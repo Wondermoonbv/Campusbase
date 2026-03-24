@@ -1,0 +1,103 @@
+// Types for the Campus Recruitment CRM
+
+export type SchoolType = "universiteit" | "hogeschool" | "secundair";
+export type Language = "NL" | "FR" | "EN";
+export type SchoolStatus = "actief" | "inactief" | "prospect";
+export type StudyLevel = "bachelor" | "master" | "graduaat";
+export type ContractType = "partnership" | "sponsoring" | "stage-overeenkomst" | "andere";
+export type ContractStatus = "actief" | "verlopen" | "in onderhandeling";
+export type EventType = "jobbeurs" | "campus presentatie" | "workshop" | "hackathon" | "andere";
+export type EventStatus = "gepland" | "bevestigd" | "afgelopen" | "geannuleerd";
+
+export interface School {
+  id: string;
+  name: string;
+  type: SchoolType;
+  province: string;
+  city: string;
+  website: string;
+  contact_name: string;
+  contact_email: string;
+  contact_phone: string;
+  language: Language;
+  notes: string;
+  status: SchoolStatus;
+  created_at: string;
+}
+
+export interface Program {
+  id: string;
+  school_id: string;
+  name: string;
+  faculty: string;
+  study_level: StudyLevel;
+  field_of_study: string;
+  student_count: number | null;
+  school?: School;
+}
+
+export interface Contract {
+  id: string;
+  school_id: string;
+  contract_type: ContractType;
+  start_date: string;
+  end_date: string;
+  renewal_date: string;
+  status: ContractStatus;
+  value: number | null;
+  document_url: string;
+  notes: string;
+  school?: School;
+}
+
+export interface Event {
+  id: string;
+  name: string;
+  type: EventType;
+  date: string;
+  location: string;
+  school_id: string | null;
+  responsible: string;
+  budget: number | null;
+  status: EventStatus;
+  notes: string;
+  school?: School;
+}
+
+export interface SchoolEventParticipation {
+  id: string;
+  school_id: string;
+  event_id: string;
+  staff_count: number;
+  student_contacts: number;
+  follow_up_done: boolean;
+  rating: number | null;
+  school?: School;
+  event?: Event;
+}
+
+export const PROVINCES = [
+  "Antwerpen",
+  "Brussel",
+  "Henegouwen",
+  "Limburg",
+  "Luik",
+  "Luxemburg",
+  "Namen",
+  "Oost-Vlaanderen",
+  "Vlaams-Brabant",
+  "Waals-Brabant",
+  "West-Vlaanderen",
+];
+
+export const FIELDS_OF_STUDY = [
+  "Engineering",
+  "IT / Informatica",
+  "Business / Economie",
+  "Wetenschappen",
+  "Elektromechanica",
+  "Energie",
+  "Recht",
+  "Communicatie",
+  "Andere",
+];
