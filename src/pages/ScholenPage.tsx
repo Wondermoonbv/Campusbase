@@ -47,9 +47,14 @@ export default function ScholenPage() {
     });
   }, [search, filterType, filterProvince, filterLanguage, filterStatus]);
 
+  const getFirstContact = (schoolId: string) => mockContacts.find(c => c.school_id === schoolId);
+
   const exportCSV = () => {
     const headers = ["Naam", "Type", "Stad", "Provincie", "Taal", "Status", "Contact", "Email"];
-    const rows = filtered.map((s) => [s.name, s.type, s.city, s.province, s.language, s.status, s.contact_name, s.contact_email]);
+    const rows = filtered.map((s) => {
+      const contact = getFirstContact(s.id);
+      return [s.name, s.type, s.city, s.province, s.language, s.status, contact?.name || "", contact?.email || ""];
+    });
     const csv = [headers, ...rows].map((r) => r.join(";")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
