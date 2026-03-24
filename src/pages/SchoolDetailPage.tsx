@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { mockSchools, mockPrograms, mockContracts, mockEvents, mockParticipations, mockContacts } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink, Mail, Phone, Edit, Plus, Linkedin, User } from "lucide-react";
