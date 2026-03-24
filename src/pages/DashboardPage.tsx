@@ -142,8 +142,10 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <Suspense fallback={<div className="surface-card h-[460px] animate-pulse" />}>
-        <BelgiumMap />
+      <Suspense fallback={<div className="surface-card h-[460px] animate-pulse mt-6" />}>
+        <div className="mt-6">
+          <BelgiumMap />
+        </div>
       </Suspense>
     </div>
   );
