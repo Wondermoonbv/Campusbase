@@ -153,7 +153,7 @@ export function AppSidebar() {
           </Button>
           {!collapsed && (
             <p className="text-[10px] text-sidebar-foreground/30 text-center mt-3 tracking-wide">
-              Powered by <span className="font-medium">CampusBase</span>
+              Powered by <a href="https://wondermoon.be" target="_blank" rel="noopener noreferrer" className="font-medium hover:text-sidebar-foreground/50 transition-colors">CampusBase</a>
             </p>
           )}
         </div>
