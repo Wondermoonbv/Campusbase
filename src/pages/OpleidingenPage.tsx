@@ -74,62 +74,105 @@ export default function OpleidingenPage() {
 
   return (
     <div className="page-container animate-fade-in-up">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
         <h1>Opleidingen</h1>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={exportCSV}>
+          <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-1" /> Export
           </Button>
           {isAdmin && (
-            <Button size="sm" onClick={() => setDialogOpen(true)}>
+            <Button size="sm" className="h-10 sm:h-8" onClick={() => setDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-1" /> Nieuwe opleiding
             </Button>
           )}
         </div>
       </div>
 
-      <div className="surface-card p-4 mb-4">
-        <div className="flex flex-wrap gap-3">
-          <div className="relative flex-1 min-w-[200px]">
+      <div className="surface-card p-3 sm:p-4 mb-4">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
+          <div className="relative flex-1 min-w-0 sm:min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Zoeken..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+            <Input placeholder="Zoeken..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 sm:h-9" />
           </div>
-          <Select value={filterSchool} onValueChange={setFilterSchool}>
-            <SelectTrigger className="w-[180px]"><SelectValue placeholder="School" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alle scholen</SelectItem>
-              {mockSchools.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={filterLevel} onValueChange={setFilterLevel}>
-            <SelectTrigger className="w-[150px]"><SelectValue placeholder="Niveau" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alle niveaus</SelectItem>
-              <SelectItem value="bachelor">Bachelor</SelectItem>
-              <SelectItem value="master">Master</SelectItem>
-              <SelectItem value="graduaat">Graduaat</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={filterField} onValueChange={setFilterField}>
-            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Studierichting" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alle richtingen</SelectItem>
-              {FIELDS_OF_STUDY.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3">
+            <Select value={filterSchool} onValueChange={setFilterSchool}>
+              <SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9"><SelectValue placeholder="School" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle scholen</SelectItem>
+                {mockSchools.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterLevel} onValueChange={setFilterLevel}>
+              <SelectTrigger className="w-full sm:w-[150px] h-10 sm:h-9"><SelectValue placeholder="Niveau" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle niveaus</SelectItem>
+                <SelectItem value="bachelor">Bachelor</SelectItem>
+                <SelectItem value="master">Master</SelectItem>
+                <SelectItem value="graduaat">Graduaat</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterField} onValueChange={setFilterField}>
+              <SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9 col-span-2 sm:col-span-1"><SelectValue placeholder="Studierichting" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle richtingen</SelectItem>
+                {FIELDS_OF_STUDY.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
-      <div className="surface-card overflow-hidden">
+      {/* Mobile card view */}
+      <div className="block md:hidden space-y-2">
+        {sorted.length === 0 ? (
+          <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen opleidingen gevonden.</div>
+        ) : (
+          sorted.map((p) => (
+            <div key={p.id} className="surface-card overflow-hidden">
+              <div
+                className="p-4 cursor-pointer active:scale-[0.99] transition-transform"
+                onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm">{p.name}</p>
+                    <Link to={`/scholen/${p.school_id}`} className="text-xs text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}</Link>
+                    <p className="text-xs text-muted-foreground mt-0.5 capitalize">{p.study_level} · {p.field_of_study}</p>
+                  </div>
+                  <span className="text-sm font-medium tabular-nums">{p.student_count ?? "—"}</span>
+                </div>
+              </div>
+              {expandedId === p.id && p.linkedEvents.length > 0 && (
+                <div className="px-4 pb-3 border-t border-border pt-3">
+                  <p className="text-xs font-semibold text-muted-foreground mb-2">Gekoppelde evenementen</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {p.linkedEvents.map((ev) => ev && (
+                      <Link key={ev.id} to={`/evenementen/${ev.id}`} className="text-xs bg-muted px-2 py-1 rounded hover:bg-muted/70">
+                        {ev.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+        <div className="text-xs text-muted-foreground px-1 pt-2">
+          {sorted.length} opleiding{sorted.length !== 1 ? "en" : ""} gevonden
+        </div>
+      </div>
+
+      {/* Desktop table view */}
+      <div className="surface-card overflow-hidden hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-8"></TableHead>
               <SortableTableHead sortKey="name" currentSort={sort} onSort={toggleSort}>Opleiding</SortableTableHead>
               <SortableTableHead sortKey="school" currentSort={sort} onSort={toggleSort}>School</SortableTableHead>
-              <SortableTableHead sortKey="faculty" currentSort={sort} onSort={toggleSort} className="hidden md:table-cell">Faculteit</SortableTableHead>
+              <SortableTableHead sortKey="faculty" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Faculteit</SortableTableHead>
               <SortableTableHead sortKey="level" currentSort={sort} onSort={toggleSort}>Niveau</SortableTableHead>
-              <SortableTableHead sortKey="field" currentSort={sort} onSort={toggleSort} className="hidden md:table-cell">Studierichting</SortableTableHead>
+              <SortableTableHead sortKey="field" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Studierichting</SortableTableHead>
               <SortableTableHead sortKey="students" currentSort={sort} onSort={toggleSort} className="text-right">Studenten</SortableTableHead>
               <TableHead className="w-10" />
             </TableRow>
@@ -152,9 +195,9 @@ export default function OpleidingenPage() {
                     <TableCell>
                       <Link to={`/scholen/${p.school_id}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}</Link>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">{p.faculty}</TableCell>
+                    <TableCell className="hidden lg:table-cell">{p.faculty}</TableCell>
                     <TableCell className="capitalize">{p.study_level}</TableCell>
-                    <TableCell className="hidden md:table-cell">{p.field_of_study}</TableCell>
+                    <TableCell className="hidden lg:table-cell">{p.field_of_study}</TableCell>
                     <TableCell className="text-right tabular-nums">{p.student_count ?? "—"}</TableCell>
                     <TableCell>
                       {isAdmin && (
