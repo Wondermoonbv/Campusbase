@@ -10,7 +10,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Download, CalendarDays, List } from "lucide-react";
+import { Plus, Search, Download, CalendarDays, List, Pencil } from "lucide-react";
 import { EventFormDialog } from "@/components/events/EventFormDialog";
 import { FIELDS_OF_STUDY } from "@/types/crm";
 
@@ -136,6 +136,7 @@ export default function EventenPage() {
                 <TableHead>Datum</TableHead>
                 <TableHead className="hidden md:table-cell">Locatie</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -149,6 +150,11 @@ export default function EventenPage() {
                   <TableCell className="tabular-nums">{new Date(ev.date).toLocaleDateString("nl-BE")}</TableCell>
                   <TableCell className="hidden md:table-cell">{ev.location}</TableCell>
                   <TableCell><StatusBadge status={ev.status} /></TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); navigate(`/evenementen/${ev.id}`); }}>
+                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

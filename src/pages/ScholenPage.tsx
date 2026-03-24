@@ -19,9 +19,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Download, ExternalLink } from "lucide-react";
+import { Plus, Search, Download, ExternalLink, Pencil } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
+
 
 export default function ScholenPage() {
   const [search, setSearch] = useState("");
@@ -30,6 +31,7 @@ export default function ScholenPage() {
   const [filterLanguage, setFilterLanguage] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editSchool, setEditSchool] = useState<School | undefined>();
   const navigate = useNavigate();
 
   const filtered = useMemo(() => {
@@ -72,7 +74,7 @@ export default function ScholenPage() {
           <Button variant="outline" size="sm" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-1" /> Export
           </Button>
-          <Button size="sm" onClick={() => setDialogOpen(true)}>
+          <Button size="sm" onClick={() => { setEditSchool(undefined); setDialogOpen(true); }}>
             <Plus className="h-4 w-4 mr-1" /> School toevoegen
           </Button>
         </div>
@@ -141,12 +143,13 @@ export default function ScholenPage() {
               <TableHead className="hidden md:table-cell">Taal</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="hidden lg:table-cell">Contact</TableHead>
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   Geen scholen gevonden.
                 </TableCell>
               </TableRow>
@@ -164,6 +167,11 @@ export default function ScholenPage() {
                   <TableCell className="hidden md:table-cell">{school.language}</TableCell>
                   <TableCell><StatusBadge status={school.status} /></TableCell>
                   <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{getFirstContact(school.id)?.name || "—"}</TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditSchool(school); setDialogOpen(true); }}>
+                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -174,7 +182,7 @@ export default function ScholenPage() {
         </div>
       </div>
 
-      <SchoolFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <SchoolFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditSchool(undefined); }} school={editSchool} />
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { mockContracts, mockSchools, mockEvents } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Download, Plus, ChevronDown, ChevronUp, ExternalLink, Calendar } from "lucide-react";
+import { Download, Plus, ChevronDown, ChevronUp, ExternalLink, Calendar, Pencil } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -77,6 +77,7 @@ export default function ContractenPage() {
               <TableHead className="hidden md:table-cell">Vernieuwingsdatum</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Waarde</TableHead>
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -108,6 +109,11 @@ export default function ContractenPage() {
                     <TableCell className="hidden md:table-cell">{new Date(c.renewal_date).toLocaleDateString("nl-BE")}</TableCell>
                     <TableCell><StatusBadge status={c.status} /></TableCell>
                     <TableCell className="text-right tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); openEdit(c); }}>
+                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                   {isExpanded && (
                     <TableRow key={`${c.id}-detail`} className="bg-muted/10 hover:bg-muted/10">

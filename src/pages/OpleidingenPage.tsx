@@ -9,7 +9,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Search, Download, Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, Download, Plus, ChevronDown, ChevronRight, Pencil } from "lucide-react";
 import { FIELDS_OF_STUDY } from "@/types/crm";
 import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -20,6 +20,7 @@ export default function OpleidingenPage() {
   const [filterField, setFilterField] = useState("all");
   const [filterSchool, setFilterSchool] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editProgram, setEditProgram] = useState<typeof mockPrograms[0] | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const enriched = useMemo(() => {
@@ -110,6 +111,7 @@ export default function OpleidingenPage() {
               <TableHead>Niveau</TableHead>
               <TableHead className="hidden md:table-cell">Studierichting</TableHead>
               <TableHead className="text-right">Studenten</TableHead>
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -142,6 +144,11 @@ export default function OpleidingenPage() {
                     <TableCell className="capitalize">{p.study_level}</TableCell>
                     <TableCell className="hidden md:table-cell">{p.field_of_study}</TableCell>
                     <TableCell className="text-right tabular-nums">{p.student_count ?? "—"}</TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditProgram(p); setDialogOpen(true); }}>
+                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                   {expandedId === p.id && p.linkedEvents.length > 0 && (
                     <TableRow key={`${p.id}-events`}>
@@ -173,7 +180,7 @@ export default function OpleidingenPage() {
         </div>
       </div>
 
-      <ProgramFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <ProgramFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditProgram(undefined); }} program={editProgram} />
     </div>
   );
 }
