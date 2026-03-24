@@ -20,6 +20,7 @@ export default function OpleidingenPage() {
   const [filterField, setFilterField] = useState("all");
   const [filterSchool, setFilterSchool] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editProgram, setEditProgram] = useState<typeof mockPrograms[0] | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const enriched = useMemo(() => {
