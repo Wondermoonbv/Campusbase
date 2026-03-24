@@ -30,6 +30,7 @@ export default function SchoolDetailPage() {
 
   const programs = mockPrograms.filter((p) => p.school_id === school.id);
   const contracts = mockContracts.filter((c) => c.school_id === school.id);
+  const contacts = mockContacts.filter((c) => c.school_id === school.id);
   const participations = mockParticipations.filter((p) => p.school_id === school.id);
   const events = participations
     .map((p) => ({ ...p, event: mockEvents.find((e) => e.id === p.event_id) }))
