@@ -10,12 +10,14 @@ import {
 import { useState } from "react";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
 import { ContactFormDialog } from "@/components/schools/ContactFormDialog";
+import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
 
 export default function SchoolDetailPage() {
   const { id } = useParams();
   const school = mockSchools.find((s) => s.id === id);
   const [editOpen, setEditOpen] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [programDialogOpen, setProgramDialogOpen] = useState(false);
 
   if (!school) {
     return (
@@ -135,6 +137,12 @@ export default function SchoolDetailPage() {
 
         <TabsContent value="programs" className="mt-4">
           <div className="surface-card overflow-hidden">
+            <div className="flex items-center justify-between p-4 pb-0">
+              <span className="text-sm text-muted-foreground">{programs.length} opleiding{programs.length !== 1 ? "en" : ""}</span>
+              <Button size="sm" variant="outline" onClick={() => setProgramDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" /> Opleiding toevoegen
+              </Button>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -241,6 +249,7 @@ export default function SchoolDetailPage() {
 
       <SchoolFormDialog open={editOpen} onOpenChange={setEditOpen} school={school} />
       <ContactFormDialog open={contactDialogOpen} onOpenChange={setContactDialogOpen} schoolId={school.id} />
+      <ProgramFormDialog open={programDialogOpen} onOpenChange={setProgramDialogOpen} schoolId={school.id} />
     </div>
   );
 }
