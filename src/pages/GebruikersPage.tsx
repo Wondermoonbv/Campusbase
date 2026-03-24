@@ -14,32 +14,33 @@ export default function GebruikersPage() {
   const { users, addUser, updateUser, deleteUser, user: currentUser } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editUser, setEditUser] = useState<AppUser | null>(null);
-  const [form, setForm] = useState({ name: "", email: "", role: "viewer" as UserRole });
+  const [form, setForm] = useState({ firstName: "", lastName: "", name: "", email: "", role: "viewer" as UserRole });
 
   const openCreate = () => {
     setEditUser(null);
-    setForm({ name: "", email: "", role: "viewer" });
+    setForm({ firstName: "", lastName: "", name: "", email: "", role: "viewer" });
     setDialogOpen(true);
   };
 
   const openEdit = (u: AppUser) => {
     setEditUser(u);
-    setForm({ name: u.name, email: u.email, role: u.role });
+    setForm({ firstName: u.firstName ?? "", lastName: u.lastName ?? "", name: u.name, email: u.email, role: u.role });
     setDialogOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email) { toast.error("Vul alle velden in."); return; }
+    if (!form.firstName || !form.email) { toast.error("Vul alle velden in."); return; }
+    const fullName = `${form.firstName} ${form.lastName}`.trim();
     if (editUser) {
-      updateUser(editUser.id, form);
+      updateUser(editUser.id, { ...form, name: fullName });
       toast.success("Gebruiker bijgewerkt.");
     } else {
       if (users.some((u) => u.email.toLowerCase() === form.email.toLowerCase())) {
         toast.error("E-mailadres is al in gebruik.");
         return;
       }
-      addUser(form);
+      addUser({ ...form, name: fullName });
       toast.success("Gebruiker toegevoegd.");
     }
     setDialogOpen(false);
@@ -98,9 +99,15 @@ export default function GebruikersPage() {
             <DialogTitle>{editUser ? "Gebruiker bewerken" : "Nieuwe gebruiker"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Naam *</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Voornaam *</Label>
+                <Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} required />
+              </div>
+              <div className="space-y-2">
+                <Label>Achternaam</Label>
+                <Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>E-mail *</Label>

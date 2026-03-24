@@ -15,6 +15,7 @@ import EventenPage from "./pages/EventenPage";
 import EventDetailPage from "./pages/EventDetailPage";
 import RapportagePage from "./pages/RapportagePage";
 import GebruikersPage from "./pages/GebruikersPage";
+import InstellingenPage from "./pages/InstellingenPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ function AppRoutes() {
         <Route path="/evenementen/:id" element={<EventDetailPage />} />
         <Route path="/rapportage" element={<RapportagePage />} />
         {isAdmin && <Route path="/gebruikers" element={<GebruikersPage />} />}
+        <Route path="/instellingen" element={<InstellingenPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AppLayout>

@@ -7,10 +7,12 @@ import {
   BarChart3,
   Users,
   LogOut,
+  Settings,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -37,28 +39,42 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { user, isAdmin, logout } = useAuth();
+  const navigate = useNavigate();
+  const { user, isAdmin, logout, platformSettings } = useAuth();
 
   const allItems = isAdmin
     ? [...navItems, { title: "Gebruikers", url: "/gebruikers", icon: Users }]
     : navItems;
+
+  const initials = user ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() : "?";
 
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
         <div className={`px-4 py-5 ${collapsed ? "px-2" : ""}`}>
           {!collapsed ? (
-            <div>
-              <h1 className="text-base font-bold text-sidebar-foreground tracking-tight">
-                Elia Campus
-              </h1>
-              <p className="text-xs text-sidebar-foreground/60 mt-0.5">
-                Recruitment CRM
-              </p>
+            <div className="flex items-center gap-2.5">
+              {platformSettings.companyLogoUrl && (
+                <img src={platformSettings.companyLogoUrl} alt="Logo" className="h-7 w-7 rounded object-contain" />
+              )}
+              <div>
+                <h1 className="text-base font-bold text-sidebar-foreground tracking-tight">
+                  {platformSettings.companyName || "Elia Campus"}
+                </h1>
+                <p className="text-xs text-sidebar-foreground/60 mt-0.5">
+                  Recruitment CRM
+                </p>
+              </div>
             </div>
           ) : (
             <div className="flex items-center justify-center">
-              <span className="text-lg font-bold text-sidebar-foreground">E</span>
+              {platformSettings.companyLogoUrl ? (
+                <img src={platformSettings.companyLogoUrl} alt="Logo" className="h-6 w-6 rounded object-contain" />
+              ) : (
+                <span className="text-lg font-bold text-sidebar-foreground">
+                  {(platformSettings.companyName || "E")[0]}
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -100,10 +116,31 @@ export function AppSidebar() {
       <SidebarFooter>
         <div className={`px-3 py-3 border-t border-sidebar-border ${collapsed ? "px-1" : ""}`}>
           {!collapsed && user && (
-            <div className="mb-2 px-1">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">{user.name}</p>
-              <p className="text-xs text-sidebar-foreground/60 capitalize">{user.role}</p>
-            </div>
+            <button
+              onClick={() => navigate("/instellingen")}
+              className="w-full flex items-center gap-2.5 mb-2 px-1 py-1.5 rounded hover:bg-sidebar-accent/50 transition-colors text-left"
+            >
+              <Avatar className="h-8 w-8 border border-sidebar-border">
+                <AvatarImage src={user.avatarUrl} />
+                <AvatarFallback className="text-xs font-semibold bg-sidebar-accent text-sidebar-accent-foreground">{initials}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-sidebar-foreground truncate">{user.name}</p>
+                <p className="text-xs text-sidebar-foreground/60 capitalize">{user.role}</p>
+              </div>
+              <Settings className="h-3.5 w-3.5 text-sidebar-foreground/50 shrink-0" />
+            </button>
+          )}
+          {collapsed && (
+            <button
+              onClick={() => navigate("/instellingen")}
+              className="w-full flex items-center justify-center mb-2 py-1.5 rounded hover:bg-sidebar-accent/50 transition-colors"
+            >
+              <Avatar className="h-7 w-7 border border-sidebar-border">
+                <AvatarImage src={user?.avatarUrl} />
+                <AvatarFallback className="text-xs font-semibold bg-sidebar-accent text-sidebar-accent-foreground">{initials}</AvatarFallback>
+              </Avatar>
+            </button>
           )}
           <Button
             variant="ghost"
