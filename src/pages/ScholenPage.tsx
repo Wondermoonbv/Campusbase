@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { mockSchools } from "@/data/mockData";
+import { mockSchools, mockContacts } from "@/data/mockData";
 import { School, SchoolType, SchoolStatus, Language, PROVINCES } from "@/types/crm";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
