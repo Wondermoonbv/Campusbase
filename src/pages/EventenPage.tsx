@@ -39,6 +39,7 @@ export default function EventenPage() {
   const [filterPeriod] = useState(initialPeriod);
   const [view, setView] = useState<"list" | "calendar">("list");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const now = new Date();
