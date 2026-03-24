@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import L from "leaflet";
 import { mockSchools, mockEvents } from "@/data/mockData";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
