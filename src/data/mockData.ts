@@ -1,42 +1,25 @@
-import type { School, Program, Contract, Event, SchoolEventParticipation } from "@/types/crm";
+import type { School, Contact, Program, Contract, Event, SchoolEventParticipation } from "@/types/crm";
 
 // Mock data for development — will be replaced with Supabase queries
 export const mockSchools: School[] = [
-  {
-    id: "1", name: "KU Leuven", type: "universiteit", province: "Vlaams-Brabant", city: "Leuven",
-    website: "https://kuleuven.be", contact_name: "Jan Peeters", contact_email: "jan.peeters@kuleuven.be",
-    contact_phone: "+32 16 32 40 10", language: "NL", notes: "Belangrijke partner voor engineering", status: "actief", created_at: "2024-01-15",
-  },
-  {
-    id: "2", name: "UGent", type: "universiteit", province: "Oost-Vlaanderen", city: "Gent",
-    website: "https://ugent.be", contact_name: "Marie De Smet", contact_email: "marie.desmet@ugent.be",
-    contact_phone: "+32 9 331 01 01", language: "NL", notes: "", status: "actief", created_at: "2024-02-10",
-  },
-  {
-    id: "3", name: "UCLouvain", type: "universiteit", province: "Waals-Brabant", city: "Louvain-la-Neuve",
-    website: "https://uclouvain.be", contact_name: "Pierre Dubois", contact_email: "pierre.dubois@uclouvain.be",
-    contact_phone: "+32 10 47 21 11", language: "FR", notes: "Franstalig partnerschap", status: "actief", created_at: "2024-03-05",
-  },
-  {
-    id: "4", name: "Thomas More", type: "hogeschool", province: "Antwerpen", city: "Mechelen",
-    website: "https://thomasmore.be", contact_name: "Lien Janssens", contact_email: "lien.janssens@thomasmore.be",
-    contact_phone: "+32 15 36 91 00", language: "NL", notes: "", status: "prospect", created_at: "2024-04-20",
-  },
-  {
-    id: "5", name: "VUB", type: "universiteit", province: "Brussel", city: "Brussel",
-    website: "https://vub.be", contact_name: "Koen Willems", contact_email: "koen.willems@vub.be",
-    contact_phone: "+32 2 629 21 11", language: "NL", notes: "Engineering faculteit focus", status: "actief", created_at: "2024-01-20",
-  },
-  {
-    id: "6", name: "HOGENT", type: "hogeschool", province: "Oost-Vlaanderen", city: "Gent",
-    website: "https://hogent.be", contact_name: "Sara Van Damme", contact_email: "sara.vandamme@hogent.be",
-    contact_phone: "+32 9 243 87 87", language: "NL", notes: "", status: "actief", created_at: "2024-05-01",
-  },
-  {
-    id: "7", name: "ULB", type: "universiteit", province: "Brussel", city: "Brussel",
-    website: "https://ulb.be", contact_name: "Sophie Laurent", contact_email: "sophie.laurent@ulb.be",
-    contact_phone: "+32 2 650 21 11", language: "FR", notes: "", status: "inactief", created_at: "2023-11-15",
-  },
+  { id: "1", name: "KU Leuven", type: "universiteit", province: "Vlaams-Brabant", city: "Leuven", website: "https://kuleuven.be", language: "NL", notes: "Belangrijke partner voor engineering", status: "actief", created_at: "2024-01-15" },
+  { id: "2", name: "UGent", type: "universiteit", province: "Oost-Vlaanderen", city: "Gent", website: "https://ugent.be", language: "NL", notes: "", status: "actief", created_at: "2024-02-10" },
+  { id: "3", name: "UCLouvain", type: "universiteit", province: "Waals-Brabant", city: "Louvain-la-Neuve", website: "https://uclouvain.be", language: "FR", notes: "Franstalig partnerschap", status: "actief", created_at: "2024-03-05" },
+  { id: "4", name: "Thomas More", type: "hogeschool", province: "Antwerpen", city: "Mechelen", website: "https://thomasmore.be", language: "NL", notes: "", status: "prospect", created_at: "2024-04-20" },
+  { id: "5", name: "VUB", type: "universiteit", province: "Brussel", city: "Brussel", website: "https://vub.be", language: "NL", notes: "Engineering faculteit focus", status: "actief", created_at: "2024-01-20" },
+  { id: "6", name: "HOGENT", type: "hogeschool", province: "Oost-Vlaanderen", city: "Gent", website: "https://hogent.be", language: "NL", notes: "", status: "actief", created_at: "2024-05-01" },
+  { id: "7", name: "ULB", type: "universiteit", province: "Brussel", city: "Brussel", website: "https://ulb.be", language: "FR", notes: "", status: "inactief", created_at: "2023-11-15" },
+];
+
+export const mockContacts: Contact[] = [
+  { id: "1", school_id: "1", name: "Jan Peeters", email: "jan.peeters@kuleuven.be", phone: "+32 16 32 40 10", role: "Career Services Manager", department: "Dienst Studentenvoorzieningen", notes: "", linkedin_url: "https://linkedin.com/in/janpeeters" },
+  { id: "2", school_id: "1", name: "Els Wouters", email: "els.wouters@kuleuven.be", phone: "+32 16 32 55 00", role: "Stagecoördinator", department: "Faculteit Ingenieurswetenschappen", notes: "Hoofdcontact voor stage-overeenkomsten", linkedin_url: "" },
+  { id: "3", school_id: "2", name: "Marie De Smet", email: "marie.desmet@ugent.be", phone: "+32 9 331 01 01", role: "Employer Relations", department: "Career Center", notes: "", linkedin_url: "" },
+  { id: "4", school_id: "3", name: "Pierre Dubois", email: "pierre.dubois@uclouvain.be", phone: "+32 10 47 21 11", role: "Responsable Relations Entreprises", department: "Service Carrières", notes: "Franstalig", linkedin_url: "" },
+  { id: "5", school_id: "4", name: "Lien Janssens", email: "lien.janssens@thomasmore.be", phone: "+32 15 36 91 00", role: "Stagecoördinator", department: "", notes: "", linkedin_url: "" },
+  { id: "6", school_id: "5", name: "Koen Willems", email: "koen.willems@vub.be", phone: "+32 2 629 21 11", role: "Career Advisor", department: "Career Center", notes: "Engineering faculteit focus", linkedin_url: "" },
+  { id: "7", school_id: "6", name: "Sara Van Damme", email: "sara.vandamme@hogent.be", phone: "+32 9 243 87 87", role: "Verantwoordelijke Jobbeurzen", department: "", notes: "", linkedin_url: "" },
+  { id: "8", school_id: "7", name: "Sophie Laurent", email: "sophie.laurent@ulb.be", phone: "+32 2 650 21 11", role: "Relations Entreprises", department: "Service des Stages", notes: "", linkedin_url: "" },
 ];
 
 export const mockPrograms: Program[] = [
