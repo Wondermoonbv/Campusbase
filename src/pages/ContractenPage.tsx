@@ -9,6 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { ContractFormDialog } from "@/components/contracts/ContractFormDialog";
+import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 
 function getExpiryColor(endDate: string) {
   const now = new Date();
@@ -26,8 +27,9 @@ export default function ContractenPage() {
   const [editContract, setEditContract] = useState<typeof mockContracts[0] | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { isAdmin } = useAuth();
+  const { sort, toggleSort } = useSort("school");
 
-  const sorted = useMemo(() => {
+  const baseList = useMemo(() => {
     let list = [...mockContracts];
     if (filterExpiring) {
       const now = new Date();
@@ -37,10 +39,23 @@ export default function ContractenPage() {
         return d >= now && d <= in90 && c.status === "actief";
       });
     }
-    return list.sort(
-      (a, b) => new Date(a.end_date).getTime() - new Date(b.end_date).getTime()
-    );
+    return list;
   }, [filterExpiring]);
+
+  const sorted = useMemo(() => {
+    return sortItems(baseList, sort, (c, key) => {
+      switch (key) {
+        case "school": return mockSchools.find((s) => s.id === c.school_id)?.name ?? "";
+        case "type": return c.contract_type;
+        case "start": return new Date(c.start_date).getTime();
+        case "end": return new Date(c.end_date).getTime();
+        case "renewal": return new Date(c.renewal_date).getTime();
+        case "status": return c.status;
+        case "value": return c.value ?? 0;
+        default: return mockSchools.find((s) => s.id === c.school_id)?.name ?? "";
+      }
+    });
+  }, [baseList, sort]);
 
   const exportCSV = () => {
     const headers = ["School", "Type", "Start", "Einde", "Vernieuwing", "Status", "Waarde", "Beschrijving"];
@@ -51,19 +66,11 @@ export default function ContractenPage() {
     const csv = [headers, ...rows].map((r) => r.join(";")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = "contracten_export.csv"; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = "contracten_export.csv"; a.click();
   };
 
-  const openEdit = (contract: typeof mockContracts[0]) => {
-    setEditContract(contract);
-    setDialogOpen(true);
-  };
-
-  const openCreate = () => {
-    setEditContract(undefined);
-    setDialogOpen(true);
-  };
+  const openEdit = (contract: typeof mockContracts[0]) => { setEditContract(contract); setDialogOpen(true); };
+  const openCreate = () => { setEditContract(undefined); setDialogOpen(true); };
 
   return (
     <div className="page-container animate-fade-in-up">
@@ -86,13 +93,13 @@ export default function ContractenPage() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-8" />
-              <TableHead>School</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Start</TableHead>
-              <TableHead>Einde</TableHead>
-              <TableHead className="hidden md:table-cell">Vernieuwingsdatum</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Waarde</TableHead>
+              <SortableTableHead sortKey="school" currentSort={sort} onSort={toggleSort}>School</SortableTableHead>
+              <SortableTableHead sortKey="type" currentSort={sort} onSort={toggleSort}>Type</SortableTableHead>
+              <SortableTableHead sortKey="start" currentSort={sort} onSort={toggleSort}>Start</SortableTableHead>
+              <SortableTableHead sortKey="end" currentSort={sort} onSort={toggleSort}>Einde</SortableTableHead>
+              <SortableTableHead sortKey="renewal" currentSort={sort} onSort={toggleSort} className="hidden md:table-cell">Vernieuwingsdatum</SortableTableHead>
+              <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
+              <SortableTableHead sortKey="value" currentSort={sort} onSort={toggleSort} className="text-right">Waarde</SortableTableHead>
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
@@ -100,23 +107,13 @@ export default function ContractenPage() {
             {sorted.map((c) => {
               const school = mockSchools.find((s) => s.id === c.school_id);
               const isExpanded = expandedId === c.id;
-              const linkedEvents = (c.linked_event_ids || [])
-                .map((eid) => mockEvents.find((e) => e.id === eid))
-                .filter(Boolean);
+              const linkedEvents = (c.linked_event_ids || []).map((eid) => mockEvents.find((e) => e.id === eid)).filter(Boolean);
 
               return (
                 <>
-                  <TableRow
-                    key={c.id}
-                    className={`hover:bg-muted/30 cursor-pointer ${getExpiryColor(c.end_date)}`}
-                    onClick={() => setExpandedId(isExpanded ? null : c.id)}
-                  >
+                  <TableRow key={c.id} className={`hover:bg-muted/30 cursor-pointer ${getExpiryColor(c.end_date)}`} onClick={() => setExpandedId(isExpanded ? null : c.id)}>
                     <TableCell className="px-2">
-                      {isExpanded ? (
-                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                      )}
+                      {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                     </TableCell>
                     <TableCell className="font-medium">{school?.name ?? "—"}</TableCell>
                     <TableCell className="capitalize">{c.contract_type}</TableCell>
@@ -135,7 +132,7 @@ export default function ContractenPage() {
                   </TableRow>
                   {isExpanded && (
                     <TableRow key={`${c.id}-detail`} className="bg-muted/10 hover:bg-muted/10">
-                      <TableCell colSpan={8} className="p-4">
+                      <TableCell colSpan={9} className="p-4">
                         <div className="space-y-3">
                           {c.description && (
                             <div>
@@ -161,10 +158,7 @@ export default function ContractenPage() {
                               <p className="text-xs font-medium text-muted-foreground mb-1.5">Gekoppelde evenementen</p>
                               <div className="flex flex-wrap gap-2">
                                 {linkedEvents.map((event) => (
-                                  <span
-                                    key={event!.id}
-                                    className="inline-flex items-center gap-1.5 text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-md"
-                                  >
+                                  <span key={event!.id} className="inline-flex items-center gap-1.5 text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-md">
                                     <Calendar className="h-3 w-3" />
                                     {event!.name} — {new Date(event!.date).toLocaleDateString("nl-BE")}
                                   </span>
@@ -173,9 +167,7 @@ export default function ContractenPage() {
                             </div>
                           )}
                           <div className="pt-1">
-                            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); openEdit(c); }}>
-                              Bewerken
-                            </Button>
+                            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); openEdit(c); }}>Bewerken</Button>
                           </div>
                         </div>
                       </TableCell>
@@ -193,11 +185,7 @@ export default function ContractenPage() {
         </div>
       </div>
 
-      <ContractFormDialog
-        open={dialogOpen}
-        onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditContract(undefined); }}
-        contract={editContract}
-      />
+      <ContractFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditContract(undefined); }} contract={editContract} />
     </div>
   );
 }

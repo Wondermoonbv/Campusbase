@@ -15,6 +15,7 @@ import { Plus, Search, Download, CalendarDays, List, Pencil, Upload } from "luci
 import { EventFormDialog } from "@/components/events/EventFormDialog";
 import { CsvImportDialog, CsvColumn } from "@/components/import/CsvImportDialog";
 import { FIELDS_OF_STUDY } from "@/types/crm";
+import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 
 const EVENT_CSV_COLUMNS: CsvColumn[] = [
   { key: "name", label: "Naam", required: true },
@@ -32,7 +33,7 @@ const EVENT_CSV_COLUMNS: CsvColumn[] = [
 export default function EventenPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const initialPeriod = searchParams.get("period") ?? "all"; // "thisYear" or "next30"
+  const initialPeriod = searchParams.get("period") ?? "all";
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -42,6 +43,7 @@ export default function EventenPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const { isAdmin } = useAuth();
+  const { sort, toggleSort } = useSort("name");
 
   const filtered = useMemo(() => {
     const now = new Date();
@@ -51,7 +53,6 @@ export default function EventenPage() {
         e.location.toLowerCase().includes(search.toLowerCase());
       const matchType = filterType === "all" || e.type === filterType;
       const matchStatus = filterStatus === "all" || e.status === filterStatus;
-
       let matchPeriod = true;
       if (filterPeriod === "thisYear") {
         matchPeriod = new Date(e.date).getFullYear() === now.getFullYear();
@@ -59,23 +60,32 @@ export default function EventenPage() {
         const d = new Date(e.date);
         matchPeriod = d >= now && d <= in30Days;
       }
-
       let matchField = true;
       if (filterFieldOfStudy !== "all") {
-        const linkedProgramIds = mockEventPrograms
-          .filter((ep) => ep.event_id === e.id)
-          .map((ep) => ep.program_id);
+        const linkedProgramIds = mockEventPrograms.filter((ep) => ep.event_id === e.id).map((ep) => ep.program_id);
         const linkedPrograms = mockPrograms.filter((p) => linkedProgramIds.includes(p.id));
         matchField = linkedPrograms.some((p) => p.field_of_study === filterFieldOfStudy);
       }
-
       return matchSearch && matchType && matchStatus && matchField && matchPeriod;
     });
   }, [search, filterType, filterStatus, filterFieldOfStudy, filterPeriod]);
 
+  const sorted = useMemo(() => {
+    return sortItems(filtered, sort, (e, key) => {
+      switch (key) {
+        case "name": return e.name;
+        case "date": return new Date(e.date).getTime();
+        case "location": return e.location;
+        case "status": return e.status;
+        default: return e.name;
+      }
+    });
+  }, [filtered, sort]);
+
   const byMonth = useMemo(() => {
+    const sortedByDate = [...filtered].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     const groups: Record<string, typeof filtered> = {};
-    filtered.forEach((e) => {
+    sortedByDate.forEach((e) => {
       const key = new Date(e.date).toLocaleDateString("nl-BE", { year: "numeric", month: "long" });
       if (!groups[key]) groups[key] = [];
       groups[key].push(e);
@@ -85,12 +95,11 @@ export default function EventenPage() {
 
   const exportCSV = () => {
     const headers = ["Naam", "Type", "Datum", "Locatie", "Status", "Verantwoordelijke", "Budget"];
-    const rows = filtered.map((e) => [e.name, e.type, e.date, e.location, e.status, e.responsible, e.budget ?? ""]);
+    const rows = sorted.map((e) => [e.name, e.type, e.date, e.location, e.status, e.responsible, e.budget ?? ""]);
     const csv = [headers, ...rows].map((r) => r.join(";")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = "evenementen_export.csv"; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = "evenementen_export.csv"; a.click();
   };
 
   return (
@@ -99,16 +108,10 @@ export default function EventenPage() {
         <h1>Evenementen</h1>
         <div className="flex gap-2">
           <div className="flex border border-border rounded overflow-hidden">
-            <button
-              onClick={() => setView("list")}
-              className={`px-3 py-1.5 text-sm ${view === "list" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted"}`}
-            >
+            <button onClick={() => setView("list")} className={`px-3 py-1.5 text-sm ${view === "list" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted"}`}>
               <List className="h-4 w-4" />
             </button>
-            <button
-              onClick={() => setView("calendar")}
-              className={`px-3 py-1.5 text-sm ${view === "calendar" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted"}`}
-            >
+            <button onClick={() => setView("calendar")} className={`px-3 py-1.5 text-sm ${view === "calendar" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted"}`}>
               <CalendarDays className="h-4 w-4" />
             </button>
           </div>
@@ -169,20 +172,16 @@ export default function EventenPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Evenement</TableHead>
-                <TableHead>Datum</TableHead>
-                <TableHead className="hidden md:table-cell">Locatie</TableHead>
-                <TableHead>Status</TableHead>
+                <SortableTableHead sortKey="name" currentSort={sort} onSort={toggleSort}>Evenement</SortableTableHead>
+                <SortableTableHead sortKey="date" currentSort={sort} onSort={toggleSort}>Datum</SortableTableHead>
+                <SortableTableHead sortKey="location" currentSort={sort} onSort={toggleSort} className="hidden md:table-cell">Locatie</SortableTableHead>
+                <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
                 <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((ev) => (
-                <TableRow
-                  key={ev.id}
-                  className="hover:bg-muted/30 cursor-pointer"
-                  onClick={() => navigate(`/evenementen/${ev.id}`)}
-                >
+              {sorted.map((ev) => (
+                <TableRow key={ev.id} className="hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/evenementen/${ev.id}`)}>
                   <TableCell className="font-medium">{ev.name}</TableCell>
                   <TableCell className="tabular-nums">{new Date(ev.date).toLocaleDateString("nl-BE")}</TableCell>
                   <TableCell className="hidden md:table-cell">{ev.location}</TableCell>
@@ -199,7 +198,7 @@ export default function EventenPage() {
             </TableBody>
           </Table>
           <div className="p-3 border-t border-border text-xs text-muted-foreground">
-            {filtered.length} evenement{filtered.length !== 1 ? "en" : ""} gevonden
+            {sorted.length} evenement{sorted.length !== 1 ? "en" : ""} gevonden
           </div>
         </div>
       ) : (
@@ -209,17 +208,11 @@ export default function EventenPage() {
               <h2 className="mb-3 capitalize">{month}</h2>
               <div className="space-y-2">
                 {events.map((ev) => (
-                  <div
-                    key={ev.id}
-                    className="surface-card p-4 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition-colors"
-                    onClick={() => navigate(`/evenementen/${ev.id}`)}
-                  >
+                  <div key={ev.id} className="surface-card p-4 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => navigate(`/evenementen/${ev.id}`)}>
                     <div className="flex items-center gap-4">
                       <div className="text-center min-w-[48px]">
                         <div className="text-2xl font-semibold tabular-nums">{new Date(ev.date).getDate()}</div>
-                        <div className="text-xs text-muted-foreground uppercase">
-                          {new Date(ev.date).toLocaleDateString("nl-BE", { weekday: "short" })}
-                        </div>
+                        <div className="text-xs text-muted-foreground uppercase">{new Date(ev.date).toLocaleDateString("nl-BE", { weekday: "short" })}</div>
                       </div>
                       <div>
                         <p className="font-medium text-sm">{ev.name}</p>
@@ -236,14 +229,7 @@ export default function EventenPage() {
       )}
 
       <EventFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />
-      <CsvImportDialog
-        open={importOpen}
-        onOpenChange={setImportOpen}
-        title="Evenementen importeren"
-        columns={EVENT_CSV_COLUMNS}
-        templateFilename="evenementen_template.csv"
-        onImport={(rows) => { console.log("Import events:", rows); }}
-      />
+      <CsvImportDialog open={importOpen} onOpenChange={setImportOpen} title="Evenementen importeren" columns={EVENT_CSV_COLUMNS} templateFilename="evenementen_template.csv" onImport={(rows) => { console.log("Import events:", rows); }} />
     </div>
   );
 }
