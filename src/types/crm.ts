@@ -146,13 +146,3 @@ export interface Task {
   status: TaskStatus;
   created_at: string;
 }
-  "Engineering",
-  "IT / Informatica",
-  "Business / Economie",
-  "Wetenschappen",
-  "Elektromechanica",
-  "Energie",
-  "Recht",
-  "Communicatie",
-  "Andere",
-];
