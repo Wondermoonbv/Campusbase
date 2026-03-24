@@ -35,6 +35,7 @@ function AppRoutes() {
         <Route path="/evenementen" element={<EventenPage />} />
         <Route path="/evenementen/:id" element={<EventDetailPage />} />
         <Route path="/rapportage" element={<RapportagePage />} />
+        <Route path="/taken" element={<TakenPage />} />
         {isAdmin && <Route path="/gebruikers" element={<GebruikersPage />} />}
         <Route path="/instellingen" element={<InstellingenPage />} />
         <Route path="*" element={<NotFound />} />
