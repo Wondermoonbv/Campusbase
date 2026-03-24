@@ -14,17 +14,17 @@ export default function GebruikersPage() {
   const { users, addUser, updateUser, deleteUser, user: currentUser } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editUser, setEditUser] = useState<AppUser | null>(null);
-  const [form, setForm] = useState({ name: "", email: "", role: "viewer" as UserRole });
+  const [form, setForm] = useState({ firstName: "", lastName: "", name: "", email: "", role: "viewer" as UserRole });
 
   const openCreate = () => {
     setEditUser(null);
-    setForm({ name: "", email: "", role: "viewer" });
+    setForm({ firstName: "", lastName: "", name: "", email: "", role: "viewer" });
     setDialogOpen(true);
   };
 
   const openEdit = (u: AppUser) => {
     setEditUser(u);
-    setForm({ name: u.name, email: u.email, role: u.role });
+    setForm({ firstName: u.firstName ?? "", lastName: u.lastName ?? "", name: u.name, email: u.email, role: u.role });
     setDialogOpen(true);
   };
 
