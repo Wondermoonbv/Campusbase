@@ -75,7 +75,12 @@ export default function GebruikersPage() {
           <TableBody>
             {users.map((u) => (
               <TableRow key={u.id}>
-                <TableCell className="font-medium">{u.name}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2.5">
+                    <UserAvatar name={u.name} avatarUrl={u.avatarUrl} />
+                    <span className="font-medium">{u.name}</span>
+                  </div>
+                </TableCell>
                 <TableCell>{u.email}</TableCell>
                 <TableCell className="capitalize">{u.role}</TableCell>
                 <TableCell>
