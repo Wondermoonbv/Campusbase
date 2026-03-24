@@ -151,6 +151,11 @@ export function AppSidebar() {
             <LogOut className="h-4 w-4 shrink-0" />
             {!collapsed && <span className="ml-2">Uitloggen</span>}
           </Button>
+          {!collapsed && (
+            <p className="text-[10px] text-sidebar-foreground/30 text-center mt-3 tracking-wide">
+              Powered by <span className="font-medium">CampusBase</span>
+            </p>
+          )}
         </div>
       </SidebarFooter>
     </Sidebar>
