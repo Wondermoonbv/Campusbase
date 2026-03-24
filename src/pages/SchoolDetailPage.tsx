@@ -11,6 +11,7 @@ import { useState } from "react";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
 import { ContactFormDialog } from "@/components/schools/ContactFormDialog";
 import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
+import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 import { mockSchools, mockPrograms, mockContracts, mockEvents, mockParticipations, mockContacts } from "@/data/mockData";
 
 export default function SchoolDetailPage() {
