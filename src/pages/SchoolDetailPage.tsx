@@ -137,6 +137,12 @@ export default function SchoolDetailPage() {
 
         <TabsContent value="programs" className="mt-4">
           <div className="surface-card overflow-hidden">
+            <div className="flex items-center justify-between p-4 pb-0">
+              <span className="text-sm text-muted-foreground">{programs.length} opleiding{programs.length !== 1 ? "en" : ""}</span>
+              <Button size="sm" variant="outline" onClick={() => setProgramDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" /> Opleiding toevoegen
+              </Button>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
