@@ -128,9 +128,11 @@ export default function SchoolDetailPage() {
                     <p className="text-xs text-muted-foreground mt-1">{contact.notes}</p>
                   )}
                 </div>
-                <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => { setEditContact(contact); setContactDialogOpen(true); }}>
-                  <Edit className="h-3.5 w-3.5" />
-                </Button>
+                {isAdmin && (
+                  <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => { setEditContact(contact); setContactDialogOpen(true); }}>
+                    <Edit className="h-3.5 w-3.5" />
+                  </Button>
+                )}
               </div>
             ))}
           </div>
