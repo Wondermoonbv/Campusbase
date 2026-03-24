@@ -141,6 +141,10 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      <Suspense fallback={<div className="surface-card h-[460px] animate-pulse" />}>
+        <BelgiumMap />
+      </Suspense>
     </div>
   );
 }
