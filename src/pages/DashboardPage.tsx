@@ -1,5 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, lazy, Suspense } from "react";
 import { mockSchools, mockContracts, mockEvents } from "@/data/mockData";
+
+const BelgiumMap = lazy(() => import("@/components/dashboard/BelgiumMap"));
 import {
   GraduationCap,
   CalendarDays,
