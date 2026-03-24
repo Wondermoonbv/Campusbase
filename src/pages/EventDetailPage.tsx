@@ -96,6 +96,9 @@ export default function EventDetailPage() {
               </Button>
             </div>
           ) : (
+            <Button variant="outline" size="sm" onClick={() => setTaskDialogOpen(true)}>
+              <CheckSquare className="h-4 w-4 mr-1" /> Taak
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
               <Pencil className="h-4 w-4 mr-1" /> Bewerken
             </Button>
