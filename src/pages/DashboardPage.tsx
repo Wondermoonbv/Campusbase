@@ -18,11 +18,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Link, useNavigate } from "react-router-dom";
-import { formatDistanceToNow } from "date-fns";
-import { nl } from "date-fns/locale";
-import type { ActivityAction, ActivityEntityType } from "@/contexts/ActivityContext";
 
 function KpiCard({
   icon: Icon,
