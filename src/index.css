@@ -139,3 +139,20 @@
     @apply bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))];
   }
 }
+
+/* Leaflet custom pin overrides */
+.custom-map-pin {
+  background: transparent !important;
+  border: none !important;
+}
+.leaflet-popup-content-wrapper {
+  @apply rounded shadow-md border border-border;
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+}
+.leaflet-popup-tip {
+  background: hsl(var(--card));
+}
+.leaflet-popup-close-button {
+  color: hsl(var(--muted-foreground)) !important;
+}
