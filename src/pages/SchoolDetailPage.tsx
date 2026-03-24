@@ -240,6 +240,7 @@ export default function SchoolDetailPage() {
       </Tabs>
 
       <SchoolFormDialog open={editOpen} onOpenChange={setEditOpen} school={school} />
+      <ContactFormDialog open={contactDialogOpen} onOpenChange={setContactDialogOpen} schoolId={school.id} />
     </div>
   );
 }

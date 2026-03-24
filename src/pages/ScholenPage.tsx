@@ -163,7 +163,7 @@ export default function ScholenPage() {
                   <TableCell className="hidden lg:table-cell">{school.province}</TableCell>
                   <TableCell className="hidden md:table-cell">{school.language}</TableCell>
                   <TableCell><StatusBadge status={school.status} /></TableCell>
-                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{school.contact_name}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{getFirstContact(school.id)?.name || "—"}</TableCell>
                 </TableRow>
               ))
             )}
