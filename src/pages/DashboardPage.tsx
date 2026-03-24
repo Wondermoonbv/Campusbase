@@ -1,7 +1,6 @@
-import { useMemo, lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { mockSchools, mockContracts, mockEvents, mockTasks } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
-
 
 const BelgiumMap = lazy(() => import("@/components/dashboard/BelgiumMap"));
 import {
