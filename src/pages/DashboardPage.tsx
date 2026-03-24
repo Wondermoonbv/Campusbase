@@ -178,48 +178,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Recent activity widget */}
-        <div className="surface-card">
-          <div className="p-4 border-b border-border flex items-center justify-between">
-            <h2 className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-primary" /> Recente activiteit
-            </h2>
-            <Link to="/activiteit" className="text-sm text-primary hover:underline">Alle activiteit bekijken</Link>
-          </div>
-          <div className="divide-y divide-border">
-            {recentActivities.length === 0 ? (
-              <p className="p-4 text-sm text-muted-foreground">Nog geen activiteiten.</p>
-            ) : (
-              recentActivities.map((a) => {
-                const ActionIcon = actionIcons[a.action];
-                const EntityIcon = entityIcons[a.entityType];
-                return (
-                  <div key={a.id} className="flex items-center gap-3 px-4 py-3">
-                    <UserAvatar name={a.userName} avatarUrl={a.userAvatarUrl} className="h-7 w-7 shrink-0" fallbackClassName="text-[10px]" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs leading-relaxed">
-                        <span className="font-medium">{a.userName}</span>
-                        {" "}
-                        <span className={`inline-flex items-center gap-0.5 font-medium ${actionColors[a.action]}`}>
-                          <ActionIcon className="h-2.5 w-2.5" />
-                          {a.action}
-                        </span>
-                        {" "}
-                        <span className="inline-flex items-center gap-0.5">
-                          <EntityIcon className="h-2.5 w-2.5 text-muted-foreground" />
-                          <span className="font-medium truncate">{a.entityName}</span>
-                        </span>
-                      </p>
-                    </div>
-                    <time className="text-[10px] text-muted-foreground whitespace-nowrap tabular-nums">
-                      {formatDistanceToNow(new Date(a.timestamp), { addSuffix: true, locale: nl })}
-                    </time>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
       </div>
 
       <Suspense fallback={<div className="surface-card h-[460px] animate-pulse mt-6" />}>
