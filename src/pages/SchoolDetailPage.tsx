@@ -17,6 +17,7 @@ export default function SchoolDetailPage() {
   const school = mockSchools.find((s) => s.id === id);
   const [editOpen, setEditOpen] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [editContact, setEditContact] = useState<typeof contacts[0] | undefined>(undefined);
   const [programDialogOpen, setProgramDialogOpen] = useState(false);
 
   if (!school) {
