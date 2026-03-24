@@ -1,11 +1,12 @@
-import { useMemo } from "react";
-import { mockContracts, mockSchools } from "@/data/mockData";
+import { useMemo, useState } from "react";
+import { mockContracts, mockSchools, mockEvents } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Plus, ChevronDown, ChevronUp, ExternalLink, Calendar } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { ContractFormDialog } from "@/components/contracts/ContractFormDialog";
 
 function getExpiryColor(endDate: string) {
   const now = new Date();
@@ -17,6 +18,10 @@ function getExpiryColor(endDate: string) {
 }
 
 export default function ContractenPage() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editContract, setEditContract] = useState<typeof mockContracts[0] | undefined>();
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   const sorted = useMemo(() => {
     return [...mockContracts].sort(
       (a, b) => new Date(a.end_date).getTime() - new Date(b.end_date).getTime()
@@ -24,10 +29,10 @@ export default function ContractenPage() {
   }, []);
 
   const exportCSV = () => {
-    const headers = ["School", "Type", "Start", "Einde", "Vernieuwing", "Status", "Waarde"];
+    const headers = ["School", "Type", "Start", "Einde", "Vernieuwing", "Status", "Waarde", "Beschrijving"];
     const rows = sorted.map((c) => {
       const school = mockSchools.find((s) => s.id === c.school_id);
-      return [school?.name ?? "", c.contract_type, c.start_date, c.end_date, c.renewal_date, c.status, c.value ?? ""];
+      return [school?.name ?? "", c.contract_type, c.start_date, c.end_date, c.renewal_date, c.status, c.value ?? "", c.description ?? ""];
     });
     const csv = [headers, ...rows].map((r) => r.join(";")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -36,19 +41,35 @@ export default function ContractenPage() {
     a.href = url; a.download = "contracten_export.csv"; a.click();
   };
 
+  const openEdit = (contract: typeof mockContracts[0]) => {
+    setEditContract(contract);
+    setDialogOpen(true);
+  };
+
+  const openCreate = () => {
+    setEditContract(undefined);
+    setDialogOpen(true);
+  };
+
   return (
     <div className="page-container animate-fade-in-up">
       <div className="flex items-center justify-between mb-6">
         <h1>Contracten</h1>
-        <Button variant="outline" size="sm" onClick={exportCSV}>
-          <Download className="h-4 w-4 mr-1" /> Export
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={exportCSV}>
+            <Download className="h-4 w-4 mr-1" /> Export
+          </Button>
+          <Button size="sm" onClick={openCreate}>
+            <Plus className="h-4 w-4 mr-1" /> Contract toevoegen
+          </Button>
+        </div>
       </div>
 
       <div className="surface-card overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-8" />
               <TableHead>School</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Start</TableHead>
@@ -61,16 +82,82 @@ export default function ContractenPage() {
           <TableBody>
             {sorted.map((c) => {
               const school = mockSchools.find((s) => s.id === c.school_id);
+              const isExpanded = expandedId === c.id;
+              const linkedEvents = (c.linked_event_ids || [])
+                .map((eid) => mockEvents.find((e) => e.id === eid))
+                .filter(Boolean);
+
               return (
-                <TableRow key={c.id} className={`hover:bg-muted/30 ${getExpiryColor(c.end_date)}`}>
-                  <TableCell className="font-medium">{school?.name ?? "—"}</TableCell>
-                  <TableCell className="capitalize">{c.contract_type}</TableCell>
-                  <TableCell>{new Date(c.start_date).toLocaleDateString("nl-BE")}</TableCell>
-                  <TableCell>{new Date(c.end_date).toLocaleDateString("nl-BE")}</TableCell>
-                  <TableCell className="hidden md:table-cell">{new Date(c.renewal_date).toLocaleDateString("nl-BE")}</TableCell>
-                  <TableCell><StatusBadge status={c.status} /></TableCell>
-                  <TableCell className="text-right tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
-                </TableRow>
+                <>
+                  <TableRow
+                    key={c.id}
+                    className={`hover:bg-muted/30 cursor-pointer ${getExpiryColor(c.end_date)}`}
+                    onClick={() => setExpandedId(isExpanded ? null : c.id)}
+                  >
+                    <TableCell className="px-2">
+                      {isExpanded ? (
+                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </TableCell>
+                    <TableCell className="font-medium">{school?.name ?? "—"}</TableCell>
+                    <TableCell className="capitalize">{c.contract_type}</TableCell>
+                    <TableCell>{new Date(c.start_date).toLocaleDateString("nl-BE")}</TableCell>
+                    <TableCell>{new Date(c.end_date).toLocaleDateString("nl-BE")}</TableCell>
+                    <TableCell className="hidden md:table-cell">{new Date(c.renewal_date).toLocaleDateString("nl-BE")}</TableCell>
+                    <TableCell><StatusBadge status={c.status} /></TableCell>
+                    <TableCell className="text-right tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
+                  </TableRow>
+                  {isExpanded && (
+                    <TableRow key={`${c.id}-detail`} className="bg-muted/10 hover:bg-muted/10">
+                      <TableCell colSpan={8} className="p-4">
+                        <div className="space-y-3">
+                          {c.description && (
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground mb-1">Beschrijving</p>
+                              <p className="text-sm">{c.description}</p>
+                            </div>
+                          )}
+                          {c.notes && (
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground mb-1">Notities</p>
+                              <p className="text-sm">{c.notes}</p>
+                            </div>
+                          )}
+                          {c.document_url && (
+                            <div>
+                              <a href={c.document_url} target="_blank" rel="noopener" className="text-sm text-primary hover:underline inline-flex items-center gap-1">
+                                <ExternalLink className="h-3 w-3" /> Document bekijken
+                              </a>
+                            </div>
+                          )}
+                          {linkedEvents.length > 0 && (
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground mb-1.5">Gekoppelde evenementen</p>
+                              <div className="flex flex-wrap gap-2">
+                                {linkedEvents.map((event) => (
+                                  <span
+                                    key={event!.id}
+                                    className="inline-flex items-center gap-1.5 text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-md"
+                                  >
+                                    <Calendar className="h-3 w-3" />
+                                    {event!.name} — {new Date(event!.date).toLocaleDateString("nl-BE")}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          <div className="pt-1">
+                            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); openEdit(c); }}>
+                              Bewerken
+                            </Button>
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </>
               );
             })}
           </TableBody>
@@ -81,6 +168,12 @@ export default function ContractenPage() {
           <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-destructive" /> Verlopen</span>
         </div>
       </div>
+
+      <ContractFormDialog
+        open={dialogOpen}
+        onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditContract(undefined); }}
+        contract={editContract}
+      />
     </div>
   );
 }
