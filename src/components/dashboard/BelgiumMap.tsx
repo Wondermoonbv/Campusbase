@@ -73,8 +73,11 @@ export default function BelgiumMap() {
 
     const map = L.map(containerRef.current, {
       center: [50.5, 4.47],
-      zoom: 8,
+      zoom: isMobile ? 7 : 8,
       scrollWheelZoom: false,
+      dragging: true,
+      touchZoom: true,
+      tap: true,
     });
 
     L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
