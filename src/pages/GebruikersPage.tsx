@@ -40,7 +40,7 @@ export default function GebruikersPage() {
         toast.error("E-mailadres is al in gebruik.");
         return;
       }
-      addUser(form);
+      addUser({ ...form, name: fullName });
       toast.success("Gebruiker toegevoegd.");
     }
     setDialogOpen(false);
