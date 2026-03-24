@@ -209,6 +209,9 @@ export function ContractFormDialog({ open, onOpenChange, contract }: ContractFor
               />
             </div>
           </div>
+
+          <div>
+            <Label>Notities</Label>
             <Textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} rows={2} />
           </div>
 
