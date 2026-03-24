@@ -27,11 +27,21 @@ export default function EventenPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const filtered = useMemo(() => {
+    const now = new Date();
+    const in30Days = new Date(now.getTime() + 30 * 86400000);
     return mockEvents.filter((e) => {
       const matchSearch = e.name.toLowerCase().includes(search.toLowerCase()) ||
         e.location.toLowerCase().includes(search.toLowerCase());
       const matchType = filterType === "all" || e.type === filterType;
       const matchStatus = filterStatus === "all" || e.status === filterStatus;
+
+      let matchPeriod = true;
+      if (filterPeriod === "thisYear") {
+        matchPeriod = new Date(e.date).getFullYear() === now.getFullYear();
+      } else if (filterPeriod === "next30") {
+        const d = new Date(e.date);
+        matchPeriod = d >= now && d <= in30Days;
+      }
 
       let matchField = true;
       if (filterFieldOfStudy !== "all") {
