@@ -82,19 +82,21 @@ export default function EventDetailPage() {
           </div>
           <StatusBadge status={event.status} />
         </div>
-        {editing ? (
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => { setForm(event); setSelectedProgramIds(initialProgramIds); setEditing(false); }}>
-              <X className="h-4 w-4 mr-1" /> Annuleren
+        {isAdmin && (
+          editing ? (
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => { setForm(event); setSelectedProgramIds(initialProgramIds); setEditing(false); }}>
+                <X className="h-4 w-4 mr-1" /> Annuleren
+              </Button>
+              <Button size="sm" onClick={handleSave}>
+                <Save className="h-4 w-4 mr-1" /> Opslaan
+              </Button>
+            </div>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+              <Pencil className="h-4 w-4 mr-1" /> Bewerken
             </Button>
-            <Button size="sm" onClick={handleSave}>
-              <Save className="h-4 w-4 mr-1" /> Opslaan
-            </Button>
-          </div>
-        ) : (
-          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-            <Pencil className="h-4 w-4 mr-1" /> Bewerken
-          </Button>
+          )
         )}
       </div>
 
