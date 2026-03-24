@@ -25,6 +25,7 @@ export default function ContractenPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editContract, setEditContract] = useState<typeof mockContracts[0] | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { isAdmin } = useAuth();
 
   const sorted = useMemo(() => {
     let list = [...mockContracts];
