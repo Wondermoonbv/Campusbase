@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { mockTasks as initialTasks, mockSchools, mockEvents } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useActivity } from "@/contexts/ActivityContext";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
