@@ -45,6 +45,7 @@ export default function ScholenPage() {
   const [filterLanguage, setFilterLanguage] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>(searchParams.get("status") ?? "all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editSchool, setEditSchool] = useState<School | undefined>();
   const navigate = useNavigate();
 
