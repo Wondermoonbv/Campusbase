@@ -78,7 +78,7 @@ export default function BelgiumMap() {
       dragging: true,
       touchZoom: true,
       tap: true,
-    });
+    } as L.MapOptions);
 
     L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
       attribution: '&copy; <a href="https://carto.com">CARTO</a>',
