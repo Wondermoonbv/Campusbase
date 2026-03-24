@@ -9,7 +9,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Search, Download, Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, Download, Plus, ChevronDown, ChevronRight, Pencil } from "lucide-react";
 import { FIELDS_OF_STUDY } from "@/types/crm";
 import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
 import { StatusBadge } from "@/components/ui/StatusBadge";
