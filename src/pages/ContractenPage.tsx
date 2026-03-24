@@ -73,9 +73,11 @@ export default function ContractenPage() {
           <Button variant="outline" size="sm" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-1" /> Export
           </Button>
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4 mr-1" /> Contract toevoegen
-          </Button>
+          {isAdmin && (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4 mr-1" /> Contract toevoegen
+            </Button>
+          )}
         </div>
       </div>
 
