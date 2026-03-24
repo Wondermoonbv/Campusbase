@@ -4,6 +4,7 @@ export type SchoolType = "universiteit" | "hogeschool" | "secundair";
 export type Language = "NL" | "FR" | "EN";
 export type SchoolStatus = "actief" | "inactief" | "prospect";
 export type StudyLevel = "bachelor" | "master" | "graduaat";
+export type ContractType = "partnership" | "sponsoring" | "stage-overeenkomst" | "andere";
 export type StandType = "jobbeurs stand" | "infotafel" | "presentatie" | "workshop" | "anders";
 export type StandSize = "klein 2m²" | "medium 4m²" | "groot 6m²+" | "anders";
 export type ContractStatus = "actief" | "verlopen" | "in onderhandeling";
