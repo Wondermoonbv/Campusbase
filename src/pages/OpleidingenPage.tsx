@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { mockPrograms, mockSchools } from "@/data/mockData";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,13 +9,16 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Search, Download } from "lucide-react";
+import { Search, Download, Plus } from "lucide-react";
 import { FIELDS_OF_STUDY } from "@/types/crm";
+import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
 
 export default function OpleidingenPage() {
   const [search, setSearch] = useState("");
   const [filterLevel, setFilterLevel] = useState("all");
   const [filterField, setFilterField] = useState("all");
+  const [filterSchool, setFilterSchool] = useState("all");
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const enriched = useMemo(() => {
     return mockPrograms.map((p) => ({
@@ -29,9 +33,10 @@ export default function OpleidingenPage() {
         (p.school?.name ?? "").toLowerCase().includes(search.toLowerCase());
       const matchLevel = filterLevel === "all" || p.study_level === filterLevel;
       const matchField = filterField === "all" || p.field_of_study === filterField;
-      return matchSearch && matchLevel && matchField;
+      const matchSchool = filterSchool === "all" || p.school_id === filterSchool;
+      return matchSearch && matchLevel && matchField && matchSchool;
     });
-  }, [enriched, search, filterLevel, filterField]);
+  }, [enriched, search, filterLevel, filterField, filterSchool]);
 
   const exportCSV = () => {
     const headers = ["Opleiding", "School", "Faculteit", "Niveau", "Studierichting", "Studenten"];
@@ -46,9 +51,14 @@ export default function OpleidingenPage() {
     <div className="page-container animate-fade-in-up">
       <div className="flex items-center justify-between mb-6">
         <h1>Opleidingen</h1>
-        <Button variant="outline" size="sm" onClick={exportCSV}>
-          <Download className="h-4 w-4 mr-1" /> Export
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={exportCSV}>
+            <Download className="h-4 w-4 mr-1" /> Export
+          </Button>
+          <Button size="sm" onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" /> Nieuwe opleiding
+          </Button>
+        </div>
       </div>
 
       <div className="surface-card p-4 mb-4">
@@ -57,6 +67,13 @@ export default function OpleidingenPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Zoeken..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
           </div>
+          <Select value={filterSchool} onValueChange={setFilterSchool}>
+            <SelectTrigger className="w-[180px]"><SelectValue placeholder="School" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle scholen</SelectItem>
+              {mockSchools.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
           <Select value={filterLevel} onValueChange={setFilterLevel}>
             <SelectTrigger className="w-[150px]"><SelectValue placeholder="Niveau" /></SelectTrigger>
             <SelectContent>
@@ -97,7 +114,11 @@ export default function OpleidingenPage() {
               filtered.map((p) => (
                 <TableRow key={p.id} className="hover:bg-muted/30">
                   <TableCell className="font-medium">{p.name}</TableCell>
-                  <TableCell>{p.school?.name}</TableCell>
+                  <TableCell>
+                    <Link to={`/scholen/${p.school_id}`} className="text-primary hover:underline">
+                      {p.school?.name}
+                    </Link>
+                  </TableCell>
                   <TableCell className="hidden md:table-cell">{p.faculty}</TableCell>
                   <TableCell className="capitalize">{p.study_level}</TableCell>
                   <TableCell className="hidden md:table-cell">{p.field_of_study}</TableCell>
@@ -111,6 +132,8 @@ export default function OpleidingenPage() {
           {filtered.length} opleiding{filtered.length !== 1 ? "en" : ""} gevonden
         </div>
       </div>
+
+      <ProgramFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </div>
   );
 }
