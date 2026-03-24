@@ -9,21 +9,26 @@ import {
   Users,
 } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function KpiCard({
   icon: Icon,
   label,
   value,
   accent = false,
+  to,
 }: {
   icon: React.ElementType;
   label: string;
   value: string | number;
   accent?: boolean;
+  to: string;
 }) {
   return (
-    <div className="surface-card p-5 flex items-start gap-4">
+    <Link
+      to={to}
+      className="surface-card p-5 flex items-start gap-4 cursor-pointer transition-[box-shadow,background-color] hover:shadow-md hover:bg-muted/30"
+    >
       <div
         className={`flex items-center justify-center w-10 h-10 rounded ${
           accent ? "bg-accent/10" : "bg-primary/10"
@@ -35,7 +40,7 @@ function KpiCard({
         <p className="text-sm text-muted-foreground">{label}</p>
         <p className="text-2xl font-semibold mt-0.5 tabular-nums">{value}</p>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -62,10 +67,10 @@ export default function DashboardPage() {
       <h1 className="mb-6">Dashboard</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <KpiCard icon={GraduationCap} label="Actieve partnerschappen" value={activeSchools} />
-        <KpiCard icon={CalendarDays} label="Evenementen dit jaar" value={eventsThisYear} />
-        <KpiCard icon={TrendingUp} label="Komende 30 dagen" value={upcomingEvents.length} accent />
-        <KpiCard icon={AlertTriangle} label="Contracten vervallen < 90d" value={expiringContracts.length} accent />
+        <KpiCard icon={GraduationCap} label="Actieve partnerschappen" value={activeSchools} to="/scholen?status=actief" />
+        <KpiCard icon={CalendarDays} label="Evenementen dit jaar" value={eventsThisYear} to="/evenementen?period=thisYear" />
+        <KpiCard icon={TrendingUp} label="Komende 30 dagen" value={upcomingEvents.length} accent to="/evenementen?period=next30" />
+        <KpiCard icon={AlertTriangle} label="Contracten vervallen < 90d" value={expiringContracts.length} accent to="/contracten?expiring=90" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -82,7 +87,11 @@ export default function DashboardPage() {
               <p className="p-4 text-sm text-muted-foreground">Geen evenementen in de komende 30 dagen.</p>
             ) : (
               upcomingEvents.slice(0, 5).map((ev) => (
-                <div key={ev.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                <Link
+                  key={ev.id}
+                  to={`/evenementen/${ev.id}`}
+                  className="p-4 flex items-center justify-between hover:bg-muted/30 transition-[background-color,box-shadow] hover:shadow-sm cursor-pointer block"
+                >
                   <div>
                     <p className="text-sm font-medium">{ev.name}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -90,7 +99,7 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <StatusBadge status={ev.status} />
-                </div>
+                </Link>
               ))
             )}
           </div>
@@ -111,7 +120,11 @@ export default function DashboardPage() {
               expiringContracts.map((c) => {
                 const school = mockSchools.find((s) => s.id === c.school_id);
                 return (
-                  <div key={c.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                  <Link
+                    key={c.id}
+                    to={`/contracten`}
+                    className="p-4 flex items-center justify-between hover:bg-muted/30 transition-[background-color,box-shadow] hover:shadow-sm cursor-pointer block"
+                  >
                     <div>
                       <p className="text-sm font-medium">{school?.name}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
@@ -119,7 +132,7 @@ export default function DashboardPage() {
                       </p>
                     </div>
                     <StatusBadge status={c.status} />
-                  </div>
+                  </Link>
                 );
               })
             )}
