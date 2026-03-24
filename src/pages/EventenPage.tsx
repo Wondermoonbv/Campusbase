@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { mockEvents, mockSchools, mockPrograms, mockEventPrograms } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -16,19 +16,32 @@ import { FIELDS_OF_STUDY } from "@/types/crm";
 
 export default function EventenPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialPeriod = searchParams.get("period") ?? "all"; // "thisYear" or "next30"
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterFieldOfStudy, setFilterFieldOfStudy] = useState("all");
+  const [filterPeriod] = useState(initialPeriod);
   const [view, setView] = useState<"list" | "calendar">("list");
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const filtered = useMemo(() => {
+    const now = new Date();
+    const in30Days = new Date(now.getTime() + 30 * 86400000);
     return mockEvents.filter((e) => {
       const matchSearch = e.name.toLowerCase().includes(search.toLowerCase()) ||
         e.location.toLowerCase().includes(search.toLowerCase());
       const matchType = filterType === "all" || e.type === filterType;
       const matchStatus = filterStatus === "all" || e.status === filterStatus;
+
+      let matchPeriod = true;
+      if (filterPeriod === "thisYear") {
+        matchPeriod = new Date(e.date).getFullYear() === now.getFullYear();
+      } else if (filterPeriod === "next30") {
+        const d = new Date(e.date);
+        matchPeriod = d >= now && d <= in30Days;
+      }
 
       let matchField = true;
       if (filterFieldOfStudy !== "all") {
@@ -39,9 +52,9 @@ export default function EventenPage() {
         matchField = linkedPrograms.some((p) => p.field_of_study === filterFieldOfStudy);
       }
 
-      return matchSearch && matchType && matchStatus && matchField;
+      return matchSearch && matchType && matchStatus && matchField && matchPeriod;
     });
-  }, [search, filterType, filterStatus, filterFieldOfStudy]);
+  }, [search, filterType, filterStatus, filterFieldOfStudy, filterPeriod]);
 
   const byMonth = useMemo(() => {
     const groups: Record<string, typeof filtered> = {};

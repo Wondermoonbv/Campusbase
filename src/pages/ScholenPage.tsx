@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { mockSchools, mockContacts } from "@/data/mockData";
 import { School, SchoolType, SchoolStatus, Language, PROVINCES } from "@/types/crm";
 import { Input } from "@/components/ui/input";
@@ -25,11 +26,12 @@ import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
 
 
 export default function ScholenPage() {
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [filterProvince, setFilterProvince] = useState<string>("all");
   const [filterLanguage, setFilterLanguage] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>(searchParams.get("status") ?? "all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editSchool, setEditSchool] = useState<School | undefined>();
   const navigate = useNavigate();

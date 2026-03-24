@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { mockContracts, mockSchools, mockEvents } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -18,15 +19,26 @@ function getExpiryColor(endDate: string) {
 }
 
 export default function ContractenPage() {
+  const [searchParams] = useSearchParams();
+  const filterExpiring = searchParams.get("expiring") === "90";
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editContract, setEditContract] = useState<typeof mockContracts[0] | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const sorted = useMemo(() => {
-    return [...mockContracts].sort(
+    let list = [...mockContracts];
+    if (filterExpiring) {
+      const now = new Date();
+      const in90 = new Date(now.getTime() + 90 * 86400000);
+      list = list.filter((c) => {
+        const d = new Date(c.end_date);
+        return d >= now && d <= in90 && c.status === "actief";
+      });
+    }
+    return list.sort(
       (a, b) => new Date(a.end_date).getTime() - new Date(b.end_date).getTime()
     );
-  }, []);
+  }, [filterExpiring]);
 
   const exportCSV = () => {
     const headers = ["School", "Type", "Start", "Einde", "Vernieuwing", "Status", "Waarde", "Beschrijving"];
