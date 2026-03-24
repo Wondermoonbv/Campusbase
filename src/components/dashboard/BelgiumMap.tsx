@@ -152,7 +152,7 @@ export default function BelgiumMap() {
 
   return (
     <div className="surface-card overflow-hidden">
-      <div className="p-4 border-b border-border flex items-center justify-between">
+      <div className="p-3 sm:p-4 border-b border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <h2>België overzicht</h2>
         <ToggleGroup
           type="single"
@@ -162,19 +162,19 @@ export default function BelgiumMap() {
         >
           <ToggleGroupItem value="both" aria-label="Beide">
             <Layers className="h-4 w-4 mr-1.5" />
-            Beide
+            <span className="hidden sm:inline">Beide</span>
           </ToggleGroupItem>
           <ToggleGroupItem value="schools" aria-label="Scholen">
             <GraduationCap className="h-4 w-4 mr-1.5" />
-            Scholen
+            <span className="hidden sm:inline">Scholen</span>
           </ToggleGroupItem>
           <ToggleGroupItem value="events" aria-label="Evenementen">
             <CalendarDays className="h-4 w-4 mr-1.5" />
-            Evenementen
+            <span className="hidden sm:inline">Evenementen</span>
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
-      <div ref={containerRef} className="h-[400px]" style={{ zIndex: 0 }} />
+      <div ref={containerRef} className="h-[280px] sm:h-[400px]" style={{ zIndex: 0 }} />
     </div>
   );
 }
