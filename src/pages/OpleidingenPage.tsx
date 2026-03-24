@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { mockPrograms, mockSchools } from "@/data/mockData";
+import { mockPrograms, mockSchools, mockEvents, mockEventPrograms } from "@/data/mockData";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,9 +9,10 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Search, Download, Plus } from "lucide-react";
+import { Search, Download, Plus, ChevronDown, ChevronRight } from "lucide-react";
 import { FIELDS_OF_STUDY } from "@/types/crm";
 import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 export default function OpleidingenPage() {
   const [search, setSearch] = useState("");
@@ -19,11 +20,16 @@ export default function OpleidingenPage() {
   const [filterField, setFilterField] = useState("all");
   const [filterSchool, setFilterSchool] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const enriched = useMemo(() => {
     return mockPrograms.map((p) => ({
       ...p,
       school: mockSchools.find((s) => s.id === p.school_id),
+      linkedEvents: mockEventPrograms
+        .filter((ep) => ep.program_id === p.id)
+        .map((ep) => mockEvents.find((e) => e.id === ep.event_id))
+        .filter(Boolean),
     }));
   }, []);
 
@@ -97,6 +103,7 @@ export default function OpleidingenPage() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-8"></TableHead>
               <TableHead>Opleiding</TableHead>
               <TableHead>School</TableHead>
               <TableHead className="hidden md:table-cell">Faculteit</TableHead>
@@ -108,22 +115,55 @@ export default function OpleidingenPage() {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Geen opleidingen gevonden.</TableCell>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Geen opleidingen gevonden.</TableCell>
               </TableRow>
             ) : (
               filtered.map((p) => (
-                <TableRow key={p.id} className="hover:bg-muted/30">
-                  <TableCell className="font-medium">{p.name}</TableCell>
-                  <TableCell>
-                    <Link to={`/scholen/${p.school_id}`} className="text-primary hover:underline">
-                      {p.school?.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{p.faculty}</TableCell>
-                  <TableCell className="capitalize">{p.study_level}</TableCell>
-                  <TableCell className="hidden md:table-cell">{p.field_of_study}</TableCell>
-                  <TableCell className="text-right tabular-nums">{p.student_count ?? "—"}</TableCell>
-                </TableRow>
+                <>
+                  <TableRow
+                    key={p.id}
+                    className="hover:bg-muted/30 cursor-pointer"
+                    onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}
+                  >
+                    <TableCell className="px-2">
+                      {p.linkedEvents.length > 0 && (
+                        expandedId === p.id
+                          ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          : <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </TableCell>
+                    <TableCell className="font-medium">{p.name}</TableCell>
+                    <TableCell>
+                      <Link to={`/scholen/${p.school_id}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
+                        {p.school?.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">{p.faculty}</TableCell>
+                    <TableCell className="capitalize">{p.study_level}</TableCell>
+                    <TableCell className="hidden md:table-cell">{p.field_of_study}</TableCell>
+                    <TableCell className="text-right tabular-nums">{p.student_count ?? "—"}</TableCell>
+                  </TableRow>
+                  {expandedId === p.id && p.linkedEvents.length > 0 && (
+                    <TableRow key={`${p.id}-events`}>
+                      <TableCell colSpan={7} className="bg-muted/20 px-6 py-3">
+                        <p className="text-xs font-semibold text-muted-foreground mb-2">Gekoppelde evenementen</p>
+                        <div className="flex flex-wrap gap-2">
+                          {p.linkedEvents.map((ev) => ev && (
+                            <Link
+                              key={ev.id}
+                              to={`/evenementen/${ev.id}`}
+                              className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted/50 transition-colors"
+                            >
+                              <span className="font-medium">{ev.name}</span>
+                              <span className="text-muted-foreground">{new Date(ev.date).toLocaleDateString("nl-BE")}</span>
+                              <StatusBadge status={ev.status} />
+                            </Link>
+                          ))}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </>
               ))
             )}
           </TableBody>
