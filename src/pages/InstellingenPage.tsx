@@ -46,11 +46,11 @@ function ProfileTab() {
         <p className="text-sm text-muted-foreground">Beheer je persoonlijke gegevens.</p>
       </div>
 
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-4 sm:gap-5">
         <div className="relative group">
-          <Avatar className="h-20 w-20 border-2 border-border">
+          <Avatar className="h-16 w-16 sm:h-20 sm:w-20 border-2 border-border">
             <AvatarImage src={avatarUrl} />
-            <AvatarFallback className="text-lg font-semibold bg-primary/10 text-primary">{initials}</AvatarFallback>
+            <AvatarFallback className="text-base sm:text-lg font-semibold bg-primary/10 text-primary">{initials}</AvatarFallback>
           </Avatar>
           <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
             <Camera className="h-5 w-5 text-white" />
@@ -66,19 +66,19 @@ function ProfileTab() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
         <div className="space-y-1.5">
           <Label htmlFor="firstName">Voornaam</Label>
-          <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+          <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-10 sm:h-9" />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="lastName">Achternaam</Label>
-          <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+          <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} className="h-10 sm:h-9" />
         </div>
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="email">E-mailadres</Label>
-          <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-10 sm:h-9" />
         </div>
       </div>
 
-      <Button onClick={handleSave} className="gap-1.5">
+      <Button onClick={handleSave} className="gap-1.5 h-10 sm:h-9">
         <Check className="h-4 w-4" /> Opslaan
       </Button>
     </div>
@@ -124,19 +124,19 @@ function SecurityTab() {
       <div className="space-y-4 max-w-sm">
         <div className="space-y-1.5">
           <Label htmlFor="currentPass">Huidig wachtwoord</Label>
-          <Input id="currentPass" type="password" value={current} onChange={(e) => setCurrent(e.target.value)} />
+          <Input id="currentPass" type="password" value={current} onChange={(e) => setCurrent(e.target.value)} className="h-10 sm:h-9" />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="newPass">Nieuw wachtwoord</Label>
-          <Input id="newPass" type="password" value={newPass} onChange={(e) => setNewPass(e.target.value)} />
+          <Input id="newPass" type="password" value={newPass} onChange={(e) => setNewPass(e.target.value)} className="h-10 sm:h-9" />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="confirmPass">Bevestig nieuw wachtwoord</Label>
-          <Input id="confirmPass" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+          <Input id="confirmPass" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className="h-10 sm:h-9" />
         </div>
       </div>
 
-      <Button onClick={handleSave} className="gap-1.5">
+      <Button onClick={handleSave} className="gap-1.5 h-10 sm:h-9">
         <Check className="h-4 w-4" /> Wachtwoord wijzigen
       </Button>
     </div>
@@ -167,8 +167,8 @@ function NotificationsTab() {
 
       <div className="space-y-1">
         {items.map((item) => (
-          <div key={item.key} className="flex items-center justify-between py-4 border-b border-border last:border-0">
-            <div className="pr-8">
+          <div key={item.key} className="flex items-center justify-between py-4 border-b border-border last:border-0 gap-4">
+            <div className="min-w-0">
               <p className="text-sm font-medium text-foreground">{item.label}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
             </div>
@@ -221,7 +221,7 @@ function PlatformTab() {
         <div className="space-y-1.5">
           <Label>Standaard taal</Label>
           <Select value={platformSettings.defaultLanguage} onValueChange={(v) => updatePlatformSettings({ defaultLanguage: v as "nl" | "fr" | "en" })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="nl">Nederlands</SelectItem>
               <SelectItem value="fr">Frans</SelectItem>
@@ -233,7 +233,7 @@ function PlatformTab() {
         <div className="space-y-1.5">
           <Label>Standaard weergave evenementen</Label>
           <Select value={platformSettings.defaultEventView} onValueChange={(v) => updatePlatformSettings({ defaultEventView: v as "list" | "calendar" })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="list">Lijst</SelectItem>
               <SelectItem value="calendar">Kalender</SelectItem>
@@ -243,7 +243,7 @@ function PlatformTab() {
 
         <div className="space-y-1.5">
           <Label htmlFor="companyName">Bedrijfsnaam</Label>
-          <Input id="companyName" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Elia Campus" />
+          <Input id="companyName" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Elia Campus" className="h-10 sm:h-9" />
         </div>
 
         <div className="space-y-1.5">
@@ -251,7 +251,7 @@ function PlatformTab() {
           <div className="flex items-center gap-3">
             {logoUrl && <img src={logoUrl} alt="Logo" className="h-10 w-10 rounded object-contain border border-border" />}
             <label className="cursor-pointer">
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" className="h-10 sm:h-8" asChild>
                 <span><Camera className="h-3.5 w-3.5 mr-1.5" /> Logo uploaden</span>
               </Button>
               <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
@@ -260,7 +260,7 @@ function PlatformTab() {
         </div>
       </div>
 
-      <Button onClick={handleSave} className="gap-1.5">
+      <Button onClick={handleSave} className="gap-1.5 h-10 sm:h-9">
         <Check className="h-4 w-4" /> Opslaan
       </Button>
     </div>
@@ -270,15 +270,15 @@ function PlatformTab() {
 export default function InstellingenPage() {
   return (
     <div className="page-container animate-fade-in-up">
-      <h1 className="mb-6">Instellingen</h1>
+      <h1 className="mb-4 sm:mb-6">Instellingen</h1>
 
-      <div className="surface-card p-6">
+      <div className="surface-card p-4 sm:p-6">
         <Tabs defaultValue="profiel">
-          <TabsList className="mb-6">
-            <TabsTrigger value="profiel" className="gap-1.5"><User className="h-3.5 w-3.5" /> Profiel</TabsTrigger>
-            <TabsTrigger value="beveiliging" className="gap-1.5"><Shield className="h-3.5 w-3.5" /> Beveiliging</TabsTrigger>
-            <TabsTrigger value="notificaties" className="gap-1.5"><Bell className="h-3.5 w-3.5" /> Notificaties</TabsTrigger>
-            <TabsTrigger value="platform" className="gap-1.5"><Settings className="h-3.5 w-3.5" /> Platform</TabsTrigger>
+          <TabsList className="mb-4 sm:mb-6 w-full sm:w-auto overflow-x-auto">
+            <TabsTrigger value="profiel" className="gap-1.5 text-xs sm:text-sm"><User className="h-3.5 w-3.5" /> Profiel</TabsTrigger>
+            <TabsTrigger value="beveiliging" className="gap-1.5 text-xs sm:text-sm"><Shield className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Beveiliging</span><span className="sm:hidden">Beveil.</span></TabsTrigger>
+            <TabsTrigger value="notificaties" className="gap-1.5 text-xs sm:text-sm"><Bell className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Notificaties</span><span className="sm:hidden">Notif.</span></TabsTrigger>
+            <TabsTrigger value="platform" className="gap-1.5 text-xs sm:text-sm"><Settings className="h-3.5 w-3.5" /> Platform</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profiel"><ProfileTab /></TabsContent>

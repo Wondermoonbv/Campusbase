@@ -50,14 +50,14 @@ export default function SchoolDetailPage() {
       </Link>
 
       {/* Header */}
-      <div className="surface-card p-6 mb-6">
-        <div className="flex items-start justify-between">
+      <div className="surface-card p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1>{school.name}</h1>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+              <h1 className="text-lg sm:text-2xl">{school.name}</h1>
               <StatusBadge status={school.status} />
             </div>
-            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+            <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
               <span className="capitalize">{school.type}</span>
               <span>{school.city}, {school.province}</span>
               <span>{school.language}</span>
@@ -65,18 +65,17 @@ export default function SchoolDetailPage() {
           </div>
           {isAdmin && (
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setTaskDialogOpen(true)}>
+              <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => setTaskDialogOpen(true)}>
                 <CheckSquare className="h-4 w-4 mr-1" /> Taak
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+              <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => setEditOpen(true)}>
                 <Edit className="h-4 w-4 mr-1" /> Bewerken
               </Button>
             </div>
           )}
         </div>
 
-        {/* Website link */}
-        <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-6 text-sm">
+        <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-4 sm:gap-6 text-sm">
           {school.website && (
             <a href={school.website} target="_blank" rel="noopener" className="text-primary hover:underline inline-flex items-center gap-1">
               <ExternalLink className="h-3 w-3" /> Website
@@ -89,12 +88,12 @@ export default function SchoolDetailPage() {
       </div>
 
       {/* Contactpersonen */}
-      <div className="surface-card p-6 mb-6">
+      <div className="surface-card p-4 sm:p-6 mb-4 sm:mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Contactpersonen ({contacts.length})</h2>
+          <h2 className="text-base sm:text-lg font-semibold">Contactpersonen ({contacts.length})</h2>
           {isAdmin && (
-            <Button size="sm" variant="outline" onClick={() => { setEditContact(undefined); setContactDialogOpen(true); }}>
-              <Plus className="h-4 w-4 mr-1" /> Contact toevoegen
+            <Button size="sm" variant="outline" className="h-10 sm:h-8" onClick={() => { setEditContact(undefined); setContactDialogOpen(true); }}>
+              <Plus className="h-4 w-4 mr-1" /> Contact
             </Button>
           )}
         </div>
@@ -103,7 +102,7 @@ export default function SchoolDetailPage() {
         ) : (
           <div className="grid gap-3">
             {contacts.map((contact) => (
-              <div key={contact.id} className="flex items-start gap-4 p-3 rounded-lg border border-border bg-muted/20">
+              <div key={contact.id} className="flex items-start gap-3 sm:gap-4 p-3 rounded-lg border border-border bg-muted/20">
                 <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <User className="h-4 w-4 text-primary" />
                 </div>
@@ -115,15 +114,15 @@ export default function SchoolDetailPage() {
                   {contact.department && (
                     <p className="text-xs text-muted-foreground">{contact.department}</p>
                   )}
-                  <div className="flex flex-wrap gap-3 mt-1.5 text-xs">
+                  <div className="flex flex-wrap gap-2 sm:gap-3 mt-1.5 text-xs">
                     {contact.email && (
-                      <a href={`mailto:${contact.email}`} className="text-primary hover:underline inline-flex items-center gap-1">
-                        <Mail className="h-3 w-3" /> {contact.email}
+                      <a href={`mailto:${contact.email}`} className="text-primary hover:underline inline-flex items-center gap-1 break-all">
+                        <Mail className="h-3 w-3 shrink-0" /> {contact.email}
                       </a>
                     )}
                     {contact.phone && (
                       <a href={`tel:${contact.phone}`} className="text-muted-foreground inline-flex items-center gap-1">
-                        <Phone className="h-3 w-3" /> {contact.phone}
+                        <Phone className="h-3 w-3 shrink-0" /> {contact.phone}
                       </a>
                     )}
                     {contact.linkedin_url && (
@@ -132,9 +131,6 @@ export default function SchoolDetailPage() {
                       </a>
                     )}
                   </div>
-                  {contact.notes && (
-                    <p className="text-xs text-muted-foreground mt-1">{contact.notes}</p>
-                  )}
                 </div>
                 {isAdmin && (
                   <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => { setEditContact(contact); setContactDialogOpen(true); }}>
@@ -148,122 +144,184 @@ export default function SchoolDetailPage() {
       </div>
 
       <Tabs defaultValue="programs">
-        <TabsList>
-          <TabsTrigger value="programs">Opleidingen ({programs.length})</TabsTrigger>
-          <TabsTrigger value="contracts">Contracten ({contracts.length})</TabsTrigger>
-          <TabsTrigger value="events">Evenementen ({events.length})</TabsTrigger>
+        <TabsList className="w-full sm:w-auto overflow-x-auto">
+          <TabsTrigger value="programs" className="text-xs sm:text-sm">Opleidingen ({programs.length})</TabsTrigger>
+          <TabsTrigger value="contracts" className="text-xs sm:text-sm">Contracten ({contracts.length})</TabsTrigger>
+          <TabsTrigger value="events" className="text-xs sm:text-sm">Evenementen ({events.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="programs" className="mt-4">
           <div className="surface-card overflow-hidden">
-            <div className="flex items-center justify-between p-4 pb-0">
+            <div className="flex items-center justify-between p-3 sm:p-4 pb-0">
               <span className="text-sm text-muted-foreground">{programs.length} opleiding{programs.length !== 1 ? "en" : ""}</span>
               {isAdmin && (
-                <Button size="sm" variant="outline" onClick={() => setProgramDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-1" /> Opleiding toevoegen
+                <Button size="sm" variant="outline" className="h-9 sm:h-8" onClick={() => setProgramDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> Toevoegen
                 </Button>
               )}
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Opleiding</TableHead>
-                  <TableHead>Faculteit</TableHead>
-                  <TableHead>Niveau</TableHead>
-                  <TableHead>Studierichting</TableHead>
-                  <TableHead>Studenten</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {programs.length === 0 ? (
+            {/* Mobile card view */}
+            <div className="block md:hidden divide-y divide-border">
+              {programs.length === 0 ? (
+                <p className="p-4 text-center text-sm text-muted-foreground">Geen opleidingen gekoppeld.</p>
+              ) : (
+                programs.map((p) => (
+                  <div key={p.id} className="p-4">
+                    <p className="font-medium text-sm">{p.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{p.faculty} · <span className="capitalize">{p.study_level}</span> · {p.field_of_study}</p>
+                    {p.student_count && <p className="text-xs text-muted-foreground mt-0.5">{p.student_count} studenten</p>}
+                  </div>
+                ))
+              )}
+            </div>
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                      Geen opleidingen gekoppeld.
-                    </TableCell>
+                    <TableHead>Opleiding</TableHead>
+                    <TableHead>Faculteit</TableHead>
+                    <TableHead>Niveau</TableHead>
+                    <TableHead className="hidden lg:table-cell">Studierichting</TableHead>
+                    <TableHead>Studenten</TableHead>
                   </TableRow>
-                ) : (
-                  programs.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="font-medium">{p.name}</TableCell>
-                      <TableCell>{p.faculty}</TableCell>
-                      <TableCell className="capitalize">{p.study_level}</TableCell>
-                      <TableCell>{p.field_of_study}</TableCell>
-                      <TableCell className="tabular-nums">{p.student_count ?? "—"}</TableCell>
+                </TableHeader>
+                <TableBody>
+                  {programs.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                        Geen opleidingen gekoppeld.
+                      </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    programs.map((p) => (
+                      <TableRow key={p.id}>
+                        <TableCell className="font-medium">{p.name}</TableCell>
+                        <TableCell>{p.faculty}</TableCell>
+                        <TableCell className="capitalize">{p.study_level}</TableCell>
+                        <TableCell className="hidden lg:table-cell">{p.field_of_study}</TableCell>
+                        <TableCell className="tabular-nums">{p.student_count ?? "—"}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </TabsContent>
 
         <TabsContent value="contracts" className="mt-4">
           <div className="surface-card overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Start</TableHead>
-                  <TableHead>Einde</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Waarde</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {contracts.length === 0 ? (
+            {/* Mobile card view */}
+            <div className="block md:hidden divide-y divide-border">
+              {contracts.length === 0 ? (
+                <p className="p-4 text-center text-sm text-muted-foreground">Geen contracten gekoppeld.</p>
+              ) : (
+                contracts.map((c) => (
+                  <div key={c.id} className="p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-medium text-sm capitalize">{c.contract_type}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {new Date(c.start_date).toLocaleDateString("nl-BE")} → {new Date(c.end_date).toLocaleDateString("nl-BE")}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <StatusBadge status={c.status} />
+                        {c.value && <span className="text-xs tabular-nums">€{c.value.toLocaleString("nl-BE")}</span>}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                      Geen contracten gekoppeld.
-                    </TableCell>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Start</TableHead>
+                    <TableHead>Einde</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Waarde</TableHead>
                   </TableRow>
-                ) : (
-                  contracts.map((c) => (
-                    <TableRow key={c.id}>
-                      <TableCell className="capitalize font-medium">{c.contract_type}</TableCell>
-                      <TableCell>{new Date(c.start_date).toLocaleDateString("nl-BE")}</TableCell>
-                      <TableCell>{new Date(c.end_date).toLocaleDateString("nl-BE")}</TableCell>
-                      <TableCell><StatusBadge status={c.status} /></TableCell>
-                      <TableCell className="tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
+                </TableHeader>
+                <TableBody>
+                  {contracts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                        Geen contracten gekoppeld.
+                      </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    contracts.map((c) => (
+                      <TableRow key={c.id}>
+                        <TableCell className="capitalize font-medium">{c.contract_type}</TableCell>
+                        <TableCell>{new Date(c.start_date).toLocaleDateString("nl-BE")}</TableCell>
+                        <TableCell>{new Date(c.end_date).toLocaleDateString("nl-BE")}</TableCell>
+                        <TableCell><StatusBadge status={c.status} /></TableCell>
+                        <TableCell className="tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </TabsContent>
 
         <TabsContent value="events" className="mt-4">
           <div className="surface-card overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Evenement</TableHead>
-                  <TableHead>Datum</TableHead>
-                  <TableHead>Elia medewerkers</TableHead>
-                  <TableHead>Studentcontacten</TableHead>
-                  <TableHead>Beoordeling</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {events.length === 0 ? (
+            {/* Mobile card view */}
+            <div className="block md:hidden divide-y divide-border">
+              {events.length === 0 ? (
+                <p className="p-4 text-center text-sm text-muted-foreground">Geen evenementdeelnames.</p>
+              ) : (
+                events.map((p) => (
+                  <div key={p.id} className="p-4">
+                    <p className="font-medium text-sm">{p.event!.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {new Date(p.event!.date).toLocaleDateString("nl-BE")} · {p.staff_count} medewerkers · {p.student_contacts} studenten
+                    </p>
+                    {p.rating && <p className="text-xs text-muted-foreground">{p.rating}/5</p>}
+                  </div>
+                ))
+              )}
+            </div>
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                      Geen evenementdeelnames.
-                    </TableCell>
+                    <TableHead>Evenement</TableHead>
+                    <TableHead>Datum</TableHead>
+                    <TableHead>Elia medewerkers</TableHead>
+                    <TableHead>Studentcontacten</TableHead>
+                    <TableHead>Beoordeling</TableHead>
                   </TableRow>
-                ) : (
-                  events.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="font-medium">{p.event!.name}</TableCell>
-                      <TableCell>{new Date(p.event!.date).toLocaleDateString("nl-BE")}</TableCell>
-                      <TableCell className="tabular-nums">{p.staff_count}</TableCell>
-                      <TableCell className="tabular-nums">{p.student_contacts}</TableCell>
-                      <TableCell>{p.rating ? `${p.rating}/5` : "—"}</TableCell>
+                </TableHeader>
+                <TableBody>
+                  {events.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                        Geen evenementdeelnames.
+                      </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    events.map((p) => (
+                      <TableRow key={p.id}>
+                        <TableCell className="font-medium">{p.event!.name}</TableCell>
+                        <TableCell>{new Date(p.event!.date).toLocaleDateString("nl-BE")}</TableCell>
+                        <TableCell className="tabular-nums">{p.staff_count}</TableCell>
+                        <TableCell className="tabular-nums">{p.student_contacts}</TableCell>
+                        <TableCell>{p.rating ? `${p.rating}/5` : "—"}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </TabsContent>
       </Tabs>

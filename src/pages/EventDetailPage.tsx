@@ -74,33 +74,33 @@ export default function EventDetailPage() {
 
   return (
     <div className="page-container animate-fade-in-up max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/evenementen")}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <Button variant="ghost" size="sm" className="shrink-0" onClick={() => navigate("/evenementen")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div>
-            <h1 className="text-xl font-semibold">{event.name}</h1>
-            <p className="text-sm text-muted-foreground">{event.location}</p>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-semibold truncate">{event.name}</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">{event.location}</p>
           </div>
           <StatusBadge status={event.status} />
         </div>
         {isAdmin && (
           editing ? (
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => { setForm(event); setSelectedProgramIds(initialProgramIds); setEditing(false); }}>
+              <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => { setForm(event); setSelectedProgramIds(initialProgramIds); setEditing(false); }}>
                 <X className="h-4 w-4 mr-1" /> Annuleren
               </Button>
-              <Button size="sm" onClick={handleSave}>
+              <Button size="sm" className="h-10 sm:h-8" onClick={handleSave}>
                 <Save className="h-4 w-4 mr-1" /> Opslaan
               </Button>
             </div>
           ) : (
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setTaskDialogOpen(true)}>
+              <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => setTaskDialogOpen(true)}>
                 <CheckSquare className="h-4 w-4 mr-1" /> Taak
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+              <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => setEditing(true)}>
                 <Pencil className="h-4 w-4 mr-1" /> Bewerken
               </Button>
             </div>
@@ -108,17 +108,17 @@ export default function EventDetailPage() {
         )}
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-4 sm:gap-6">
         {/* General info */}
-        <section className="surface-card p-5 space-y-4">
+        <section className="surface-card p-4 sm:p-5 space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Algemeen</h2>
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Naam" value={form.name} editing={editing} onChange={(v) => update({ name: v })} />
             <div>
               <Label className="text-xs text-muted-foreground">Type</Label>
               {editing ? (
                 <Select value={form.type} onValueChange={(v) => update({ type: v as EventType })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="jobbeurs">Jobbeurs</SelectItem>
                     <SelectItem value="campus presentatie">Campus presentatie</SelectItem>
@@ -135,7 +135,7 @@ export default function EventDetailPage() {
               <Label className="text-xs text-muted-foreground">Status</Label>
               {editing ? (
                 <Select value={form.status} onValueChange={(v) => update({ status: v as EventStatus })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="gepland">Gepland</SelectItem>
                     <SelectItem value="bevestigd">Bevestigd</SelectItem>
@@ -151,7 +151,7 @@ export default function EventDetailPage() {
               <Label className="text-xs text-muted-foreground">School</Label>
               {editing ? (
                 <Select value={form.school_id ?? ""} onValueChange={(v) => update({ school_id: v || null })}>
-                  <SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger>
+                  <SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Optioneel" /></SelectTrigger>
                   <SelectContent>
                     {mockSchools.map((s) => (
                       <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
@@ -168,16 +168,16 @@ export default function EventDetailPage() {
         </section>
 
         {/* Date & time */}
-        <section className="surface-card p-5 space-y-4">
+        <section className="surface-card p-4 sm:p-5 space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
             <Clock className="h-4 w-4" /> Datum & Tijd
           </h2>
-          <div className="grid sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Field label="Datum" value={form.date} editing={editing} onChange={(v) => update({ date: v })} type="date" />
             <Field label="Startuur" value={form.start_time} editing={editing} onChange={(v) => update({ start_time: v })} type="time" />
             <Field label="Einduur" value={form.end_time} editing={editing} onChange={(v) => update({ end_time: v })} type="time" />
           </div>
-          <div className="grid sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Field label="Opbouwdatum" value={form.setup_date} editing={editing} onChange={(v) => update({ setup_date: v })} type="date" />
             <Field label="Opbouwuur" value={form.setup_time} editing={editing} onChange={(v) => update({ setup_time: v })} type="time" />
             <div />
@@ -185,11 +185,11 @@ export default function EventDetailPage() {
         </section>
 
         {/* Contact & team */}
-        <section className="surface-card p-5 space-y-4">
+        <section className="surface-card p-4 sm:p-5 space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
             <Users className="h-4 w-4" /> Contactinfo & Team
           </h2>
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Elia contactpersoon" value={form.elia_contact} editing={editing} onChange={(v) => update({ elia_contact: v })} />
             <Field label="Verantwoordelijke" value={form.responsible} editing={editing} onChange={(v) => update({ responsible: v })} />
           </div>
@@ -200,6 +200,7 @@ export default function EventDetailPage() {
                 value={form.team_members.join(", ")}
                 onChange={(e) => update({ team_members: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
                 placeholder="Naam 1, Naam 2, ..."
+                className="h-10 sm:h-9"
               />
             ) : (
               <div className="flex flex-wrap gap-1.5 mt-1">
@@ -216,7 +217,7 @@ export default function EventDetailPage() {
         </section>
 
         {/* Doelgroep / Opleidingen */}
-        <section className="surface-card p-5 space-y-4">
+        <section className="surface-card p-4 sm:p-5 space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
             <GraduationCap className="h-4 w-4" /> Doelgroep — Opleidingen
           </h2>
@@ -227,10 +228,11 @@ export default function EventDetailPage() {
                   <p className="text-xs font-semibold text-muted-foreground mb-2">{s.name}</p>
                   <div className="space-y-1.5">
                     {programs.map((p) => (
-                      <label key={p.id} className="flex items-center gap-2 cursor-pointer text-sm">
+                      <label key={p.id} className="flex items-center gap-2 cursor-pointer text-sm min-h-[44px] sm:min-h-0 py-1 sm:py-0">
                         <Checkbox
                           checked={selectedProgramIds.includes(p.id)}
                           onCheckedChange={() => toggleProgram(p.id)}
+                          className="h-5 w-5 sm:h-4 sm:w-4"
                         />
                         <span>{p.name}</span>
                         <span className="text-xs text-muted-foreground capitalize">({p.study_level})</span>
@@ -254,7 +256,7 @@ export default function EventDetailPage() {
         </section>
 
         {/* Content / stand */}
-        <section className="surface-card p-5 space-y-4">
+        <section className="surface-card p-4 sm:p-5 space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
             <CalendarDays className="h-4 w-4" /> Inhoud & Stand
           </h2>
@@ -266,12 +268,12 @@ export default function EventDetailPage() {
               <p className="text-sm mt-1">{form.description || "—"}</p>
             )}
           </div>
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label className="text-xs text-muted-foreground">Type stand</Label>
               {editing ? (
                 <Select value={form.stand_type} onValueChange={(v) => update({ stand_type: v as StandType })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="jobbeurs stand">Jobbeurs stand</SelectItem>
                     <SelectItem value="infotafel">Infotafel</SelectItem>
@@ -288,7 +290,7 @@ export default function EventDetailPage() {
               <Label className="text-xs text-muted-foreground">Standformaat</Label>
               {editing ? (
                 <Select value={form.stand_size} onValueChange={(v) => update({ stand_size: v as StandSize })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="klein 2m²">Klein 2m²</SelectItem>
                     <SelectItem value="medium 4m²">Medium 4m²</SelectItem>
@@ -304,7 +306,7 @@ export default function EventDetailPage() {
         </section>
 
         {/* Notes */}
-        <section className="surface-card p-5 space-y-4">
+        <section className="surface-card p-4 sm:p-5 space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Extra opmerkingen</h2>
           {editing ? (
             <Textarea value={form.notes} onChange={(e) => update({ notes: e.target.value })} rows={3} />
@@ -328,7 +330,7 @@ function Field({
     <div>
       <Label className="text-xs text-muted-foreground">{label}</Label>
       {editing ? (
-        <Input type={type} value={value} onChange={(e) => onChange(e.target.value)} />
+        <Input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="h-10 sm:h-9" />
       ) : (
         <p className="text-sm mt-1 flex items-center gap-1.5">
           {icon}

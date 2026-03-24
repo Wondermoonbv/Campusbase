@@ -17,7 +17,6 @@ import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableT
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 
-// Activity helpers
 const entityIcons: Record<ActivityEntityType, React.ElementType> = {
   school: GraduationCap,
   evenement: CalendarDays,
@@ -43,10 +42,10 @@ function ActivityRow({ activity: a }: { activity: ReturnType<typeof useActivity>
   const EntityIcon = entityIcons[a.entityType];
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
+    <div className="flex items-start sm:items-center gap-3 px-3 sm:px-4 py-3">
       <UserAvatar name={a.userName} avatarUrl={a.userAvatarUrl} className="h-8 w-8 shrink-0" />
       <div className="flex-1 min-w-0">
-        <p className="text-sm">
+        <p className="text-sm leading-relaxed">
           <span className="font-medium">{a.userName}</span>
           {" "}
           <span className="text-muted-foreground">heeft</span>
@@ -62,7 +61,7 @@ function ActivityRow({ activity: a }: { activity: ReturnType<typeof useActivity>
           </span>
         </p>
       </div>
-      <time className="text-xs text-muted-foreground whitespace-nowrap tabular-nums">
+      <time className="text-xs text-muted-foreground whitespace-nowrap tabular-nums shrink-0">
         {formatDistanceToNow(new Date(a.timestamp), { addSuffix: true, locale: nl })}
       </time>
     </div>
@@ -75,13 +74,11 @@ export default function GebruikersPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") === "activiteit" ? "activiteit" : "gebruikers";
 
-  // User management state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editUser, setEditUser] = useState<AppUser | null>(null);
   const [form, setForm] = useState({ firstName: "", lastName: "", name: "", email: "", role: "viewer" as UserRole });
   const { sort, toggleSort } = useSort("lastName");
 
-  // Activity filter state
   const [actSearch, setActSearch] = useState("");
   const [filterUser, setFilterUser] = useState("alle");
   const [filterAction, setFilterAction] = useState("alle");
@@ -165,10 +162,10 @@ export default function GebruikersPage() {
 
   return (
     <div className="page-container animate-fade-in-up">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
         <h1>Gebruikers</h1>
         {activeTab === "gebruikers" && (
-          <Button size="sm" onClick={openCreate}>
+          <Button size="sm" className="h-10 sm:h-8" onClick={openCreate}>
             <Plus className="h-4 w-4 mr-1" /> Gebruiker toevoegen
           </Button>
         )}
@@ -181,7 +178,32 @@ export default function GebruikersPage() {
         </TabsList>
 
         <TabsContent value="gebruikers" className="mt-4">
-          <div className="surface-card overflow-hidden">
+          {/* Mobile card view */}
+          <div className="block md:hidden space-y-2">
+            {sorted.map((u) => (
+              <div key={u.id} className="surface-card p-4">
+                <div className="flex items-center gap-3">
+                  <UserAvatar name={u.name} avatarUrl={u.avatarUrl} />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{u.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{u.role}</p>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => openEdit(u)}>
+                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleDelete(u)} disabled={u.id === currentUser?.id}>
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table view */}
+          <div className="surface-card overflow-hidden hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -220,37 +242,39 @@ export default function GebruikersPage() {
         </TabsContent>
 
         <TabsContent value="activiteit" className="mt-4">
-          <div className="surface-card p-4 mb-4">
-            <div className="flex flex-wrap gap-3">
-              <div className="relative flex-1 min-w-[200px]">
+          <div className="surface-card p-3 sm:p-4 mb-4">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
+              <div className="relative flex-1 min-w-0 sm:min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Zoeken..." value={actSearch} onChange={(e) => setActSearch(e.target.value)} className="pl-9" />
+                <Input placeholder="Zoeken..." value={actSearch} onChange={(e) => setActSearch(e.target.value)} className="pl-9 h-10 sm:h-9" />
               </div>
-              <Select value={filterUser} onValueChange={setFilterUser}>
-                <SelectTrigger className="w-[180px]"><SelectValue placeholder="Gebruiker" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="alle">Alle gebruikers</SelectItem>
-                  {activityUsers.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={filterAction} onValueChange={setFilterAction}>
-                <SelectTrigger className="w-[160px]"><SelectValue placeholder="Actie" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="alle">Alle acties</SelectItem>
-                  <SelectItem value="aangemaakt">Aangemaakt</SelectItem>
-                  <SelectItem value="bewerkt">Bewerkt</SelectItem>
-                  <SelectItem value="verwijderd">Verwijderd</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filterPeriod} onValueChange={setFilterPeriod}>
-                <SelectTrigger className="w-[150px]"><SelectValue placeholder="Periode" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="alle">Alle tijd</SelectItem>
-                  <SelectItem value="vandaag">Vandaag</SelectItem>
-                  <SelectItem value="week">Afgelopen week</SelectItem>
-                  <SelectItem value="maand">Afgelopen maand</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3">
+                <Select value={filterUser} onValueChange={setFilterUser}>
+                  <SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9"><SelectValue placeholder="Gebruiker" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="alle">Alle gebruikers</SelectItem>
+                    {activityUsers.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={filterAction} onValueChange={setFilterAction}>
+                  <SelectTrigger className="w-full sm:w-[160px] h-10 sm:h-9"><SelectValue placeholder="Actie" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="alle">Alle acties</SelectItem>
+                    <SelectItem value="aangemaakt">Aangemaakt</SelectItem>
+                    <SelectItem value="bewerkt">Bewerkt</SelectItem>
+                    <SelectItem value="verwijderd">Verwijderd</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filterPeriod} onValueChange={setFilterPeriod}>
+                  <SelectTrigger className="w-full sm:w-[150px] h-10 sm:h-9 col-span-2 sm:col-span-1"><SelectValue placeholder="Periode" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="alle">Alle tijd</SelectItem>
+                    <SelectItem value="vandaag">Vandaag</SelectItem>
+                    <SelectItem value="week">Afgelopen week</SelectItem>
+                    <SelectItem value="maand">Afgelopen maand</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
@@ -276,21 +300,21 @@ export default function GebruikersPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Voornaam *</Label>
-                <Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} required />
+                <Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} required className="h-10 sm:h-9" />
               </div>
               <div className="space-y-2">
                 <Label>Achternaam</Label>
-                <Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
+                <Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} className="h-10 sm:h-9" />
               </div>
             </div>
             <div className="space-y-2">
               <Label>E-mail *</Label>
-              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required className="h-10 sm:h-9" />
             </div>
             <div className="space-y-2">
               <Label>Rol</Label>
               <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as UserRole })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="viewer">Viewer</SelectItem>
@@ -298,8 +322,8 @@ export default function GebruikersPage() {
               </Select>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Annuleren</Button>
-              <Button type="submit">{editUser ? "Opslaan" : "Toevoegen"}</Button>
+              <Button type="button" variant="outline" className="h-10 sm:h-9" onClick={() => setDialogOpen(false)}>Annuleren</Button>
+              <Button type="submit" className="h-10 sm:h-9">{editUser ? "Opslaan" : "Toevoegen"}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
