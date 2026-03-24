@@ -77,6 +77,7 @@ export default function ContractenPage() {
               <TableHead className="hidden md:table-cell">Vernieuwingsdatum</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Waarde</TableHead>
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
