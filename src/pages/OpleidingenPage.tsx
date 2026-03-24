@@ -144,6 +144,11 @@ export default function OpleidingenPage() {
                     <TableCell className="capitalize">{p.study_level}</TableCell>
                     <TableCell className="hidden md:table-cell">{p.field_of_study}</TableCell>
                     <TableCell className="text-right tabular-nums">{p.student_count ?? "—"}</TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditProgram(p); setDialogOpen(true); }}>
+                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                   {expandedId === p.id && p.linkedEvents.length > 0 && (
                     <TableRow key={`${p.id}-events`}>
