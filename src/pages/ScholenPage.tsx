@@ -182,7 +182,7 @@ export default function ScholenPage() {
         </div>
       </div>
 
-      <SchoolFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <SchoolFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditSchool(undefined); }} school={editSchool} />
     </div>
   );
 }
