@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { mockSchools, mockContacts } from "@/data/mockData";
 import { School, SchoolType, SchoolStatus, Language, PROVINCES } from "@/types/crm";
 import { Input } from "@/components/ui/input";
