@@ -33,7 +33,7 @@ export default function GebruikersPage() {
     if (!form.firstName || !form.email) { toast.error("Vul alle velden in."); return; }
     const fullName = `${form.firstName} ${form.lastName}`.trim();
     if (editUser) {
-      updateUser(editUser.id, form);
+      updateUser(editUser.id, { ...form, name: fullName });
       toast.success("Gebruiker bijgewerkt.");
     } else {
       if (users.some((u) => u.email.toLowerCase() === form.email.toLowerCase())) {
