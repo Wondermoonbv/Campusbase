@@ -74,7 +74,7 @@ export default function DashboardPage() {
     .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
     .slice(0, 5);
 
-  const recentActivities = activities.slice(0, 8);
+  
 
   const priorityIcon: Record<string, React.ReactNode> = {
     hoog: <ArrowUp className="h-3 w-3 text-destructive" />,
