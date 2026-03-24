@@ -52,9 +52,9 @@ export default function EventenPage() {
         matchField = linkedPrograms.some((p) => p.field_of_study === filterFieldOfStudy);
       }
 
-      return matchSearch && matchType && matchStatus && matchField;
+      return matchSearch && matchType && matchStatus && matchField && matchPeriod;
     });
-  }, [search, filterType, filterStatus, filterFieldOfStudy]);
+  }, [search, filterType, filterStatus, filterFieldOfStudy, filterPeriod]);
 
   const byMonth = useMemo(() => {
     const groups: Record<string, typeof filtered> = {};
