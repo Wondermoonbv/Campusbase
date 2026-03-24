@@ -159,8 +159,53 @@ export function ContractFormDialog({ open, onOpenChange, contract }: ContractFor
             </div>
           </div>
 
+          {/* PDF upload */}
           <div>
-            <Label>Notities</Label>
+            <Label>Contract document (PDF)</Label>
+            <div className="mt-1">
+              {form.file ? (
+                <div className="flex items-center gap-2 p-2.5 border border-border rounded-lg bg-muted/20">
+                  <FileText className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-sm truncate flex-1">{form.file.name}</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {(form.file.size / 1024).toFixed(0)} KB
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={() => setForm((p) => ({ ...p, file: null }))}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-lg text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors cursor-pointer"
+                >
+                  <Upload className="h-4 w-4" />
+                  Klik om een PDF te uploaden
+                </button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  if (file && file.type !== "application/pdf") {
+                    toast.error("Alleen PDF-bestanden zijn toegestaan.");
+                    return;
+                  }
+                  setForm((p) => ({ ...p, file }));
+                }}
+              />
+            </div>
+          </div>
             <Textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} rows={2} />
           </div>
 
