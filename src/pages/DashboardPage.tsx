@@ -49,25 +49,6 @@ function KpiCard({
   );
 }
 
-const entityIcons: Record<ActivityEntityType, React.ElementType> = {
-  school: GraduationCap,
-  evenement: CalendarDays,
-  contract: FileText,
-  opleiding: BookOpen,
-  taak: CheckSquare,
-};
-
-const actionIcons: Record<ActivityAction, React.ElementType> = {
-  aangemaakt: Plus,
-  bewerkt: Pencil,
-  verwijderd: Trash2,
-};
-
-const actionColors: Record<ActivityAction, string> = {
-  aangemaakt: "text-success",
-  bewerkt: "text-primary",
-  verwijderd: "text-destructive",
-};
 
 export default function DashboardPage() {
   const now = new Date();
