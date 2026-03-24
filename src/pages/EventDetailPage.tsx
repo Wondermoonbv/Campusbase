@@ -14,6 +14,7 @@ import {
 import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap, CheckSquare } from "lucide-react";
 import type { Event, StandType, StandSize, EventType, EventStatus } from "@/types/crm";
 import { toast } from "sonner";
+import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 
 export default function EventDetailPage() {
   const { id } = useParams();
