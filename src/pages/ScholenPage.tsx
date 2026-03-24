@@ -167,6 +167,11 @@ export default function ScholenPage() {
                   <TableCell className="hidden md:table-cell">{school.language}</TableCell>
                   <TableCell><StatusBadge status={school.status} /></TableCell>
                   <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{getFirstContact(school.id)?.name || "—"}</TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditSchool(school); setDialogOpen(true); }}>
+                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             )}
