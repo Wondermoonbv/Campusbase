@@ -136,6 +136,7 @@ export default function EventenPage() {
                 <TableHead>Datum</TableHead>
                 <TableHead className="hidden md:table-cell">Locatie</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
