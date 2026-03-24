@@ -16,6 +16,7 @@ import EventDetailPage from "./pages/EventDetailPage";
 import RapportagePage from "./pages/RapportagePage";
 import GebruikersPage from "./pages/GebruikersPage";
 import InstellingenPage from "./pages/InstellingenPage";
+import TakenPage from "./pages/TakenPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
