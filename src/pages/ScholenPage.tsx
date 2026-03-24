@@ -19,9 +19,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Download, ExternalLink } from "lucide-react";
+import { Plus, Search, Download, ExternalLink, Pencil } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
+import type { School } from "@/types/crm";
 
 export default function ScholenPage() {
   const [search, setSearch] = useState("");
