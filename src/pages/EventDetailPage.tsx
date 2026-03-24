@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap } from "lucide-react";
+import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap, CheckSquare } from "lucide-react";
 import type { Event, StandType, StandSize, EventType, EventStatus } from "@/types/crm";
 import { toast } from "sonner";
 
