@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { mockContracts, mockSchools, mockEvents } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,8 @@ function getExpiryColor(endDate: string) {
 }
 
 export default function ContractenPage() {
+  const [searchParams] = useSearchParams();
+  const filterExpiring = searchParams.get("expiring") === "90";
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editContract, setEditContract] = useState<typeof mockContracts[0] | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
