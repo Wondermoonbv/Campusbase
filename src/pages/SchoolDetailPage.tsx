@@ -64,9 +64,14 @@ export default function SchoolDetailPage() {
             </div>
           </div>
           {isAdmin && (
-            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-              <Edit className="h-4 w-4 mr-1" /> Bewerken
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setTaskDialogOpen(true)}>
+                <CheckSquare className="h-4 w-4 mr-1" /> Taak
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+                <Edit className="h-4 w-4 mr-1" /> Bewerken
+              </Button>
+            </div>
           )}
         </div>
 
