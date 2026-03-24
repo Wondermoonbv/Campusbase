@@ -10,9 +10,23 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Download, CalendarDays, List, Pencil } from "lucide-react";
+import { Plus, Search, Download, CalendarDays, List, Pencil, Upload } from "lucide-react";
 import { EventFormDialog } from "@/components/events/EventFormDialog";
+import { CsvImportDialog, CsvColumn } from "@/components/import/CsvImportDialog";
 import { FIELDS_OF_STUDY } from "@/types/crm";
+
+const EVENT_CSV_COLUMNS: CsvColumn[] = [
+  { key: "name", label: "Naam", required: true },
+  { key: "type", label: "Type", required: true, validate: (v) => ["jobbeurs", "campus presentatie", "workshop", "hackathon", "andere"].includes(v.toLowerCase()) ? null : "Ongeldig type" },
+  { key: "date", label: "Datum", required: true, validate: (v) => /^\d{4}-\d{2}-\d{2}$/.test(v) ? null : "Formaat: YYYY-MM-DD" },
+  { key: "start_time", label: "Startuur" },
+  { key: "end_time", label: "Einduur" },
+  { key: "location", label: "Locatie", required: true },
+  { key: "responsible", label: "Verantwoordelijke" },
+  { key: "budget", label: "Budget", validate: (v) => isNaN(Number(v)) ? "Moet een getal zijn" : null },
+  { key: "status", label: "Status", validate: (v) => ["gepland", "bevestigd", "afgelopen", "geannuleerd"].includes(v.toLowerCase()) ? null : "Ongeldige status" },
+  { key: "description", label: "Beschrijving" },
+];
 
 export default function EventenPage() {
   const navigate = useNavigate();
@@ -25,6 +39,7 @@ export default function EventenPage() {
   const [filterPeriod] = useState(initialPeriod);
   const [view, setView] = useState<"list" | "calendar">("list");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const now = new Date();
@@ -97,6 +112,9 @@ export default function EventenPage() {
           </div>
           <Button variant="outline" size="sm" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-1" /> Export
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+            <Upload className="h-4 w-4 mr-1" /> Import
           </Button>
           <Button size="sm" onClick={() => setDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-1" /> Evenement toevoegen
@@ -210,6 +228,14 @@ export default function EventenPage() {
       )}
 
       <EventFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <CsvImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Evenementen importeren"
+        columns={EVENT_CSV_COLUMNS}
+        templateFilename="evenementen_template.csv"
+        onImport={(rows) => { console.log("Import events:", rows); }}
+      />
     </div>
   );
 }
