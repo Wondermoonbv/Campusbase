@@ -16,10 +16,13 @@ import { FIELDS_OF_STUDY } from "@/types/crm";
 
 export default function EventenPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialPeriod = searchParams.get("period") ?? "all"; // "thisYear" or "next30"
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterFieldOfStudy, setFilterFieldOfStudy] = useState("all");
+  const [filterPeriod] = useState(initialPeriod);
   const [view, setView] = useState<"list" | "calendar">("list");
   const [dialogOpen, setDialogOpen] = useState(false);
 
