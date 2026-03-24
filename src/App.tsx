@@ -10,6 +10,7 @@ import SchoolDetailPage from "./pages/SchoolDetailPage";
 import OpleidingenPage from "./pages/OpleidingenPage";
 import ContractenPage from "./pages/ContractenPage";
 import EventenPage from "./pages/EventenPage";
+import EventDetailPage from "./pages/EventDetailPage";
 import RapportagePage from "./pages/RapportagePage";
 import NotFound from "./pages/NotFound";
 
