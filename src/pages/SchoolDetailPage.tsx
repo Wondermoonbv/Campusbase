@@ -126,7 +126,6 @@ export default function SchoolDetailPage() {
         )}
       </div>
 
-      {/* Tabs */}
       <Tabs defaultValue="programs">
         <TabsList>
           <TabsTrigger value="programs">Opleidingen ({programs.length})</TabsTrigger>
