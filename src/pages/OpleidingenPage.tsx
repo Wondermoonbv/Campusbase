@@ -111,6 +111,7 @@ export default function OpleidingenPage() {
               <TableHead>Niveau</TableHead>
               <TableHead className="hidden md:table-cell">Studierichting</TableHead>
               <TableHead className="text-right">Studenten</TableHead>
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
