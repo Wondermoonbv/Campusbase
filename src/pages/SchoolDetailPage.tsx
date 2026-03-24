@@ -19,6 +19,7 @@ export default function SchoolDetailPage() {
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [editContact, setEditContact] = useState<typeof contacts[0] | undefined>(undefined);
   const [programDialogOpen, setProgramDialogOpen] = useState(false);
+  const { isAdmin } = useAuth();
 
   if (!school) {
     return (
