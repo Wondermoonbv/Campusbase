@@ -36,7 +36,6 @@ const navItems = [
   { title: "Evenementen", url: "/evenementen", icon: CalendarDays },
   { title: "Taken", url: "/taken", icon: CheckSquare },
   { title: "Rapportage", url: "/rapportage", icon: BarChart3 },
-  { title: "Activiteit", url: "/activiteit", icon: Activity },
 ];
 
 export function AppSidebar() {
