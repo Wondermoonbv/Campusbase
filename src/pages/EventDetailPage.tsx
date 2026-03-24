@@ -18,6 +18,7 @@ import { toast } from "sonner";
 export default function EventDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const event = mockEvents.find((e) => e.id === id);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Event | null>(event ?? null);
