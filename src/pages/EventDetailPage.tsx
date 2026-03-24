@@ -22,6 +22,7 @@ export default function EventDetailPage() {
   const { isAdmin } = useAuth();
   const event = mockEvents.find((e) => e.id === id);
   const [editing, setEditing] = useState(false);
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [form, setForm] = useState<Event | null>(event ?? null);
 
   const initialProgramIds = useMemo(() =>
