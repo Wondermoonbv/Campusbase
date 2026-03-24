@@ -41,6 +41,7 @@ export default function EventenPage() {
   const [view, setView] = useState<"list" | "calendar">("list");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const { isAdmin } = useAuth();
 
   const filtered = useMemo(() => {
     const now = new Date();
