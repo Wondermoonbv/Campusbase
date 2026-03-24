@@ -1,4 +1,4 @@
-import type { School, Contact, Program, Contract, Event, SchoolEventParticipation } from "@/types/crm";
+import type { School, Contact, Program, Contract, Event, SchoolEventParticipation, EventProgram } from "@/types/crm";
 
 // Mock data for development — will be replaced with Supabase queries
 export const mockSchools: School[] = [

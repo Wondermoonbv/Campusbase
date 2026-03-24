@@ -85,6 +85,12 @@ export interface Event {
   stand_size: StandSize;
   notes: string;
   school?: School;
+  target_program_ids?: string[];
+}
+
+export interface EventProgram {
+  event_id: string;
+  program_id: string;
 }
 
 export interface SchoolEventParticipation {
