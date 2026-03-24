@@ -49,6 +49,7 @@ export default function ScholenPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [editSchool, setEditSchool] = useState<School | undefined>();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
 
   const filtered = useMemo(() => {
     return mockSchools.filter((s) => {
