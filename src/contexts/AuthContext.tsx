@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const [user, setUser] = useState<AppUser | null>(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : null;
+    return stored ? JSON.parse(stored) : users[0]; // Default to admin for preview
   });
 
   useEffect(() => {

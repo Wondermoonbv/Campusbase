@@ -20,9 +20,7 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function AppRoutes() {
-  const { user, isAdmin } = useAuth();
-
-  if (!user) return <LoginPage />;
+  const { isAdmin } = useAuth();
 
   return (
     <AppLayout>
