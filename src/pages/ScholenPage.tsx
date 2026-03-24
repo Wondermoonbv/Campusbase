@@ -31,6 +31,7 @@ export default function ScholenPage() {
   const [filterLanguage, setFilterLanguage] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editSchool, setEditSchool] = useState<School | undefined>();
   const navigate = useNavigate();
 
   const filtered = useMemo(() => {
