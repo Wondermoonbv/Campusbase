@@ -5,9 +5,13 @@ import {
   FileText,
   CalendarDays,
   BarChart3,
+  Users,
+  LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -16,6 +20,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
 
@@ -32,6 +37,11 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { user, isAdmin, logout } = useAuth();
+
+  const allItems = isAdmin
+    ? [...navItems, { title: "Gebruikers", url: "/gebruikers", icon: Users }]
+    : navItems;
 
   return (
     <Sidebar collapsible="icon">
@@ -55,7 +65,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => {
+              {allItems.map((item) => {
                 const isActive =
                   item.url === "/"
                     ? location.pathname === "/"
@@ -87,6 +97,25 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <div className={`px-3 py-3 border-t border-sidebar-border ${collapsed ? "px-1" : ""}`}>
+          {!collapsed && user && (
+            <div className="mb-2 px-1">
+              <p className="text-sm font-medium text-sidebar-foreground truncate">{user.name}</p>
+              <p className="text-xs text-sidebar-foreground/60 capitalize">{user.role}</p>
+            </div>
+          )}
+          <Button
+            variant="ghost"
+            size={collapsed ? "icon" : "sm"}
+            className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+            onClick={logout}
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            {!collapsed && <span className="ml-2">Uitloggen</span>}
+          </Button>
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 }
