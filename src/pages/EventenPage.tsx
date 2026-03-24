@@ -228,6 +228,14 @@ export default function EventenPage() {
       )}
 
       <EventFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <CsvImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Evenementen importeren"
+        columns={EVENT_CSV_COLUMNS}
+        templateFilename="evenementen_template.csv"
+        onImport={(rows) => { console.log("Import events:", rows); }}
+      />
     </div>
   );
 }
