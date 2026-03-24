@@ -58,6 +58,7 @@ const eventIcon = makeSvgIcon("hsl(28, 87%, 51%)");
 type FilterMode = "both" | "schools" | "events";
 
 export default function BelgiumMap() {
+  const isMobile = useIsMobile();
   const [filter, setFilter] = useState<FilterMode>("both");
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
