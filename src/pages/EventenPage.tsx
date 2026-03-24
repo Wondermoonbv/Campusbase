@@ -10,7 +10,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Download, CalendarDays, List } from "lucide-react";
+import { Plus, Search, Download, CalendarDays, List, Pencil } from "lucide-react";
 import { EventFormDialog } from "@/components/events/EventFormDialog";
 import { FIELDS_OF_STUDY } from "@/types/crm";
 
