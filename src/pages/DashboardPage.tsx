@@ -1,6 +1,7 @@
 import { useMemo, lazy, Suspense } from "react";
 import { mockSchools, mockContracts, mockEvents, mockTasks } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
+import { useActivity } from "@/contexts/ActivityContext";
 
 const BelgiumMap = lazy(() => import("@/components/dashboard/BelgiumMap"));
 import {
@@ -13,9 +14,18 @@ import {
   CheckSquare,
   ArrowUp,
   Minus,
+  Activity,
+  Plus,
+  Pencil,
+  Trash2,
+  BookOpen,
 } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Link, useNavigate } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
+import { nl } from "date-fns/locale";
+import type { ActivityAction, ActivityEntityType } from "@/contexts/ActivityContext";
 
 function KpiCard({
   icon: Icon,
@@ -35,11 +45,7 @@ function KpiCard({
       to={to}
       className="surface-card p-5 flex items-start gap-4 cursor-pointer transition-[box-shadow,background-color] hover:shadow-md hover:bg-muted/30"
     >
-      <div
-        className={`flex items-center justify-center w-10 h-10 rounded ${
-          accent ? "bg-accent/10" : "bg-primary/10"
-        }`}
-      >
+      <div className={`flex items-center justify-center w-10 h-10 rounded ${accent ? "bg-accent/10" : "bg-primary/10"}`}>
         <Icon className={`h-5 w-5 ${accent ? "text-accent" : "text-primary"}`} />
       </div>
       <div>
@@ -50,9 +56,30 @@ function KpiCard({
   );
 }
 
+const entityIcons: Record<ActivityEntityType, React.ElementType> = {
+  school: GraduationCap,
+  evenement: CalendarDays,
+  contract: FileText,
+  opleiding: BookOpen,
+  taak: CheckSquare,
+};
+
+const actionIcons: Record<ActivityAction, React.ElementType> = {
+  aangemaakt: Plus,
+  bewerkt: Pencil,
+  verwijderd: Trash2,
+};
+
+const actionColors: Record<ActivityAction, string> = {
+  aangemaakt: "text-success",
+  bewerkt: "text-primary",
+  verwijderd: "text-destructive",
+};
+
 export default function DashboardPage() {
   const now = new Date();
   const { user } = useAuth();
+  const { activities } = useActivity();
   const in30Days = new Date(now.getTime() + 30 * 86400000);
   const in90Days = new Date(now.getTime() + 90 * 86400000);
 
@@ -74,11 +101,14 @@ export default function DashboardPage() {
     .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
     .slice(0, 5);
 
+  const recentActivities = activities.slice(0, 8);
+
   const priorityIcon: Record<string, React.ReactNode> = {
     hoog: <ArrowUp className="h-3 w-3 text-destructive" />,
     normaal: <Minus className="h-3 w-3 text-muted-foreground" />,
     laag: <ArrowUp className="h-3 w-3 text-info rotate-180" />,
   };
+
   return (
     <div className="page-container animate-fade-in-up">
       <h1 className="mb-6">Dashboard</h1>
@@ -95,25 +125,17 @@ export default function DashboardPage() {
         <div className="surface-card">
           <div className="p-4 border-b border-border flex items-center justify-between">
             <h2>Komende evenementen</h2>
-            <Link to="/evenementen" className="text-sm text-primary hover:underline">
-              Alles bekijken
-            </Link>
+            <Link to="/evenementen" className="text-sm text-primary hover:underline">Alles bekijken</Link>
           </div>
           <div className="divide-y divide-border">
             {upcomingEvents.length === 0 ? (
               <p className="p-4 text-sm text-muted-foreground">Geen evenementen in de komende 30 dagen.</p>
             ) : (
               upcomingEvents.slice(0, 5).map((ev) => (
-                <Link
-                  key={ev.id}
-                  to={`/evenementen/${ev.id}`}
-                  className="p-4 flex items-center justify-between hover:bg-muted/30 transition-[background-color,box-shadow] hover:shadow-sm cursor-pointer block"
-                >
+                <Link key={ev.id} to={`/evenementen/${ev.id}`} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-[background-color,box-shadow] hover:shadow-sm cursor-pointer block">
                   <div>
                     <p className="text-sm font-medium">{ev.name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {new Date(ev.date).toLocaleDateString("nl-BE")} · {ev.location}
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{new Date(ev.date).toLocaleDateString("nl-BE")} · {ev.location}</p>
                   </div>
                   <StatusBadge status={ev.status} />
                 </Link>
@@ -126,9 +148,7 @@ export default function DashboardPage() {
         <div className="surface-card">
           <div className="p-4 border-b border-border flex items-center justify-between">
             <h2>Vervallende contracten</h2>
-            <Link to="/contracten" className="text-sm text-primary hover:underline">
-              Alles bekijken
-            </Link>
+            <Link to="/contracten" className="text-sm text-primary hover:underline">Alles bekijken</Link>
           </div>
           <div className="divide-y divide-border">
             {expiringContracts.length === 0 ? (
@@ -137,16 +157,10 @@ export default function DashboardPage() {
               expiringContracts.map((c) => {
                 const school = mockSchools.find((s) => s.id === c.school_id);
                 return (
-                  <Link
-                    key={c.id}
-                    to={`/contracten`}
-                    className="p-4 flex items-center justify-between hover:bg-muted/30 transition-[background-color,box-shadow] hover:shadow-sm cursor-pointer block"
-                  >
+                  <Link key={c.id} to="/contracten" className="p-4 flex items-center justify-between hover:bg-muted/30 transition-[background-color,box-shadow] hover:shadow-sm cursor-pointer block">
                     <div>
                       <p className="text-sm font-medium">{school?.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Vervalt: {new Date(c.end_date).toLocaleDateString("nl-BE")} · {c.contract_type}
-                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Vervalt: {new Date(c.end_date).toLocaleDateString("nl-BE")} · {c.contract_type}</p>
                     </div>
                     <StatusBadge status={c.status} />
                   </Link>
@@ -157,45 +171,81 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* My tasks widget */}
-      <div className="surface-card mt-6">
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <h2 className="flex items-center gap-2">
-            <CheckSquare className="h-4 w-4 text-primary" /> Mijn taken
-          </h2>
-          <Link to="/taken" className="text-sm text-primary hover:underline">
-            Alles bekijken
-          </Link>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        {/* My tasks widget */}
+        <div className="surface-card">
+          <div className="p-4 border-b border-border flex items-center justify-between">
+            <h2 className="flex items-center gap-2">
+              <CheckSquare className="h-4 w-4 text-primary" /> Mijn taken
+            </h2>
+            <Link to="/taken" className="text-sm text-primary hover:underline">Alles bekijken</Link>
+          </div>
+          <div className="divide-y divide-border">
+            {myTasks.length === 0 ? (
+              <p className="p-4 text-sm text-muted-foreground">Geen openstaande taken.</p>
+            ) : (
+              myTasks.map((task) => {
+                const overdue = new Date(task.due_date) < now;
+                return (
+                  <Link key={task.id} to="/taken" className="p-4 flex items-center justify-between hover:bg-muted/30 transition-[background-color,box-shadow] hover:shadow-sm cursor-pointer block">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <span>{priorityIcon[task.priority]}</span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{task.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {task.assigned_to} · <span className={overdue ? "text-destructive font-medium" : ""}>{new Date(task.due_date).toLocaleDateString("nl-BE")}{overdue && " (verlopen)"}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <StatusBadge status={task.status} />
+                  </Link>
+                );
+              })
+            )}
+          </div>
         </div>
-        <div className="divide-y divide-border">
-          {myTasks.length === 0 ? (
-            <p className="p-4 text-sm text-muted-foreground">Geen openstaande taken.</p>
-          ) : (
-            myTasks.map((task) => {
-              const overdue = new Date(task.due_date) < now;
-              return (
-                <Link
-                  key={task.id}
-                  to="/taken"
-                  className="p-4 flex items-center justify-between hover:bg-muted/30 transition-[background-color,box-shadow] hover:shadow-sm cursor-pointer block"
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <span>{priorityIcon[task.priority]}</span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{task.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {task.assigned_to} · <span className={overdue ? "text-destructive font-medium" : ""}>
-                          {new Date(task.due_date).toLocaleDateString("nl-BE")}
-                          {overdue && " (verlopen)"}
+
+        {/* Recent activity widget */}
+        <div className="surface-card">
+          <div className="p-4 border-b border-border flex items-center justify-between">
+            <h2 className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-primary" /> Recente activiteit
+            </h2>
+            <Link to="/activiteit" className="text-sm text-primary hover:underline">Alle activiteit bekijken</Link>
+          </div>
+          <div className="divide-y divide-border">
+            {recentActivities.length === 0 ? (
+              <p className="p-4 text-sm text-muted-foreground">Nog geen activiteiten.</p>
+            ) : (
+              recentActivities.map((a) => {
+                const ActionIcon = actionIcons[a.action];
+                const EntityIcon = entityIcons[a.entityType];
+                return (
+                  <div key={a.id} className="flex items-center gap-3 px-4 py-3">
+                    <UserAvatar name={a.userName} avatarUrl={a.userAvatarUrl} className="h-7 w-7 shrink-0" fallbackClassName="text-[10px]" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs leading-relaxed">
+                        <span className="font-medium">{a.userName}</span>
+                        {" "}
+                        <span className={`inline-flex items-center gap-0.5 font-medium ${actionColors[a.action]}`}>
+                          <ActionIcon className="h-2.5 w-2.5" />
+                          {a.action}
+                        </span>
+                        {" "}
+                        <span className="inline-flex items-center gap-0.5">
+                          <EntityIcon className="h-2.5 w-2.5 text-muted-foreground" />
+                          <span className="font-medium truncate">{a.entityName}</span>
                         </span>
                       </p>
                     </div>
+                    <time className="text-[10px] text-muted-foreground whitespace-nowrap tabular-nums">
+                      {formatDistanceToNow(new Date(a.timestamp), { addSuffix: true, locale: nl })}
+                    </time>
                   </div>
-                  <StatusBadge status={task.status} />
-                </Link>
-              );
-            })
-          )}
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
 

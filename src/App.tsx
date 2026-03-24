@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ActivityProvider } from "@/contexts/ActivityContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -17,6 +18,7 @@ import RapportagePage from "./pages/RapportagePage";
 import GebruikersPage from "./pages/GebruikersPage";
 import InstellingenPage from "./pages/InstellingenPage";
 import TakenPage from "./pages/TakenPage";
+import ActiviteitenPage from "./pages/ActiviteitenPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +38,7 @@ function AppRoutes() {
         <Route path="/evenementen/:id" element={<EventDetailPage />} />
         <Route path="/rapportage" element={<RapportagePage />} />
         <Route path="/taken" element={<TakenPage />} />
+        <Route path="/activiteit" element={<ActiviteitenPage />} />
         {isAdmin && <Route path="/gebruikers" element={<GebruikersPage />} />}
         <Route path="/instellingen" element={<InstellingenPage />} />
         <Route path="*" element={<NotFound />} />
@@ -51,7 +54,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <AppRoutes />
+          <ActivityProvider>
+            <AppRoutes />
+          </ActivityProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
