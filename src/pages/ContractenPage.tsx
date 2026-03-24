@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { mockContracts, mockSchools, mockEvents } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Download, Plus, ChevronDown, ChevronUp, ExternalLink, Calendar } from "lucide-react";
+import { Download, Plus, ChevronDown, ChevronUp, ExternalLink, Calendar, Pencil } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
