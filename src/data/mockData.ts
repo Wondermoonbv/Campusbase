@@ -48,6 +48,16 @@ export const mockEvents: Event[] = [
   { id: "7", name: "Ingenieursbeurs Brussel", type: "jobbeurs", date: "2026-06-12", start_time: "09:00", end_time: "17:00", setup_date: "2026-06-11", setup_time: "15:00", location: "Tour & Taxis, Brussel", school_id: null, responsible: "Anna Verhoeven", team_members: ["Tom De Graef", "Sarah Mertens", "Koen Willems"], elia_contact: "Anna Verhoeven", budget: 6000, status: "gepland", description: "Grote multi-school ingenieursbeurs in Brussel.", stand_type: "jobbeurs stand", stand_size: "groot 6m²+", notes: "" },
 ];
 
+export const mockEventPrograms: EventProgram[] = [
+  { event_id: "1", program_id: "1" },  // Jobbeurs KU Leuven → Burgerlijk Ingenieur
+  { event_id: "1", program_id: "2" },  // Jobbeurs KU Leuven → Informatica
+  { event_id: "2", program_id: "3" },  // Career Day UGent → Elektrotechniek
+  { event_id: "3", program_id: "2" },  // Hackathon → Informatica KU Leuven
+  { event_id: "3", program_id: "5" },  // Hackathon → Computer Science VUB
+  { event_id: "4", program_id: "5" },  // Workshop Smart Grids VUB → Computer Science
+  { event_id: "5", program_id: "4" },  // Campus Presentatie HOGENT → Elektromechanica
+];
+
 export const mockParticipations: SchoolEventParticipation[] = [
   { id: "1", school_id: "1", event_id: "1", staff_count: 4, student_contacts: 85, follow_up_done: true, rating: 4 },
   { id: "2", school_id: "2", event_id: "2", staff_count: 3, student_contacts: 0, follow_up_done: false, rating: null },
