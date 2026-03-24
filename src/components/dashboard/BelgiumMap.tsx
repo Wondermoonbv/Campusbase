@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import L from "leaflet";
 import { mockSchools, mockEvents } from "@/data/mockData";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -57,6 +58,7 @@ const eventIcon = makeSvgIcon("hsl(28, 87%, 51%)");
 type FilterMode = "both" | "schools" | "events";
 
 export default function BelgiumMap() {
+  const isMobile = useIsMobile();
   const [filter, setFilter] = useState<FilterMode>("both");
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -71,9 +73,12 @@ export default function BelgiumMap() {
 
     const map = L.map(containerRef.current, {
       center: [50.5, 4.47],
-      zoom: 8,
+      zoom: isMobile ? 7 : 8,
       scrollWheelZoom: false,
-    });
+      dragging: true,
+      touchZoom: true,
+      tap: true,
+    } as L.MapOptions);
 
     L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
       attribution: '&copy; <a href="https://carto.com">CARTO</a>',
@@ -147,7 +152,7 @@ export default function BelgiumMap() {
 
   return (
     <div className="surface-card overflow-hidden">
-      <div className="p-4 border-b border-border flex items-center justify-between">
+      <div className="p-3 sm:p-4 border-b border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <h2>België overzicht</h2>
         <ToggleGroup
           type="single"
@@ -157,19 +162,19 @@ export default function BelgiumMap() {
         >
           <ToggleGroupItem value="both" aria-label="Beide">
             <Layers className="h-4 w-4 mr-1.5" />
-            Beide
+            <span className="hidden sm:inline">Beide</span>
           </ToggleGroupItem>
           <ToggleGroupItem value="schools" aria-label="Scholen">
             <GraduationCap className="h-4 w-4 mr-1.5" />
-            Scholen
+            <span className="hidden sm:inline">Scholen</span>
           </ToggleGroupItem>
           <ToggleGroupItem value="events" aria-label="Evenementen">
             <CalendarDays className="h-4 w-4 mr-1.5" />
-            Evenementen
+            <span className="hidden sm:inline">Evenementen</span>
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
-      <div ref={containerRef} className="h-[400px]" style={{ zIndex: 0 }} />
+      <div ref={containerRef} className="h-[280px] sm:h-[400px]" style={{ zIndex: 0 }} />
     </div>
   );
 }
