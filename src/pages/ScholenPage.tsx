@@ -20,9 +20,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Download, ExternalLink, Pencil } from "lucide-react";
+import { Plus, Search, Download, ExternalLink, Pencil, Upload } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
+import { CsvImportDialog, CsvColumn } from "@/components/import/CsvImportDialog";
+
+const SCHOOL_CSV_COLUMNS: CsvColumn[] = [
+  { key: "name", label: "Naam", required: true },
+  { key: "type", label: "Type", required: true, validate: (v) => ["universiteit", "hogeschool", "secundair"].includes(v.toLowerCase()) ? null : "Moet universiteit, hogeschool of secundair zijn" },
+  { key: "city", label: "Stad", required: true },
+  { key: "province", label: "Provincie", required: true, validate: (v) => PROVINCES.includes(v) ? null : "Ongeldige provincie" },
+  { key: "language", label: "Taal", required: true, validate: (v) => ["NL", "FR", "EN"].includes(v.toUpperCase()) ? null : "Moet NL, FR of EN zijn" },
+  { key: "status", label: "Status", validate: (v) => ["actief", "inactief", "prospect"].includes(v.toLowerCase()) ? null : "Moet actief, inactief of prospect zijn" },
+  { key: "website", label: "Website" },
+  { key: "notes", label: "Notities" },
+];
 
 
 export default function ScholenPage() {
