@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { mockEvents, mockSchools } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -9,15 +10,11 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Plus, Search, Download, CalendarDays, List } from "lucide-react";
-import { toast } from "sonner";
+import { EventFormDialog } from "@/components/events/EventFormDialog";
 
 export default function EventenPage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -34,7 +31,6 @@ export default function EventenPage() {
     });
   }, [search, filterType, filterStatus]);
 
-  // Group by month for calendar view
   const byMonth = useMemo(() => {
     const groups: Record<string, typeof filtered> = {};
     filtered.forEach((e) => {
@@ -118,33 +114,24 @@ export default function EventenPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Evenement</TableHead>
-                <TableHead>Type</TableHead>
                 <TableHead>Datum</TableHead>
                 <TableHead className="hidden md:table-cell">Locatie</TableHead>
-                <TableHead className="hidden lg:table-cell">School</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="hidden lg:table-cell">Verantwoordelijke</TableHead>
-                <TableHead className="hidden md:table-cell text-right">Budget</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((ev) => {
-                const school = ev.school_id ? mockSchools.find((s) => s.id === ev.school_id) : null;
-                return (
-                  <TableRow key={ev.id} className="hover:bg-muted/30">
-                    <TableCell className="font-medium">{ev.name}</TableCell>
-                    <TableCell className="capitalize">{ev.type}</TableCell>
-                    <TableCell>{new Date(ev.date).toLocaleDateString("nl-BE")}</TableCell>
-                    <TableCell className="hidden md:table-cell">{ev.location}</TableCell>
-                    <TableCell className="hidden lg:table-cell">{school?.name ?? "Multi-school"}</TableCell>
-                    <TableCell><StatusBadge status={ev.status} /></TableCell>
-                    <TableCell className="hidden lg:table-cell text-muted-foreground">{ev.responsible}</TableCell>
-                    <TableCell className="hidden md:table-cell text-right tabular-nums">
-                      {ev.budget ? `€${ev.budget.toLocaleString("nl-BE")}` : "—"}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {filtered.map((ev) => (
+                <TableRow
+                  key={ev.id}
+                  className="hover:bg-muted/30 cursor-pointer"
+                  onClick={() => navigate(`/evenementen/${ev.id}`)}
+                >
+                  <TableCell className="font-medium">{ev.name}</TableCell>
+                  <TableCell className="tabular-nums">{new Date(ev.date).toLocaleDateString("nl-BE")}</TableCell>
+                  <TableCell className="hidden md:table-cell">{ev.location}</TableCell>
+                  <TableCell><StatusBadge status={ev.status} /></TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
           <div className="p-3 border-t border-border text-xs text-muted-foreground">
@@ -158,7 +145,11 @@ export default function EventenPage() {
               <h2 className="mb-3 capitalize">{month}</h2>
               <div className="space-y-2">
                 {events.map((ev) => (
-                  <div key={ev.id} className="surface-card p-4 flex items-center justify-between">
+                  <div
+                    key={ev.id}
+                    className="surface-card p-4 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition-colors"
+                    onClick={() => navigate(`/evenementen/${ev.id}`)}
+                  >
                     <div className="flex items-center gap-4">
                       <div className="text-center min-w-[48px]">
                         <div className="text-2xl font-semibold tabular-nums">{new Date(ev.date).getDate()}</div>
@@ -168,7 +159,7 @@ export default function EventenPage() {
                       </div>
                       <div>
                         <p className="font-medium text-sm">{ev.name}</p>
-                        <p className="text-xs text-muted-foreground">{ev.location} · {ev.responsible}</p>
+                        <p className="text-xs text-muted-foreground">{ev.location}</p>
                       </div>
                     </div>
                     <StatusBadge status={ev.status} />
@@ -182,95 +173,5 @@ export default function EventenPage() {
 
       <EventFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </div>
-  );
-}
-
-function EventFormDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.success("Evenement toegevoegd.");
-    onOpenChange(false);
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Nieuw evenement</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label>Naam *</Label>
-            <Input required />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Type</Label>
-              <Select defaultValue="jobbeurs">
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="jobbeurs">Jobbeurs</SelectItem>
-                  <SelectItem value="campus presentatie">Campus presentatie</SelectItem>
-                  <SelectItem value="workshop">Workshop</SelectItem>
-                  <SelectItem value="hackathon">Hackathon</SelectItem>
-                  <SelectItem value="andere">Andere</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Datum *</Label>
-              <Input type="date" required />
-            </div>
-          </div>
-          <div>
-            <Label>Locatie</Label>
-            <Input />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>School</Label>
-              <Select>
-                <SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger>
-                <SelectContent>
-                  {mockSchools.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Verantwoordelijke</Label>
-              <Input />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Budget (€)</Label>
-              <Input type="number" />
-            </div>
-            <div>
-              <Label>Status</Label>
-              <Select defaultValue="gepland">
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="gepland">Gepland</SelectItem>
-                  <SelectItem value="bevestigd">Bevestigd</SelectItem>
-                  <SelectItem value="afgelopen">Afgelopen</SelectItem>
-                  <SelectItem value="geannuleerd">Geannuleerd</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div>
-            <Label>Notities</Label>
-            <Textarea rows={3} />
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuleren</Button>
-            <Button type="submit">Toevoegen</Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 }
