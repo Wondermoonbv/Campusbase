@@ -81,7 +81,7 @@ export default function SchoolDetailPage() {
       <div className="surface-card p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Contactpersonen ({contacts.length})</h2>
-          <Button size="sm" variant="outline" onClick={() => setContactDialogOpen(true)}>
+          <Button size="sm" variant="outline" onClick={() => { setEditContact(undefined); setContactDialogOpen(true); }}>
             <Plus className="h-4 w-4 mr-1" /> Contact toevoegen
           </Button>
         </div>
