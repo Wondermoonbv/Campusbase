@@ -68,9 +68,9 @@ function ChartCard({ title, children, data, chartId }: {
 }) {
   const ref = useRef<HTMLDivElement>(null);
   return (
-    <div className="surface-card p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-base font-semibold">{title}</h2>
+    <div className="surface-card p-4 sm:p-5">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <h2 className="text-sm sm:text-base font-semibold">{title}</h2>
         <div className="flex gap-1">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => exportChartPNG(ref, chartId)} title="Export PNG">
             <Download className="h-3.5 w-3.5" />
@@ -98,7 +98,6 @@ export default function RapportagePage() {
     return isWithinInterval(d, { start: rangeStart, end: rangeEnd });
   }, [rangeStart, rangeEnd]);
 
-  // Filtered data
   const filteredEvents = useMemo(() => mockEvents.filter((e) => inRange(e.date)), [inRange]);
   const filteredContracts = useMemo(() => mockContracts.filter((c) => {
     const start = new Date(c.start_date);
@@ -111,13 +110,11 @@ export default function RapportagePage() {
     return ev && inRange(ev.date);
   }), [inRange]);
 
-  // KPIs
   const totalEvents = filteredEvents.length;
   const totalBudget = filteredEvents.reduce((s, e) => s + (e.budget ?? 0), 0);
   const activeSchoolIds = new Set(filteredEvents.map((e) => e.school_id).filter(Boolean));
   const studentsReached = filteredParticipations.reduce((s, p) => s + p.student_contacts, 0);
 
-  // Events per week/month
   const eventsTimeline = useMemo(() => {
     const groups: Record<string, number> = {};
     filteredEvents.forEach((e) => {
@@ -128,14 +125,12 @@ export default function RapportagePage() {
     return Object.entries(groups).map(([name, value]) => ({ name, value }));
   }, [filteredEvents, eventGrouping]);
 
-  // Events by type
   const eventsByType = useMemo(() => {
     const counts: Record<string, number> = {};
     filteredEvents.forEach((e) => { counts[e.type] = (counts[e.type] || 0) + 1; });
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [filteredEvents]);
 
-  // Events by school
   const eventsBySchool = useMemo(() => {
     const counts: Record<string, number> = {};
     filteredEvents.forEach((e) => {
@@ -145,14 +140,12 @@ export default function RapportagePage() {
     return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
   }, [filteredEvents]);
 
-  // Budget by type
   const budgetByType = useMemo(() => {
     const sums: Record<string, number> = {};
     filteredEvents.forEach((e) => { sums[e.type] = (sums[e.type] || 0) + (e.budget ?? 0); });
     return Object.entries(sums).map(([name, value]) => ({ name, value }));
   }, [filteredEvents]);
 
-  // Budget by school
   const budgetBySchool = useMemo(() => {
     const sums: Record<string, number> = {};
     filteredEvents.forEach((e) => {
@@ -162,7 +155,6 @@ export default function RapportagePage() {
     return Object.entries(sums).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
   }, [filteredEvents]);
 
-  // Contracts by type
   const contractsByType = useMemo(() => {
     const sums: Record<string, number> = {};
     filteredContracts.forEach((c) => { sums[c.contract_type] = (sums[c.contract_type] || 0) + (c.value ?? 0); });
@@ -176,159 +168,156 @@ export default function RapportagePage() {
       <h1 className="mb-4">Rapportage</h1>
 
       {/* Date filter bar */}
-      <div className="surface-card p-4 mb-6 flex flex-wrap items-center gap-3">
-        <span className="text-sm font-medium text-muted-foreground">Periode:</span>
-        {(["week", "month", "quarter", "year", "custom"] as PeriodPreset[]).map((p) => {
-          const labels: Record<PeriodPreset, string> = { week: "Deze week", month: "Deze maand", quarter: "Dit kwartaal", year: "Dit jaar", custom: "Aangepast" };
-          return (
-            <Button key={p} variant={preset === p ? "default" : "outline"} size="sm" onClick={() => setPreset(p)}>
-              {labels[p]}
-            </Button>
-          );
-        })}
-        {preset === "custom" && (
-          <div className="flex items-center gap-2 ml-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal", !customFrom && "text-muted-foreground")}>
-                  <CalendarIcon className="mr-1 h-3.5 w-3.5" />
-                  {customFrom ? format(customFrom, "dd/MM/yyyy") : "Van"}
+      <div className="surface-card p-3 sm:p-4 mb-4 sm:mb-6">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <span className="text-sm font-medium text-muted-foreground w-full sm:w-auto">Periode:</span>
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
+            {(["week", "month", "quarter", "year", "custom"] as PeriodPreset[]).map((p) => {
+              const labels: Record<PeriodPreset, string> = { week: "Week", month: "Maand", quarter: "Kwartaal", year: "Jaar", custom: "Aangepast" };
+              return (
+                <Button key={p} variant={preset === p ? "default" : "outline"} size="sm" className="h-9 sm:h-8 text-xs sm:text-sm" onClick={() => setPreset(p)}>
+                  {labels[p]}
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={customFrom} onSelect={setCustomFrom} className={cn("p-3 pointer-events-auto")} />
-              </PopoverContent>
-            </Popover>
-            <span className="text-sm text-muted-foreground">→</span>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal", !customTo && "text-muted-foreground")}>
-                  <CalendarIcon className="mr-1 h-3.5 w-3.5" />
-                  {customTo ? format(customTo, "dd/MM/yyyy") : "Tot"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={customTo} onSelect={setCustomTo} className={cn("p-3 pointer-events-auto")} />
-              </PopoverContent>
-            </Popover>
+              );
+            })}
           </div>
-        )}
-        <span className="ml-auto text-xs text-muted-foreground">
-          {format(rangeStart, "dd/MM/yyyy")} — {format(rangeEnd, "dd/MM/yyyy")}
-        </span>
+          {preset === "custom" && (
+            <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal h-9 sm:h-8", !customFrom && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-1 h-3.5 w-3.5" />
+                    {customFrom ? format(customFrom, "dd/MM/yyyy") : "Van"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={customFrom} onSelect={setCustomFrom} className={cn("p-3 pointer-events-auto")} />
+                </PopoverContent>
+              </Popover>
+              <span className="text-sm text-muted-foreground">→</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal h-9 sm:h-8", !customTo && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-1 h-3.5 w-3.5" />
+                    {customTo ? format(customTo, "dd/MM/yyyy") : "Tot"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={customTo} onSelect={setCustomTo} className={cn("p-3 pointer-events-auto")} />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+          <span className="text-xs text-muted-foreground w-full sm:w-auto sm:ml-auto">
+            {format(rangeStart, "dd/MM/yyyy")} — {format(rangeEnd, "dd/MM/yyyy")}
+          </span>
+        </div>
       </div>
 
       {/* KPI summary */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         {[
           { icon: CalendarDays, label: "Totaal events", value: totalEvents },
           { icon: Wallet, label: "Totaal budget", value: `€${totalBudget.toLocaleString("nl-BE")}` },
           { icon: GraduationCap, label: "Actieve scholen", value: activeSchoolIds.size },
           { icon: Users, label: "Studenten bereikt", value: studentsReached },
         ].map((kpi) => (
-          <div key={kpi.label} className="surface-card p-4 flex items-start gap-3">
-            <div className="flex items-center justify-center w-9 h-9 rounded bg-primary/10">
+          <div key={kpi.label} className="surface-card p-3 sm:p-4 flex items-start gap-2 sm:gap-3">
+            <div className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded bg-primary/10">
               <kpi.icon className="h-4 w-4 text-primary" />
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">{kpi.label}</p>
-              <p className="text-xl font-semibold tabular-nums">{kpi.value}</p>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">{kpi.label}</p>
+              <p className="text-lg sm:text-xl font-semibold tabular-nums">{kpi.value}</p>
             </div>
           </div>
         ))}
       </div>
 
       {/* Charts grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* Events timeline */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <ChartCard title="Evenementen per periode" data={eventsTimeline} chartId="events-timeline">
           <div className="flex gap-1 mb-3">
-            <Button variant={eventGrouping === "week" ? "default" : "outline"} size="sm" className="h-6 text-xs" onClick={() => setEventGrouping("week")}>Week</Button>
-            <Button variant={eventGrouping === "month" ? "default" : "outline"} size="sm" className="h-6 text-xs" onClick={() => setEventGrouping("month")}>Maand</Button>
+            <Button variant={eventGrouping === "week" ? "default" : "outline"} size="sm" className="h-7 text-xs" onClick={() => setEventGrouping("week")}>Week</Button>
+            <Button variant={eventGrouping === "month" ? "default" : "outline"} size="sm" className="h-7 text-xs" onClick={() => setEventGrouping("month")}>Maand</Button>
           </div>
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart data={eventsTimeline}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+              <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 10 }} width={30} />
               <Tooltip />
               <Bar dataKey="value" fill="#0E6575" radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        {/* Events by type */}
         <ChartCard title="Evenementen per type" data={eventsByType} chartId="events-type">
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={250}>
             <PieChart>
-              <Pie data={eventsByType} cx="50%" cy="50%" innerRadius={55} outerRadius={95} dataKey="value" nameKey="name" label>
+              <Pie data={eventsByType} cx="50%" cy="50%" innerRadius={40} outerRadius={75} dataKey="value" nameKey="name" label>
                 {eventsByType.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
               </Pie>
               <Tooltip />
-              <Legend />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        {/* Events by school */}
         <ChartCard title="Evenementen per school" data={eventsBySchool} chartId="events-school">
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={250}>
             <BarChart data={eventsBySchool} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
-              <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 10 }} />
+              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} />
+              <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 9 }} />
               <Tooltip />
               <Bar dataKey="value" fill="#007BAF" radius={[0, 2, 2, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        {/* Budget by type */}
         <ChartCard title="Budget per type event (€)" data={budgetByType} chartId="budget-type">
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={250}>
             <BarChart data={budgetByType}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `€${v.toLocaleString()}`} />
+              <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+              <YAxis tick={{ fontSize: 10 }} width={50} tickFormatter={(v) => `€${v.toLocaleString()}`} />
               <Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} />
               <Bar dataKey="value" fill="#ef7c14" radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        {/* Budget by school */}
         <ChartCard title="Budget per school (€)" data={budgetBySchool} chartId="budget-school">
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={250}>
             <BarChart data={budgetBySchool} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `€${v.toLocaleString()}`} />
-              <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 10 }} />
+              <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={(v) => `€${v.toLocaleString()}`} />
+              <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 9 }} />
               <Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} />
               <Bar dataKey="value" fill="#0E6575" radius={[0, 2, 2, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        {/* Contracts by type (value) */}
         <ChartCard title="Contractwaarde per type (€)" data={contractsByType} chartId="contracts-type">
           <div className="mb-3 text-sm text-muted-foreground">
             Totaal actieve contractwaarde: <span className="font-semibold text-foreground">€{totalContractValue.toLocaleString("nl-BE")}</span>
           </div>
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer width="100%" height={220}>
             <PieChart>
-              <Pie data={contractsByType} cx="50%" cy="50%" innerRadius={55} outerRadius={95} dataKey="value" nameKey="name" label={({ name, value }) => `${name}: €${value.toLocaleString()}`}>
+              <Pie data={contractsByType} cx="50%" cy="50%" innerRadius={40} outerRadius={75} dataKey="value" nameKey="name" label={({ name, value }) => `${name}: €${value.toLocaleString()}`}>
                 {contractsByType.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
               </Pie>
               <Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} />
-              <Legend />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>
 
         {/* Expiring contracts */}
-        <div className="surface-card p-5 lg:col-span-2">
-          <h2 className="text-base font-semibold mb-4">Contracten die vervallen in deze periode ({expiringContracts.length})</h2>
+        <div className="surface-card p-4 sm:p-5 lg:col-span-2">
+          <h2 className="text-sm sm:text-base font-semibold mb-4">Contracten die vervallen in deze periode ({expiringContracts.length})</h2>
           {expiringContracts.length === 0 ? (
             <p className="text-sm text-muted-foreground">Geen contracten vervallen in de geselecteerde periode.</p>
           ) : (
@@ -336,7 +325,7 @@ export default function RapportagePage() {
               {expiringContracts.map((c) => {
                 const school = mockSchools.find((s) => s.id === c.school_id);
                 return (
-                  <div key={c.id} className="py-3 flex items-center justify-between">
+                  <div key={c.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                     <div>
                       <p className="text-sm font-medium">{school?.name} — <span className="capitalize">{c.contract_type}</span></p>
                       <p className="text-xs text-muted-foreground">Vervalt: {new Date(c.end_date).toLocaleDateString("nl-BE")} · Waarde: {c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</p>

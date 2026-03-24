@@ -103,34 +103,36 @@ export default function TakenPage() {
 
   return (
     <div className="page-container animate-fade-in-up">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
         <h1>Taken</h1>
-        <Button size="sm" onClick={openCreate}>
+        <Button size="sm" className="h-10 sm:h-8" onClick={openCreate}>
           <Plus className="h-4 w-4 mr-1" /> Nieuwe taak
         </Button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 mb-4">
+        <div className="relative flex-1 min-w-0 sm:max-w-sm">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Zoek taken..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder="Zoek taken..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 sm:h-9" />
         </div>
-        <Select value={filterPriority} onValueChange={setFilterPriority}>
-          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Prioriteit" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="alle">Alle prioriteiten</SelectItem>
-            <SelectItem value="hoog">Hoog</SelectItem>
-            <SelectItem value="normaal">Normaal</SelectItem>
-            <SelectItem value="laag">Laag</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={filterAssigned} onValueChange={setFilterAssigned}>
-          <SelectTrigger className="w-[180px]"><SelectValue placeholder="Teamlid" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="alle">Alle teamleden</SelectItem>
-            {teamMembers.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select value={filterPriority} onValueChange={setFilterPriority}>
+            <SelectTrigger className="w-full sm:w-[140px] h-10 sm:h-9"><SelectValue placeholder="Prioriteit" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="alle">Alle prioriteiten</SelectItem>
+              <SelectItem value="hoog">Hoog</SelectItem>
+              <SelectItem value="normaal">Normaal</SelectItem>
+              <SelectItem value="laag">Laag</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filterAssigned} onValueChange={setFilterAssigned}>
+            <SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9"><SelectValue placeholder="Teamlid" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="alle">Alle teamleden</SelectItem>
+              {teamMembers.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Tabs defaultValue="active">
@@ -200,77 +202,134 @@ function TaskTable({ tasks, done = false, onToggle, onEdit, onDelete }: TaskTabl
   }, [tasks, sort]);
 
   return (
-    <div className="surface-card overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-8"></TableHead>
-            <SortableTableHead sortKey="title" currentSort={sort} onSort={toggleSort}>Taak</SortableTableHead>
-            <SortableTableHead sortKey="priority" currentSort={sort} onSort={toggleSort}>Prioriteit</SortableTableHead>
-            <SortableTableHead sortKey="assigned" currentSort={sort} onSort={toggleSort}>Toegewezen aan</SortableTableHead>
-            <SortableTableHead sortKey="due" currentSort={sort} onSort={toggleSort}>Vervaldatum</SortableTableHead>
-            <TableHead>Gekoppeld</TableHead>
-            <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
-            <TableHead className="w-20" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sorted.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen taken gevonden.</TableCell>
-            </TableRow>
-          ) : (
-            sorted.map((task) => {
-              const school = task.school_id ? mockSchools.find((s) => s.id === task.school_id) : null;
-              const event = task.event_id ? mockEvents.find((e) => e.id === task.event_id) : null;
-              const overdue = !done && new Date(task.due_date) < now;
+    <>
+      {/* Mobile card view */}
+      <div className="block md:hidden space-y-2">
+        {sorted.length === 0 ? (
+          <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen taken gevonden.</div>
+        ) : (
+          sorted.map((task) => {
+            const school = task.school_id ? mockSchools.find((s) => s.id === task.school_id) : null;
+            const event = task.event_id ? mockEvents.find((e) => e.id === task.event_id) : null;
+            const overdue = !done && new Date(task.due_date) < now;
 
-              return (
-                <TableRow key={task.id} className={done ? "opacity-60" : ""}>
-                  <TableCell>
-                    <Checkbox
-                      checked={task.status === "afgerond"}
-                      onCheckedChange={() => onToggle(task.id)}
-                    />
-                  </TableCell>
-                  <TableCell>
+            return (
+              <div key={task.id} className={`surface-card p-4 ${done ? "opacity-60" : ""}`}>
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    checked={task.status === "afgerond"}
+                    onCheckedChange={() => onToggle(task.id)}
+                    className="mt-0.5 h-5 w-5"
+                  />
+                  <div className="flex-1 min-w-0">
                     <p className={`text-sm font-medium ${task.status === "afgerond" ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>
-                    {task.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>}
-                  </TableCell>
-                  <TableCell>
-                    <span className="inline-flex items-center gap-1 text-xs capitalize">{priorityIcon[task.priority]} {task.priority}</span>
-                  </TableCell>
-                  <TableCell className="text-sm">{task.assigned_to}</TableCell>
-                  <TableCell>
-                    <span className={`text-sm tabular-nums ${overdue ? "text-destructive font-medium" : ""}`}>
-                      {new Date(task.due_date).toLocaleDateString("nl-BE")}
-                      {overdue && <AlertTriangle className="inline h-3 w-3 ml-1 -mt-0.5" />}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-0.5">
-                      {school && <Link to={`/scholen/${school.id}`} className="text-xs text-primary hover:underline">{school.name}</Link>}
-                      {event && <Link to={`/evenementen/${event.id}`} className="text-xs text-primary hover:underline">{event.name}</Link>}
-                      {!school && !event && <span className="text-xs text-muted-foreground">—</span>}
+                    {task.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{task.description}</p>}
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <span className="inline-flex items-center gap-1 text-xs capitalize">{priorityIcon[task.priority]} {task.priority}</span>
+                      <span className="text-xs text-muted-foreground">·</span>
+                      <span className="text-xs text-muted-foreground">{task.assigned_to}</span>
+                      <span className="text-xs text-muted-foreground">·</span>
+                      <span className={`text-xs tabular-nums ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                        {new Date(task.due_date).toLocaleDateString("nl-BE")}
+                        {overdue && " ⚠"}
+                      </span>
                     </div>
-                  </TableCell>
-                  <TableCell><StatusBadge status={task.status} /></TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(task)}>
-                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDelete(task)}>
-                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                      </Button>
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="flex gap-1">
+                        {school && <Link to={`/scholen/${school.id}`} className="text-xs text-primary hover:underline">{school.name}</Link>}
+                        {school && event && <span className="text-xs text-muted-foreground">,</span>}
+                        {event && <Link to={`/evenementen/${event.id}`} className="text-xs text-primary hover:underline">{event.name}</Link>}
+                      </div>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(task)}>
+                          <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDelete(task)}>
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })
-          )}
-        </TableBody>
-      </Table>
-    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop table view */}
+      <div className="surface-card overflow-hidden hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-8"></TableHead>
+              <SortableTableHead sortKey="title" currentSort={sort} onSort={toggleSort}>Taak</SortableTableHead>
+              <SortableTableHead sortKey="priority" currentSort={sort} onSort={toggleSort}>Prioriteit</SortableTableHead>
+              <SortableTableHead sortKey="assigned" currentSort={sort} onSort={toggleSort}>Toegewezen aan</SortableTableHead>
+              <SortableTableHead sortKey="due" currentSort={sort} onSort={toggleSort}>Vervaldatum</SortableTableHead>
+              <TableHead className="hidden lg:table-cell">Gekoppeld</TableHead>
+              <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
+              <TableHead className="w-20" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sorted.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen taken gevonden.</TableCell>
+              </TableRow>
+            ) : (
+              sorted.map((task) => {
+                const school = task.school_id ? mockSchools.find((s) => s.id === task.school_id) : null;
+                const event = task.event_id ? mockEvents.find((e) => e.id === task.event_id) : null;
+                const overdue = !done && new Date(task.due_date) < now;
+
+                return (
+                  <TableRow key={task.id} className={done ? "opacity-60" : ""}>
+                    <TableCell>
+                      <Checkbox
+                        checked={task.status === "afgerond"}
+                        onCheckedChange={() => onToggle(task.id)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <p className={`text-sm font-medium ${task.status === "afgerond" ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>
+                      {task.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>}
+                    </TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center gap-1 text-xs capitalize">{priorityIcon[task.priority]} {task.priority}</span>
+                    </TableCell>
+                    <TableCell className="text-sm">{task.assigned_to}</TableCell>
+                    <TableCell>
+                      <span className={`text-sm tabular-nums ${overdue ? "text-destructive font-medium" : ""}`}>
+                        {new Date(task.due_date).toLocaleDateString("nl-BE")}
+                        {overdue && <AlertTriangle className="inline h-3 w-3 ml-1 -mt-0.5" />}
+                      </span>
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <div className="flex flex-col gap-0.5">
+                        {school && <Link to={`/scholen/${school.id}`} className="text-xs text-primary hover:underline">{school.name}</Link>}
+                        {event && <Link to={`/evenementen/${event.id}`} className="text-xs text-primary hover:underline">{event.name}</Link>}
+                        {!school && !event && <span className="text-xs text-muted-foreground">—</span>}
+                      </div>
+                    </TableCell>
+                    <TableCell><StatusBadge status={task.status} /></TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(task)}>
+                          <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDelete(task)}>
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 }
