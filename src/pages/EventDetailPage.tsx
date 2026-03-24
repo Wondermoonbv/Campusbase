@@ -11,9 +11,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap } from "lucide-react";
+import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap, CheckSquare } from "lucide-react";
 import type { Event, StandType, StandSize, EventType, EventStatus } from "@/types/crm";
 import { toast } from "sonner";
+import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 
 export default function EventDetailPage() {
   const { id } = useParams();
@@ -21,6 +22,7 @@ export default function EventDetailPage() {
   const { isAdmin } = useAuth();
   const event = mockEvents.find((e) => e.id === id);
   const [editing, setEditing] = useState(false);
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [form, setForm] = useState<Event | null>(event ?? null);
 
   const initialProgramIds = useMemo(() =>
@@ -94,9 +96,14 @@ export default function EventDetailPage() {
               </Button>
             </div>
           ) : (
-            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-              <Pencil className="h-4 w-4 mr-1" /> Bewerken
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setTaskDialogOpen(true)}>
+                <CheckSquare className="h-4 w-4 mr-1" /> Taak
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+                <Pencil className="h-4 w-4 mr-1" /> Bewerken
+              </Button>
+            </div>
           )
         )}
       </div>
@@ -306,6 +313,8 @@ export default function EventDetailPage() {
           )}
         </section>
       </div>
+
+      <TaskFormDialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen} defaultEventId={event.id} defaultSchoolId={event.school_id} />
     </div>
   );
 }

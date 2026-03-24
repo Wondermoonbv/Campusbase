@@ -8,6 +8,7 @@ import {
   Users,
   LogOut,
   Settings,
+  CheckSquare,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -32,6 +33,7 @@ const navItems = [
   { title: "Opleidingen", url: "/opleidingen", icon: BookOpen },
   { title: "Contracten", url: "/contracten", icon: FileText },
   { title: "Evenementen", url: "/evenementen", icon: CalendarDays },
+  { title: "Taken", url: "/taken", icon: CheckSquare },
   { title: "Rapportage", url: "/rapportage", icon: BarChart3 },
 ];
 

@@ -2,7 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ExternalLink, Mail, Phone, Edit, Plus, Linkedin, User } from "lucide-react";
+import { ArrowLeft, ExternalLink, Mail, Phone, Edit, Plus, Linkedin, User, CheckSquare } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -11,6 +11,7 @@ import { useState } from "react";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
 import { ContactFormDialog } from "@/components/schools/ContactFormDialog";
 import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
+import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 import { mockSchools, mockPrograms, mockContracts, mockEvents, mockParticipations, mockContacts } from "@/data/mockData";
 
 export default function SchoolDetailPage() {
@@ -20,6 +21,7 @@ export default function SchoolDetailPage() {
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [editContact, setEditContact] = useState<typeof contacts[0] | undefined>(undefined);
   const [programDialogOpen, setProgramDialogOpen] = useState(false);
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const { isAdmin } = useAuth();
 
   if (!school) {
@@ -62,9 +64,14 @@ export default function SchoolDetailPage() {
             </div>
           </div>
           {isAdmin && (
-            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-              <Edit className="h-4 w-4 mr-1" /> Bewerken
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setTaskDialogOpen(true)}>
+                <CheckSquare className="h-4 w-4 mr-1" /> Taak
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+                <Edit className="h-4 w-4 mr-1" /> Bewerken
+              </Button>
+            </div>
           )}
         </div>
 
@@ -264,6 +271,7 @@ export default function SchoolDetailPage() {
       <SchoolFormDialog open={editOpen} onOpenChange={setEditOpen} school={school} />
       <ContactFormDialog open={contactDialogOpen} onOpenChange={setContactDialogOpen} schoolId={school.id} contact={editContact} />
       <ProgramFormDialog open={programDialogOpen} onOpenChange={setProgramDialogOpen} schoolId={school.id} />
+      <TaskFormDialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen} defaultSchoolId={school.id} />
     </div>
   );
 }
