@@ -9,7 +9,7 @@ import {
   LogOut,
   Settings,
   CheckSquare,
-  Activity,
+  
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -46,7 +46,7 @@ export function AppSidebar() {
   const { user, isAdmin, logout, platformSettings } = useAuth();
 
   const allItems = isAdmin
-    ? [...navItems, { title: "Gebruikers", url: "/gebruikers", icon: Users }, { title: "Activiteit", url: "/activiteit", icon: Activity }]
+    ? [...navItems, { title: "Gebruikers", url: "/gebruikers", icon: Users }]
     : navItems;
 
   const initials = user ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() : "?";

@@ -18,7 +18,7 @@ import RapportagePage from "./pages/RapportagePage";
 import GebruikersPage from "./pages/GebruikersPage";
 import InstellingenPage from "./pages/InstellingenPage";
 import TakenPage from "./pages/TakenPage";
-import ActiviteitenPage from "./pages/ActiviteitenPage";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,7 +38,7 @@ function AppRoutes() {
         <Route path="/evenementen/:id" element={<EventDetailPage />} />
         <Route path="/rapportage" element={<RapportagePage />} />
         <Route path="/taken" element={<TakenPage />} />
-        <Route path="/activiteit" element={<ActiviteitenPage />} />
+        {/* activiteit is now a tab on gebruikers page */}
         {isAdmin && <Route path="/gebruikers" element={<GebruikersPage />} />}
         <Route path="/instellingen" element={<InstellingenPage />} />
         <Route path="*" element={<NotFound />} />
