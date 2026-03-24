@@ -52,6 +52,7 @@ function KpiCard({
 
 export default function DashboardPage() {
   const now = new Date();
+  const { user } = useAuth();
   const in30Days = new Date(now.getTime() + 30 * 86400000);
   const in90Days = new Date(now.getTime() + 90 * 86400000);
 
