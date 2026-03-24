@@ -68,11 +68,20 @@ export interface Event {
   name: string;
   type: EventType;
   date: string;
+  start_time: string;
+  end_time: string;
+  setup_date: string;
+  setup_time: string;
   location: string;
   school_id: string | null;
   responsible: string;
+  team_members: string[];
+  elia_contact: string;
   budget: number | null;
   status: EventStatus;
+  description: string;
+  stand_type: StandType;
+  stand_size: StandSize;
   notes: string;
   school?: School;
 }
