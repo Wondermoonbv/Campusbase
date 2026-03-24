@@ -36,7 +36,6 @@ const navItems = [
   { title: "Evenementen", url: "/evenementen", icon: CalendarDays },
   { title: "Taken", url: "/taken", icon: CheckSquare },
   { title: "Rapportage", url: "/rapportage", icon: BarChart3 },
-  { title: "Activiteit", url: "/activiteit", icon: Activity },
 ];
 
 export function AppSidebar() {
@@ -47,7 +46,7 @@ export function AppSidebar() {
   const { user, isAdmin, logout, platformSettings } = useAuth();
 
   const allItems = isAdmin
-    ? [...navItems, { title: "Gebruikers", url: "/gebruikers", icon: Users }]
+    ? [...navItems, { title: "Gebruikers", url: "/gebruikers", icon: Users }, { title: "Activiteit", url: "/activiteit", icon: Activity }]
     : navItems;
 
   const initials = user ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() : "?";

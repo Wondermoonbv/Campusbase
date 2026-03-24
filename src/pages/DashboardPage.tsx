@@ -1,7 +1,6 @@
-import { useMemo, lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { mockSchools, mockContracts, mockEvents, mockTasks } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
-import { useActivity } from "@/contexts/ActivityContext";
 
 const BelgiumMap = lazy(() => import("@/components/dashboard/BelgiumMap"));
 import {
@@ -15,17 +14,10 @@ import {
   ArrowUp,
   Minus,
   Activity,
-  Plus,
-  Pencil,
-  Trash2,
   BookOpen,
 } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Link, useNavigate } from "react-router-dom";
-import { formatDistanceToNow } from "date-fns";
-import { nl } from "date-fns/locale";
-import type { ActivityAction, ActivityEntityType } from "@/contexts/ActivityContext";
 
 function KpiCard({
   icon: Icon,
@@ -56,30 +48,10 @@ function KpiCard({
   );
 }
 
-const entityIcons: Record<ActivityEntityType, React.ElementType> = {
-  school: GraduationCap,
-  evenement: CalendarDays,
-  contract: FileText,
-  opleiding: BookOpen,
-  taak: CheckSquare,
-};
-
-const actionIcons: Record<ActivityAction, React.ElementType> = {
-  aangemaakt: Plus,
-  bewerkt: Pencil,
-  verwijderd: Trash2,
-};
-
-const actionColors: Record<ActivityAction, string> = {
-  aangemaakt: "text-success",
-  bewerkt: "text-primary",
-  verwijderd: "text-destructive",
-};
 
 export default function DashboardPage() {
   const now = new Date();
   const { user } = useAuth();
-  const { activities } = useActivity();
   const in30Days = new Date(now.getTime() + 30 * 86400000);
   const in90Days = new Date(now.getTime() + 90 * 86400000);
 
@@ -101,7 +73,7 @@ export default function DashboardPage() {
     .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
     .slice(0, 5);
 
-  const recentActivities = activities.slice(0, 8);
+  
 
   const priorityIcon: Record<string, React.ReactNode> = {
     hoog: <ArrowUp className="h-3 w-3 text-destructive" />,
@@ -171,7 +143,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+      <div className="mt-6">
         {/* My tasks widget */}
         <div className="surface-card">
           <div className="p-4 border-b border-border flex items-center justify-between">
@@ -205,48 +177,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Recent activity widget */}
-        <div className="surface-card">
-          <div className="p-4 border-b border-border flex items-center justify-between">
-            <h2 className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-primary" /> Recente activiteit
-            </h2>
-            <Link to="/activiteit" className="text-sm text-primary hover:underline">Alle activiteit bekijken</Link>
-          </div>
-          <div className="divide-y divide-border">
-            {recentActivities.length === 0 ? (
-              <p className="p-4 text-sm text-muted-foreground">Nog geen activiteiten.</p>
-            ) : (
-              recentActivities.map((a) => {
-                const ActionIcon = actionIcons[a.action];
-                const EntityIcon = entityIcons[a.entityType];
-                return (
-                  <div key={a.id} className="flex items-center gap-3 px-4 py-3">
-                    <UserAvatar name={a.userName} avatarUrl={a.userAvatarUrl} className="h-7 w-7 shrink-0" fallbackClassName="text-[10px]" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs leading-relaxed">
-                        <span className="font-medium">{a.userName}</span>
-                        {" "}
-                        <span className={`inline-flex items-center gap-0.5 font-medium ${actionColors[a.action]}`}>
-                          <ActionIcon className="h-2.5 w-2.5" />
-                          {a.action}
-                        </span>
-                        {" "}
-                        <span className="inline-flex items-center gap-0.5">
-                          <EntityIcon className="h-2.5 w-2.5 text-muted-foreground" />
-                          <span className="font-medium truncate">{a.entityName}</span>
-                        </span>
-                      </p>
-                    </div>
-                    <time className="text-[10px] text-muted-foreground whitespace-nowrap tabular-nums">
-                      {formatDistanceToNow(new Date(a.timestamp), { addSuffix: true, locale: nl })}
-                    </time>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
       </div>
 
       <Suspense fallback={<div className="surface-card h-[460px] animate-pulse mt-6" />}>
