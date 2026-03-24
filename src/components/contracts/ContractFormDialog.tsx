@@ -30,6 +30,7 @@ interface ContractFormDialogProps {
 
 export function ContractFormDialog({ open, onOpenChange, contract }: ContractFormDialogProps) {
   const isEdit = !!contract;
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     school_id: contract?.school_id || "",
     contract_type: contract?.contract_type || "partnership",
@@ -42,6 +43,7 @@ export function ContractFormDialog({ open, onOpenChange, contract }: ContractFor
     document_url: contract?.document_url || "",
     notes: contract?.notes || "",
     linked_event_ids: contract?.linked_event_ids || [] as string[],
+    file: null as File | null,
   });
 
   const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
