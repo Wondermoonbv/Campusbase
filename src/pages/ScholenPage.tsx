@@ -143,6 +143,7 @@ export default function ScholenPage() {
               <TableHead className="hidden md:table-cell">Taal</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="hidden lg:table-cell">Contact</TableHead>
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
