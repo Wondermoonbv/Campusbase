@@ -1,0 +1,128 @@
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import type { AppUser, UserRole } from "@/contexts/AuthContext";
+
+export default function GebruikersPage() {
+  const { users, addUser, updateUser, deleteUser, user: currentUser } = useAuth();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editUser, setEditUser] = useState<AppUser | null>(null);
+  const [form, setForm] = useState({ name: "", email: "", role: "viewer" as UserRole });
+
+  const openCreate = () => {
+    setEditUser(null);
+    setForm({ name: "", email: "", role: "viewer" });
+    setDialogOpen(true);
+  };
+
+  const openEdit = (u: AppUser) => {
+    setEditUser(u);
+    setForm({ name: u.name, email: u.email, role: u.role });
+    setDialogOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name || !form.email) { toast.error("Vul alle velden in."); return; }
+    if (editUser) {
+      updateUser(editUser.id, form);
+      toast.success("Gebruiker bijgewerkt.");
+    } else {
+      if (users.some((u) => u.email.toLowerCase() === form.email.toLowerCase())) {
+        toast.error("E-mailadres is al in gebruik.");
+        return;
+      }
+      addUser(form);
+      toast.success("Gebruiker toegevoegd.");
+    }
+    setDialogOpen(false);
+  };
+
+  const handleDelete = (u: AppUser) => {
+    if (u.id === currentUser?.id) { toast.error("Je kan jezelf niet verwijderen."); return; }
+    deleteUser(u.id);
+    toast.success("Gebruiker verwijderd.");
+  };
+
+  return (
+    <div className="page-container animate-fade-in-up">
+      <div className="flex items-center justify-between mb-6">
+        <h1>Gebruikers</h1>
+        <Button size="sm" onClick={openCreate}>
+          <Plus className="h-4 w-4 mr-1" /> Gebruiker toevoegen
+        </Button>
+      </div>
+
+      <div className="surface-card overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Naam</TableHead>
+              <TableHead>E-mail</TableHead>
+              <TableHead>Rol</TableHead>
+              <TableHead className="w-20" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map((u) => (
+              <TableRow key={u.id}>
+                <TableCell className="font-medium">{u.name}</TableCell>
+                <TableCell>{u.email}</TableCell>
+                <TableCell className="capitalize">{u.role}</TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(u)}>
+                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(u)} disabled={u.id === currentUser?.id}>
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>{editUser ? "Gebruiker bewerken" : "Nieuwe gebruiker"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Naam *</Label>
+              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+            </div>
+            <div className="space-y-2">
+              <Label>E-mail *</Label>
+              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+            </div>
+            <div className="space-y-2">
+              <Label>Rol</Label>
+              <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as UserRole })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="viewer">Viewer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Annuleren</Button>
+              <Button type="submit">{editUser ? "Opslaan" : "Toevoegen"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
