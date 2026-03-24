@@ -99,9 +99,15 @@ export default function GebruikersPage() {
             <DialogTitle>{editUser ? "Gebruiker bewerken" : "Nieuwe gebruiker"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Naam *</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Voornaam *</Label>
+                <Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} required />
+              </div>
+              <div className="space-y-2">
+                <Label>Achternaam</Label>
+                <Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>E-mail *</Label>
