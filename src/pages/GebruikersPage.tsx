@@ -30,7 +30,8 @@ export default function GebruikersPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email) { toast.error("Vul alle velden in."); return; }
+    if (!form.firstName || !form.email) { toast.error("Vul alle velden in."); return; }
+    const fullName = `${form.firstName} ${form.lastName}`.trim();
     if (editUser) {
       updateUser(editUser.id, form);
       toast.success("Gebruiker bijgewerkt.");
