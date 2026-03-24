@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { mockTasks, mockSchools, mockEvents } from "@/data/mockData";
+import { mockTasks as initialTasks, mockSchools, mockEvents } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,10 +10,15 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, AlertTriangle, ArrowUp, Minus } from "lucide-react";
+import { Plus, Search, AlertTriangle, ArrowUp, Minus, Pencil, Trash2 } from "lucide-react";
 import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import type { Task, TaskStatus } from "@/types/crm";
 import { SortableTableHead, useSort, sortItems, SortConfig } from "@/components/ui/SortableTableHead";
 
@@ -24,18 +29,56 @@ const priorityIcon: Record<string, React.ReactNode> = {
 };
 
 export default function TakenPage() {
+  const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editTask, setEditTask] = useState<Task | null>(null);
+  const [deleteTask, setDeleteTask] = useState<Task | null>(null);
   const [search, setSearch] = useState("");
   const [filterPriority, setFilterPriority] = useState("alle");
   const [filterAssigned, setFilterAssigned] = useState("alle");
 
   const teamMembers = useMemo(() =>
-    [...new Set(mockTasks.map((t) => t.assigned_to))].sort(),
-    []
+    [...new Set(tasks.map((t) => t.assigned_to))].sort(),
+    [tasks]
   );
 
+  const toggleTaskStatus = (taskId: string) => {
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === taskId
+          ? { ...t, status: t.status === "afgerond" ? "open" : "afgerond" as TaskStatus }
+          : t
+      )
+    );
+  };
+
+  const handleSave = (saved: Task) => {
+    setTasks((prev) => {
+      const exists = prev.find((t) => t.id === saved.id);
+      if (exists) return prev.map((t) => (t.id === saved.id ? saved : t));
+      return [...prev, saved];
+    });
+  };
+
+  const handleDelete = () => {
+    if (!deleteTask) return;
+    setTasks((prev) => prev.filter((t) => t.id !== deleteTask.id));
+    toast.success("Taak verwijderd.");
+    setDeleteTask(null);
+  };
+
+  const openCreate = () => {
+    setEditTask(null);
+    setDialogOpen(true);
+  };
+
+  const openEdit = (task: Task) => {
+    setEditTask(task);
+    setDialogOpen(true);
+  };
+
   const filterTasks = (status: TaskStatus | "active") => {
-    return mockTasks.filter((t) => {
+    return tasks.filter((t) => {
       if (status === "active") {
         if (t.status === "afgerond") return false;
       } else if (t.status !== status) return false;
@@ -53,7 +96,7 @@ export default function TakenPage() {
     <div className="page-container animate-fade-in-up">
       <div className="flex items-center justify-between mb-6">
         <h1>Taken</h1>
-        <Button size="sm" onClick={() => setDialogOpen(true)}>
+        <Button size="sm" onClick={openCreate}>
           <Plus className="h-4 w-4 mr-1" /> Nieuwe taak
         </Button>
       </div>
@@ -87,22 +130,51 @@ export default function TakenPage() {
           <TabsTrigger value="done">Afgerond ({doneTasks.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="active" className="mt-4">
-          <TaskTable tasks={activeTasks} />
+          <TaskTable tasks={activeTasks} onToggle={toggleTaskStatus} onEdit={openEdit} onDelete={setDeleteTask} />
         </TabsContent>
         <TabsContent value="done" className="mt-4">
-          <TaskTable tasks={doneTasks} done />
+          <TaskTable tasks={doneTasks} done onToggle={toggleTaskStatus} onEdit={openEdit} onDelete={setDeleteTask} />
         </TabsContent>
       </Tabs>
 
-      <TaskFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <TaskFormDialog
+        open={dialogOpen}
+        onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditTask(null); }}
+        task={editTask}
+        onSave={handleSave}
+      />
+
+      <AlertDialog open={!!deleteTask} onOpenChange={(open) => { if (!open) setDeleteTask(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Taak verwijderen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Weet je zeker dat je de taak "{deleteTask?.title}" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Verwijderen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-function TaskTable({ tasks, done = false }: { tasks: Task[]; done?: boolean }) {
+interface TaskTableProps {
+  tasks: Task[];
+  done?: boolean;
+  onToggle: (id: string) => void;
+  onEdit: (task: Task) => void;
+  onDelete: (task: Task) => void;
+}
+
+function TaskTable({ tasks, done = false, onToggle, onEdit, onDelete }: TaskTableProps) {
   const now = new Date();
   const { sort, toggleSort } = useSort("title");
-
   const priorityOrder: Record<string, number> = { hoog: 0, normaal: 1, laag: 2 };
 
   const sorted = useMemo(() => {
@@ -130,12 +202,13 @@ function TaskTable({ tasks, done = false }: { tasks: Task[]; done?: boolean }) {
             <SortableTableHead sortKey="due" currentSort={sort} onSort={toggleSort}>Vervaldatum</SortableTableHead>
             <TableHead>Gekoppeld</TableHead>
             <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
+            <TableHead className="w-20" />
           </TableRow>
         </TableHeader>
         <TableBody>
           {sorted.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Geen taken gevonden.</TableCell>
+              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen taken gevonden.</TableCell>
             </TableRow>
           ) : (
             sorted.map((task) => {
@@ -145,9 +218,14 @@ function TaskTable({ tasks, done = false }: { tasks: Task[]; done?: boolean }) {
 
               return (
                 <TableRow key={task.id} className={done ? "opacity-60" : ""}>
-                  <TableCell><Checkbox checked={done} disabled={done} /></TableCell>
                   <TableCell>
-                    <p className={`text-sm font-medium ${done ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>
+                    <Checkbox
+                      checked={task.status === "afgerond"}
+                      onCheckedChange={() => onToggle(task.id)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <p className={`text-sm font-medium ${task.status === "afgerond" ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>
                     {task.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>}
                   </TableCell>
                   <TableCell>
@@ -168,6 +246,16 @@ function TaskTable({ tasks, done = false }: { tasks: Task[]; done?: boolean }) {
                     </div>
                   </TableCell>
                   <TableCell><StatusBadge status={task.status} /></TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(task)}>
+                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDelete(task)}>
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               );
             })
