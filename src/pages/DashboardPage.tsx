@@ -69,6 +69,16 @@ export default function DashboardPage() {
     return d >= now && d <= in90Days && c.status === "actief";
   });
 
+  const myTasks = mockTasks
+    .filter((t) => t.status !== "afgerond")
+    .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+    .slice(0, 5);
+
+  const priorityIcon: Record<string, React.ReactNode> = {
+    hoog: <ArrowUp className="h-3 w-3 text-destructive" />,
+    normaal: <Minus className="h-3 w-3 text-muted-foreground" />,
+    laag: <ArrowUp className="h-3 w-3 text-info rotate-180" />,
+  };
   return (
     <div className="page-container animate-fade-in-up">
       <h1 className="mb-6">Dashboard</h1>
