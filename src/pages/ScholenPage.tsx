@@ -34,10 +34,11 @@ export default function ScholenPage() {
 
   const filtered = useMemo(() => {
     return mockSchools.filter((s) => {
+      const contacts = mockContacts.filter(c => c.school_id === s.id);
       const matchesSearch =
         s.name.toLowerCase().includes(search.toLowerCase()) ||
         s.city.toLowerCase().includes(search.toLowerCase()) ||
-        s.contact_name.toLowerCase().includes(search.toLowerCase());
+        contacts.some(c => c.name.toLowerCase().includes(search.toLowerCase()));
       const matchesType = filterType === "all" || s.type === filterType;
       const matchesProvince = filterProvince === "all" || s.province === filterProvince;
       const matchesLanguage = filterLanguage === "all" || s.language === filterLanguage;
