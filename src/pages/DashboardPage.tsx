@@ -157,6 +157,48 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* My tasks widget */}
+      <div className="surface-card mt-6">
+        <div className="p-4 border-b border-border flex items-center justify-between">
+          <h2 className="flex items-center gap-2">
+            <CheckSquare className="h-4 w-4 text-primary" /> Mijn taken
+          </h2>
+          <Link to="/taken" className="text-sm text-primary hover:underline">
+            Alles bekijken
+          </Link>
+        </div>
+        <div className="divide-y divide-border">
+          {myTasks.length === 0 ? (
+            <p className="p-4 text-sm text-muted-foreground">Geen openstaande taken.</p>
+          ) : (
+            myTasks.map((task) => {
+              const overdue = new Date(task.due_date) < now;
+              return (
+                <Link
+                  key={task.id}
+                  to="/taken"
+                  className="p-4 flex items-center justify-between hover:bg-muted/30 transition-[background-color,box-shadow] hover:shadow-sm cursor-pointer block"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <span>{priorityIcon[task.priority]}</span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{task.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {task.assigned_to} · <span className={overdue ? "text-destructive font-medium" : ""}>
+                          {new Date(task.due_date).toLocaleDateString("nl-BE")}
+                          {overdue && " (verlopen)"}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                  <StatusBadge status={task.status} />
+                </Link>
+              );
+            })
+          )}
+        </div>
+      </div>
+
       <Suspense fallback={<div className="surface-card h-[460px] animate-pulse mt-6" />}>
         <div className="mt-6">
           <BelgiumMap />

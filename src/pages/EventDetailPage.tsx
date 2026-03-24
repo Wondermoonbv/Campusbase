@@ -311,6 +311,8 @@ export default function EventDetailPage() {
           )}
         </section>
       </div>
+
+      <TaskFormDialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen} defaultEventId={event.id} defaultSchoolId={event.school_id} />
     </div>
   );
 }
