@@ -26,10 +26,19 @@ export default function ContractenPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const sorted = useMemo(() => {
-    return [...mockContracts].sort(
+    let list = [...mockContracts];
+    if (filterExpiring) {
+      const now = new Date();
+      const in90 = new Date(now.getTime() + 90 * 86400000);
+      list = list.filter((c) => {
+        const d = new Date(c.end_date);
+        return d >= now && d <= in90 && c.status === "actief";
+      });
+    }
+    return list.sort(
       (a, b) => new Date(a.end_date).getTime() - new Date(b.end_date).getTime()
     );
-  }, []);
+  }, [filterExpiring]);
 
   const exportCSV = () => {
     const headers = ["School", "Type", "Start", "Einde", "Vernieuwing", "Status", "Waarde", "Beschrijving"];
