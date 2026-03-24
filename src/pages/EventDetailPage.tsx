@@ -21,12 +21,22 @@ export default function EventDetailPage() {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Event | null>(event ?? null);
 
-  // Many-to-many: linked program IDs for this event
   const initialProgramIds = useMemo(() =>
     mockEventPrograms.filter((ep) => ep.event_id === id).map((ep) => ep.program_id),
     [id]
   );
   const [selectedProgramIds, setSelectedProgramIds] = useState<string[]>(initialProgramIds);
+
+  const programsBySchool = useMemo(() => {
+    const groups: Record<string, { school: typeof mockSchools[0]; programs: typeof mockPrograms }> = {};
+    mockPrograms.forEach((p) => {
+      const s = mockSchools.find((sc) => sc.id === p.school_id);
+      if (!s) return;
+      if (!groups[s.id]) groups[s.id] = { school: s, programs: [] };
+      groups[s.id].programs.push(p);
+    });
+    return Object.values(groups);
+  }, []);
 
   if (!event || !form) {
     return (
@@ -40,18 +50,6 @@ export default function EventDetailPage() {
   }
 
   const school = event.school_id ? mockSchools.find((s) => s.id === event.school_id) : null;
-
-  // Group programs by school for the multi-select
-  const programsBySchool = useMemo(() => {
-    const groups: Record<string, { school: typeof mockSchools[0]; programs: typeof mockPrograms }> = {};
-    mockPrograms.forEach((p) => {
-      const s = mockSchools.find((sc) => sc.id === p.school_id);
-      if (!s) return;
-      if (!groups[s.id]) groups[s.id] = { school: s, programs: [] };
-      groups[s.id].programs.push(p);
-    });
-    return Object.values(groups);
-  }, []);
 
   const linkedPrograms = mockPrograms
     .filter((p) => selectedProgramIds.includes(p.id))
