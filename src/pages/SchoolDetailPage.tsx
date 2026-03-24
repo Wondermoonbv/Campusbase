@@ -252,7 +252,7 @@ export default function SchoolDetailPage() {
       </Tabs>
 
       <SchoolFormDialog open={editOpen} onOpenChange={setEditOpen} school={school} />
-      <ContactFormDialog open={contactDialogOpen} onOpenChange={setContactDialogOpen} schoolId={school.id} />
+      <ContactFormDialog open={contactDialogOpen} onOpenChange={setContactDialogOpen} schoolId={school.id} contact={editContact} />
       <ProgramFormDialog open={programDialogOpen} onOpenChange={setProgramDialogOpen} schoolId={school.id} />
     </div>
   );
