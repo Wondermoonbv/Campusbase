@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { mockEvents, mockSchools, mockPrograms, mockEventPrograms } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
