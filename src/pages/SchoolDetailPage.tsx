@@ -1,14 +1,15 @@
 import { useParams, Link } from "react-router-dom";
-import { mockSchools, mockPrograms, mockContracts, mockEvents, mockParticipations } from "@/data/mockData";
+import { mockSchools, mockPrograms, mockContracts, mockEvents, mockParticipations, mockContacts } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ExternalLink, Mail, Phone, Edit } from "lucide-react";
+import { ArrowLeft, ExternalLink, Mail, Phone, Edit, Plus, Linkedin, User } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { useState } from "react";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
+import { ContactFormDialog } from "@/components/schools/ContactFormDialog";
 
 export default function SchoolDetailPage() {
   const { id } = useParams();
