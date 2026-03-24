@@ -201,6 +201,14 @@ export default function ScholenPage() {
       </div>
 
       <SchoolFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditSchool(undefined); }} school={editSchool} />
+      <CsvImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Scholen importeren"
+        columns={SCHOOL_CSV_COLUMNS}
+        templateFilename="scholen_template.csv"
+        onImport={(rows) => { console.log("Import schools:", rows); }}
+      />
     </div>
   );
 }
