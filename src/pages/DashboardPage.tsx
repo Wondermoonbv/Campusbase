@@ -15,9 +15,6 @@ import {
   ArrowUp,
   Minus,
   Activity,
-  Plus,
-  Pencil,
-  Trash2,
   BookOpen,
 } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
