@@ -23,6 +23,7 @@ export default function OpleidingenPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProgram, setEditProgram] = useState<typeof mockPrograms[0] | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { isAdmin } = useAuth();
 
   const enriched = useMemo(() => {
     return mockPrograms.map((p) => ({
