@@ -60,9 +60,11 @@ export default function SchoolDetailPage() {
               <span>{school.language}</span>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-            <Edit className="h-4 w-4 mr-1" /> Bewerken
-          </Button>
+          {isAdmin && (
+            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+              <Edit className="h-4 w-4 mr-1" /> Bewerken
+            </Button>
+          )}
         </div>
 
         {/* Website link */}
