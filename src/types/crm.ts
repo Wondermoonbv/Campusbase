@@ -16,13 +16,23 @@ export interface School {
   province: string;
   city: string;
   website: string;
-  contact_name: string;
-  contact_email: string;
-  contact_phone: string;
   language: Language;
   notes: string;
   status: SchoolStatus;
   created_at: string;
+  contacts?: Contact[];
+}
+
+export interface Contact {
+  id: string;
+  school_id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+  department: string;
+  notes: string;
+  linkedin_url: string;
 }
 
 export interface Program {

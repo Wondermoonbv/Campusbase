@@ -34,9 +34,6 @@ export function SchoolFormDialog({ open, onOpenChange, school }: SchoolFormDialo
     province: school?.province || "",
     city: school?.city || "",
     website: school?.website || "",
-    contact_name: school?.contact_name || "",
-    contact_email: school?.contact_email || "",
-    contact_phone: school?.contact_phone || "",
     language: school?.language || "NL",
     notes: school?.notes || "",
     status: school?.status || "prospect",
@@ -120,21 +117,6 @@ export function SchoolFormDialog({ open, onOpenChange, school }: SchoolFormDialo
                 <SelectItem value="prospect">Prospect</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <hr className="border-border" />
-          <div>
-            <Label>Contactpersoon</Label>
-            <Input value={form.contact_name} onChange={(e) => update("contact_name", e.target.value)} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Email</Label>
-              <Input type="email" value={form.contact_email} onChange={(e) => update("contact_email", e.target.value)} />
-            </div>
-            <div>
-              <Label>Telefoon</Label>
-              <Input value={form.contact_phone} onChange={(e) => update("contact_phone", e.target.value)} />
-            </div>
           </div>
           <div>
             <Label>Notities</Label>

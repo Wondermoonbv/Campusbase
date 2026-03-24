@@ -1,19 +1,21 @@
 import { useParams, Link } from "react-router-dom";
-import { mockSchools, mockPrograms, mockContracts, mockEvents, mockParticipations } from "@/data/mockData";
+import { mockSchools, mockPrograms, mockContracts, mockEvents, mockParticipations, mockContacts } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ExternalLink, Mail, Phone, Edit } from "lucide-react";
+import { ArrowLeft, ExternalLink, Mail, Phone, Edit, Plus, Linkedin, User } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { useState } from "react";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
+import { ContactFormDialog } from "@/components/schools/ContactFormDialog";
 
 export default function SchoolDetailPage() {
   const { id } = useParams();
   const school = mockSchools.find((s) => s.id === id);
   const [editOpen, setEditOpen] = useState(false);
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
 
   if (!school) {
     return (
@@ -28,6 +30,7 @@ export default function SchoolDetailPage() {
 
   const programs = mockPrograms.filter((p) => p.school_id === school.id);
   const contracts = mockContracts.filter((c) => c.school_id === school.id);
+  const contacts = mockContacts.filter((c) => c.school_id === school.id);
   const participations = mockParticipations.filter((p) => p.school_id === school.id);
   const events = participations
     .map((p) => ({ ...p, event: mockEvents.find((e) => e.id === p.event_id) }))
@@ -58,21 +61,8 @@ export default function SchoolDetailPage() {
           </Button>
         </div>
 
-        {/* Contact info */}
+        {/* Website link */}
         <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-6 text-sm">
-          {school.contact_name && (
-            <span className="font-medium">{school.contact_name}</span>
-          )}
-          {school.contact_email && (
-            <a href={`mailto:${school.contact_email}`} className="text-primary hover:underline inline-flex items-center gap-1">
-              <Mail className="h-3 w-3" /> {school.contact_email}
-            </a>
-          )}
-          {school.contact_phone && (
-            <a href={`tel:${school.contact_phone}`} className="text-muted-foreground inline-flex items-center gap-1">
-              <Phone className="h-3 w-3" /> {school.contact_phone}
-            </a>
-          )}
           {school.website && (
             <a href={school.website} target="_blank" rel="noopener" className="text-primary hover:underline inline-flex items-center gap-1">
               <ExternalLink className="h-3 w-3" /> Website
@@ -84,7 +74,58 @@ export default function SchoolDetailPage() {
         )}
       </div>
 
-      {/* Tabs */}
+      {/* Contactpersonen */}
+      <div className="surface-card p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Contactpersonen ({contacts.length})</h2>
+          <Button size="sm" variant="outline" onClick={() => setContactDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" /> Contact toevoegen
+          </Button>
+        </div>
+        {contacts.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Geen contactpersonen gekoppeld.</p>
+        ) : (
+          <div className="grid gap-3">
+            {contacts.map((contact) => (
+              <div key={contact.id} className="flex items-start gap-4 p-3 rounded-lg border border-border bg-muted/20">
+                <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <User className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm">{contact.name}</span>
+                    {contact.role && <span className="text-xs text-muted-foreground">— {contact.role}</span>}
+                  </div>
+                  {contact.department && (
+                    <p className="text-xs text-muted-foreground">{contact.department}</p>
+                  )}
+                  <div className="flex flex-wrap gap-3 mt-1.5 text-xs">
+                    {contact.email && (
+                      <a href={`mailto:${contact.email}`} className="text-primary hover:underline inline-flex items-center gap-1">
+                        <Mail className="h-3 w-3" /> {contact.email}
+                      </a>
+                    )}
+                    {contact.phone && (
+                      <a href={`tel:${contact.phone}`} className="text-muted-foreground inline-flex items-center gap-1">
+                        <Phone className="h-3 w-3" /> {contact.phone}
+                      </a>
+                    )}
+                    {contact.linkedin_url && (
+                      <a href={contact.linkedin_url} target="_blank" rel="noopener" className="text-primary hover:underline inline-flex items-center gap-1">
+                        <Linkedin className="h-3 w-3" /> LinkedIn
+                      </a>
+                    )}
+                  </div>
+                  {contact.notes && (
+                    <p className="text-xs text-muted-foreground mt-1">{contact.notes}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <Tabs defaultValue="programs">
         <TabsList>
           <TabsTrigger value="programs">Opleidingen ({programs.length})</TabsTrigger>
@@ -199,6 +240,7 @@ export default function SchoolDetailPage() {
       </Tabs>
 
       <SchoolFormDialog open={editOpen} onOpenChange={setEditOpen} school={school} />
+      <ContactFormDialog open={contactDialogOpen} onOpenChange={setContactDialogOpen} schoolId={school.id} />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { mockSchools } from "@/data/mockData";
+import { mockSchools, mockContacts } from "@/data/mockData";
 import { School, SchoolType, SchoolStatus, Language, PROVINCES } from "@/types/crm";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -34,10 +34,11 @@ export default function ScholenPage() {
 
   const filtered = useMemo(() => {
     return mockSchools.filter((s) => {
+      const contacts = mockContacts.filter(c => c.school_id === s.id);
       const matchesSearch =
         s.name.toLowerCase().includes(search.toLowerCase()) ||
         s.city.toLowerCase().includes(search.toLowerCase()) ||
-        s.contact_name.toLowerCase().includes(search.toLowerCase());
+        contacts.some(c => c.name.toLowerCase().includes(search.toLowerCase()));
       const matchesType = filterType === "all" || s.type === filterType;
       const matchesProvince = filterProvince === "all" || s.province === filterProvince;
       const matchesLanguage = filterLanguage === "all" || s.language === filterLanguage;
@@ -46,9 +47,14 @@ export default function ScholenPage() {
     });
   }, [search, filterType, filterProvince, filterLanguage, filterStatus]);
 
+  const getFirstContact = (schoolId: string) => mockContacts.find(c => c.school_id === schoolId);
+
   const exportCSV = () => {
     const headers = ["Naam", "Type", "Stad", "Provincie", "Taal", "Status", "Contact", "Email"];
-    const rows = filtered.map((s) => [s.name, s.type, s.city, s.province, s.language, s.status, s.contact_name, s.contact_email]);
+    const rows = filtered.map((s) => {
+      const contact = getFirstContact(s.id);
+      return [s.name, s.type, s.city, s.province, s.language, s.status, contact?.name || "", contact?.email || ""];
+    });
     const csv = [headers, ...rows].map((r) => r.join(";")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -157,7 +163,7 @@ export default function ScholenPage() {
                   <TableCell className="hidden lg:table-cell">{school.province}</TableCell>
                   <TableCell className="hidden md:table-cell">{school.language}</TableCell>
                   <TableCell><StatusBadge status={school.status} /></TableCell>
-                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{school.contact_name}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{getFirstContact(school.id)?.name || "—"}</TableCell>
                 </TableRow>
               ))
             )}
