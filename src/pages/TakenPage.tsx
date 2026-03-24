@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { mockTasks as initialTasks, mockSchools, mockEvents } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useActivity } from "@/contexts/ActivityContext";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +32,8 @@ const priorityIcon: Record<string, React.ReactNode> = {
 
 export default function TakenPage() {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const { user } = useAuth();
+  const { logActivity } = useActivity();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [deleteTask, setDeleteTask] = useState<Task | null>(null);
@@ -43,13 +47,15 @@ export default function TakenPage() {
   );
 
   const toggleTaskStatus = (taskId: string) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+    const newStatus = task.status === "afgerond" ? "open" : "afgerond";
     setTasks((prev) =>
       prev.map((t) =>
-        t.id === taskId
-          ? { ...t, status: t.status === "afgerond" ? "open" : "afgerond" as TaskStatus }
-          : t
+        t.id === taskId ? { ...t, status: newStatus as TaskStatus } : t
       )
     );
+    logActivity({ userId: user?.id ?? "", userName: user?.name ?? "", action: "bewerkt", entityType: "taak", entityName: task.title });
   };
 
   const handleSave = (saved: Task) => {
@@ -58,11 +64,14 @@ export default function TakenPage() {
       if (exists) return prev.map((t) => (t.id === saved.id ? saved : t));
       return [...prev, saved];
     });
+    const isNew = !tasks.find((t) => t.id === saved.id);
+    logActivity({ userId: user?.id ?? "", userName: user?.name ?? "", action: isNew ? "aangemaakt" : "bewerkt", entityType: "taak", entityName: saved.title });
   };
 
   const handleDelete = () => {
     if (!deleteTask) return;
     setTasks((prev) => prev.filter((t) => t.id !== deleteTask.id));
+    logActivity({ userId: user?.id ?? "", userName: user?.name ?? "", action: "verwijderd", entityType: "taak", entityName: deleteTask.title });
     toast.success("Taak verwijderd.");
     setDeleteTask(null);
   };
