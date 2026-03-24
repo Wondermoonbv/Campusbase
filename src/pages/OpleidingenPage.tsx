@@ -180,7 +180,7 @@ export default function OpleidingenPage() {
         </div>
       </div>
 
-      <ProgramFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <ProgramFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditProgram(undefined); }} program={editProgram} />
     </div>
   );
 }

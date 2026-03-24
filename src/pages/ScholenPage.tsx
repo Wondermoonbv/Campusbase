@@ -74,7 +74,7 @@ export default function ScholenPage() {
           <Button variant="outline" size="sm" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-1" /> Export
           </Button>
-          <Button size="sm" onClick={() => setDialogOpen(true)}>
+          <Button size="sm" onClick={() => { setEditSchool(undefined); setDialogOpen(true); }}>
             <Plus className="h-4 w-4 mr-1" /> School toevoegen
           </Button>
         </div>

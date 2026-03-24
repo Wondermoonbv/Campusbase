@@ -150,6 +150,11 @@ export default function EventenPage() {
                   <TableCell className="tabular-nums">{new Date(ev.date).toLocaleDateString("nl-BE")}</TableCell>
                   <TableCell className="hidden md:table-cell">{ev.location}</TableCell>
                   <TableCell><StatusBadge status={ev.status} /></TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); navigate(`/evenementen/${ev.id}`); }}>
+                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

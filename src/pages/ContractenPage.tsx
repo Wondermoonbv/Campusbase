@@ -109,6 +109,11 @@ export default function ContractenPage() {
                     <TableCell className="hidden md:table-cell">{new Date(c.renewal_date).toLocaleDateString("nl-BE")}</TableCell>
                     <TableCell><StatusBadge status={c.status} /></TableCell>
                     <TableCell className="text-right tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); openEdit(c); }}>
+                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                   {isExpanded && (
                     <TableRow key={`${c.id}-detail`} className="bg-muted/10 hover:bg-muted/10">
