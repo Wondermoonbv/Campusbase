@@ -144,7 +144,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+      <div className="mt-6">
         {/* My tasks widget */}
         <div className="surface-card">
           <div className="p-4 border-b border-border flex items-center justify-between">
