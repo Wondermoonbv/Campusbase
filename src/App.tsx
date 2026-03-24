@@ -3,7 +3,9 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/layout/AppLayout";
+import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import ScholenPage from "./pages/ScholenPage";
 import SchoolDetailPage from "./pages/SchoolDetailPage";
@@ -12,9 +14,33 @@ import ContractenPage from "./pages/ContractenPage";
 import EventenPage from "./pages/EventenPage";
 import EventDetailPage from "./pages/EventDetailPage";
 import RapportagePage from "./pages/RapportagePage";
+import GebruikersPage from "./pages/GebruikersPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+function AppRoutes() {
+  const { user, isAdmin } = useAuth();
+
+  if (!user) return <LoginPage />;
+
+  return (
+    <AppLayout>
+      <Routes>
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/scholen" element={<ScholenPage />} />
+        <Route path="/scholen/:id" element={<SchoolDetailPage />} />
+        <Route path="/opleidingen" element={<OpleidingenPage />} />
+        <Route path="/contracten" element={<ContractenPage />} />
+        <Route path="/evenementen" element={<EventenPage />} />
+        <Route path="/evenementen/:id" element={<EventDetailPage />} />
+        <Route path="/rapportage" element={<RapportagePage />} />
+        {isAdmin && <Route path="/gebruikers" element={<GebruikersPage />} />}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AppLayout>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -22,19 +48,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppLayout>
-          <Routes>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/scholen" element={<ScholenPage />} />
-            <Route path="/scholen/:id" element={<SchoolDetailPage />} />
-            <Route path="/opleidingen" element={<OpleidingenPage />} />
-            <Route path="/contracten" element={<ContractenPage />} />
-            <Route path="/evenementen" element={<EventenPage />} />
-            <Route path="/evenementen/:id" element={<EventDetailPage />} />
-            <Route path="/rapportage" element={<RapportagePage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AppLayout>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { mockContracts, mockSchools, mockEvents } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ export default function ContractenPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editContract, setEditContract] = useState<typeof mockContracts[0] | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { isAdmin } = useAuth();
 
   const sorted = useMemo(() => {
     let list = [...mockContracts];
@@ -71,9 +73,11 @@ export default function ContractenPage() {
           <Button variant="outline" size="sm" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-1" /> Export
           </Button>
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4 mr-1" /> Contract toevoegen
-          </Button>
+          {isAdmin && (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4 mr-1" /> Contract toevoegen
+            </Button>
+          )}
         </div>
       </div>
 
@@ -122,9 +126,11 @@ export default function ContractenPage() {
                     <TableCell><StatusBadge status={c.status} /></TableCell>
                     <TableCell className="text-right tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); openEdit(c); }}>
-                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                      </Button>
+                      {isAdmin && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); openEdit(c); }}>
+                          <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                   {isExpanded && (

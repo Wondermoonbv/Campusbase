@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { mockSchools, mockContacts } from "@/data/mockData";
 import { School, SchoolType, SchoolStatus, Language, PROVINCES } from "@/types/crm";
 import { Input } from "@/components/ui/input";
@@ -48,6 +49,7 @@ export default function ScholenPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [editSchool, setEditSchool] = useState<School | undefined>();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
 
   const filtered = useMemo(() => {
     return mockSchools.filter((s) => {
@@ -89,12 +91,16 @@ export default function ScholenPage() {
           <Button variant="outline" size="sm" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-1" /> Export
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
-            <Upload className="h-4 w-4 mr-1" /> Import
-          </Button>
-          <Button size="sm" onClick={() => { setEditSchool(undefined); setDialogOpen(true); }}>
-            <Plus className="h-4 w-4 mr-1" /> School toevoegen
-          </Button>
+          {isAdmin && (
+            <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+              <Upload className="h-4 w-4 mr-1" /> Import
+            </Button>
+          )}
+          {isAdmin && (
+            <Button size="sm" onClick={() => { setEditSchool(undefined); setDialogOpen(true); }}>
+              <Plus className="h-4 w-4 mr-1" /> School toevoegen
+            </Button>
+          )}
         </div>
       </div>
 
@@ -186,9 +192,11 @@ export default function ScholenPage() {
                   <TableCell><StatusBadge status={school.status} /></TableCell>
                   <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{getFirstContact(school.id)?.name || "—"}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditSchool(school); setDialogOpen(true); }}>
-                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                    </Button>
+                    {isAdmin && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditSchool(school); setDialogOpen(true); }}>
+                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))

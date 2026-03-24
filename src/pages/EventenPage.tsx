@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { mockEvents, mockSchools, mockPrograms, mockEventPrograms } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ export default function EventenPage() {
   const [view, setView] = useState<"list" | "calendar">("list");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const { isAdmin } = useAuth();
 
   const filtered = useMemo(() => {
     const now = new Date();
@@ -113,12 +115,16 @@ export default function EventenPage() {
           <Button variant="outline" size="sm" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-1" /> Export
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
-            <Upload className="h-4 w-4 mr-1" /> Import
-          </Button>
-          <Button size="sm" onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" /> Evenement toevoegen
-          </Button>
+          {isAdmin && (
+            <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+              <Upload className="h-4 w-4 mr-1" /> Import
+            </Button>
+          )}
+          {isAdmin && (
+            <Button size="sm" onClick={() => setDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" /> Evenement toevoegen
+            </Button>
+          )}
         </div>
       </div>
 
@@ -182,9 +188,11 @@ export default function EventenPage() {
                   <TableCell className="hidden md:table-cell">{ev.location}</TableCell>
                   <TableCell><StatusBadge status={ev.status} /></TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); navigate(`/evenementen/${ev.id}`); }}>
-                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                    </Button>
+                    {isAdmin && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); navigate(`/evenementen/${ev.id}`); }}>
+                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

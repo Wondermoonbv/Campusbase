@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { mockSchools, mockPrograms, mockContracts, mockEvents, mockParticipations, mockContacts } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink, Mail, Phone, Edit, Plus, Linkedin, User } from "lucide-react";
@@ -11,6 +11,7 @@ import { useState } from "react";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
 import { ContactFormDialog } from "@/components/schools/ContactFormDialog";
 import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
+import { mockSchools, mockPrograms, mockContracts, mockEvents, mockParticipations, mockContacts } from "@/data/mockData";
 
 export default function SchoolDetailPage() {
   const { id } = useParams();
@@ -19,6 +20,7 @@ export default function SchoolDetailPage() {
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [editContact, setEditContact] = useState<typeof contacts[0] | undefined>(undefined);
   const [programDialogOpen, setProgramDialogOpen] = useState(false);
+  const { isAdmin } = useAuth();
 
   if (!school) {
     return (
@@ -59,9 +61,11 @@ export default function SchoolDetailPage() {
               <span>{school.language}</span>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-            <Edit className="h-4 w-4 mr-1" /> Bewerken
-          </Button>
+          {isAdmin && (
+            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+              <Edit className="h-4 w-4 mr-1" /> Bewerken
+            </Button>
+          )}
         </div>
 
         {/* Website link */}
@@ -81,9 +85,11 @@ export default function SchoolDetailPage() {
       <div className="surface-card p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Contactpersonen ({contacts.length})</h2>
-          <Button size="sm" variant="outline" onClick={() => { setEditContact(undefined); setContactDialogOpen(true); }}>
-            <Plus className="h-4 w-4 mr-1" /> Contact toevoegen
-          </Button>
+          {isAdmin && (
+            <Button size="sm" variant="outline" onClick={() => { setEditContact(undefined); setContactDialogOpen(true); }}>
+              <Plus className="h-4 w-4 mr-1" /> Contact toevoegen
+            </Button>
+          )}
         </div>
         {contacts.length === 0 ? (
           <p className="text-sm text-muted-foreground">Geen contactpersonen gekoppeld.</p>
@@ -123,9 +129,11 @@ export default function SchoolDetailPage() {
                     <p className="text-xs text-muted-foreground mt-1">{contact.notes}</p>
                   )}
                 </div>
-                <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => { setEditContact(contact); setContactDialogOpen(true); }}>
-                  <Edit className="h-3.5 w-3.5" />
-                </Button>
+                {isAdmin && (
+                  <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => { setEditContact(contact); setContactDialogOpen(true); }}>
+                    <Edit className="h-3.5 w-3.5" />
+                  </Button>
+                )}
               </div>
             ))}
           </div>
@@ -143,9 +151,11 @@ export default function SchoolDetailPage() {
           <div className="surface-card overflow-hidden">
             <div className="flex items-center justify-between p-4 pb-0">
               <span className="text-sm text-muted-foreground">{programs.length} opleiding{programs.length !== 1 ? "en" : ""}</span>
-              <Button size="sm" variant="outline" onClick={() => setProgramDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" /> Opleiding toevoegen
-              </Button>
+              {isAdmin && (
+                <Button size="sm" variant="outline" onClick={() => setProgramDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> Opleiding toevoegen
+                </Button>
+              )}
             </div>
             <Table>
               <TableHeader>

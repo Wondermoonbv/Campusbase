@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { mockPrograms, mockSchools, mockEvents, mockEventPrograms } from "@/data/mockData";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ export default function OpleidingenPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProgram, setEditProgram] = useState<typeof mockPrograms[0] | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { isAdmin } = useAuth();
 
   const enriched = useMemo(() => {
     return mockPrograms.map((p) => ({
@@ -62,9 +64,11 @@ export default function OpleidingenPage() {
           <Button variant="outline" size="sm" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-1" /> Export
           </Button>
-          <Button size="sm" onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" /> Nieuwe opleiding
-          </Button>
+          {isAdmin && (
+            <Button size="sm" onClick={() => setDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" /> Nieuwe opleiding
+            </Button>
+          )}
         </div>
       </div>
 
@@ -145,9 +149,11 @@ export default function OpleidingenPage() {
                     <TableCell className="hidden md:table-cell">{p.field_of_study}</TableCell>
                     <TableCell className="text-right tabular-nums">{p.student_count ?? "—"}</TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditProgram(p); setDialogOpen(true); }}>
-                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                      </Button>
+                      {isAdmin && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditProgram(p); setDialogOpen(true); }}>
+                          <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                   {expandedId === p.id && p.linkedEvents.length > 0 && (
