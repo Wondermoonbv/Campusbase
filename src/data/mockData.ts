@@ -1,4 +1,4 @@
-import type { School, Contact, Program, Contract, Event, SchoolEventParticipation } from "@/types/crm";
+import type { School, Contact, Program, Contract, Event, SchoolEventParticipation, EventProgram } from "@/types/crm";
 
 // Mock data for development — will be replaced with Supabase queries
 export const mockSchools: School[] = [
@@ -46,6 +46,16 @@ export const mockEvents: Event[] = [
   { id: "5", name: "Campus Presentatie HOGENT", type: "campus presentatie", date: "2026-05-05", start_time: "11:00", end_time: "13:00", setup_date: "2026-05-05", setup_time: "09:30", location: "HOGENT Campus Schoonmeersen", school_id: "6", responsible: "Tom De Graef", team_members: [], elia_contact: "Tom De Graef", budget: 800, status: "gepland", description: "Presentatie over carrièremogelijkheden bij Elia.", stand_type: "presentatie", stand_size: "klein 2m²", notes: "" },
   { id: "6", name: "Jobbeurs UCLouvain", type: "jobbeurs", date: "2026-04-18", start_time: "10:00", end_time: "16:00", setup_date: "2026-04-17", setup_time: "16:00", location: "Forum UCLouvain", school_id: "3", responsible: "Sarah Mertens", team_members: ["Anna Verhoeven"], elia_contact: "Sarah Mertens", budget: 3000, status: "bevestigd", description: "Forum des entreprises UCLouvain.", stand_type: "jobbeurs stand", stand_size: "medium 4m²", notes: "" },
   { id: "7", name: "Ingenieursbeurs Brussel", type: "jobbeurs", date: "2026-06-12", start_time: "09:00", end_time: "17:00", setup_date: "2026-06-11", setup_time: "15:00", location: "Tour & Taxis, Brussel", school_id: null, responsible: "Anna Verhoeven", team_members: ["Tom De Graef", "Sarah Mertens", "Koen Willems"], elia_contact: "Anna Verhoeven", budget: 6000, status: "gepland", description: "Grote multi-school ingenieursbeurs in Brussel.", stand_type: "jobbeurs stand", stand_size: "groot 6m²+", notes: "" },
+];
+
+export const mockEventPrograms: EventProgram[] = [
+  { event_id: "1", program_id: "1" },  // Jobbeurs KU Leuven → Burgerlijk Ingenieur
+  { event_id: "1", program_id: "2" },  // Jobbeurs KU Leuven → Informatica
+  { event_id: "2", program_id: "3" },  // Career Day UGent → Elektrotechniek
+  { event_id: "3", program_id: "2" },  // Hackathon → Informatica KU Leuven
+  { event_id: "3", program_id: "5" },  // Hackathon → Computer Science VUB
+  { event_id: "4", program_id: "5" },  // Workshop Smart Grids VUB → Computer Science
+  { event_id: "5", program_id: "4" },  // Campus Presentatie HOGENT → Elektromechanica
 ];
 
 export const mockParticipations: SchoolEventParticipation[] = [

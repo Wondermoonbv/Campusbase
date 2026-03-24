@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { mockEvents, mockSchools } from "@/data/mockData";
+import { mockEvents, mockSchools, mockPrograms, mockEventPrograms } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,12 +12,14 @@ import {
 } from "@/components/ui/table";
 import { Plus, Search, Download, CalendarDays, List } from "lucide-react";
 import { EventFormDialog } from "@/components/events/EventFormDialog";
+import { FIELDS_OF_STUDY } from "@/types/crm";
 
 export default function EventenPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterFieldOfStudy, setFilterFieldOfStudy] = useState("all");
   const [view, setView] = useState<"list" | "calendar">("list");
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -27,9 +29,19 @@ export default function EventenPage() {
         e.location.toLowerCase().includes(search.toLowerCase());
       const matchType = filterType === "all" || e.type === filterType;
       const matchStatus = filterStatus === "all" || e.status === filterStatus;
-      return matchSearch && matchType && matchStatus;
+
+      let matchField = true;
+      if (filterFieldOfStudy !== "all") {
+        const linkedProgramIds = mockEventPrograms
+          .filter((ep) => ep.event_id === e.id)
+          .map((ep) => ep.program_id);
+        const linkedPrograms = mockPrograms.filter((p) => linkedProgramIds.includes(p.id));
+        matchField = linkedPrograms.some((p) => p.field_of_study === filterFieldOfStudy);
+      }
+
+      return matchSearch && matchType && matchStatus && matchField;
     });
-  }, [search, filterType, filterStatus]);
+  }, [search, filterType, filterStatus, filterFieldOfStudy]);
 
   const byMonth = useMemo(() => {
     const groups: Record<string, typeof filtered> = {};
@@ -103,6 +115,13 @@ export default function EventenPage() {
               <SelectItem value="bevestigd">Bevestigd</SelectItem>
               <SelectItem value="afgelopen">Afgelopen</SelectItem>
               <SelectItem value="geannuleerd">Geannuleerd</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filterFieldOfStudy} onValueChange={setFilterFieldOfStudy}>
+            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Studiedomein" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle domeinen</SelectItem>
+              {FIELDS_OF_STUDY.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>

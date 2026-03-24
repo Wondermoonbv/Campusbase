@@ -1,15 +1,16 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { mockEvents, mockSchools } from "@/data/mockData";
+import { useState, useMemo } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { mockEvents, mockSchools, mockPrograms, mockEventPrograms } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays } from "lucide-react";
+import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap } from "lucide-react";
 import type { Event, StandType, StandSize, EventType, EventStatus } from "@/types/crm";
 import { toast } from "sonner";
 
@@ -19,6 +20,23 @@ export default function EventDetailPage() {
   const event = mockEvents.find((e) => e.id === id);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Event | null>(event ?? null);
+
+  const initialProgramIds = useMemo(() =>
+    mockEventPrograms.filter((ep) => ep.event_id === id).map((ep) => ep.program_id),
+    [id]
+  );
+  const [selectedProgramIds, setSelectedProgramIds] = useState<string[]>(initialProgramIds);
+
+  const programsBySchool = useMemo(() => {
+    const groups: Record<string, { school: typeof mockSchools[0]; programs: typeof mockPrograms }> = {};
+    mockPrograms.forEach((p) => {
+      const s = mockSchools.find((sc) => sc.id === p.school_id);
+      if (!s) return;
+      if (!groups[s.id]) groups[s.id] = { school: s, programs: [] };
+      groups[s.id].programs.push(p);
+    });
+    return Object.values(groups);
+  }, []);
 
   if (!event || !form) {
     return (
@@ -32,6 +50,16 @@ export default function EventDetailPage() {
   }
 
   const school = event.school_id ? mockSchools.find((s) => s.id === event.school_id) : null;
+
+  const linkedPrograms = mockPrograms
+    .filter((p) => selectedProgramIds.includes(p.id))
+    .map((p) => ({ ...p, school: mockSchools.find((s) => s.id === p.school_id) }));
+
+  const toggleProgram = (programId: string) => {
+    setSelectedProgramIds((prev) =>
+      prev.includes(programId) ? prev.filter((id) => id !== programId) : [...prev, programId]
+    );
+  };
 
   const handleSave = () => {
     toast.success("Evenement bijgewerkt.");
@@ -55,7 +83,7 @@ export default function EventDetailPage() {
         </div>
         {editing ? (
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => { setForm(event); setEditing(false); }}>
+            <Button variant="outline" size="sm" onClick={() => { setForm(event); setSelectedProgramIds(initialProgramIds); setEditing(false); }}>
               <X className="h-4 w-4 mr-1" /> Annuleren
             </Button>
             <Button size="sm" onClick={handleSave}>
@@ -174,6 +202,44 @@ export default function EventDetailPage() {
               </div>
             )}
           </div>
+        </section>
+
+        {/* Doelgroep / Opleidingen */}
+        <section className="surface-card p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+            <GraduationCap className="h-4 w-4" /> Doelgroep — Opleidingen
+          </h2>
+          {editing ? (
+            <div className="space-y-3">
+              {programsBySchool.map(({ school: s, programs }) => (
+                <div key={s.id} className="border border-border rounded-lg p-3">
+                  <p className="text-xs font-semibold text-muted-foreground mb-2">{s.name}</p>
+                  <div className="space-y-1.5">
+                    {programs.map((p) => (
+                      <label key={p.id} className="flex items-center gap-2 cursor-pointer text-sm">
+                        <Checkbox
+                          checked={selectedProgramIds.includes(p.id)}
+                          onCheckedChange={() => toggleProgram(p.id)}
+                        />
+                        <span>{p.name}</span>
+                        <span className="text-xs text-muted-foreground capitalize">({p.study_level})</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {linkedPrograms.length > 0 ? linkedPrograms.map((p) => (
+                <span key={p.id} className="inline-flex items-center rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-medium">
+                  {p.name} — {p.school?.name}
+                </span>
+              )) : (
+                <span className="text-sm text-muted-foreground">Geen doelgroep geselecteerd.</span>
+              )}
+            </div>
+          )}
         </section>
 
         {/* Content / stand */}
