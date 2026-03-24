@@ -14,6 +14,7 @@ import { Search, Download, Plus, ChevronDown, ChevronRight, Pencil } from "lucid
 import { FIELDS_OF_STUDY } from "@/types/crm";
 import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 
 export default function OpleidingenPage() {
   const [search, setSearch] = useState("");
@@ -24,6 +25,7 @@ export default function OpleidingenPage() {
   const [editProgram, setEditProgram] = useState<typeof mockPrograms[0] | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { isAdmin } = useAuth();
+  const { sort, toggleSort } = useSort("name");
 
   const enriched = useMemo(() => {
     return mockPrograms.map((p) => ({
@@ -47,9 +49,23 @@ export default function OpleidingenPage() {
     });
   }, [enriched, search, filterLevel, filterField, filterSchool]);
 
+  const sorted = useMemo(() => {
+    return sortItems(filtered, sort, (p, key) => {
+      switch (key) {
+        case "name": return p.name;
+        case "school": return p.school?.name ?? "";
+        case "faculty": return p.faculty;
+        case "level": return p.study_level;
+        case "field": return p.field_of_study;
+        case "students": return p.student_count ?? 0;
+        default: return p.name;
+      }
+    });
+  }, [filtered, sort]);
+
   const exportCSV = () => {
     const headers = ["Opleiding", "School", "Faculteit", "Niveau", "Studierichting", "Studenten"];
-    const rows = filtered.map((p) => [p.name, p.school?.name ?? "", p.faculty, p.study_level, p.field_of_study, p.student_count ?? ""]);
+    const rows = sorted.map((p) => [p.name, p.school?.name ?? "", p.faculty, p.study_level, p.field_of_study, p.student_count ?? ""]);
     const csv = [headers, ...rows].map((r) => r.join(";")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -109,40 +125,32 @@ export default function OpleidingenPage() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-8"></TableHead>
-              <TableHead>Opleiding</TableHead>
-              <TableHead>School</TableHead>
-              <TableHead className="hidden md:table-cell">Faculteit</TableHead>
-              <TableHead>Niveau</TableHead>
-              <TableHead className="hidden md:table-cell">Studierichting</TableHead>
-              <TableHead className="text-right">Studenten</TableHead>
+              <SortableTableHead sortKey="name" currentSort={sort} onSort={toggleSort}>Opleiding</SortableTableHead>
+              <SortableTableHead sortKey="school" currentSort={sort} onSort={toggleSort}>School</SortableTableHead>
+              <SortableTableHead sortKey="faculty" currentSort={sort} onSort={toggleSort} className="hidden md:table-cell">Faculteit</SortableTableHead>
+              <SortableTableHead sortKey="level" currentSort={sort} onSort={toggleSort}>Niveau</SortableTableHead>
+              <SortableTableHead sortKey="field" currentSort={sort} onSort={toggleSort} className="hidden md:table-cell">Studierichting</SortableTableHead>
+              <SortableTableHead sortKey="students" currentSort={sort} onSort={toggleSort} className="text-right">Studenten</SortableTableHead>
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 ? (
+            {sorted.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Geen opleidingen gevonden.</TableCell>
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen opleidingen gevonden.</TableCell>
               </TableRow>
             ) : (
-              filtered.map((p) => (
+              sorted.map((p) => (
                 <>
-                  <TableRow
-                    key={p.id}
-                    className="hover:bg-muted/30 cursor-pointer"
-                    onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}
-                  >
+                  <TableRow key={p.id} className="hover:bg-muted/30 cursor-pointer" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
                     <TableCell className="px-2">
                       {p.linkedEvents.length > 0 && (
-                        expandedId === p.id
-                          ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                          : <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        expandedId === p.id ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />
                       )}
                     </TableCell>
                     <TableCell className="font-medium">{p.name}</TableCell>
                     <TableCell>
-                      <Link to={`/scholen/${p.school_id}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
-                        {p.school?.name}
-                      </Link>
+                      <Link to={`/scholen/${p.school_id}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}</Link>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">{p.faculty}</TableCell>
                     <TableCell className="capitalize">{p.study_level}</TableCell>
@@ -158,15 +166,11 @@ export default function OpleidingenPage() {
                   </TableRow>
                   {expandedId === p.id && p.linkedEvents.length > 0 && (
                     <TableRow key={`${p.id}-events`}>
-                      <TableCell colSpan={7} className="bg-muted/20 px-6 py-3">
+                      <TableCell colSpan={8} className="bg-muted/20 px-6 py-3">
                         <p className="text-xs font-semibold text-muted-foreground mb-2">Gekoppelde evenementen</p>
                         <div className="flex flex-wrap gap-2">
                           {p.linkedEvents.map((ev) => ev && (
-                            <Link
-                              key={ev.id}
-                              to={`/evenementen/${ev.id}`}
-                              className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted/50 transition-colors"
-                            >
+                            <Link key={ev.id} to={`/evenementen/${ev.id}`} className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted/50 transition-colors">
                               <span className="font-medium">{ev.name}</span>
                               <span className="text-muted-foreground">{new Date(ev.date).toLocaleDateString("nl-BE")}</span>
                               <StatusBadge status={ev.status} />
@@ -182,7 +186,7 @@ export default function OpleidingenPage() {
           </TableBody>
         </Table>
         <div className="p-3 border-t border-border text-xs text-muted-foreground">
-          {filtered.length} opleiding{filtered.length !== 1 ? "en" : ""} gevonden
+          {sorted.length} opleiding{sorted.length !== 1 ? "en" : ""} gevonden
         </div>
       </div>
 

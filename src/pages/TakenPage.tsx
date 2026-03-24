@@ -15,6 +15,7 @@ import { Plus, Search, AlertTriangle, ArrowUp, Minus } from "lucide-react";
 import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 import { Link } from "react-router-dom";
 import type { Task, TaskStatus } from "@/types/crm";
+import { SortableTableHead, useSort, sortItems, SortConfig } from "@/components/ui/SortableTableHead";
 
 const priorityIcon: Record<string, React.ReactNode> = {
   hoog: <ArrowUp className="h-3.5 w-3.5 text-destructive" />,
@@ -42,7 +43,7 @@ export default function TakenPage() {
       if (filterPriority !== "alle" && t.priority !== filterPriority) return false;
       if (filterAssigned !== "alle" && t.assigned_to !== filterAssigned) return false;
       return true;
-    }).sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+    });
   };
 
   const activeTasks = filterTasks("active");
@@ -57,16 +58,10 @@ export default function TakenPage() {
         </Button>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Zoek taken..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+          <Input placeholder="Zoek taken..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Select value={filterPriority} onValueChange={setFilterPriority}>
           <SelectTrigger className="w-[140px]"><SelectValue placeholder="Prioriteit" /></SelectTrigger>
@@ -81,9 +76,7 @@ export default function TakenPage() {
           <SelectTrigger className="w-[180px]"><SelectValue placeholder="Teamlid" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="alle">Alle teamleden</SelectItem>
-            {teamMembers.map((m) => (
-              <SelectItem key={m} value={m}>{m}</SelectItem>
-            ))}
+            {teamMembers.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
@@ -93,11 +86,9 @@ export default function TakenPage() {
           <TabsTrigger value="active">Openstaand ({activeTasks.length})</TabsTrigger>
           <TabsTrigger value="done">Afgerond ({doneTasks.length})</TabsTrigger>
         </TabsList>
-
         <TabsContent value="active" className="mt-4">
           <TaskTable tasks={activeTasks} />
         </TabsContent>
-
         <TabsContent value="done" className="mt-4">
           <TaskTable tasks={doneTasks} done />
         </TabsContent>
@@ -110,6 +101,22 @@ export default function TakenPage() {
 
 function TaskTable({ tasks, done = false }: { tasks: Task[]; done?: boolean }) {
   const now = new Date();
+  const { sort, toggleSort } = useSort("title");
+
+  const priorityOrder: Record<string, number> = { hoog: 0, normaal: 1, laag: 2 };
+
+  const sorted = useMemo(() => {
+    return sortItems(tasks, sort, (t, key) => {
+      switch (key) {
+        case "title": return t.title;
+        case "priority": return priorityOrder[t.priority] ?? 1;
+        case "assigned": return t.assigned_to;
+        case "due": return new Date(t.due_date).getTime();
+        case "status": return t.status;
+        default: return t.title;
+      }
+    });
+  }, [tasks, sort]);
 
   return (
     <div className="surface-card overflow-hidden">
@@ -117,44 +124,34 @@ function TaskTable({ tasks, done = false }: { tasks: Task[]; done?: boolean }) {
         <TableHeader>
           <TableRow>
             <TableHead className="w-8"></TableHead>
-            <TableHead>Taak</TableHead>
-            <TableHead>Prioriteit</TableHead>
-            <TableHead>Toegewezen aan</TableHead>
-            <TableHead>Vervaldatum</TableHead>
+            <SortableTableHead sortKey="title" currentSort={sort} onSort={toggleSort}>Taak</SortableTableHead>
+            <SortableTableHead sortKey="priority" currentSort={sort} onSort={toggleSort}>Prioriteit</SortableTableHead>
+            <SortableTableHead sortKey="assigned" currentSort={sort} onSort={toggleSort}>Toegewezen aan</SortableTableHead>
+            <SortableTableHead sortKey="due" currentSort={sort} onSort={toggleSort}>Vervaldatum</SortableTableHead>
             <TableHead>Gekoppeld</TableHead>
-            <TableHead>Status</TableHead>
+            <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tasks.length === 0 ? (
+          {sorted.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                Geen taken gevonden.
-              </TableCell>
+              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Geen taken gevonden.</TableCell>
             </TableRow>
           ) : (
-            tasks.map((task) => {
+            sorted.map((task) => {
               const school = task.school_id ? mockSchools.find((s) => s.id === task.school_id) : null;
               const event = task.event_id ? mockEvents.find((e) => e.id === task.event_id) : null;
               const overdue = !done && new Date(task.due_date) < now;
 
               return (
                 <TableRow key={task.id} className={done ? "opacity-60" : ""}>
+                  <TableCell><Checkbox checked={done} disabled={done} /></TableCell>
                   <TableCell>
-                    <Checkbox checked={done} disabled={done} />
+                    <p className={`text-sm font-medium ${done ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>
+                    {task.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>}
                   </TableCell>
                   <TableCell>
-                    <p className={`text-sm font-medium ${done ? "line-through text-muted-foreground" : ""}`}>
-                      {task.title}
-                    </p>
-                    {task.description && (
-                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <span className="inline-flex items-center gap-1 text-xs capitalize">
-                      {priorityIcon[task.priority]} {task.priority}
-                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs capitalize">{priorityIcon[task.priority]} {task.priority}</span>
                   </TableCell>
                   <TableCell className="text-sm">{task.assigned_to}</TableCell>
                   <TableCell>
@@ -165,22 +162,12 @@ function TaskTable({ tasks, done = false }: { tasks: Task[]; done?: boolean }) {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
-                      {school && (
-                        <Link to={`/scholen/${school.id}`} className="text-xs text-primary hover:underline">
-                          {school.name}
-                        </Link>
-                      )}
-                      {event && (
-                        <Link to={`/evenementen/${event.id}`} className="text-xs text-primary hover:underline">
-                          {event.name}
-                        </Link>
-                      )}
+                      {school && <Link to={`/scholen/${school.id}`} className="text-xs text-primary hover:underline">{school.name}</Link>}
+                      {event && <Link to={`/evenementen/${event.id}`} className="text-xs text-primary hover:underline">{event.name}</Link>}
                       {!school && !event && <span className="text-xs text-muted-foreground">—</span>}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <StatusBadge status={task.status} />
-                  </TableCell>
+                  <TableCell><StatusBadge status={task.status} /></TableCell>
                 </TableRow>
               );
             })

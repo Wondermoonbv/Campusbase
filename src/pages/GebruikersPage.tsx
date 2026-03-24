@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,25 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { toast } from "sonner";
 import type { AppUser, UserRole } from "@/contexts/AuthContext";
+import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 
 export default function GebruikersPage() {
   const { users, addUser, updateUser, deleteUser, user: currentUser } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editUser, setEditUser] = useState<AppUser | null>(null);
   const [form, setForm] = useState({ firstName: "", lastName: "", name: "", email: "", role: "viewer" as UserRole });
+  const { sort, toggleSort } = useSort("lastName");
+
+  const sorted = useMemo(() => {
+    return sortItems(users, sort, (u, key) => {
+      switch (key) {
+        case "lastName": return u.lastName ?? u.name;
+        case "email": return u.email;
+        case "role": return u.role;
+        default: return u.lastName ?? u.name;
+      }
+    });
+  }, [users, sort]);
 
   const openCreate = () => {
     setEditUser(null);
@@ -66,14 +79,14 @@ export default function GebruikersPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Naam</TableHead>
-              <TableHead>E-mail</TableHead>
-              <TableHead>Rol</TableHead>
+              <SortableTableHead sortKey="lastName" currentSort={sort} onSort={toggleSort}>Naam</SortableTableHead>
+              <SortableTableHead sortKey="email" currentSort={sort} onSort={toggleSort}>E-mail</SortableTableHead>
+              <SortableTableHead sortKey="role" currentSort={sort} onSort={toggleSort}>Rol</SortableTableHead>
               <TableHead className="w-20" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((u) => (
+            {sorted.map((u) => (
               <TableRow key={u.id}>
                 <TableCell>
                   <div className="flex items-center gap-2.5">

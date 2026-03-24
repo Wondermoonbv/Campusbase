@@ -7,24 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Plus, Search, Download, ExternalLink, Pencil, Upload } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
 import { CsvImportDialog, CsvColumn } from "@/components/import/CsvImportDialog";
+import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 
 const SCHOOL_CSV_COLUMNS: CsvColumn[] = [
   { key: "name", label: "Naam", required: true },
@@ -36,7 +28,6 @@ const SCHOOL_CSV_COLUMNS: CsvColumn[] = [
   { key: "website", label: "Website" },
   { key: "notes", label: "Notities" },
 ];
-
 
 export default function ScholenPage() {
   const [searchParams] = useSearchParams();
@@ -50,6 +41,7 @@ export default function ScholenPage() {
   const [editSchool, setEditSchool] = useState<School | undefined>();
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
+  const { sort, toggleSort } = useSort("name");
 
   const filtered = useMemo(() => {
     return mockSchools.filter((s) => {
@@ -66,11 +58,25 @@ export default function ScholenPage() {
     });
   }, [search, filterType, filterProvince, filterLanguage, filterStatus]);
 
+  const sorted = useMemo(() => {
+    return sortItems(filtered, sort, (s, key) => {
+      switch (key) {
+        case "name": return s.name;
+        case "type": return s.type;
+        case "city": return s.city;
+        case "province": return s.province;
+        case "language": return s.language;
+        case "status": return s.status;
+        default: return s.name;
+      }
+    });
+  }, [filtered, sort]);
+
   const getFirstContact = (schoolId: string) => mockContacts.find(c => c.school_id === schoolId);
 
   const exportCSV = () => {
     const headers = ["Naam", "Type", "Stad", "Provincie", "Taal", "Status", "Contact", "Email"];
-    const rows = filtered.map((s) => {
+    const rows = sorted.map((s) => {
       const contact = getFirstContact(s.id);
       return [s.name, s.type, s.city, s.province, s.language, s.status, contact?.name || "", contact?.email || ""];
     });
@@ -78,9 +84,7 @@ export default function ScholenPage() {
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = "scholen_export.csv";
-    a.click();
+    a.href = url; a.download = "scholen_export.csv"; a.click();
   };
 
   return (
@@ -104,17 +108,11 @@ export default function ScholenPage() {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="surface-card p-4 mb-4">
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Zoeken op naam, stad, contact..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
+            <Input placeholder="Zoeken op naam, stad, contact..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
           </div>
           <Select value={filterType} onValueChange={setFilterType}>
             <SelectTrigger className="w-[160px]"><SelectValue placeholder="Type" /></SelectTrigger>
@@ -129,9 +127,7 @@ export default function ScholenPage() {
             <SelectTrigger className="w-[180px]"><SelectValue placeholder="Provincie" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Alle provincies</SelectItem>
-              {PROVINCES.map((p) => (
-                <SelectItem key={p} value={p}>{p}</SelectItem>
-              ))}
+              {PROVINCES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={filterLanguage} onValueChange={setFilterLanguage}>
@@ -155,35 +151,28 @@ export default function ScholenPage() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="surface-card overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Naam</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead className="hidden md:table-cell">Stad</TableHead>
-              <TableHead className="hidden lg:table-cell">Provincie</TableHead>
-              <TableHead className="hidden md:table-cell">Taal</TableHead>
-              <TableHead>Status</TableHead>
+              <SortableTableHead sortKey="name" currentSort={sort} onSort={toggleSort}>Naam</SortableTableHead>
+              <SortableTableHead sortKey="type" currentSort={sort} onSort={toggleSort}>Type</SortableTableHead>
+              <SortableTableHead sortKey="city" currentSort={sort} onSort={toggleSort} className="hidden md:table-cell">Stad</SortableTableHead>
+              <SortableTableHead sortKey="province" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Provincie</SortableTableHead>
+              <SortableTableHead sortKey="language" currentSort={sort} onSort={toggleSort} className="hidden md:table-cell">Taal</SortableTableHead>
+              <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
               <TableHead className="hidden lg:table-cell">Contact</TableHead>
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 ? (
+            {sorted.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                  Geen scholen gevonden.
-                </TableCell>
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen scholen gevonden.</TableCell>
               </TableRow>
             ) : (
-              filtered.map((school) => (
-                <TableRow
-                  key={school.id}
-                  className="cursor-pointer hover:bg-muted/30"
-                  onClick={() => navigate(`/scholen/${school.id}`)}
-                >
+              sorted.map((school) => (
+                <TableRow key={school.id} className="cursor-pointer hover:bg-muted/30" onClick={() => navigate(`/scholen/${school.id}`)}>
                   <TableCell className="font-medium">{school.name}</TableCell>
                   <TableCell className="capitalize">{school.type}</TableCell>
                   <TableCell className="hidden md:table-cell">{school.city}</TableCell>
@@ -204,19 +193,12 @@ export default function ScholenPage() {
           </TableBody>
         </Table>
         <div className="p-3 border-t border-border text-xs text-muted-foreground">
-          {filtered.length} {filtered.length === 1 ? "school" : "scholen"} gevonden
+          {sorted.length} {sorted.length === 1 ? "school" : "scholen"} gevonden
         </div>
       </div>
 
       <SchoolFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditSchool(undefined); }} school={editSchool} />
-      <CsvImportDialog
-        open={importOpen}
-        onOpenChange={setImportOpen}
-        title="Scholen importeren"
-        columns={SCHOOL_CSV_COLUMNS}
-        templateFilename="scholen_template.csv"
-        onImport={(rows) => { console.log("Import schools:", rows); }}
-      />
+      <CsvImportDialog open={importOpen} onOpenChange={setImportOpen} title="Scholen importeren" columns={SCHOOL_CSV_COLUMNS} templateFilename="scholen_template.csv" onImport={(rows) => { console.log("Import schools:", rows); }} />
     </div>
   );
 }
