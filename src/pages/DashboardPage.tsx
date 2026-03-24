@@ -1,5 +1,6 @@
 import { useMemo, lazy, Suspense } from "react";
-import { mockSchools, mockContracts, mockEvents } from "@/data/mockData";
+import { mockSchools, mockContracts, mockEvents, mockTasks } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
 
 const BelgiumMap = lazy(() => import("@/components/dashboard/BelgiumMap"));
 import {
@@ -9,6 +10,9 @@ import {
   AlertTriangle,
   TrendingUp,
   Users,
+  CheckSquare,
+  ArrowUp,
+  Minus,
 } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Link, useNavigate } from "react-router-dom";
