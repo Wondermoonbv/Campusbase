@@ -57,7 +57,9 @@ export interface Contract {
   value: number | null;
   document_url: string;
   notes: string;
+  description: string;
   school?: School;
+  linked_event_ids?: string[];
 }
 
 export interface Event {

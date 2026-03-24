@@ -31,11 +31,11 @@ export const mockPrograms: Program[] = [
 ];
 
 export const mockContracts: Contract[] = [
-  { id: "1", school_id: "1", contract_type: "partnership", start_date: "2024-01-01", end_date: "2025-12-31", renewal_date: "2025-10-01", status: "actief", value: 15000, document_url: "", notes: "Jaarlijkse partnerschapsovereenkomst" },
-  { id: "2", school_id: "2", contract_type: "stage-overeenkomst", start_date: "2024-03-01", end_date: "2025-02-28", renewal_date: "2025-01-15", status: "actief", value: null, document_url: "", notes: "" },
-  { id: "3", school_id: "3", contract_type: "sponsoring", start_date: "2023-09-01", end_date: "2024-08-31", renewal_date: "2024-06-01", status: "verlopen", value: 5000, document_url: "", notes: "Sponsoring ingenieursgala" },
-  { id: "4", school_id: "5", contract_type: "partnership", start_date: "2024-06-01", end_date: "2026-05-31", renewal_date: "2026-03-01", status: "actief", value: 20000, document_url: "", notes: "" },
-  { id: "5", school_id: "4", contract_type: "partnership", start_date: "2025-01-01", end_date: "2025-06-30", renewal_date: "2025-05-01", status: "in onderhandeling", value: 8000, document_url: "", notes: "Nieuw partnerschap in bespreking" },
+  { id: "1", school_id: "1", contract_type: "partnership", start_date: "2024-01-01", end_date: "2025-12-31", renewal_date: "2025-10-01", status: "actief", value: 15000, document_url: "", notes: "Jaarlijkse partnerschapsovereenkomst", description: "Strategisch partnerschap met KU Leuven voor employer branding activiteiten, inclusief toegang tot jobbeurzen en campus presentaties.", linked_event_ids: ["1"] },
+  { id: "2", school_id: "2", contract_type: "stage-overeenkomst", start_date: "2024-03-01", end_date: "2025-02-28", renewal_date: "2025-01-15", status: "actief", value: null, document_url: "", notes: "", description: "Kaderovereenkomst voor stage-plaatsingen vanuit UGent engineering faculteit.", linked_event_ids: ["2"] },
+  { id: "3", school_id: "3", contract_type: "sponsoring", start_date: "2023-09-01", end_date: "2024-08-31", renewal_date: "2024-06-01", status: "verlopen", value: 5000, document_url: "", notes: "Sponsoring ingenieursgala", description: "Sponsoring van het jaarlijkse ingenieursgala aan UCLouvain.", linked_event_ids: ["6"] },
+  { id: "4", school_id: "5", contract_type: "partnership", start_date: "2024-06-01", end_date: "2026-05-31", renewal_date: "2026-03-01", status: "actief", value: 20000, document_url: "", notes: "", description: "Uitgebreid partnerschap met VUB, focus op engineering en IT-opleidingen.", linked_event_ids: ["4"] },
+  { id: "5", school_id: "4", contract_type: "partnership", start_date: "2025-01-01", end_date: "2025-06-30", renewal_date: "2025-05-01", status: "in onderhandeling", value: 8000, document_url: "", notes: "Nieuw partnerschap in bespreking", description: "Nieuw partnerschap met Thomas More voor elektromechanica studenten.", linked_event_ids: [] },
 ];
 
 export const mockEvents: Event[] = [
