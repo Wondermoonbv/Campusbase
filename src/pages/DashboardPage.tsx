@@ -1,5 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, lazy, Suspense } from "react";
 import { mockSchools, mockContracts, mockEvents } from "@/data/mockData";
+
+const BelgiumMap = lazy(() => import("@/components/dashboard/BelgiumMap"));
 import {
   GraduationCap,
   CalendarDays,
@@ -139,6 +141,10 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      <Suspense fallback={<div className="surface-card h-[460px] animate-pulse" />}>
+        <BelgiumMap />
+      </Suspense>
     </div>
   );
 }
