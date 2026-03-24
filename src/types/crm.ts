@@ -130,3 +130,29 @@ export const FIELDS_OF_STUDY = [
   "Communicatie",
   "Andere",
 ];
+
+export type TaskPriority = "laag" | "normaal" | "hoog";
+export type TaskStatus = "open" | "in behandeling" | "afgerond";
+
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  school_id: string | null;
+  event_id: string | null;
+  assigned_to: string;
+  due_date: string;
+  priority: TaskPriority;
+  status: TaskStatus;
+  created_at: string;
+}
+  "Engineering",
+  "IT / Informatica",
+  "Business / Economie",
+  "Wetenschappen",
+  "Elektromechanica",
+  "Energie",
+  "Recht",
+  "Communicatie",
+  "Andere",
+];

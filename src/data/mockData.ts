@@ -64,3 +64,14 @@ export const mockParticipations: SchoolEventParticipation[] = [
   { id: "3", school_id: "1", event_id: "3", staff_count: 2, student_contacts: 0, follow_up_done: false, rating: null },
   { id: "4", school_id: "5", event_id: "3", staff_count: 2, student_contacts: 0, follow_up_done: false, rating: null },
 ];
+
+export const mockTasks: Task[] = [
+  { id: "t1", title: "Stand materiaal bestellen voor Career Day UGent", description: "Roll-up banners, brochures en give-aways bestellen.", school_id: "2", event_id: "2", assigned_to: "Tom De Graef", due_date: "2026-03-28", priority: "hoog", status: "open", created_at: "2026-03-20" },
+  { id: "t2", title: "Contactpersoon UCLouvain opvolgen", description: "Nieuwe sponsoring bespreken voor volgend academiejaar.", school_id: "3", event_id: null, assigned_to: "Sarah Mertens", due_date: "2026-04-01", priority: "normaal", status: "open", created_at: "2026-03-18" },
+  { id: "t3", title: "Hackathon jury samenstellen", description: "", school_id: null, event_id: "3", assigned_to: "Sarah Mertens", due_date: "2026-04-15", priority: "hoog", status: "in behandeling", created_at: "2026-03-15" },
+  { id: "t4", title: "VUB partnerschap evaluatie voorbereiden", description: "KPI's en resultaten verzamelen voor tussentijdse evaluatie.", school_id: "5", event_id: null, assigned_to: "Anna Verhoeven", due_date: "2026-04-10", priority: "normaal", status: "open", created_at: "2026-03-19" },
+  { id: "t5", title: "Presentatie slides updaten voor HOGENT", description: "", school_id: "6", event_id: "5", assigned_to: "Tom De Graef", due_date: "2026-04-20", priority: "laag", status: "open", created_at: "2026-03-22" },
+  { id: "t6", title: "Follow-up KU Leuven jobbeurs", description: "Bedankmail sturen en contacten opvolgen.", school_id: "1", event_id: "1", assigned_to: "Anna Verhoeven", due_date: "2026-03-20", priority: "hoog", status: "afgerond", created_at: "2026-03-16" },
+  { id: "t7", title: "Budget aanvraag ingenieursbeurs Brussel", description: "Budget voorstel indienen bij management.", school_id: null, event_id: "7", assigned_to: "Anna Verhoeven", due_date: "2026-04-05", priority: "normaal", status: "in behandeling", created_at: "2026-03-17" },
+  { id: "t8", title: "Thomas More contract finaliseren", description: "Laatste versie contract nalezen en doorsturen.", school_id: "4", event_id: null, assigned_to: "Anna Verhoeven", due_date: "2026-03-30", priority: "hoog", status: "open", created_at: "2026-03-21" },
+];
