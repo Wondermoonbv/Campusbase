@@ -119,10 +119,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <div className={`px-3 py-3 border-t border-sidebar-border ${collapsed ? "px-1" : ""}`}>
           {!collapsed && user && (
-            <button
-              onClick={() => navigate("/instellingen")}
-              className="w-full flex items-center gap-2.5 mb-2 px-1 py-1.5 rounded hover:bg-sidebar-accent/50 transition-colors text-left"
-            >
+            <div className="w-full flex items-center gap-2.5 mb-2 px-1 py-1.5">
               <Avatar className="h-8 w-8 border border-sidebar-border">
                 <AvatarImage src={user.avatarUrl} />
                 <AvatarFallback className="text-xs font-semibold bg-sidebar-accent text-sidebar-accent-foreground">{initials}</AvatarFallback>
@@ -131,19 +128,15 @@ export function AppSidebar() {
                 <p className="text-sm font-medium text-sidebar-foreground truncate">{user.name}</p>
                 <p className="text-xs text-sidebar-foreground/60 capitalize">{user.role}</p>
               </div>
-              <Settings className="h-3.5 w-3.5 text-sidebar-foreground/50 shrink-0" />
-            </button>
+            </div>
           )}
           {collapsed && (
-            <button
-              onClick={() => navigate("/instellingen")}
-              className="w-full flex items-center justify-center mb-2 py-1.5 rounded hover:bg-sidebar-accent/50 transition-colors"
-            >
+            <div className="w-full flex items-center justify-center mb-2 py-1.5">
               <Avatar className="h-7 w-7 border border-sidebar-border">
                 <AvatarImage src={user?.avatarUrl} />
                 <AvatarFallback className="text-xs font-semibold bg-sidebar-accent text-sidebar-accent-foreground">{initials}</AvatarFallback>
               </Avatar>
-            </button>
+            </div>
           )}
           <Button
             variant="ghost"
