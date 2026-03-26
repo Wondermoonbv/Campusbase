@@ -22,7 +22,7 @@ interface TaskFormDialogProps {
   onSave?: (task: Task) => void;
 }
 
-const teamMembers = ["Ellen Geerts", "Naomi Geyskens", "Matthias Peeters", "Sarah Zekhnini", "Elie ten Cate"];
+const teamMembers = ["Ellen Geerts", "Naomi Geyskens", "Matthias Peeters", "Sarah Zekhnini", "Eline ten Cate"];
 
 export function TaskFormDialog({ open, onOpenChange, defaultSchoolId, defaultEventId, task, onSave }: TaskFormDialogProps) {
   const [title, setTitle] = useState("");

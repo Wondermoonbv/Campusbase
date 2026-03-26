@@ -59,7 +59,7 @@ const DEFAULT_USERS: AppUser[] = [
   { id: "u2", firstName: "Ellen", lastName: "Geerts", name: "Ellen Geerts", email: "ellen.geerts@elia.be", role: "admin", notifications: { ...DEFAULT_NOTIFICATIONS } },
   { id: "u3", firstName: "Naomi", lastName: "Geyskens", name: "Naomi Geyskens", email: "naomi.geyskens@elia.be", role: "admin", notifications: { ...DEFAULT_NOTIFICATIONS } },
   { id: "u4", firstName: "Sarah", lastName: "Zekhnini", name: "Sarah Zekhnini", email: "sarah.zekhnini@elia.be", role: "admin", notifications: { ...DEFAULT_NOTIFICATIONS } },
-  { id: "u5", firstName: "Elie", lastName: "ten Cate", name: "Elie ten Cate", email: "elie.tencate@elia.be", role: "admin", notifications: { ...DEFAULT_NOTIFICATIONS } },
+  { id: "u5", firstName: "Eline", lastName: "ten Cate", name: "Eline ten Cate", email: "eline.tencate@elia.be", role: "admin", notifications: { ...DEFAULT_NOTIFICATIONS } },
 ];
 
 const STORAGE_KEY = "elia_crm_auth";
