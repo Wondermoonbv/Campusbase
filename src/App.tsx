@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,7 +24,17 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function AppRoutes() {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
+
+  // Not logged in → show login
+  if (!user) {
+    return (
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
+  }
 
   return (
     <AppLayout>
@@ -38,9 +48,13 @@ function AppRoutes() {
         <Route path="/evenementen/:id" element={<EventDetailPage />} />
         <Route path="/rapportage" element={<RapportagePage />} />
         <Route path="/taken" element={<TakenPage />} />
-        {/* activiteit is now a tab on gebruikers page */}
         {isAdmin && <Route path="/gebruikers" element={<GebruikersPage />} />}
-        <Route path="/instellingen" element={<InstellingenPage />} />
+        {isAdmin ? (
+          <Route path="/instellingen" element={<InstellingenPage />} />
+        ) : (
+          <Route path="/instellingen" element={<Navigate to="/" replace />} />
+        )}
+        <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AppLayout>
