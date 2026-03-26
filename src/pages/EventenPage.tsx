@@ -42,7 +42,7 @@ export default function EventenPage() {
   const [view, setView] = useState<"list" | "calendar">("list");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-  const { isAdmin } = useAuth();
+  const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
 
   const filtered = useMemo(() => {
@@ -118,12 +118,12 @@ export default function EventenPage() {
           <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Export</span>
           </Button>
-          {isAdmin && (
+          {canEdit && (
             <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => setImportOpen(true)}>
               <Upload className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Import</span>
             </Button>
           )}
-          {isAdmin && (
+          {canEdit && (
             <Button size="sm" className="h-10 sm:h-8" onClick={() => setDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Evenement toevoegen</span><span className="sm:hidden">Nieuw</span>
             </Button>
@@ -219,7 +219,7 @@ export default function EventenPage() {
                     <TableCell>{ev.location}</TableCell>
                     <TableCell><StatusBadge status={ev.status} /></TableCell>
                     <TableCell>
-                      {isAdmin && (
+                      {canEdit && (
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); navigate(`/evenementen/${ev.id}`); }}>
                           <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                         </Button>

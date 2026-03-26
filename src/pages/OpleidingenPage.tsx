@@ -24,7 +24,7 @@ export default function OpleidingenPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProgram, setEditProgram] = useState<typeof mockPrograms[0] | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const { isAdmin } = useAuth();
+  const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
 
   const enriched = useMemo(() => {
@@ -80,7 +80,7 @@ export default function OpleidingenPage() {
           <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-1" /> Export
           </Button>
-          {isAdmin && (
+          {canEdit && (
             <Button size="sm" className="h-10 sm:h-8" onClick={() => setDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-1" /> Nieuwe opleiding
             </Button>
@@ -200,7 +200,7 @@ export default function OpleidingenPage() {
                     <TableCell className="hidden lg:table-cell">{p.field_of_study}</TableCell>
                     <TableCell className="text-right tabular-nums">{p.student_count ?? "—"}</TableCell>
                     <TableCell>
-                      {isAdmin && (
+                      {canEdit && (
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditProgram(p); setDialogOpen(true); }}>
                           <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                         </Button>

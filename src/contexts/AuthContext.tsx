@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
 
-export type UserRole = "admin" | "viewer";
+export type UserRole = "admin" | "editor" | "viewer";
 
 export interface NotificationSettings {
   contractExpiry90: boolean;
@@ -29,6 +29,8 @@ export interface AppUser {
 interface AuthContextType {
   user: AppUser | null;
   isAdmin: boolean;
+  /** Admin or Editor — can create/edit/delete entities */
+  canEdit: boolean;
   login: (email: string, password: string) => boolean;
   logout: () => void;
   users: AppUser[];
@@ -50,18 +52,28 @@ const DEFAULT_NOTIFICATIONS: NotificationSettings = {
 const DEFAULT_PLATFORM: PlatformSettings = {
   defaultLanguage: "nl",
   defaultEventView: "list",
-  companyName: "Elia Campus",
+  companyName: "CampusBase",
   companyLogoUrl: "",
 };
 
 const DEFAULT_USERS: AppUser[] = [
   { id: "u1", firstName: "Matthias", lastName: "Peeters", name: "Matthias Peeters", email: "matthias.peeters@elia.be", role: "admin", notifications: { ...DEFAULT_NOTIFICATIONS } },
-  { id: "u2", firstName: "Ellen", lastName: "Geerts", name: "Ellen Geerts", email: "ellen.geerts@elia.be", role: "admin", notifications: { ...DEFAULT_NOTIFICATIONS } },
-  { id: "u3", firstName: "Naomi", lastName: "Geyskens", name: "Naomi Geyskens", email: "naomi.geyskens@elia.be", role: "admin", notifications: { ...DEFAULT_NOTIFICATIONS } },
-  { id: "u4", firstName: "Sarah", lastName: "Zekhnini", name: "Sarah Zekhnini", email: "sarah.zekhnini@elia.be", role: "admin", notifications: { ...DEFAULT_NOTIFICATIONS } },
-  { id: "u5", firstName: "Eline", lastName: "ten Cate", name: "Eline ten Cate", email: "eline.tencate@elia.be", role: "admin", notifications: { ...DEFAULT_NOTIFICATIONS } },
-  { id: "u6", firstName: "Elke", lastName: "Vanton", name: "Elke Vanton", email: "elke.vanton@elia.be", role: "viewer", notifications: { ...DEFAULT_NOTIFICATIONS } },
+  { id: "u2", firstName: "Ellen", lastName: "Geerts", name: "Ellen Geerts", email: "ellen.geerts@elia.be", role: "editor", notifications: { ...DEFAULT_NOTIFICATIONS } },
+  { id: "u3", firstName: "Naomi", lastName: "Geyskens", name: "Naomi Geyskens", email: "naomi.geyskens@elia.be", role: "editor", notifications: { ...DEFAULT_NOTIFICATIONS } },
+  { id: "u4", firstName: "Sarah", lastName: "Zekhnini", name: "Sarah Zekhnini", email: "sarah.zekhnini@elia.be", role: "editor", notifications: { ...DEFAULT_NOTIFICATIONS } },
+  { id: "u5", firstName: "Eline", lastName: "ten Cate", name: "Eline ten Cate", email: "eline.tencate@elia.be", role: "editor", notifications: { ...DEFAULT_NOTIFICATIONS } },
+  { id: "u6", firstName: "Elke", lastName: "Vanton", name: "Elke Vanton", email: "elke.vanton@elia.be", role: "editor", notifications: { ...DEFAULT_NOTIFICATIONS } },
 ];
+
+/** Mock password store — email → password */
+const PASSWORDS: Record<string, string> = {
+  "matthias.peeters@elia.be": "iktestgraag1234",
+  "ellen.geerts@elia.be": "iktestgraag1234",
+  "elke.vanton@elia.be": "iktestgraag1234",
+  "naomi.geyskens@elia.be": "iktestgraag1234",
+  "sarah.zekhnini@elia.be": "iktestgraag1234",
+  "eline.tencate@elia.be": "iktestgraag1234",
+};
 
 const STORAGE_KEY = "elia_crm_auth";
 const USERS_KEY = "elia_crm_users";
@@ -75,9 +87,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return stored ? JSON.parse(stored) : DEFAULT_USERS;
   });
 
+  // Start logged out — user must log in
   const [user, setUser] = useState<AppUser | null>(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : users[0];
+    return stored ? JSON.parse(stored) : null;
   });
 
   const [platformSettings, setPlatformSettings] = useState<PlatformSettings>(() => {
@@ -93,14 +106,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(PLATFORM_KEY, JSON.stringify(platformSettings));
   }, [platformSettings]);
 
-  const login = useCallback((email: string, _password: string) => {
+  const login = useCallback((email: string, password: string) => {
     const found = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
-    if (found) {
-      setUser(found);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(found));
-      return true;
-    }
-    return false;
+    if (!found) return false;
+    const expectedPass = PASSWORDS[found.email.toLowerCase()];
+    if (expectedPass && password !== expectedPass) return false;
+    setUser(found);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(found));
+    return true;
   }, [users]);
 
   const logout = useCallback(() => {
@@ -138,7 +151,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const changePassword = useCallback((_current: string, _newPass: string) => {
-    // Mock: always succeeds
     return true;
   }, []);
 
@@ -146,10 +158,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setPlatformSettings((prev) => ({ ...prev, ...data }));
   }, []);
 
+  const isAdmin = user?.role === "admin";
+  const canEdit = user?.role === "admin" || user?.role === "editor";
+
   return (
     <AuthContext.Provider value={{
       user,
-      isAdmin: user?.role === "admin",
+      isAdmin,
+      canEdit,
       login, logout, users, addUser, updateUser, deleteUser,
       updateProfile, changePassword,
       platformSettings, updatePlatformSettings,

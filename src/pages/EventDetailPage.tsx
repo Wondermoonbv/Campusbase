@@ -19,7 +19,7 @@ import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 export default function EventDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { canEdit } = useAuth();
   const event = mockEvents.find((e) => e.id === id);
   const [editing, setEditing] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
@@ -85,7 +85,7 @@ export default function EventDetailPage() {
           </div>
           <StatusBadge status={event.status} />
         </div>
-        {isAdmin && (
+        {canEdit && (
           editing ? (
             <div className="flex gap-2">
               <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => { setForm(event); setSelectedProgramIds(initialProgramIds); setEditing(false); }}>

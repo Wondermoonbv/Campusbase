@@ -40,7 +40,7 @@ export default function ScholenPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [editSchool, setEditSchool] = useState<School | undefined>();
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
 
   const filtered = useMemo(() => {
@@ -95,12 +95,12 @@ export default function ScholenPage() {
           <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-1" /> Export
           </Button>
-          {isAdmin && (
+          {canEdit && (
             <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => setImportOpen(true)}>
               <Upload className="h-4 w-4 mr-1" /> Import
             </Button>
           )}
-          {isAdmin && (
+          {canEdit && (
             <Button size="sm" className="h-10 sm:h-8" onClick={() => { setEditSchool(undefined); setDialogOpen(true); }}>
               <Plus className="h-4 w-4 mr-1" /> School toevoegen
             </Button>
@@ -213,7 +213,7 @@ export default function ScholenPage() {
                   <TableCell><StatusBadge status={school.status} /></TableCell>
                   <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{getFirstContact(school.id)?.name || "—"}</TableCell>
                   <TableCell>
-                    {isAdmin && (
+                    {canEdit && (
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditSchool(school); setDialogOpen(true); }}>
                         <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                       </Button>

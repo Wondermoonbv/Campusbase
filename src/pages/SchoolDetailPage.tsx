@@ -22,7 +22,7 @@ export default function SchoolDetailPage() {
   const [editContact, setEditContact] = useState<typeof contacts[0] | undefined>(undefined);
   const [programDialogOpen, setProgramDialogOpen] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
-  const { isAdmin } = useAuth();
+  const { canEdit } = useAuth();
 
   if (!school) {
     return (
@@ -63,7 +63,7 @@ export default function SchoolDetailPage() {
               <span>{school.language}</span>
             </div>
           </div>
-          {isAdmin && (
+          {canEdit && (
             <div className="flex gap-2">
               <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => setTaskDialogOpen(true)}>
                 <CheckSquare className="h-4 w-4 mr-1" /> Taak
@@ -91,7 +91,7 @@ export default function SchoolDetailPage() {
       <div className="surface-card p-4 sm:p-6 mb-4 sm:mb-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base sm:text-lg font-semibold">Contactpersonen ({contacts.length})</h2>
-          {isAdmin && (
+          {canEdit && (
             <Button size="sm" variant="outline" className="h-10 sm:h-8" onClick={() => { setEditContact(undefined); setContactDialogOpen(true); }}>
               <Plus className="h-4 w-4 mr-1" /> Contact
             </Button>
@@ -132,7 +132,7 @@ export default function SchoolDetailPage() {
                     )}
                   </div>
                 </div>
-                {isAdmin && (
+                {canEdit && (
                   <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => { setEditContact(contact); setContactDialogOpen(true); }}>
                     <Edit className="h-3.5 w-3.5" />
                   </Button>
@@ -154,7 +154,7 @@ export default function SchoolDetailPage() {
           <div className="surface-card overflow-hidden">
             <div className="flex items-center justify-between p-3 sm:p-4 pb-0">
               <span className="text-sm text-muted-foreground">{programs.length} opleiding{programs.length !== 1 ? "en" : ""}</span>
-              {isAdmin && (
+              {canEdit && (
                 <Button size="sm" variant="outline" className="h-9 sm:h-8" onClick={() => setProgramDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-1" /> Toevoegen
                 </Button>

@@ -26,7 +26,7 @@ export default function ContractenPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editContract, setEditContract] = useState<typeof mockContracts[0] | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const { isAdmin } = useAuth();
+  const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("school");
 
   const baseList = useMemo(() => {
@@ -80,7 +80,7 @@ export default function ContractenPage() {
           <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-1" /> Export
           </Button>
-          {isAdmin && (
+          {canEdit && (
             <Button size="sm" className="h-10 sm:h-8" onClick={openCreate}>
               <Plus className="h-4 w-4 mr-1" /> Contract toevoegen
             </Button>
@@ -133,7 +133,7 @@ export default function ContractenPage() {
                       ))}
                     </div>
                   )}
-                  {isAdmin && (
+                  {canEdit && (
                     <Button size="sm" variant="outline" className="h-9" onClick={(e) => { e.stopPropagation(); openEdit(c); }}>Bewerken</Button>
                   )}
                 </div>
@@ -179,7 +179,7 @@ export default function ContractenPage() {
                     <TableCell><StatusBadge status={c.status} /></TableCell>
                     <TableCell className="text-right tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
                     <TableCell>
-                      {isAdmin && (
+                      {canEdit && (
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); openEdit(c); }}>
                           <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                         </Button>
