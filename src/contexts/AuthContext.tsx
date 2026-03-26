@@ -84,6 +84,15 @@ const CURRENT_VERSION = "2";
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  // Reset stale localStorage when data version changes
+  const needsReset = localStorage.getItem(DATA_VERSION_KEY) !== CURRENT_VERSION;
+  if (needsReset) {
+    localStorage.removeItem(USERS_KEY);
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(PLATFORM_KEY);
+    localStorage.setItem(DATA_VERSION_KEY, CURRENT_VERSION);
+  }
+
   const [users, setUsers] = useState<AppUser[]>(() => {
     const stored = localStorage.getItem(USERS_KEY);
     return stored ? JSON.parse(stored) : DEFAULT_USERS;
