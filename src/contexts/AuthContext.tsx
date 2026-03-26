@@ -78,6 +78,8 @@ const PASSWORDS: Record<string, string> = {
 const STORAGE_KEY = "elia_crm_auth";
 const USERS_KEY = "elia_crm_users";
 const PLATFORM_KEY = "elia_crm_platform";
+const DATA_VERSION_KEY = "elia_crm_version";
+const CURRENT_VERSION = "2";
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
