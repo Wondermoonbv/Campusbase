@@ -22,18 +22,10 @@ interface ActivityContextType {
 const ActivityContext = createContext<ActivityContextType | null>(null);
 
 const SEED_ACTIVITIES: Activity[] = [
-  { id: "a1", userId: "u1", userName: "Admin User", action: "aangemaakt", entityType: "taak", entityName: "Stand materiaal bestellen voor Career Day UGent", timestamp: new Date(Date.now() - 1 * 3600000).toISOString() },
-  { id: "a2", userId: "u1", userName: "Admin User", action: "bewerkt", entityType: "evenement", entityName: "Career Day UGent", timestamp: new Date(Date.now() - 2 * 3600000).toISOString() },
-  { id: "a3", userId: "u2", userName: "Viewer User", action: "aangemaakt", entityType: "contract", entityName: "Thomas More partnerschap", timestamp: new Date(Date.now() - 4 * 3600000).toISOString() },
-  { id: "a4", userId: "u1", userName: "Admin User", action: "bewerkt", entityType: "school", entityName: "KU Leuven", timestamp: new Date(Date.now() - 6 * 3600000).toISOString() },
-  { id: "a5", userId: "u2", userName: "Viewer User", action: "aangemaakt", entityType: "taak", entityName: "Hackathon jury samenstellen", timestamp: new Date(Date.now() - 8 * 3600000).toISOString() },
-  { id: "a6", userId: "u1", userName: "Admin User", action: "verwijderd", entityType: "opleiding", entityName: "Oude opleiding Chemie", timestamp: new Date(Date.now() - 12 * 3600000).toISOString() },
-  { id: "a7", userId: "u1", userName: "Admin User", action: "aangemaakt", entityType: "evenement", entityName: "Workshop Smart Grids VUB", timestamp: new Date(Date.now() - 24 * 3600000).toISOString() },
-  { id: "a8", userId: "u2", userName: "Viewer User", action: "bewerkt", entityType: "contract", entityName: "VUB partnerschap", timestamp: new Date(Date.now() - 28 * 3600000).toISOString() },
-  { id: "a9", userId: "u1", userName: "Admin User", action: "aangemaakt", entityType: "school", entityName: "HOGENT", timestamp: new Date(Date.now() - 48 * 3600000).toISOString() },
-  { id: "a10", userId: "u2", userName: "Viewer User", action: "bewerkt", entityType: "taak", entityName: "VUB partnerschap evaluatie voorbereiden", timestamp: new Date(Date.now() - 72 * 3600000).toISOString() },
-  { id: "a11", userId: "u1", userName: "Admin User", action: "aangemaakt", entityType: "evenement", entityName: "Jobbeurs KU Leuven", timestamp: new Date(Date.now() - 120 * 3600000).toISOString() },
-  { id: "a12", userId: "u1", userName: "Admin User", action: "bewerkt", entityType: "school", entityName: "UGent", timestamp: new Date(Date.now() - 168 * 3600000).toISOString() },
+  { id: "a1", userId: "u1", userName: "Matthias Peeters", action: "aangemaakt", entityType: "taak", entityName: "Stand materiaal bestellen voor Career Day KU Leuven", timestamp: new Date(Date.now() - 1 * 3600000).toISOString() },
+  { id: "a2", userId: "u2", userName: "Ellen Geerts", action: "bewerkt", entityType: "evenement", entityName: "Career Day KU Leuven", timestamp: new Date(Date.now() - 4 * 3600000).toISOString() },
+  { id: "a3", userId: "u3", userName: "Naomi Geyskens", action: "aangemaakt", entityType: "school", entityName: "HOGENT", timestamp: new Date(Date.now() - 24 * 3600000).toISOString() },
+  { id: "a4", userId: "u4", userName: "Sarah Zekhnini", action: "bewerkt", entityType: "contract", entityName: "KU Leuven partnerschap", timestamp: new Date(Date.now() - 48 * 3600000).toISOString() },
 ];
 
 export function ActivityProvider({ children }: { children: React.ReactNode }) {
