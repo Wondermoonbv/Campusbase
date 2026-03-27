@@ -14,16 +14,422 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      contacten: {
+        Row: {
+          department: string | null
+          email: string | null
+          id: string
+          linkedin_url: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          role: string | null
+          school_id: string
+        }
+        Insert: {
+          department?: string | null
+          email?: string | null
+          id?: string
+          linkedin_url?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          role?: string | null
+          school_id: string
+        }
+        Update: {
+          department?: string | null
+          email?: string | null
+          id?: string
+          linkedin_url?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          role?: string | null
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacten_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "scholen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_evenementen: {
+        Row: {
+          contract_id: string
+          event_id: string
+        }
+        Insert: {
+          contract_id: string
+          event_id: string
+        }
+        Update: {
+          contract_id?: string
+          event_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_evenementen_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracten"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_evenementen_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "evenementen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contracten: {
+        Row: {
+          contract_type: string
+          description: string | null
+          document_url: string | null
+          end_date: string
+          id: string
+          notes: string | null
+          renewal_date: string | null
+          school_id: string
+          start_date: string
+          status: string
+          value: number | null
+        }
+        Insert: {
+          contract_type?: string
+          description?: string | null
+          document_url?: string | null
+          end_date: string
+          id?: string
+          notes?: string | null
+          renewal_date?: string | null
+          school_id: string
+          start_date: string
+          status?: string
+          value?: number | null
+        }
+        Update: {
+          contract_type?: string
+          description?: string | null
+          document_url?: string | null
+          end_date?: string
+          id?: string
+          notes?: string | null
+          renewal_date?: string | null
+          school_id?: string
+          start_date?: string
+          status?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracten_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "scholen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evenementen: {
+        Row: {
+          budget: number | null
+          date: string
+          description: string | null
+          elia_contact: string | null
+          end_time: string | null
+          id: string
+          location: string | null
+          name: string
+          notes: string | null
+          responsible: string | null
+          school_id: string | null
+          setup_date: string | null
+          setup_time: string | null
+          stand_size: string | null
+          stand_type: string | null
+          start_time: string | null
+          status: string
+          team_members: string[] | null
+          type: string
+        }
+        Insert: {
+          budget?: number | null
+          date: string
+          description?: string | null
+          elia_contact?: string | null
+          end_time?: string | null
+          id?: string
+          location?: string | null
+          name: string
+          notes?: string | null
+          responsible?: string | null
+          school_id?: string | null
+          setup_date?: string | null
+          setup_time?: string | null
+          stand_size?: string | null
+          stand_type?: string | null
+          start_time?: string | null
+          status?: string
+          team_members?: string[] | null
+          type?: string
+        }
+        Update: {
+          budget?: number | null
+          date?: string
+          description?: string | null
+          elia_contact?: string | null
+          end_time?: string | null
+          id?: string
+          location?: string | null
+          name?: string
+          notes?: string | null
+          responsible?: string | null
+          school_id?: string | null
+          setup_date?: string | null
+          setup_time?: string | null
+          stand_size?: string | null
+          stand_type?: string | null
+          start_time?: string | null
+          status?: string
+          team_members?: string[] | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evenementen_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "scholen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_opleidingen: {
+        Row: {
+          event_id: string
+          opleiding_id: string
+        }
+        Insert: {
+          event_id: string
+          opleiding_id: string
+        }
+        Update: {
+          event_id?: string
+          opleiding_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_opleidingen_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "evenementen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_opleidingen_opleiding_id_fkey"
+            columns: ["opleiding_id"]
+            isOneToOne: false
+            referencedRelation: "opleidingen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      opleidingen: {
+        Row: {
+          faculty: string | null
+          field_of_study: string | null
+          id: string
+          name: string
+          school_id: string
+          student_count: number | null
+          study_level: string
+        }
+        Insert: {
+          faculty?: string | null
+          field_of_study?: string | null
+          id?: string
+          name: string
+          school_id: string
+          student_count?: number | null
+          study_level?: string
+        }
+        Update: {
+          faculty?: string | null
+          field_of_study?: string | null
+          id?: string
+          name?: string
+          school_id?: string
+          student_count?: number | null
+          study_level?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opleidingen_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "scholen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          email?: string
+          first_name?: string
+          id: string
+          last_name?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+        }
+        Relationships: []
+      }
+      scholen: {
+        Row: {
+          city: string
+          created_at: string | null
+          id: string
+          language: string
+          name: string
+          notes: string | null
+          province: string
+          status: string
+          type: string
+          website: string | null
+        }
+        Insert: {
+          city: string
+          created_at?: string | null
+          id?: string
+          language?: string
+          name: string
+          notes?: string | null
+          province: string
+          status?: string
+          type?: string
+          website?: string | null
+        }
+        Update: {
+          city?: string
+          created_at?: string | null
+          id?: string
+          language?: string
+          name?: string
+          notes?: string | null
+          province?: string
+          status?: string
+          type?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      taken: {
+        Row: {
+          assigned_to: string | null
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          event_id: string | null
+          id: string
+          priority: string
+          school_id: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          event_id?: string | null
+          id?: string
+          priority?: string
+          school_id?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          event_id?: string | null
+          id?: string
+          priority?: string
+          school_id?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taken_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "evenementen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taken_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "scholen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "editor" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +556,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "editor", "viewer"],
+    },
   },
 } as const

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import L from "leaflet";
-import { mockSchools, mockEvents } from "@/data/mockData";
+import { useScholen } from "@/hooks/useScholen";
+import { useEvenementen } from "@/hooks/useEvenementen";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { GraduationCap, CalendarDays, Layers } from "lucide-react";
 import "leaflet/dist/leaflet.css";
@@ -9,172 +10,78 @@ import "leaflet/dist/leaflet.css";
 const CITY_COORDS: Record<string, [number, number]> = {
   "Leuven": [50.8798, 4.7005],
   "Gent": [51.0543, 3.7174],
-  "Louvain-la-Neuve": [50.6681, 4.6118],
-  "Mechelen": [51.0259, 4.4777],
   "Brussel": [50.8503, 4.3517],
+  "Antwerpen": [51.2194, 4.4025],
+  "Luik": [50.6326, 5.5797],
+  "Namen": [50.4674, 4.8720],
+  "Hasselt": [50.9311, 5.3378],
+  "Brugge": [51.2093, 3.2247],
+  "Kortrijk": [50.8280, 3.2650],
+  "Mons": [50.4542, 3.9522],
 };
-
-const LOCATION_COORDS: Record<string, [number, number]> = {
-  "Aula KU Leuven": [50.8775, 4.7005],
-  "ICC Gent": [51.0380, 3.7250],
-  "BeCentral, Brussel": [50.8453, 4.3567],
-  "VUB Campus Etterbeek": [50.8225, 4.3925],
-  "HOGENT Campus Schoonmeersen": [51.0350, 3.7020],
-  "Forum UCLouvain": [50.6695, 4.6150],
-  "Tour & Taxis, Brussel": [50.8625, 4.3490],
-};
-
-const PROVINCE_COORDS: Record<string, [number, number]> = {
-  "Antwerpen": [51.22, 4.40],
-  "Brussel": [50.85, 4.35],
-  "Henegouwen": [50.45, 3.95],
-  "Limburg": [50.93, 5.34],
-  "Luik": [50.63, 5.57],
-  "Luxemburg": [49.82, 5.47],
-  "Namen": [50.47, 4.87],
-  "Oost-Vlaanderen": [51.04, 3.73],
-  "Vlaams-Brabant": [50.88, 4.70],
-  "Waals-Brabant": [50.67, 4.52],
-  "West-Vlaanderen": [51.05, 3.08],
-};
-
-function makeSvgIcon(color: string) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="38" viewBox="0 0 28 38">
-    <path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 24 14 24s14-13.5 14-24C28 6.27 21.73 0 14 0z" fill="${color}" stroke="white" stroke-width="1.5"/>
-    <circle cx="14" cy="14" r="6" fill="white" opacity="0.9"/>
-  </svg>`;
-  return L.divIcon({
-    html: svg,
-    className: "custom-map-pin",
-    iconSize: [28, 38],
-    iconAnchor: [14, 38],
-    popupAnchor: [0, -38],
-  });
-}
-
-const schoolIcon = makeSvgIcon("hsl(189, 78%, 26%)");
-const eventIcon = makeSvgIcon("hsl(28, 87%, 51%)");
-
-type FilterMode = "both" | "schools" | "events";
 
 export default function BelgiumMap() {
+  const { scholen } = useScholen();
+  const { evenementen } = useEvenementen();
+  const mapRef = useRef<HTMLDivElement>(null);
+  const leafletMap = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.LayerGroup | null>(null);
   const isMobile = useIsMobile();
-  const [filter, setFilter] = useState<FilterMode>("both");
-  const mapRef = useRef<L.Map | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const layersRef = useRef<{ schools: L.LayerGroup; events: L.LayerGroup }>({
-    schools: L.layerGroup(),
-    events: L.layerGroup(),
-  });
+  const [layer, setLayer] = useState<"scholen" | "evenementen" | "beide">("beide");
 
-  // Initialize map once
-  useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
+  const updateMarkers = useCallback(() => {
+    if (!leafletMap.current || !markersRef.current) return;
+    markersRef.current.clearLayers();
 
-    const map = L.map(containerRef.current, {
-      center: [50.5, 4.47],
-      zoom: isMobile ? 7 : 8,
-      scrollWheelZoom: false,
-      dragging: true,
-      touchZoom: true,
-      tap: true,
-    } as L.MapOptions);
+    const showScholen = layer === "scholen" || layer === "beide";
+    const showEvents = layer === "evenementen" || layer === "beide";
 
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-      attribution: '&copy; <a href="https://carto.com">CARTO</a>',
-    }).addTo(map);
-
-    // Add school markers
-    mockSchools.forEach((s) => {
-      const coords = CITY_COORDS[s.city] ?? PROVINCE_COORDS[s.province];
-      if (!coords) return;
-      L.marker(coords, { icon: schoolIcon })
-        .bindPopup(`
-          <div style="min-width:160px">
-            <p style="font-weight:600;margin:0">${s.name}</p>
-            <p style="color:#666;font-size:12px;margin:2px 0 4px">${s.type} · ${s.city}</p>
-            <a href="/scholen/${s.id}" style="font-size:12px">Details bekijken →</a>
-          </div>
-        `)
-        .addTo(layersRef.current.schools);
-    });
-
-    // Add event markers
-    mockEvents.forEach((e) => {
-      const coords =
-        LOCATION_COORDS[e.location] ??
-        (() => {
-          if (!e.school_id) return null;
-          const school = mockSchools.find((s) => s.id === e.school_id);
-          return school ? (CITY_COORDS[school.city] ?? PROVINCE_COORDS[school.province]) : null;
-        })();
-      if (!coords) return;
-      L.marker(coords, { icon: eventIcon })
-        .bindPopup(`
-          <div style="min-width:160px">
-            <p style="font-weight:600;margin:0">${e.name}</p>
-            <p style="color:#666;font-size:12px;margin:2px 0 4px">${e.type} · ${new Date(e.date).toLocaleDateString("nl-BE")}</p>
-            <a href="/evenementen/${e.id}" style="font-size:12px">Details bekijken →</a>
-          </div>
-        `)
-        .addTo(layersRef.current.events);
-    });
-
-    layersRef.current.schools.addTo(map);
-    layersRef.current.events.addTo(map);
-    mapRef.current = map;
-
-    return () => {
-      map.remove();
-      mapRef.current = null;
-    };
-  }, []);
-
-  // Toggle layers based on filter
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    const { schools, events } = layersRef.current;
-
-    if (filter === "both" || filter === "schools") {
-      if (!map.hasLayer(schools)) map.addLayer(schools);
-    } else {
-      map.removeLayer(schools);
+    if (showScholen) {
+      scholen.forEach((s) => {
+        const coords = CITY_COORDS[s.city];
+        if (!coords) return;
+        const marker = L.circleMarker(coords, { radius: 7, fillColor: "#0E6575", color: "#fff", weight: 2, fillOpacity: 0.9 });
+        marker.bindPopup(`<strong>${s.name}</strong><br/>${s.city}<br/><em>${s.type}</em>`);
+        markersRef.current!.addLayer(marker);
+      });
     }
 
-    if (filter === "both" || filter === "events") {
-      if (!map.hasLayer(events)) map.addLayer(events);
-    } else {
-      map.removeLayer(events);
+    if (showEvents) {
+      evenementen.forEach((e) => {
+        const school = e.school_id ? scholen.find((s) => s.id === e.school_id) : null;
+        const city = school?.city || e.location.split(",").pop()?.trim() || "";
+        const coords = CITY_COORDS[city];
+        if (!coords) return;
+        const offset: [number, number] = [coords[0] + 0.008, coords[1] + 0.008];
+        const marker = L.circleMarker(offset, { radius: 6, fillColor: "#ef7c14", color: "#fff", weight: 2, fillOpacity: 0.9 });
+        marker.bindPopup(`<strong>${e.name}</strong><br/>${new Date(e.date).toLocaleDateString("nl-BE")}<br/>${e.location}`);
+        markersRef.current!.addLayer(marker);
+      });
     }
-  }, [filter]);
+  }, [scholen, evenementen, layer]);
+
+  useEffect(() => {
+    if (!mapRef.current || leafletMap.current) return;
+    const map = L.map(mapRef.current, { zoomControl: !isMobile, attributionControl: false }).setView([50.5, 4.5], isMobile ? 7 : 8);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { maxZoom: 18 }).addTo(map);
+    markersRef.current = L.layerGroup().addTo(map);
+    leafletMap.current = map;
+    return () => { map.remove(); leafletMap.current = null; };
+  }, [isMobile]);
+
+  useEffect(() => { updateMarkers(); }, [updateMarkers]);
 
   return (
     <div className="surface-card overflow-hidden">
-      <div className="p-3 sm:p-4 border-b border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-        <h2>België overzicht</h2>
-        <ToggleGroup
-          type="single"
-          value={filter}
-          onValueChange={(v) => v && setFilter(v as FilterMode)}
-          size="sm"
-        >
-          <ToggleGroupItem value="both" aria-label="Beide">
-            <Layers className="h-4 w-4 mr-1.5" />
-            <span className="hidden sm:inline">Beide</span>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="schools" aria-label="Scholen">
-            <GraduationCap className="h-4 w-4 mr-1.5" />
-            <span className="hidden sm:inline">Scholen</span>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="events" aria-label="Evenementen">
-            <CalendarDays className="h-4 w-4 mr-1.5" />
-            <span className="hidden sm:inline">Evenementen</span>
-          </ToggleGroupItem>
+      <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between">
+        <h2 className="text-base font-semibold">België — Scholen & Evenementen</h2>
+        <ToggleGroup type="single" value={layer} onValueChange={(v) => v && setLayer(v as typeof layer)} size="sm">
+          <ToggleGroupItem value="scholen" className="gap-1 text-xs"><GraduationCap className="h-3.5 w-3.5" /><span className="hidden sm:inline">Scholen</span></ToggleGroupItem>
+          <ToggleGroupItem value="evenementen" className="gap-1 text-xs"><CalendarDays className="h-3.5 w-3.5" /><span className="hidden sm:inline">Events</span></ToggleGroupItem>
+          <ToggleGroupItem value="beide" className="gap-1 text-xs"><Layers className="h-3.5 w-3.5" /><span className="hidden sm:inline">Beide</span></ToggleGroupItem>
         </ToggleGroup>
       </div>
-      <div ref={containerRef} className="h-[280px] sm:h-[400px]" style={{ zIndex: 0 }} />
+      <div ref={mapRef} className="h-[280px] sm:h-[400px]" />
     </div>
   );
 }
