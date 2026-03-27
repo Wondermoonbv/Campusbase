@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { mockPrograms, mockSchools, mockEvents, mockEventPrograms } from "@/data/mockData";
+import { mockPrograms as initialPrograms, mockSchools, mockEvents, mockEventPrograms } from "@/data/mockData";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,23 +12,33 @@ import {
 } from "@/components/ui/table";
 import { Search, Download, Plus, ChevronDown, ChevronRight, Pencil } from "lucide-react";
 import { FIELDS_OF_STUDY } from "@/types/crm";
+import type { Program } from "@/types/crm";
 import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 
 export default function OpleidingenPage() {
+  const [programs, setPrograms] = useState<Program[]>(initialPrograms);
   const [search, setSearch] = useState("");
   const [filterLevel, setFilterLevel] = useState("all");
   const [filterField, setFilterField] = useState("all");
   const [filterSchool, setFilterSchool] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editProgram, setEditProgram] = useState<typeof mockPrograms[0] | undefined>();
+  const [editProgram, setEditProgram] = useState<Program | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
 
+  const handleSave = (saved: Program) => {
+    setPrograms((prev) => {
+      const exists = prev.find((p) => p.id === saved.id);
+      if (exists) return prev.map((p) => (p.id === saved.id ? saved : p));
+      return [...prev, saved];
+    });
+  };
+
   const enriched = useMemo(() => {
-    return mockPrograms.map((p) => ({
+    return programs.map((p) => ({
       ...p,
       school: mockSchools.find((s) => s.id === p.school_id),
       linkedEvents: mockEventPrograms
@@ -36,7 +46,7 @@ export default function OpleidingenPage() {
         .map((ep) => mockEvents.find((e) => e.id === ep.event_id))
         .filter(Boolean),
     }));
-  }, []);
+  }, [programs]);
 
   const filtered = useMemo(() => {
     return enriched.filter((p) => {
@@ -81,7 +91,7 @@ export default function OpleidingenPage() {
             <Download className="h-4 w-4 mr-1" /> Export
           </Button>
           {canEdit && (
-            <Button size="sm" className="h-10 sm:h-8" onClick={() => setDialogOpen(true)}>
+            <Button size="sm" className="h-10 sm:h-8" onClick={() => { setEditProgram(undefined); setDialogOpen(true); }}>
               <Plus className="h-4 w-4 mr-1" /> Nieuwe opleiding
             </Button>
           )}
@@ -233,7 +243,7 @@ export default function OpleidingenPage() {
         </div>
       </div>
 
-      <ProgramFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditProgram(undefined); }} program={editProgram} />
+      <ProgramFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditProgram(undefined); }} program={editProgram} onSave={handleSave} />
     </div>
   );
 }
