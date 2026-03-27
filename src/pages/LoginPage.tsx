@@ -14,18 +14,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      if (login(email, password)) {
-        toast.success("Succesvol ingelogd.");
-        navigate("/");
-      } else {
-        toast.error("Ongeldig e-mailadres of wachtwoord.");
-      }
-      setLoading(false);
-    }, 300);
+    const success = await login(email, password);
+    if (success) {
+      toast.success("Succesvol ingelogd.");
+      navigate("/");
+    } else {
+      toast.error("Ongeldig e-mailadres of wachtwoord.");
+    }
+    setLoading(false);
   };
 
   return (
@@ -71,10 +70,8 @@ export default function LoginPage() {
             </Button>
           </form>
           <div className="text-xs text-muted-foreground text-center space-y-1 pt-2 border-t border-border">
-            <p className="font-medium">Testaccounts</p>
-            <p>ellen.geerts@elia.be</p>
-            <p>elke.vanton@elia.be</p>
-            <p className="opacity-60">Wachtwoord: iktestgraag1234</p>
+            <p className="font-medium">Accounts aanmaken via Supabase dashboard</p>
+            <p className="opacity-60">Authentication → Users → Add user</p>
           </div>
         </div>
       </div>

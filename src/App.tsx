@@ -18,15 +18,21 @@ import RapportagePage from "./pages/RapportagePage";
 import GebruikersPage from "./pages/GebruikersPage";
 import InstellingenPage from "./pages/InstellingenPage";
 import TakenPage from "./pages/TakenPage";
-
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 function AppRoutes() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
 
-  // Not logged in → show login
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Laden...</div>
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <Routes>
