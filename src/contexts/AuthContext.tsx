@@ -26,6 +26,92 @@ export interface AppUser {
   notifications: NotificationSettings;
 }
 
+const USER_ROLES: UserRole[] = ["admin", "editor", "viewer"];
+
+function isUserRole(value: unknown): value is UserRole {
+  return typeof value === "string" && USER_ROLES.includes(value as UserRole);
+}
+
+function normalizeStoredUsers(storedValue: string | null): AppUser[] {
+  if (!storedValue) return DEFAULT_USERS;
+
+  try {
+    const parsed = JSON.parse(storedValue);
+    if (!Array.isArray(parsed)) return DEFAULT_USERS;
+
+    const normalized = parsed
+      .filter((item): item is Partial<AppUser> => typeof item === "object" && item !== null)
+      .filter((item) =>
+        typeof item.id === "string" &&
+        typeof item.firstName === "string" &&
+        typeof item.lastName === "string" &&
+        typeof item.email === "string" &&
+        isUserRole(item.role)
+      )
+      .map((item) => ({
+        id: item.id!,
+        firstName: item.firstName!,
+        lastName: item.lastName!,
+        name: typeof item.name === "string" && item.name.length > 0
+          ? item.name
+          : `${item.firstName} ${item.lastName}`,
+        email: item.email!,
+        role: item.role!,
+        avatarUrl: typeof item.avatarUrl === "string" ? item.avatarUrl : undefined,
+        notifications: {
+          contractExpiry90: item.notifications?.contractExpiry90 ?? DEFAULT_NOTIFICATIONS.contractExpiry90,
+          eventReminder7: item.notifications?.eventReminder7 ?? DEFAULT_NOTIFICATIONS.eventReminder7,
+          weeklyEventDigest: item.notifications?.weeklyEventDigest ?? DEFAULT_NOTIFICATIONS.weeklyEventDigest,
+        },
+      } satisfies AppUser));
+
+    const mergedByEmail = new Map<string, AppUser>();
+    DEFAULT_USERS.forEach((user) => mergedByEmail.set(user.email.toLowerCase(), user));
+    normalized.forEach((user) => mergedByEmail.set(user.email.toLowerCase(), user));
+
+    return [...mergedByEmail.values()];
+  } catch {
+    return DEFAULT_USERS;
+  }
+}
+
+function normalizeStoredUserSession(storedValue: string | null): AppUser | null {
+  if (!storedValue) return null;
+
+  try {
+    const parsed = JSON.parse(storedValue) as Partial<AppUser>;
+
+    if (
+      typeof parsed?.id !== "string" ||
+      typeof parsed.firstName !== "string" ||
+      typeof parsed.lastName !== "string" ||
+      typeof parsed.email !== "string" ||
+      !isUserRole(parsed.role)
+    ) {
+      return null;
+    }
+
+    return {
+      id: parsed.id,
+      firstName: parsed.firstName,
+      lastName: parsed.lastName,
+      name: typeof parsed.name === "string" && parsed.name.length > 0
+        ? parsed.name
+        : `${parsed.firstName} ${parsed.lastName}`,
+      email: parsed.email,
+      role: parsed.role,
+      avatarUrl: typeof parsed.avatarUrl === "string" ? parsed.avatarUrl : undefined,
+      notifications: {
+        contractExpiry90: parsed.notifications?.contractExpiry90 ?? DEFAULT_NOTIFICATIONS.contractExpiry90,
+        eventReminder7: parsed.notifications?.eventReminder7 ?? DEFAULT_NOTIFICATIONS.eventReminder7,
+        weeklyEventDigest: parsed.notifications?.weeklyEventDigest ?? DEFAULT_NOTIFICATIONS.weeklyEventDigest,
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
 interface AuthContextType {
   user: AppUser | null;
   isAdmin: boolean;
@@ -79,7 +165,7 @@ const STORAGE_KEY = "elia_crm_auth";
 const USERS_KEY = "elia_crm_users";
 const PLATFORM_KEY = "elia_crm_platform";
 const DATA_VERSION_KEY = "elia_crm_version";
-const CURRENT_VERSION = "2";
+const CURRENT_VERSION = "3";
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -94,14 +180,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const [users, setUsers] = useState<AppUser[]>(() => {
-    const stored = localStorage.getItem(USERS_KEY);
-    return stored ? JSON.parse(stored) : DEFAULT_USERS;
+    return normalizeStoredUsers(localStorage.getItem(USERS_KEY));
   });
 
   // Start logged out — user must log in
   const [user, setUser] = useState<AppUser | null>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : null;
+    return normalizeStoredUserSession(localStorage.getItem(STORAGE_KEY));
   });
 
   const [platformSettings, setPlatformSettings] = useState<PlatformSettings>(() => {
@@ -118,10 +202,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [platformSettings]);
 
   const login = useCallback((email: string, password: string) => {
-    const found = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim();
+    const mergedUsers = normalizeStoredUsers(JSON.stringify(users));
+    const found = mergedUsers.find((u) => u.email.toLowerCase() === normalizedEmail);
     if (!found) return false;
     const expectedPass = PASSWORDS[found.email.toLowerCase()];
-    if (expectedPass && password !== expectedPass) return false;
+    if (expectedPass && normalizedPassword !== expectedPass) return false;
+
+    if (mergedUsers.length !== users.length) {
+      setUsers(mergedUsers);
+    }
+
     setUser(found);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(found));
     return true;
