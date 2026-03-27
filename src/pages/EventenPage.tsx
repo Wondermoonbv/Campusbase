@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { mockEvents, mockSchools, mockPrograms, mockEventPrograms } from "@/data/mockData";
+import { mockEvents as initialEvents, mockSchools, mockPrograms, mockEventPrograms } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import { Plus, Search, Download, CalendarDays, List, Pencil, Upload } from "luci
 import { EventFormDialog } from "@/components/events/EventFormDialog";
 import { CsvImportDialog, CsvColumn } from "@/components/import/CsvImportDialog";
 import { FIELDS_OF_STUDY } from "@/types/crm";
+import type { Event } from "@/types/crm";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 
 const EVENT_CSV_COLUMNS: CsvColumn[] = [
@@ -34,6 +35,7 @@ export default function EventenPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialPeriod = searchParams.get("period") ?? "all";
+  const [events, setEvents] = useState<Event[]>(initialEvents);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -41,14 +43,23 @@ export default function EventenPage() {
   const [filterPeriod] = useState(initialPeriod);
   const [view, setView] = useState<"list" | "calendar">("list");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editEvent, setEditEvent] = useState<Event | undefined>();
   const [importOpen, setImportOpen] = useState(false);
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
 
+  const handleSave = (saved: Event) => {
+    setEvents((prev) => {
+      const exists = prev.find((e) => e.id === saved.id);
+      if (exists) return prev.map((e) => (e.id === saved.id ? saved : e));
+      return [...prev, saved];
+    });
+  };
+
   const filtered = useMemo(() => {
     const now = new Date();
     const in30Days = new Date(now.getTime() + 30 * 86400000);
-    return mockEvents.filter((e) => {
+    return events.filter((e) => {
       const matchSearch = e.name.toLowerCase().includes(search.toLowerCase()) ||
         e.location.toLowerCase().includes(search.toLowerCase());
       const matchType = filterType === "all" || e.type === filterType;
@@ -68,7 +79,7 @@ export default function EventenPage() {
       }
       return matchSearch && matchType && matchStatus && matchField && matchPeriod;
     });
-  }, [search, filterType, filterStatus, filterFieldOfStudy, filterPeriod]);
+  }, [events, search, filterType, filterStatus, filterFieldOfStudy, filterPeriod]);
 
   const sorted = useMemo(() => {
     return sortItems(filtered, sort, (e, key) => {
@@ -124,7 +135,7 @@ export default function EventenPage() {
             </Button>
           )}
           {canEdit && (
-            <Button size="sm" className="h-10 sm:h-8" onClick={() => setDialogOpen(true)}>
+            <Button size="sm" className="h-10 sm:h-8" onClick={() => { setEditEvent(undefined); setDialogOpen(true); }}>
               <Plus className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Evenement toevoegen</span><span className="sm:hidden">Nieuw</span>
             </Button>
           )}
@@ -261,7 +272,7 @@ export default function EventenPage() {
         </div>
       )}
 
-      <EventFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <EventFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditEvent(undefined); }} event={editEvent} onSave={handleSave} />
       <CsvImportDialog open={importOpen} onOpenChange={setImportOpen} title="Evenementen importeren" columns={EVENT_CSV_COLUMNS} templateFilename="evenementen_template.csv" onImport={(rows) => { console.log("Import events:", rows); }} />
     </div>
   );

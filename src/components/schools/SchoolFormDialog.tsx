@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -24,20 +24,40 @@ interface SchoolFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   school?: School;
+  onSave?: (school: School) => void;
 }
 
-export function SchoolFormDialog({ open, onOpenChange, school }: SchoolFormDialogProps) {
+export function SchoolFormDialog({ open, onOpenChange, school, onSave }: SchoolFormDialogProps) {
   const isEdit = !!school;
   const [form, setForm] = useState({
-    name: school?.name || "",
-    type: school?.type || "universiteit",
-    province: school?.province || "",
-    city: school?.city || "",
-    website: school?.website || "",
-    language: school?.language || "NL",
-    notes: school?.notes || "",
-    status: school?.status || "prospect",
+    name: "",
+    type: "universiteit" as string,
+    province: "",
+    city: "",
+    website: "",
+    language: "NL" as string,
+    notes: "",
+    status: "prospect" as string,
   });
+
+  useEffect(() => {
+    if (open) {
+      if (school) {
+        setForm({
+          name: school.name,
+          type: school.type,
+          province: school.province,
+          city: school.city,
+          website: school.website || "",
+          language: school.language,
+          notes: school.notes || "",
+          status: school.status,
+        });
+      } else {
+        setForm({ name: "", type: "universiteit", province: "", city: "", website: "", language: "NL", notes: "", status: "prospect" });
+      }
+    }
+  }, [open, school]);
 
   const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
 
@@ -47,6 +67,19 @@ export function SchoolFormDialog({ open, onOpenChange, school }: SchoolFormDialo
       toast.error("Vul alle verplichte velden in.");
       return;
     }
+    const saved: School = {
+      id: school?.id ?? `s${Date.now()}`,
+      name: form.name,
+      type: form.type as School["type"],
+      province: form.province,
+      city: form.city,
+      website: form.website,
+      language: form.language as School["language"],
+      notes: form.notes,
+      status: form.status as School["status"],
+      created_at: school?.created_at ?? new Date().toISOString().slice(0, 10),
+    };
+    onSave?.(saved);
     toast.success(isEdit ? "School bijgewerkt." : "School toegevoegd.");
     onOpenChange(false);
   };

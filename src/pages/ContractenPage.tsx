@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { mockContracts, mockSchools, mockEvents } from "@/data/mockData";
+import { mockContracts as initialContracts, mockSchools, mockEvents } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Download, Plus, ChevronDown, ChevronUp, ExternalLink, Calendar, Pencil } from "lucide-react";
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { ContractFormDialog } from "@/components/contracts/ContractFormDialog";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
+import type { Contract } from "@/types/crm";
 
 function getExpiryColor(endDate: string) {
   const now = new Date();
@@ -23,14 +24,23 @@ function getExpiryColor(endDate: string) {
 export default function ContractenPage() {
   const [searchParams] = useSearchParams();
   const filterExpiring = searchParams.get("expiring") === "90";
+  const [contracts, setContracts] = useState<Contract[]>(initialContracts);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editContract, setEditContract] = useState<typeof mockContracts[0] | undefined>();
+  const [editContract, setEditContract] = useState<Contract | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("school");
 
+  const handleSave = (saved: Contract) => {
+    setContracts((prev) => {
+      const exists = prev.find((c) => c.id === saved.id);
+      if (exists) return prev.map((c) => (c.id === saved.id ? saved : c));
+      return [...prev, saved];
+    });
+  };
+
   const baseList = useMemo(() => {
-    let list = [...mockContracts];
+    let list = [...contracts];
     if (filterExpiring) {
       const now = new Date();
       const in90 = new Date(now.getTime() + 90 * 86400000);
@@ -40,7 +50,7 @@ export default function ContractenPage() {
       });
     }
     return list;
-  }, [filterExpiring]);
+  }, [contracts, filterExpiring]);
 
   const sorted = useMemo(() => {
     return sortItems(baseList, sort, (c, key) => {
@@ -69,7 +79,7 @@ export default function ContractenPage() {
     const a = document.createElement("a"); a.href = url; a.download = "contracten_export.csv"; a.click();
   };
 
-  const openEdit = (contract: typeof mockContracts[0]) => { setEditContract(contract); setDialogOpen(true); };
+  const openEdit = (contract: Contract) => { setEditContract(contract); setDialogOpen(true); };
   const openCreate = () => { setEditContract(undefined); setDialogOpen(true); };
 
   return (
@@ -241,7 +251,7 @@ export default function ContractenPage() {
         </div>
       </div>
 
-      <ContractFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditContract(undefined); }} contract={editContract} />
+      <ContractFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditContract(undefined); }} contract={editContract} onSave={handleSave} />
     </div>
   );
 }

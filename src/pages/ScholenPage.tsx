@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { mockSchools, mockContacts } from "@/data/mockData";
+import { mockSchools as initialSchools, mockContacts } from "@/data/mockData";
 import { School, SchoolType, SchoolStatus, Language, PROVINCES } from "@/types/crm";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ const SCHOOL_CSV_COLUMNS: CsvColumn[] = [
 
 export default function ScholenPage() {
   const [searchParams] = useSearchParams();
+  const [schools, setSchools] = useState<School[]>(initialSchools);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [filterProvince, setFilterProvince] = useState<string>("all");
@@ -43,8 +44,16 @@ export default function ScholenPage() {
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
 
+  const handleSave = (saved: School) => {
+    setSchools((prev) => {
+      const exists = prev.find((s) => s.id === saved.id);
+      if (exists) return prev.map((s) => (s.id === saved.id ? saved : s));
+      return [...prev, saved];
+    });
+  };
+
   const filtered = useMemo(() => {
-    return mockSchools.filter((s) => {
+    return schools.filter((s) => {
       const contacts = mockContacts.filter(c => c.school_id === s.id);
       const matchesSearch =
         s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -56,7 +65,7 @@ export default function ScholenPage() {
       const matchesStatus = filterStatus === "all" || s.status === filterStatus;
       return matchesSearch && matchesType && matchesProvince && matchesLanguage && matchesStatus;
     });
-  }, [search, filterType, filterProvince, filterLanguage, filterStatus]);
+  }, [schools, search, filterType, filterProvince, filterLanguage, filterStatus]);
 
   const sorted = useMemo(() => {
     return sortItems(filtered, sort, (s, key) => {
@@ -229,7 +238,7 @@ export default function ScholenPage() {
         </div>
       </div>
 
-      <SchoolFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditSchool(undefined); }} school={editSchool} />
+      <SchoolFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditSchool(undefined); }} school={editSchool} onSave={handleSave} />
       <CsvImportDialog open={importOpen} onOpenChange={setImportOpen} title="Scholen importeren" columns={SCHOOL_CSV_COLUMNS} templateFilename="scholen_template.csv" onImport={(rows) => { console.log("Import schools:", rows); }} />
     </div>
   );
