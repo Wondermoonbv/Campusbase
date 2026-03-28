@@ -9,7 +9,7 @@ export function useContracten() {
     queryKey: ["contracten"],
     queryFn: async () => {
       const { data, error } = await db("contracten").select("*").order("end_date", { ascending: true });
-      if (error) throw error;
+      if (error) { console.error("Error fetching contracten:", error); return []; }
       // Fetch linked events for each contract
       const { data: links } = await db("contract_evenementen").select("*");
       const linkMap = new Map<string, string[]>();

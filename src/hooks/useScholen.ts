@@ -52,7 +52,7 @@ export function useContacten(schoolId?: string) {
       let query = db("contacten").select("*");
       if (schoolId) query = query.eq("school_id", schoolId);
       const { data, error } = await query.order("name");
-      if (error) throw error;
+      if (error) { console.error("Error fetching contacten:", error); return []; }
       return data as Contact[];
     },
   });
