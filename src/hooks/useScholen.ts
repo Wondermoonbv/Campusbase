@@ -9,7 +9,7 @@ export function useScholen() {
     queryKey: ["scholen"],
     queryFn: async () => {
       const { data, error } = await db("scholen").select("*").order("name");
-      if (error) throw error;
+      if (error) { console.error("Error fetching scholen:", error); return []; }
       return data as School[];
     },
   });
