@@ -27,7 +27,7 @@ export function useEvenementen() {
     queryKey: ["evenementen"],
     queryFn: async () => {
       const { data, error } = await db("evenementen").select("*").order("date", { ascending: true });
-      if (error) throw error;
+      if (error) { console.error("Error fetching evenementen:", error); return []; }
       return (data as any[]).map(mapEvent);
     },
   });

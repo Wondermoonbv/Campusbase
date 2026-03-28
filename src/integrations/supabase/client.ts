@@ -2,8 +2,12 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://ikurrflncrgwntpkmblg.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlrdXJyZmxuY3Jnd250cGttYmxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MjQ3OTIsImV4cCI6MjA5MDIwMDc5Mn0.8qll3AV0NZMvWqRud15tg2XSjsih4lc9X8W9_Sx_6Ck";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? "https://ikurrflncrgwntpkmblg.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlrdXJyZmxuY3Jnd250cGttYmxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MjQ3OTIsImV4cCI6MjA5MDIwMDc5Mn0.8qll3AV0NZMvWqRud15tg2XSjsih4lc9X8W9_Sx_6Ck";
+
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  console.error("Supabase URL en/of Publishable Key ontbreken. Controleer je .env bestand.");
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";

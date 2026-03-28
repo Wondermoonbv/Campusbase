@@ -9,7 +9,7 @@ export function useScholen() {
     queryKey: ["scholen"],
     queryFn: async () => {
       const { data, error } = await db("scholen").select("*").order("name");
-      if (error) throw error;
+      if (error) { console.error("Error fetching scholen:", error); return []; }
       return data as School[];
     },
   });
@@ -52,7 +52,7 @@ export function useContacten(schoolId?: string) {
       let query = db("contacten").select("*");
       if (schoolId) query = query.eq("school_id", schoolId);
       const { data, error } = await query.order("name");
-      if (error) throw error;
+      if (error) { console.error("Error fetching contacten:", error); return []; }
       return data as Contact[];
     },
   });

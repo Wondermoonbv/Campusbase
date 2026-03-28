@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -24,8 +25,28 @@ const queryClient = new QueryClient();
 
 function AppRoutes() {
   const { user, isAdmin, loading } = useAuth();
+  const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (!loading) return;
+    const timer = setTimeout(() => setTimedOut(true), 5000);
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   if (loading) {
+    if (timedOut) {
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+          <p className="text-destructive font-medium">Verbinding met de server duurt te lang.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            Opnieuw proberen
+          </button>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Laden...</div>

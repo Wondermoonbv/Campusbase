@@ -9,11 +9,10 @@ export function useOpleidingen() {
     queryKey: ["opleidingen"],
     queryFn: async () => {
       const { data, error } = await db("opleidingen").select("*").order("name");
-      if (error) throw error;
+      if (error) { console.error("Error fetching opleidingen:", error); return []; }
       return data as Program[];
     },
   });
-
   const upsertOpleiding = useMutation({
     mutationFn: async (program: Partial<Program> & { name: string; school_id: string }) => {
       const { school, ...rest } = program as any;
@@ -42,7 +41,7 @@ export function useEventOpleidingen() {
     queryKey: ["event_opleidingen"],
     queryFn: async () => {
       const { data, error } = await db("event_opleidingen").select("*");
-      if (error) throw error;
+      if (error) { console.error("Error fetching event_opleidingen:", error); return []; }
       return (data as any[]).map((d: any) => ({ event_id: d.event_id, program_id: d.opleiding_id })) as EventProgram[];
     },
   });

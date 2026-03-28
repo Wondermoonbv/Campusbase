@@ -9,7 +9,7 @@ export function useTaken() {
     queryKey: ["taken"],
     queryFn: async () => {
       const { data, error } = await db("taken").select("*").order("due_date", { ascending: true });
-      if (error) throw error;
+      if (error) { console.error("Error fetching taken:", error); return []; }
       return (data as any[]).map((t) => ({
         ...t,
         school_id: t.school_id ?? null,
