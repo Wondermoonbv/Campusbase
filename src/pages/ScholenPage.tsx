@@ -8,11 +8,13 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Download, Pencil, Upload } from "lucide-react";
+import { Plus, Search, Download, Pencil, Upload, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
 import { CsvImportDialog, CsvColumn } from "@/components/import/CsvImportDialog";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
+import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
+import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
 
 const SCHOOL_CSV_COLUMNS: CsvColumn[] = [
@@ -28,7 +30,7 @@ const SCHOOL_CSV_COLUMNS: CsvColumn[] = [
 
 export default function ScholenPage() {
   const [searchParams] = useSearchParams();
-  const { scholen, upsertSchool } = useScholen();
+  const { scholen, upsertSchool, deleteSchool } = useScholen();
   const { contacten } = useContacten();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
@@ -38,16 +40,24 @@ export default function ScholenPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [editSchool, setEditSchool] = useState<School | undefined>();
+  const [deleteTarget, setDeleteTarget] = useState<School | null>(null);
   const navigate = useNavigate();
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
 
   const handleSave = async (saved: School) => {
+    try { await upsertSchool.mutateAsync(saved); } catch { toast.error("Fout bij opslaan."); }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await upsertSchool.mutateAsync(saved);
-    } catch {
-      toast.error("Fout bij opslaan.");
+      await deleteSchool.mutateAsync(deleteTarget.id);
+      toast.success("School verwijderd.");
+    } catch (error) {
+      handleDeleteError(error, "school");
     }
+    setDeleteTarget(null);
   };
 
   const filtered = useMemo(() => {
@@ -117,7 +127,10 @@ export default function ScholenPage() {
           <div key={school.id} className="surface-card p-4 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate(`/scholen/${school.id}`)}>
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1"><p className="font-medium text-sm truncate">{school.name}</p><p className="text-xs text-muted-foreground mt-0.5 capitalize">{school.type} · {school.city} · {school.language}</p></div>
-              <StatusBadge status={school.status} />
+              <div className="flex items-center gap-1">
+                <StatusBadge status={school.status} />
+                {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(school); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+              </div>
             </div>
             {getFirstContact(school.id) && <p className="text-xs text-muted-foreground mt-2">{getFirstContact(school.id)?.name}</p>}
           </div>
@@ -135,7 +148,7 @@ export default function ScholenPage() {
             <SortableTableHead sortKey="language" currentSort={sort} onSort={toggleSort}>Taal</SortableTableHead>
             <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
             <TableHead className="hidden lg:table-cell">Contact</TableHead>
-            <TableHead className="w-10" />
+            <TableHead className="w-20" />
           </TableRow></TableHeader>
           <TableBody>
             {sorted.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen scholen gevonden.</TableCell></TableRow> : sorted.map((school) => (
@@ -147,7 +160,12 @@ export default function ScholenPage() {
                 <TableCell>{school.language}</TableCell>
                 <TableCell><StatusBadge status={school.status} /></TableCell>
                 <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{getFirstContact(school.id)?.name || "—"}</TableCell>
-                <TableCell>{canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditSchool(school); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}</TableCell>
+                <TableCell>
+                  <div className="flex gap-0.5">
+                    {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditSchool(school); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
+                    {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setDeleteTarget(school); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -157,6 +175,7 @@ export default function ScholenPage() {
 
       <SchoolFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditSchool(undefined); }} school={editSchool} onSave={handleSave} />
       <CsvImportDialog open={importOpen} onOpenChange={setImportOpen} title="Scholen importeren" columns={SCHOOL_CSV_COLUMNS} templateFilename="scholen_template.csv" onImport={(rows) => { console.log("Import schools:", rows); }} />
+      <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget?.name ?? ""} isLoading={deleteSchool.isPending} />
     </div>
   );
 }

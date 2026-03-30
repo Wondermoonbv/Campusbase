@@ -8,13 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Download, Plus, ChevronDown, ChevronRight, Pencil } from "lucide-react";
+import { Search, Download, Plus, ChevronDown, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { FIELDS_OF_STUDY } from "@/types/crm";
 import type { Program } from "@/types/crm";
 import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
+import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
+import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
+import { db } from "@/lib/supabase-helpers";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function OpleidingenPage() {
   const { opleidingen, upsertOpleiding } = useOpleidingen();
@@ -28,11 +32,29 @@ export default function OpleidingenPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProgram, setEditProgram] = useState<Program | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Program | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
+  const qc = useQueryClient();
 
   const handleSave = async (saved: Program) => {
     try { await upsertOpleiding.mutateAsync(saved); } catch { toast.error("Fout bij opslaan."); }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      const { error } = await db("opleidingen").delete().eq("id", deleteTarget.id);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["opleidingen"] });
+      toast.success("Opleiding verwijderd.");
+    } catch (error) {
+      handleDeleteError(error, "opleiding");
+    }
+    setIsDeleting(false);
+    setDeleteTarget(null);
   };
 
   const enriched = useMemo(() => {
@@ -92,7 +114,10 @@ export default function OpleidingenPage() {
             <div className="p-4 cursor-pointer active:scale-[0.99] transition-transform" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1"><p className="font-medium text-sm">{p.name}</p><Link to={`/scholen/${p.school_id}`} className="text-xs text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}</Link><p className="text-xs text-muted-foreground mt-0.5 capitalize">{p.study_level} · {p.field_of_study}</p></div>
-                <span className="text-sm font-medium tabular-nums">{p.student_count ?? "—"}</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-medium tabular-nums">{p.student_count ?? "—"}</span>
+                  {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(p); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+                </div>
               </div>
             </div>
             {expandedId === p.id && p.linkedEvents.length > 0 && (
@@ -112,7 +137,7 @@ export default function OpleidingenPage() {
           <SortableTableHead sortKey="level" currentSort={sort} onSort={toggleSort}>Niveau</SortableTableHead>
           <SortableTableHead sortKey="field" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Studierichting</SortableTableHead>
           <SortableTableHead sortKey="students" currentSort={sort} onSort={toggleSort} className="text-right">Studenten</SortableTableHead>
-          <TableHead className="w-10" />
+          <TableHead className="w-20" />
         </TableRow></TableHeader>
           <TableBody>{sorted.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen opleidingen gevonden.</TableCell></TableRow> : sorted.map((p) => (
             <><TableRow key={p.id} className="hover:bg-muted/30 cursor-pointer" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
@@ -123,7 +148,12 @@ export default function OpleidingenPage() {
               <TableCell className="capitalize">{p.study_level}</TableCell>
               <TableCell className="hidden lg:table-cell">{p.field_of_study}</TableCell>
               <TableCell className="text-right tabular-nums">{p.student_count ?? "—"}</TableCell>
-              <TableCell>{canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditProgram(p); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}</TableCell>
+              <TableCell>
+                <div className="flex gap-0.5">
+                  {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditProgram(p); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
+                  {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setDeleteTarget(p); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+                </div>
+              </TableCell>
             </TableRow>
             {expandedId === p.id && p.linkedEvents.length > 0 && (
               <TableRow key={`${p.id}-events`}><TableCell colSpan={8} className="bg-muted/20 px-6 py-3"><p className="text-xs font-semibold text-muted-foreground mb-2">Gekoppelde evenementen</p><div className="flex flex-wrap gap-2">{p.linkedEvents.map((ev) => ev && <Link key={ev.id} to={`/evenementen/${ev.id}`} className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted/50 transition-colors"><span className="font-medium">{ev.name}</span><span className="text-muted-foreground">{new Date(ev.date).toLocaleDateString("nl-BE")}</span><StatusBadge status={ev.status} /></Link>)}</div></TableCell></TableRow>
@@ -133,6 +163,7 @@ export default function OpleidingenPage() {
       </div>
 
       <ProgramFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditProgram(undefined); }} program={editProgram} onSave={handleSave} />
+      <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget?.name ?? ""} isLoading={isDeleting} />
     </div>
   );
 }

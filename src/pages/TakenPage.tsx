@@ -10,10 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, AlertTriangle, ArrowUp, Minus, Pencil, Trash2 } from "lucide-react";
 import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
+import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
+import { handleDeleteError } from "@/lib/delete-helpers";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import type { Task, TaskStatus } from "@/types/crm";
@@ -33,7 +34,7 @@ export default function TakenPage() {
   const { logActivity } = useActivity();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTask, setEditTask] = useState<Task | null>(null);
-  const [deleteTaskState, setDeleteTaskState] = useState<Task | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
   const [search, setSearch] = useState("");
   const [filterPriority, setFilterPriority] = useState("alle");
   const [filterAssigned, setFilterAssigned] = useState("alle");
@@ -59,13 +60,15 @@ export default function TakenPage() {
   };
 
   const handleDelete = async () => {
-    if (!deleteTaskState) return;
+    if (!deleteTarget) return;
     try {
-      await deleteTaskMutation.mutateAsync(deleteTaskState.id);
-      logActivity({ userId: user?.id ?? "", userName: user?.name ?? "", action: "verwijderd", entityType: "taak", entityName: deleteTaskState.title });
+      await deleteTaskMutation.mutateAsync(deleteTarget.id);
+      logActivity({ userId: user?.id ?? "", userName: user?.name ?? "", action: "verwijderd", entityType: "taak", entityName: deleteTarget.title });
       toast.success("Taak verwijderd.");
-    } catch { toast.error("Fout bij verwijderen."); }
-    setDeleteTaskState(null);
+    } catch (error) {
+      handleDeleteError(error, "taak");
+    }
+    setDeleteTarget(null);
   };
 
   const filterTasks = (status: TaskStatus | "active") => {
@@ -96,15 +99,11 @@ export default function TakenPage() {
       </div>
       <Tabs defaultValue="active">
         <TabsList><TabsTrigger value="active">Openstaand ({activeTasks.length})</TabsTrigger><TabsTrigger value="done">Afgerond ({doneTasks.length})</TabsTrigger></TabsList>
-        <TabsContent value="active" className="mt-4"><TaskTable tasks={activeTasks} scholen={scholen} evenementen={evenementen} onToggle={toggleTaskStatus} onEdit={(t) => { setEditTask(t); setDialogOpen(true); }} onDelete={setDeleteTaskState} /></TabsContent>
-        <TabsContent value="done" className="mt-4"><TaskTable tasks={doneTasks} scholen={scholen} evenementen={evenementen} done onToggle={toggleTaskStatus} onEdit={(t) => { setEditTask(t); setDialogOpen(true); }} onDelete={setDeleteTaskState} /></TabsContent>
+        <TabsContent value="active" className="mt-4"><TaskTable tasks={activeTasks} scholen={scholen} evenementen={evenementen} onToggle={toggleTaskStatus} onEdit={(t) => { setEditTask(t); setDialogOpen(true); }} onDelete={setDeleteTarget} /></TabsContent>
+        <TabsContent value="done" className="mt-4"><TaskTable tasks={doneTasks} scholen={scholen} evenementen={evenementen} done onToggle={toggleTaskStatus} onEdit={(t) => { setEditTask(t); setDialogOpen(true); }} onDelete={setDeleteTarget} /></TabsContent>
       </Tabs>
       <TaskFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditTask(null); }} task={editTask} onSave={handleSave} />
-      <AlertDialog open={!!deleteTaskState} onOpenChange={(open) => { if (!open) setDeleteTaskState(null); }}>
-        <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Taak verwijderen?</AlertDialogTitle><AlertDialogDescription>Weet je zeker dat je de taak "{deleteTaskState?.title}" wilt verwijderen?</AlertDialogDescription></AlertDialogHeader>
-          <AlertDialogFooter><AlertDialogCancel>Annuleren</AlertDialogCancel><AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Verwijderen</AlertDialogAction></AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget?.title ?? ""} isLoading={deleteTaskMutation.isPending} />
     </div>
   );
 }

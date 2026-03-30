@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Download, CalendarDays, List, Pencil, Upload } from "lucide-react";
+import { Plus, Search, Download, CalendarDays, List, Pencil, Upload, Trash2 } from "lucide-react";
 import { EventFormDialog } from "@/components/events/EventFormDialog";
 import { CsvImportDialog, CsvColumn } from "@/components/import/CsvImportDialog";
 import { FIELDS_OF_STUDY } from "@/types/crm";
 import type { Event } from "@/types/crm";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
+import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
+import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
 
 const EVENT_CSV_COLUMNS: CsvColumn[] = [
@@ -31,7 +33,7 @@ export default function EventenPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialPeriod = searchParams.get("period") ?? "all";
-  const { evenementen, upsertEvent } = useEvenementen();
+  const { evenementen, upsertEvent, deleteEvent } = useEvenementen();
   const { opleidingen } = useOpleidingen();
   const { eventOpleidingen } = useEventOpleidingen();
   const [search, setSearch] = useState("");
@@ -43,11 +45,23 @@ export default function EventenPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editEvent, setEditEvent] = useState<Event | undefined>();
   const [importOpen, setImportOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Event | null>(null);
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
 
   const handleSave = async (saved: Event) => {
     try { await upsertEvent.mutateAsync(saved); } catch { toast.error("Fout bij opslaan."); }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteEvent.mutateAsync(deleteTarget.id);
+      toast.success("Evenement verwijderd.");
+    } catch (error) {
+      handleDeleteError(error, "evenement");
+    }
+    setDeleteTarget(null);
   };
 
   const filtered = useMemo(() => {
@@ -118,7 +132,13 @@ export default function EventenPage() {
           <div className="block md:hidden space-y-2">
             {sorted.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen evenementen gevonden.</div> : sorted.map((ev) => (
               <div key={ev.id} className="surface-card p-4 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate(`/evenementen/${ev.id}`)}>
-                <div className="flex items-start justify-between gap-2"><div className="min-w-0 flex-1"><p className="font-medium text-sm truncate">{ev.name}</p><p className="text-xs text-muted-foreground mt-0.5">{new Date(ev.date).toLocaleDateString("nl-BE")} · {ev.location}</p></div><StatusBadge status={ev.status} /></div>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1"><p className="font-medium text-sm truncate">{ev.name}</p><p className="text-xs text-muted-foreground mt-0.5">{new Date(ev.date).toLocaleDateString("nl-BE")} · {ev.location}</p></div>
+                  <div className="flex items-center gap-1">
+                    <StatusBadge status={ev.status} />
+                    {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(ev); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+                  </div>
+                </div>
               </div>
             ))}
             <div className="text-xs text-muted-foreground px-1 pt-2">{sorted.length} evenement{sorted.length !== 1 ? "en" : ""} gevonden</div>
@@ -129,7 +149,7 @@ export default function EventenPage() {
               <SortableTableHead sortKey="date" currentSort={sort} onSort={toggleSort}>Datum</SortableTableHead>
               <SortableTableHead sortKey="location" currentSort={sort} onSort={toggleSort}>Locatie</SortableTableHead>
               <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
-              <TableHead className="w-10" />
+              <TableHead className="w-20" />
             </TableRow></TableHeader>
               <TableBody>{sorted.map((ev) => (
                 <TableRow key={ev.id} className="hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/evenementen/${ev.id}`)}>
@@ -137,7 +157,12 @@ export default function EventenPage() {
                   <TableCell className="tabular-nums">{new Date(ev.date).toLocaleDateString("nl-BE")}</TableCell>
                   <TableCell>{ev.location}</TableCell>
                   <TableCell><StatusBadge status={ev.status} /></TableCell>
-                  <TableCell>{canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); navigate(`/evenementen/${ev.id}`); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-0.5">
+                      {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); navigate(`/evenementen/${ev.id}`); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
+                      {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setDeleteTarget(ev); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}</TableBody></Table>
             <div className="p-3 border-t border-border text-xs text-muted-foreground">{sorted.length} evenement{sorted.length !== 1 ? "en" : ""} gevonden</div>
@@ -148,7 +173,10 @@ export default function EventenPage() {
           <div key={month}><h2 className="mb-3 capitalize">{month}</h2><div className="space-y-2">{events.map((ev) => (
             <div key={ev.id} className="surface-card p-3 sm:p-4 flex items-center justify-between cursor-pointer hover:bg-muted/30 active:scale-[0.99] transition-[transform,colors]" onClick={() => navigate(`/evenementen/${ev.id}`)}>
               <div className="flex items-center gap-3 sm:gap-4"><div className="text-center min-w-[40px] sm:min-w-[48px]"><div className="text-xl sm:text-2xl font-semibold tabular-nums">{new Date(ev.date).getDate()}</div><div className="text-xs text-muted-foreground uppercase">{new Date(ev.date).toLocaleDateString("nl-BE", { weekday: "short" })}</div></div><div><p className="font-medium text-sm">{ev.name}</p><p className="text-xs text-muted-foreground">{ev.location}</p></div></div>
-              <StatusBadge status={ev.status} />
+              <div className="flex items-center gap-1">
+                <StatusBadge status={ev.status} />
+                {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(ev); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+              </div>
             </div>
           ))}</div></div>
         ))}</div>
@@ -156,6 +184,7 @@ export default function EventenPage() {
 
       <EventFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditEvent(undefined); }} event={editEvent} onSave={handleSave} />
       <CsvImportDialog open={importOpen} onOpenChange={setImportOpen} title="Evenementen importeren" columns={EVENT_CSV_COLUMNS} templateFilename="evenementen_template.csv" onImport={(rows) => { console.log("Import events:", rows); }} />
+      <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget?.name ?? ""} isLoading={deleteEvent.isPending} />
     </div>
   );
 }
