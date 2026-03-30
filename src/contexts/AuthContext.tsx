@@ -111,6 +111,7 @@ async function loadAllUsers(): Promise<AppUser[]> {
     email: p.email ?? "",
     role: (roles.find((r) => r.user_id === p.id)?.role ?? "viewer") as UserRole,
     avatarUrl: p.avatar_url || undefined,
+    active: p.active !== false,
     notifications: { ...DEFAULT_NOTIFICATIONS },
   }));
 }
