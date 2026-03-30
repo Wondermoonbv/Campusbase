@@ -25,6 +25,7 @@ export interface AppUser {
   email: string;
   role: UserRole;
   avatarUrl?: string;
+  active?: boolean;
   notifications: NotificationSettings;
 }
 
@@ -43,6 +44,7 @@ interface AuthContextType {
   changePassword: (current: string, newPass: string) => Promise<boolean>;
   platformSettings: PlatformSettings;
   updatePlatformSettings: (data: Partial<PlatformSettings>) => void;
+  refreshUsers: () => void;
 }
 
 const DEFAULT_NOTIFICATIONS: NotificationSettings = {
@@ -110,6 +112,7 @@ async function loadAllUsers(): Promise<AppUser[]> {
     email: p.email ?? "",
     role: (roles.find((r) => r.user_id === p.id)?.role ?? "viewer") as UserRole,
     avatarUrl: p.avatar_url || undefined,
+    active: p.active !== false,
     notifications: { ...DEFAULT_NOTIFICATIONS },
   }));
 }
@@ -249,12 +252,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isAdmin = user?.role === "admin";
   const canEdit = user?.role === "admin" || user?.role === "editor";
 
+  const refreshUsers = useCallback(() => {
+    loadAllUsers().then((u) => setUsers(u));
+  }, []);
+
   return (
     <AuthContext.Provider value={{
       user, loading, isAdmin, canEdit,
       login, logout, users, addUser, updateUser, deleteUser,
       updateProfile, changePassword,
-      platformSettings, updatePlatformSettings,
+      platformSettings, updatePlatformSettings, refreshUsers,
     }}>
       {children}
     </AuthContext.Provider>
