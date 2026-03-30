@@ -25,7 +25,7 @@ export function ProgramFormDialog({ open, onOpenChange, program, schoolId, onSav
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const saved: Program = { id: program?.id ?? `p${Date.now()}`, name: form.name, school_id: form.school_id, faculty: form.faculty, study_level: form.study_level as Program["study_level"], field_of_study: form.field_of_study, student_count: form.student_count ? Number(form.student_count) : null };
+    const saved: Program = { ...(program?.id ? { id: program.id } : {}), name: form.name, school_id: form.school_id, faculty: form.faculty, study_level: form.study_level as Program["study_level"], field_of_study: form.field_of_study, student_count: form.student_count ? Number(form.student_count) : null } as Program;
     onSave?.(saved);
     toast.success(isEdit ? "Opleiding bijgewerkt." : "Opleiding toegevoegd.");
     onOpenChange(false);

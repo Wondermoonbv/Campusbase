@@ -37,7 +37,7 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.school_id || !form.start_date || !form.end_date) { toast.error("Vul school, startdatum en einddatum in."); return; }
-    const saved: Contract = { id: contract?.id ?? `c${Date.now()}`, school_id: form.school_id, contract_type: form.contract_type as Contract["contract_type"], start_date: form.start_date, end_date: form.end_date, renewal_date: form.renewal_date, status: form.status as Contract["status"], value: form.value ? Number(form.value) : null, description: form.description, document_url: form.document_url, notes: form.notes, linked_event_ids: form.linked_event_ids };
+    const saved: Contract = { ...(contract?.id ? { id: contract.id } : {}), school_id: form.school_id, contract_type: form.contract_type as Contract["contract_type"], start_date: form.start_date, end_date: form.end_date, renewal_date: form.renewal_date, status: form.status as Contract["status"], value: form.value ? Number(form.value) : null, description: form.description, document_url: form.document_url, notes: form.notes, linked_event_ids: form.linked_event_ids } as Contract;
     onSave?.(saved);
     toast.success(isEdit ? "Contract bijgewerkt." : "Contract toegevoegd.");
     onOpenChange(false);

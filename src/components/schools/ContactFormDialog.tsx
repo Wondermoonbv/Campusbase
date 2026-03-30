@@ -31,7 +31,7 @@ export function ContactFormDialog({ open, onOpenChange, schoolId, contact, onSav
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name) { toast.error("Naam is verplicht."); return; }
-    const saved: Contact = { id: contact?.id ?? `ct${Date.now()}`, school_id: schoolId, ...form };
+    const saved: Contact = { ...(contact?.id ? { id: contact.id } : {}), school_id: schoolId, ...form } as Contact;
     onSave?.(saved);
     toast.success(isEdit ? "Contactpersoon bijgewerkt." : "Contactpersoon toegevoegd.");
     onOpenChange(false);
