@@ -251,12 +251,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isAdmin = user?.role === "admin";
   const canEdit = user?.role === "admin" || user?.role === "editor";
 
+  const refreshUsers = useCallback(() => {
+    loadAllUsers().then((u) => setUsers(u));
+  }, []);
+
   return (
     <AuthContext.Provider value={{
       user, loading, isAdmin, canEdit,
       login, logout, users, addUser, updateUser, deleteUser,
       updateProfile, changePassword,
-      platformSettings, updatePlatformSettings,
+      platformSettings, updatePlatformSettings, refreshUsers,
     }}>
       {children}
     </AuthContext.Provider>
