@@ -32,6 +32,7 @@ export function useTaken() {
         if (error) throw error;
         return data as Task;
       } else {
+        // INSERT — strip id and created_at so Supabase generates them
         const { id, created_at, ...insert } = payload;
         const { data, error } = await db("taken").insert(insert).select().single();
         if (error) throw error;
