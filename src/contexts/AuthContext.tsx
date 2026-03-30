@@ -25,6 +25,7 @@ export interface AppUser {
   email: string;
   role: UserRole;
   avatarUrl?: string;
+  active?: boolean;
   notifications: NotificationSettings;
 }
 
