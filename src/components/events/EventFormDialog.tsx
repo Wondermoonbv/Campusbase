@@ -28,7 +28,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const saved: Event = { id: event?.id ?? `ev${Date.now()}`, name: form.name, type: form.type as Event["type"], date: form.date, start_time: form.start_time, end_time: form.end_time, location: form.location, school_id: form.school_id || null, responsible: form.responsible, elia_contact: form.elia_contact, team_members: form.team_members ? form.team_members.split(",").map((s) => s.trim()).filter(Boolean) : [], description: form.description, stand_type: form.stand_type as Event["stand_type"], stand_size: form.stand_size as Event["stand_size"], budget: form.budget ? Number(form.budget) : null, status: form.status as Event["status"], setup_date: form.setup_date, setup_time: form.setup_time, notes: form.notes };
+    const saved: Event = { ...(event?.id ? { id: event.id } : {}), name: form.name, type: form.type as Event["type"], date: form.date, start_time: form.start_time, end_time: form.end_time, location: form.location, school_id: form.school_id || null, responsible: form.responsible, elia_contact: form.elia_contact, team_members: form.team_members ? form.team_members.split(",").map((s) => s.trim()).filter(Boolean) : [], description: form.description, stand_type: form.stand_type as Event["stand_type"], stand_size: form.stand_size as Event["stand_size"], budget: form.budget ? Number(form.budget) : null, status: form.status as Event["status"], setup_date: form.setup_date, setup_time: form.setup_time, notes: form.notes } as Event;
     onSave?.(saved);
     toast.success(isEdit ? "Evenement bijgewerkt." : "Evenement toegevoegd.");
     onOpenChange(false);

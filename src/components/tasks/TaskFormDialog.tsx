@@ -36,7 +36,7 @@ export function TaskFormDialog({ open, onOpenChange, defaultSchoolId, defaultEve
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const saved: Task = { id: task?.id ?? `t${Date.now()}`, title, description: description || "", school_id: schoolId || null, event_id: eventId || null, assigned_to: assignedTo, due_date: dueDate, priority, status, created_at: task?.created_at ?? new Date().toISOString().slice(0, 10) };
+    const saved: Task = { ...(task?.id ? { id: task.id } : {}), title, description: description || "", school_id: schoolId || null, event_id: eventId || null, assigned_to: assignedTo, due_date: dueDate, priority, status } as Task;
     onSave?.(saved);
     toast.success(isEditing ? "Taak bijgewerkt" : "Taak aangemaakt");
     onOpenChange(false);

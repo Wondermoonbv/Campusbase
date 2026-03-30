@@ -18,11 +18,13 @@ export function useScholen() {
     mutationFn: async (school: Partial<School> & { name: string }) => {
       const { contacts, ...rest } = school as any;
       if (school.id) {
+        // UPDATE existing record
         const { id, created_at, ...updates } = rest;
         const { data, error } = await db("scholen").update(updates).eq("id", id).select().single();
         if (error) throw error;
         return data as School;
       } else {
+        // INSERT new record — let Supabase generate the UUID
         const { id, created_at, ...insert } = rest;
         const { data, error } = await db("scholen").insert(insert).select().single();
         if (error) throw error;
@@ -65,6 +67,7 @@ export function useContacten(schoolId?: string) {
         if (error) throw error;
         return data as Contact;
       } else {
+        // INSERT — strip id so Supabase generates it
         const { id, ...insert } = contact;
         const { data, error } = await db("contacten").insert(insert).select().single();
         if (error) throw error;
