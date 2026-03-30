@@ -6,10 +6,12 @@ import { useScholen } from "@/hooks/useScholen";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Download, Plus, ChevronDown, ChevronUp, ExternalLink, Calendar, Pencil } from "lucide-react";
+import { Download, Plus, ChevronDown, ChevronUp, ExternalLink, Calendar, Pencil, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContractFormDialog } from "@/components/contracts/ContractFormDialog";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
+import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
+import { handleDeleteError } from "@/lib/delete-helpers";
 import type { Contract } from "@/types/crm";
 import { toast } from "sonner";
 
@@ -24,17 +26,29 @@ function getExpiryColor(endDate: string) {
 export default function ContractenPage() {
   const [searchParams] = useSearchParams();
   const filterExpiring = searchParams.get("expiring") === "90";
-  const { contracten, upsertContract } = useContracten();
+  const { contracten, upsertContract, deleteContract } = useContracten();
   const { scholen } = useScholen();
   const { evenementen } = useEvenementen();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editContract, setEditContract] = useState<Contract | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Contract | null>(null);
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("school");
 
   const handleSave = async (saved: Contract) => {
     try { await upsertContract.mutateAsync(saved); } catch { toast.error("Fout bij opslaan."); }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteContract.mutateAsync(deleteTarget.id);
+      toast.success("Contract verwijderd.");
+    } catch (error) {
+      handleDeleteError(error, "contract");
+    }
+    setDeleteTarget(null);
   };
 
   const baseList = useMemo(() => {
@@ -91,7 +105,12 @@ export default function ContractenPage() {
                   {c.description && <p className="text-sm">{c.description}</p>}
                   {c.notes && <p className="text-sm text-muted-foreground">{c.notes}</p>}
                   {linkedEvents.length > 0 && <div className="flex flex-wrap gap-1.5">{linkedEvents.map((event) => <span key={event!.id} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">{event!.name}</span>)}</div>}
-                  {canEdit && <Button size="sm" variant="outline" className="h-9" onClick={(e) => { e.stopPropagation(); setEditContract(c); setDialogOpen(true); }}>Bewerken</Button>}
+                  {canEdit && (
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" className="h-9" onClick={(e) => { e.stopPropagation(); setEditContract(c); setDialogOpen(true); }}>Bewerken</Button>
+                      <Button size="sm" variant="outline" className="h-9 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}><Trash2 className="h-3.5 w-3.5 mr-1" /> Verwijderen</Button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -109,7 +128,7 @@ export default function ContractenPage() {
           <SortableTableHead sortKey="renewal" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Vernieuwingsdatum</SortableTableHead>
           <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
           <SortableTableHead sortKey="value" currentSort={sort} onSort={toggleSort} className="text-right">Waarde</SortableTableHead>
-          <TableHead className="w-10" />
+          <TableHead className="w-20" />
         </TableRow></TableHeader>
           <TableBody>{sorted.map((c) => {
             const school = scholen.find((s) => s.id === c.school_id);
@@ -125,7 +144,12 @@ export default function ContractenPage() {
                 <TableCell className="hidden lg:table-cell">{c.renewal_date ? new Date(c.renewal_date).toLocaleDateString("nl-BE") : "—"}</TableCell>
                 <TableCell><StatusBadge status={c.status} /></TableCell>
                 <TableCell className="text-right tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
-                <TableCell>{canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditContract(c); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}</TableCell>
+                <TableCell>
+                  <div className="flex gap-0.5">
+                    {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditContract(c); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
+                    {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+                  </div>
+                </TableCell>
               </TableRow>
               {isExpanded && (
                 <TableRow key={`${c.id}-detail`} className="bg-muted/10 hover:bg-muted/10"><TableCell colSpan={9} className="p-4"><div className="space-y-3">
@@ -145,6 +169,7 @@ export default function ContractenPage() {
       </div>
 
       <ContractFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditContract(undefined); }} contract={editContract} onSave={handleSave} />
+      <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget ? (scholen.find(s => s.id === deleteTarget.school_id)?.name ?? "contract") : ""} isLoading={deleteContract.isPending} />
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { useContracten } from "@/hooks/useContracten";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ExternalLink, Mail, Phone, Edit, Plus, Linkedin, User, CheckSquare } from "lucide-react";
+import { ArrowLeft, ExternalLink, Mail, Phone, Edit, Plus, Linkedin, User, CheckSquare, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState } from "react";
@@ -14,13 +14,15 @@ import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
 import { ContactFormDialog } from "@/components/schools/ContactFormDialog";
 import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
 import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
+import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
+import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
 import type { School, Contact } from "@/types/crm";
 
 export default function SchoolDetailPage() {
   const { id } = useParams();
   const { scholen, upsertSchool } = useScholen();
-  const { contacten, upsertContact } = useContacten(id);
+  const { contacten, upsertContact, deleteContact } = useContacten(id);
   const { opleidingen, upsertOpleiding } = useOpleidingen();
   const { contracten } = useContracten();
   const { evenementen } = useEvenementen();
@@ -31,6 +33,7 @@ export default function SchoolDetailPage() {
   const [editContact, setEditContact] = useState<Contact | undefined>(undefined);
   const [programDialogOpen, setProgramDialogOpen] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [deleteContactTarget, setDeleteContactTarget] = useState<Contact | null>(null);
   const { canEdit } = useAuth();
 
   if (!school) {
@@ -52,6 +55,17 @@ export default function SchoolDetailPage() {
 
   const handleSaveContact = async (saved: Contact) => {
     try { await upsertContact.mutateAsync(saved); } catch { toast.error("Fout bij opslaan."); }
+  };
+
+  const handleDeleteContact = async () => {
+    if (!deleteContactTarget) return;
+    try {
+      await deleteContact.mutateAsync(deleteContactTarget.id);
+      toast.success("Contact verwijderd.");
+    } catch (error) {
+      handleDeleteError(error, "contact");
+    }
+    setDeleteContactTarget(null);
   };
 
   return (
@@ -96,7 +110,12 @@ export default function SchoolDetailPage() {
                     {contact.linkedin_url && <a href={contact.linkedin_url} target="_blank" rel="noopener" className="text-primary hover:underline inline-flex items-center gap-1"><Linkedin className="h-3 w-3" /> LinkedIn</a>}
                   </div>
                 </div>
-                {canEdit && <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => { setEditContact(contact); setContactDialogOpen(true); }}><Edit className="h-3.5 w-3.5" /></Button>}
+                {canEdit && (
+                  <div className="flex gap-0.5 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditContact(contact); setContactDialogOpen(true); }}><Edit className="h-3.5 w-3.5" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDeleteContactTarget(contact)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -152,6 +171,7 @@ export default function SchoolDetailPage() {
       <ContactFormDialog open={contactDialogOpen} onOpenChange={setContactDialogOpen} schoolId={school.id} contact={editContact} onSave={handleSaveContact} />
       <ProgramFormDialog open={programDialogOpen} onOpenChange={setProgramDialogOpen} schoolId={school.id} onSave={async (p) => { try { await upsertOpleiding.mutateAsync(p); } catch { toast.error("Fout."); } }} />
       <TaskFormDialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen} defaultSchoolId={school.id} />
+      <DeleteConfirmDialog open={!!deleteContactTarget} onClose={() => setDeleteContactTarget(null)} onConfirm={handleDeleteContact} itemName={deleteContactTarget?.name ?? ""} isLoading={deleteContact.isPending} />
     </div>
   );
 }
