@@ -130,30 +130,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
+    // 1. Set up auth listener FIRST (before getSession) to catch all state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return;
+      if (session?.user) {
+        // Use setTimeout to prevent Supabase deadlock when calling DB inside auth callback
+        setTimeout(async () => {
+          if (!mounted) return;
+          const appUser = await loadAppUser(session.user.id, session.user.email);
+          if (mounted) {
+            setUser(appUser);
+            setLoading(false);
+            loadAllUsers().then((u) => mounted && setUsers(u));
+          }
+        }, 0);
+      } else {
+        setUser(null);
+        setUsers([]);
+        setLoading(false);
+      }
+    });
+
+    // 2. Then check existing session from localStorage
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted) return;
       if (session?.user) {
         const appUser = await loadAppUser(session.user.id, session.user.email);
         if (mounted) {
           setUser(appUser);
           loadAllUsers().then((u) => mounted && setUsers(u));
-        }
-      } else {
-        if (mounted) {
-          setUser(null);
-          setUsers([]);
         }
       }
       if (mounted) setLoading(false);
-    });
-
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const appUser = await loadAppUser(session.user.id, session.user.email);
-        if (mounted) {
-          setUser(appUser);
-          loadAllUsers().then((u) => mounted && setUsers(u));
-        }
-      }
+    }).catch(() => {
+      // If getSession fails (e.g. network), stop loading anyway
       if (mounted) setLoading(false);
     });
 

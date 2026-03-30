@@ -67,8 +67,10 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave }: SchoolF
       toast.error("Vul alle verplichte velden in.");
       return;
     }
-    const saved: School = {
-      id: school?.id ?? `s${Date.now()}`,
+    // Build payload matching exact DB column names
+    // For new records: omit id and created_at so Supabase generates them
+    const saved: Partial<School> & { name: string } = {
+      ...(school?.id ? { id: school.id } : {}),
       name: form.name,
       type: form.type as School["type"],
       province: form.province,
@@ -77,9 +79,8 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave }: SchoolF
       language: form.language as School["language"],
       notes: form.notes,
       status: form.status as School["status"],
-      created_at: school?.created_at ?? new Date().toISOString().slice(0, 10),
     };
-    onSave?.(saved);
+    onSave?.(saved as School);
     toast.success(isEdit ? "School bijgewerkt." : "School toegevoegd.");
     onOpenChange(false);
   };
