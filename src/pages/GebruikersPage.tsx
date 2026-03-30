@@ -1,7 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActivity, ActivityAction, ActivityEntityType } from "@/contexts/ActivityContext";
 import { useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/supabase-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Pencil, Trash2, Search, GraduationCap, CalendarDays, FileText, BookOpen, CheckSquare } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Plus, Pencil, Trash2, Search, GraduationCap, CalendarDays, FileText, BookOpen, CheckSquare, UserPlus } from "lucide-react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { toast } from "sonner";
 import type { AppUser, UserRole } from "@/contexts/AuthContext";
@@ -69,14 +72,20 @@ function ActivityRow({ activity: a }: { activity: ReturnType<typeof useActivity>
 }
 
 export default function GebruikersPage() {
-  const { users, addUser, updateUser, deleteUser, user: currentUser } = useAuth();
+  const { users, updateUser, user: currentUser, isAdmin, refreshUsers } = useAuth();
   const { activities } = useActivity();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") === "activiteit" ? "activiteit" : "gebruikers";
 
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [editUser, setEditUser] = useState<AppUser | null>(null);
-  const [form, setForm] = useState({ firstName: "", lastName: "", name: "", email: "", role: "viewer" as UserRole });
+  const [editOpen, setEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState({ firstName: "", lastName: "", email: "", role: "viewer" as UserRole });
+
+  // Invite form
+  const [inviteForm, setInviteForm] = useState({ fullName: "", email: "", password: "", role: "editor" as UserRole });
+  const [inviteLoading, setInviteLoading] = useState(false);
+
   const { sort, toggleSort } = useSort("lastName");
 
   const [actSearch, setActSearch] = useState("");
@@ -116,57 +125,89 @@ export default function GebruikersPage() {
     });
   }, [activities, actSearch, filterUser, filterAction, filterPeriod]);
 
-  const openCreate = () => {
-    setEditUser(null);
-    setForm({ firstName: "", lastName: "", name: "", email: "", role: "viewer" });
-    setDialogOpen(true);
-  };
+  // Invite user via RPC
+  const handleInvite = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteForm.fullName || !inviteForm.email || !inviteForm.password) {
+      toast.error("Vul alle verplichte velden in.");
+      return;
+    }
+    if (inviteForm.password.length < 8) {
+      toast.error("Wachtwoord moet minimaal 8 tekens zijn.");
+      return;
+    }
+    setInviteLoading(true);
+    try {
+      const { data, error } = await supabase.rpc("invite_user", {
+        user_email: inviteForm.email.trim().toLowerCase(),
+        user_password: inviteForm.password,
+        user_full_name: inviteForm.fullName.trim(),
+        user_role: inviteForm.role,
+      });
+      if (error) throw error;
+      toast.success("Gebruiker aangemaakt.");
+      setInviteOpen(false);
+      setInviteForm({ fullName: "", email: "", password: "", role: "editor" });
+      refreshUsers?.();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Fout bij aanmaken van gebruiker.");
+    } finally {
+      setInviteLoading(false);
+    }
+  }, [inviteForm, refreshUsers]);
 
+  // Edit user dialog
   const openEdit = (u: AppUser) => {
     setEditUser(u);
-    setForm({ firstName: u.firstName ?? "", lastName: u.lastName ?? "", name: u.name, email: u.email, role: u.role });
-    setDialogOpen(true);
+    setEditForm({ firstName: u.firstName ?? "", lastName: u.lastName ?? "", email: u.email, role: u.role });
+    setEditOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.firstName || !form.email) { toast.error("Vul alle velden in."); return; }
-    const fullName = `${form.firstName} ${form.lastName}`.trim();
-    if (editUser) {
-      updateUser(editUser.id, { ...form, name: fullName });
-      toast.success("Gebruiker bijgewerkt.");
-    } else {
-      if (users.some((u) => u.email.toLowerCase() === form.email.toLowerCase())) {
-        toast.error("E-mailadres is al in gebruik.");
-        return;
-      }
-      addUser({ ...form, name: fullName });
-      toast.success("Gebruiker toegevoegd.");
-    }
-    setDialogOpen(false);
+    if (!editUser) return;
+    await updateUser(editUser.id, { ...editForm, name: `${editForm.firstName} ${editForm.lastName}`.trim() });
+    toast.success("Gebruiker bijgewerkt.");
+    setEditOpen(false);
   };
 
-  const handleDelete = (u: AppUser) => {
-    if (u.id === currentUser?.id) { toast.error("Je kan jezelf niet verwijderen."); return; }
-    deleteUser(u.id);
-    toast.success("Gebruiker verwijderd.");
-  };
+  // Inline role change
+  const handleRoleChange = useCallback(async (userId: string, newRole: UserRole) => {
+    if (userId === currentUser?.id) {
+      toast.error("Je kan je eigen rol niet wijzigen.");
+      return;
+    }
+    await updateUser(userId, { role: newRole });
+    toast.success("Rol bijgewerkt.");
+  }, [currentUser, updateUser]);
+
+  // Toggle active status
+  const handleToggleActive = useCallback(async (userId: string, currentActive: boolean) => {
+    if (userId === currentUser?.id) {
+      toast.error("Je kan jezelf niet deactiveren.");
+      return;
+    }
+    try {
+      await db("profiles").update({ active: !currentActive }).eq("id", userId);
+      toast.success(currentActive ? "Gebruiker gedeactiveerd." : "Gebruiker geactiveerd.");
+      refreshUsers?.();
+    } catch {
+      toast.error("Fout bij wijzigen van status.");
+    }
+  }, [currentUser, refreshUsers]);
 
   const handleTabChange = (value: string) => {
-    if (value === "activiteit") {
-      setSearchParams({ tab: "activiteit" });
-    } else {
-      setSearchParams({});
-    }
+    if (value === "activiteit") setSearchParams({ tab: "activiteit" });
+    else setSearchParams({});
   };
 
   return (
     <div className="page-container animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
         <h1>Gebruikers</h1>
-        {activeTab === "gebruikers" && (
-          <Button size="sm" className="h-10 sm:h-8" onClick={openCreate}>
-            <Plus className="h-4 w-4 mr-1" /> Gebruiker toevoegen
+        {activeTab === "gebruikers" && isAdmin && (
+          <Button size="sm" className="h-10 sm:h-8" onClick={() => { setInviteOpen(true); setInviteForm({ fullName: "", email: "", password: "", role: "editor" }); }}>
+            <UserPlus className="h-4 w-4 mr-1" /> Gebruiker uitnodigen
           </Button>
         )}
       </div>
@@ -180,26 +221,47 @@ export default function GebruikersPage() {
         <TabsContent value="gebruikers" className="mt-4">
           {/* Mobile card view */}
           <div className="block md:hidden space-y-2">
-            {sorted.map((u) => (
-              <div key={u.id} className="surface-card p-4">
-                <div className="flex items-center gap-3">
-                  <UserAvatar name={u.name} avatarUrl={u.avatarUrl} />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm">{u.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{u.email}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{u.role}</p>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => openEdit(u)}>
-                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleDelete(u)} disabled={u.id === currentUser?.id}>
-                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                    </Button>
+            {sorted.map((u) => {
+              const isActive = (u as any).active !== false;
+              return (
+                <div key={u.id} className={`surface-card p-4 ${!isActive ? "opacity-50" : ""}`}>
+                  <div className="flex items-center gap-3">
+                    <UserAvatar name={u.name} avatarUrl={u.avatarUrl} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm">{u.name} {!isActive && <span className="text-xs text-muted-foreground">(inactief)</span>}</p>
+                      <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                      {isAdmin ? (
+                        <Select value={u.role} onValueChange={(v) => handleRoleChange(u.id, v as UserRole)}>
+                          <SelectTrigger className="h-7 w-[110px] text-xs mt-1"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="editor">Editor</SelectItem>
+                            <SelectItem value="viewer">Viewer</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <p className="text-xs text-muted-foreground capitalize">{u.role}</p>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-1 items-center">
+                      {isAdmin && (
+                        <>
+                          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => openEdit(u)}>
+                            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                          </Button>
+                          <Switch
+                            checked={isActive}
+                            onCheckedChange={() => handleToggleActive(u.id, isActive)}
+                            disabled={u.id === currentUser?.id}
+                            className="scale-75"
+                          />
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Desktop table view */}
@@ -210,34 +272,65 @@ export default function GebruikersPage() {
                   <SortableTableHead sortKey="lastName" currentSort={sort} onSort={toggleSort}>Naam</SortableTableHead>
                   <SortableTableHead sortKey="email" currentSort={sort} onSort={toggleSort}>E-mail</SortableTableHead>
                   <SortableTableHead sortKey="role" currentSort={sort} onSort={toggleSort}>Rol</SortableTableHead>
-                  <TableHead className="w-20" />
+                  <TableHead>Status</TableHead>
+                  {isAdmin && <TableHead className="w-20" />}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sorted.map((u) => (
-                  <TableRow key={u.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2.5">
-                        <UserAvatar name={u.name} avatarUrl={u.avatarUrl} />
-                        <span className="font-medium">{u.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{u.email}</TableCell>
-                    <TableCell className="capitalize">{u.role}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(u)}>
-                          <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(u)} disabled={u.id === currentUser?.id}>
-                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {sorted.map((u) => {
+                  const isActive = (u as any).active !== false;
+                  return (
+                    <TableRow key={u.id} className={!isActive ? "opacity-50" : ""}>
+                      <TableCell>
+                        <div className="flex items-center gap-2.5">
+                          <UserAvatar name={u.name} avatarUrl={u.avatarUrl} />
+                          <span className="font-medium">{u.name}</span>
+                          {!isActive && <span className="text-xs text-muted-foreground">(inactief)</span>}
+                        </div>
+                      </TableCell>
+                      <TableCell>{u.email}</TableCell>
+                      <TableCell>
+                        {isAdmin ? (
+                          <Select value={u.role} onValueChange={(v) => handleRoleChange(u.id, v as UserRole)} disabled={u.id === currentUser?.id}>
+                            <SelectTrigger className="h-8 w-[120px]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="editor">Editor</SelectItem>
+                              <SelectItem value="viewer">Viewer</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span className="capitalize">{u.role}</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isAdmin ? (
+                          <Switch
+                            checked={isActive}
+                            onCheckedChange={() => handleToggleActive(u.id, isActive)}
+                            disabled={u.id === currentUser?.id}
+                          />
+                        ) : (
+                          <span className={`text-xs ${isActive ? "text-success" : "text-muted-foreground"}`}>
+                            {isActive ? "Actief" : "Inactief"}
+                          </span>
+                        )}
+                      </TableCell>
+                      {isAdmin && (
+                        <TableCell>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(u)}>
+                            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
+            <div className="p-3 border-t border-border text-xs text-muted-foreground">
+              {sorted.length} gebruiker{sorted.length !== 1 ? "s" : ""}
+            </div>
           </div>
         </TabsContent>
 
@@ -291,39 +384,103 @@ export default function GebruikersPage() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[400px]">
+      {/* Invite Dialog */}
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
-            <DialogTitle>{editUser ? "Gebruiker bewerken" : "Nieuwe gebruiker"}</DialogTitle>
+            <DialogTitle>Gebruiker uitnodigen</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Voornaam *</Label>
-                <Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} required className="h-10 sm:h-9" />
-              </div>
-              <div className="space-y-2">
-                <Label>Achternaam</Label>
-                <Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} className="h-10 sm:h-9" />
-              </div>
+          <form onSubmit={handleInvite} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Volledige naam *</Label>
+              <Input
+                value={inviteForm.fullName}
+                onChange={(e) => setInviteForm({ ...inviteForm, fullName: e.target.value })}
+                placeholder="Jan Janssens"
+                required
+                className="h-10 sm:h-9"
+              />
             </div>
             <div className="space-y-2">
-              <Label>E-mail *</Label>
-              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required className="h-10 sm:h-9" />
+              <Label>E-mailadres *</Label>
+              <Input
+                type="email"
+                value={inviteForm.email}
+                onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                placeholder="voornaam.achternaam@elia.be"
+                required
+                className="h-10 sm:h-9"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Tijdelijk wachtwoord *</Label>
+              <Input
+                type="text"
+                value={inviteForm.password}
+                onChange={(e) => setInviteForm({ ...inviteForm, password: e.target.value })}
+                placeholder="Minimaal 8 tekens"
+                minLength={8}
+                required
+                className="h-10 sm:h-9"
+              />
+              <p className="text-xs text-muted-foreground">De gebruiker kan dit wachtwoord later wijzigen.</p>
             </div>
             <div className="space-y-2">
               <Label>Rol</Label>
-              <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as UserRole })}>
+              <Select value={inviteForm.role} onValueChange={(v) => setInviteForm({ ...inviteForm, role: v as UserRole })}>
                 <SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="editor">Editor</SelectItem>
                   <SelectItem value="viewer">Viewer</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" className="h-10 sm:h-9" onClick={() => setDialogOpen(false)}>Annuleren</Button>
-              <Button type="submit" className="h-10 sm:h-9">{editUser ? "Opslaan" : "Toevoegen"}</Button>
+              <Button type="button" variant="outline" className="h-10 sm:h-9" onClick={() => setInviteOpen(false)}>Annuleren</Button>
+              <Button type="submit" className="h-10 sm:h-9" disabled={inviteLoading}>
+                {inviteLoading ? "Aanmaken..." : "Uitnodigen"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Gebruiker bewerken</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Voornaam *</Label>
+                <Input value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} required className="h-10 sm:h-9" />
+              </div>
+              <div className="space-y-2">
+                <Label>Achternaam</Label>
+                <Input value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} className="h-10 sm:h-9" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>E-mail *</Label>
+              <Input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} required className="h-10 sm:h-9" />
+            </div>
+            <div className="space-y-2">
+              <Label>Rol</Label>
+              <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v as UserRole })}>
+                <SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="editor">Editor</SelectItem>
+                  <SelectItem value="viewer">Viewer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" className="h-10 sm:h-9" onClick={() => setEditOpen(false)}>Annuleren</Button>
+              <Button type="submit" className="h-10 sm:h-9">Opslaan</Button>
             </DialogFooter>
           </form>
         </DialogContent>
