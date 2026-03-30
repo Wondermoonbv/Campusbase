@@ -427,6 +427,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      invite_user: {
+        Args: {
+          user_email: string
+          user_full_name: string
+          user_password: string
+          user_role?: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "editor" | "viewer"
