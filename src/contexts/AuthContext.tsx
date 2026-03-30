@@ -43,6 +43,7 @@ interface AuthContextType {
   changePassword: (current: string, newPass: string) => Promise<boolean>;
   platformSettings: PlatformSettings;
   updatePlatformSettings: (data: Partial<PlatformSettings>) => void;
+  refreshUsers: () => void;
 }
 
 const DEFAULT_NOTIFICATIONS: NotificationSettings = {
