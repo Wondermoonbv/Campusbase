@@ -68,6 +68,7 @@ function AppRoutes() {
   return (
     <AppLayout>
       <Routes>
+        <Route path="/feedback/:formId" element={<PublicFeedbackPage />} />
         <Route path="/" element={<DashboardPage />} />
         <Route path="/scholen" element={<ScholenPage />} />
         <Route path="/scholen/:id" element={<SchoolDetailPage />} />
