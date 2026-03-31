@@ -162,6 +162,10 @@ export default function EventDetailPage() {
       </div>
         </TabsContent>
 
+        <TabsContent value="ambassadeurs">
+          <EventAmbassadeursTab eventId={event.id} />
+        </TabsContent>
+
         <TabsContent value="feedback">
           <EventFeedbackTab eventId={event.id} eventName={event.name} />
         </TabsContent>
