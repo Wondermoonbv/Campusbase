@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ActivityProvider } from "@/contexts/ActivityContext";
+import { ViewAsProvider, useViewAs } from "@/contexts/ViewAsContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -38,6 +39,7 @@ function PublicRoutes() {
 
 function AppRoutes() {
   const { user, isAdmin, isStandenbouwer, loading } = useAuth();
+  const { effectiveIsAdmin, effectiveIsStandenbouwer, effectiveCanEdit, isSimulating } = useViewAs();
   const [timedOut, setTimedOut] = useState(false);
   const pathname = window.location.pathname;
   const isPublicRoute = pathname.startsWith("/feedback/") || pathname.startsWith("/inschrijven/");
@@ -83,13 +85,25 @@ function AppRoutes() {
     );
   }
 
-  // Standenbouwer gets their own isolated routes
-  if (isStandenbouwer) {
+  // Real standenbouwer (not simulating) gets isolated routes
+  if (isStandenbouwer && !isSimulating) {
     return (
       <Routes>
         <Route path="/standenbouwer" element={<StandenbouwerPage />} />
         <Route path="*" element={<Navigate to="/standenbouwer" replace />} />
       </Routes>
+    );
+  }
+
+  // Admin simulating standenbouwer → show standenbouwer page within a simulated layout
+  if (effectiveIsStandenbouwer && isSimulating) {
+    return (
+      <AppLayout>
+        <Routes>
+          <Route path="/standenbouwer" element={<StandenbouwerPage />} />
+          <Route path="*" element={<Navigate to="/standenbouwer" replace />} />
+        </Routes>
+      </AppLayout>
     );
   }
 
@@ -106,8 +120,8 @@ function AppRoutes() {
         <Route path="/evenementen/:id" element={<EventDetailPage />} />
         <Route path="/rapportage" element={<RapportagePage />} />
         <Route path="/taken" element={<TakenPage />} />
-        {isAdmin && <Route path="/gebruikers" element={<GebruikersPage />} />}
-        {isAdmin ? (
+        {effectiveIsAdmin && <Route path="/gebruikers" element={<GebruikersPage />} />}
+        {effectiveIsAdmin ? (
           <Route path="/instellingen" element={<InstellingenPage />} />
         ) : (
           <Route path="/instellingen" element={<Navigate to="/" replace />} />
@@ -126,9 +140,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <ActivityProvider>
-            <AppRoutes />
-          </ActivityProvider>
+          <ViewAsProvider>
+            <ActivityProvider>
+              <AppRoutes />
+            </ActivityProvider>
+          </ViewAsProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
