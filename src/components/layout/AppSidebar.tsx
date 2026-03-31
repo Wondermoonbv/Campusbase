@@ -10,12 +10,21 @@ import {
   Settings,
   CheckSquare,
   UserCheck,
+  Eye,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, type UserRole } from "@/contexts/AuthContext";
+import { useViewAs } from "@/contexts/ViewAsContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Sidebar,
   SidebarContent,
