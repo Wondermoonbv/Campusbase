@@ -99,8 +99,9 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {([
+          { label: "Uitgenodigd", value: counts.uitgenodigd },
           { label: "Ingeschreven", value: counts.ingeschreven },
           { label: "Bevestigd", value: counts.bevestigd },
           { label: "Backup", value: counts.backup },
