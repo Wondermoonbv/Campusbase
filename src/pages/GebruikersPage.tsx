@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useViewAs } from "@/contexts/ViewAsContext";
 import { useActivity, ActivityAction, ActivityEntityType } from "@/contexts/ActivityContext";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/supabase-helpers";
 import { Button } from "@/components/ui/button";
