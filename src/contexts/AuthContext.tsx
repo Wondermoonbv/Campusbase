@@ -251,6 +251,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isAdmin = user?.role === "admin";
   const canEdit = user?.role === "admin" || user?.role === "editor";
+  const isStandenbouwer = user?.role === "standenbouwer";
 
   const refreshUsers = useCallback(() => {
     loadAllUsers().then((u) => setUsers(u));
