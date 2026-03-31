@@ -10,11 +10,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap, CheckSquare } from "lucide-react";
+import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap, CheckSquare, MessageSquare } from "lucide-react";
 import type { Event, StandType, StandSize, EventType, EventStatus } from "@/types/crm";
 import { toast } from "sonner";
 import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
+import { EventFeedbackTab } from "@/components/events/EventFeedbackTab";
 
 export default function EventDetailPage() {
   const { id } = useParams();
