@@ -61,7 +61,7 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAdmin, logout, platformSettings } = useAuth();
-  const { simulatedRole, setSimulatedRole, effectiveIsAdmin } = useViewAs();
+  const { simulatedRole, setSimulatedRole, simulateUser, effectiveIsAdmin } = useViewAs();
 
   // Use effective role for menu visibility
   const allItems = effectiveIsAdmin
