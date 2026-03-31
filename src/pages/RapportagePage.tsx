@@ -163,6 +163,40 @@ export default function RapportagePage() {
           )}
         </div>
       </div>
+
+      {/* Feedback overzicht */}
+      <div className="surface-card p-4 sm:p-5 mt-4 sm:mt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm sm:text-base font-semibold flex items-center gap-2">
+            <Star className="h-4 w-4" /> Feedback overzicht
+          </h2>
+          {totalFeedbackAvg > 0 && (
+            <span className="text-sm text-muted-foreground">
+              Jaargemiddelde: <span className="font-semibold text-foreground">{totalFeedbackAvg.toFixed(1)}/5</span>
+            </span>
+          )}
+        </div>
+        {feedbackByEvent.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nog geen feedback data beschikbaar.</p>
+        ) : (
+          <div className="divide-y divide-border">
+            {feedbackByEvent.map((f) => (
+              <div key={f.event.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <div>
+                  <p className="text-sm font-medium">{f.event.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(f.event.date).toLocaleDateString("nl-BE")} · {f.responseCount} responses
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                  <span className="text-sm font-semibold tabular-nums">{f.avgOverall.toFixed(1)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
