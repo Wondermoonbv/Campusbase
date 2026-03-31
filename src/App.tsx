@@ -20,6 +20,7 @@ import GebruikersPage from "./pages/GebruikersPage";
 import InstellingenPage from "./pages/InstellingenPage";
 import TakenPage from "./pages/TakenPage";
 import NotFound from "./pages/NotFound";
+import PublicFeedbackPage from "./pages/PublicFeedbackPage";
 
 const queryClient = new QueryClient();
 
