@@ -3,6 +3,7 @@ import { useScholen } from "@/hooks/useScholen";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { useContracten } from "@/hooks/useContracten";
 import { useAllFeedbackData } from "@/hooks/useFeedback";
+import { useAmbassadeurs, useAllInschrijvingen } from "@/hooks/useAmbassadeurs";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
