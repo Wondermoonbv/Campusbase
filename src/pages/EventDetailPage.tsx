@@ -156,6 +156,12 @@ export default function EventDetailPage() {
           {editing ? <Textarea value={form.notes} onChange={(e) => update({ notes: e.target.value })} rows={3} /> : <p className="text-sm">{form.notes || "—"}</p>}
         </section>
       </div>
+        </TabsContent>
+
+        <TabsContent value="feedback">
+          <EventFeedbackTab eventId={event.id} eventName={event.name} />
+        </TabsContent>
+      </Tabs>
 
       <TaskFormDialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen} defaultEventId={event.id} defaultSchoolId={event.school_id} />
     </div>
