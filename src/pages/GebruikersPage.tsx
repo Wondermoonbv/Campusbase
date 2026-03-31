@@ -74,6 +74,8 @@ function ActivityRow({ activity: a }: { activity: ReturnType<typeof useActivity>
 
 export default function GebruikersPage() {
   const { users, updateUser, user: currentUser, isAdmin, refreshUsers } = useAuth();
+  const { simulateUser } = useViewAs();
+  const navigate = useNavigate();
   const { activities } = useActivity();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") === "activiteit" ? "activiteit" : "gebruikers";
