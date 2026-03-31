@@ -59,6 +59,7 @@ export default function RapportagePage() {
   const { scholen } = useScholen();
   const { evenementen } = useEvenementen();
   const { contracten } = useContracten();
+  const { forms: feedbackForms, responses: feedbackResponses } = useAllFeedbackData();
   const [preset, setPreset] = useState<PeriodPreset>("year");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
