@@ -200,6 +200,36 @@ export default function RapportagePage() {
           </div>
         )}
       </div>
+
+      {/* Ambassadeurs overzicht */}
+      <div className="surface-card p-4 sm:p-5 mt-4 sm:mt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm sm:text-base font-semibold flex items-center gap-2">
+            <UserCheck className="h-4 w-4" /> Ambassadeurs overzicht
+          </h2>
+          <span className="text-sm text-muted-foreground">
+            {ambassadeurs.filter((a) => a.is_active).length} actief · {ambassadeurs.length} totaal
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div className="text-center p-3 rounded-lg bg-muted/50">
+            <p className="text-xl font-semibold tabular-nums">{ambassadeurs.length}</p>
+            <p className="text-xs text-muted-foreground">Totaal ambassadeurs</p>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-muted/50">
+            <p className="text-xl font-semibold tabular-nums">{ambassadeurs.filter((a) => a.is_active).length}</p>
+            <p className="text-xs text-muted-foreground">Actief</p>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-muted/50">
+            <p className="text-xl font-semibold tabular-nums">{allInschrijvingen.length}</p>
+            <p className="text-xs text-muted-foreground">Totaal inschrijvingen</p>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-muted/50">
+            <p className="text-xl font-semibold tabular-nums">{allInschrijvingen.filter((i) => i.status === "bevestigd").length}</p>
+            <p className="text-xs text-muted-foreground">Bevestigd</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
