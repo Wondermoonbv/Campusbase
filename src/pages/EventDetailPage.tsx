@@ -84,6 +84,15 @@ export default function EventDetailPage() {
         ))}
       </div>
 
+      <Tabs defaultValue="details" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="feedback" className="flex items-center gap-1.5">
+            <MessageSquare className="h-3.5 w-3.5" /> Feedback
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="details" className="space-y-4 sm:space-y-6">
       <div className="grid gap-4 sm:gap-6">
         <section className="surface-card p-4 sm:p-5 space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Algemeen</h2>
