@@ -478,6 +478,7 @@ export default function GebruikersPage() {
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="editor">Editor</SelectItem>
                   <SelectItem value="viewer">Viewer</SelectItem>
+                  <SelectItem value="standenbouwer">Standenbouwer</SelectItem>
                 </SelectContent>
               </Select>
             </div>
