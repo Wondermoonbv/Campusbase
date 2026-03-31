@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Copy, Download, Link2, MessageSquare, Star, ThumbsUp, BarChart3 } from "lucide-react";
 import type { FeedbackResponse } from "@/hooks/useFeedback";
 
-const SHARE_BASE = "https://elia-recruit-flow.lovable.app/feedback";
+const getShareUrl = (formId: string) => `${window.location.origin}/feedback/${formId}`;
 
 function avg(arr: (number | null)[]): number {
   const valid = arr.filter((v): v is number => v != null);
@@ -90,7 +90,7 @@ export function EventFeedbackTab({ eventId, eventName }: { eventId: string; even
 
   const copyLink = () => {
     if (!form) return;
-    navigator.clipboard.writeText(`${SHARE_BASE}/${form.id}`);
+    navigator.clipboard.writeText(getShareUrl(form.id));
     toast.success("Link gekopieerd!");
   };
 
@@ -124,7 +124,7 @@ export function EventFeedbackTab({ eventId, eventName }: { eventId: string; even
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
-            <span className="text-sm text-muted-foreground truncate">{SHARE_BASE}/{form.id}</span>
+            <span className="text-sm text-muted-foreground truncate">{getShareUrl(form.id)}</span>
           </div>
           <div className="flex items-center gap-3">
             <Button variant="outline" size="sm" onClick={copyLink}>
