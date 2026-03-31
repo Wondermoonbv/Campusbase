@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect } from "rea
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/supabase-helpers";
 
-export type UserRole = "admin" | "editor" | "viewer";
+export type UserRole = "admin" | "editor" | "viewer" | "standenbouwer";
 
 export interface NotificationSettings {
   contractExpiry90: boolean;
@@ -34,6 +34,7 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   canEdit: boolean;
+  isStandenbouwer: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   users: AppUser[];
@@ -251,6 +252,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isAdmin = user?.role === "admin";
   const canEdit = user?.role === "admin" || user?.role === "editor";
+  const isStandenbouwer = user?.role === "standenbouwer";
 
   const refreshUsers = useCallback(() => {
     loadAllUsers().then((u) => setUsers(u));
@@ -258,7 +260,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{
-      user, loading, isAdmin, canEdit,
+      user, loading, isAdmin, canEdit, isStandenbouwer,
       login, logout, users, addUser, updateUser, deleteUser,
       updateProfile, changePassword,
       platformSettings, updatePlatformSettings, refreshUsers,

@@ -23,6 +23,7 @@ import NotFound from "./pages/NotFound";
 import PublicFeedbackPage from "./pages/PublicFeedbackPage";
 import AmbassadeursPage from "./pages/AmbassadeursPage";
 import PublicInschrijvenPage from "./pages/PublicInschrijvenPage";
+import StandenbouwerPage from "./pages/StandenbouwerPage";
 
 const queryClient = new QueryClient();
 
@@ -36,7 +37,7 @@ function PublicRoutes() {
 }
 
 function AppRoutes() {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, isStandenbouwer, loading } = useAuth();
   const [timedOut, setTimedOut] = useState(false);
   const pathname = window.location.pathname;
   const isPublicRoute = pathname.startsWith("/feedback/") || pathname.startsWith("/inschrijven/");
@@ -78,6 +79,16 @@ function AppRoutes() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
+  }
+
+  // Standenbouwer gets their own isolated routes
+  if (isStandenbouwer) {
+    return (
+      <Routes>
+        <Route path="/standenbouwer" element={<StandenbouwerPage />} />
+        <Route path="*" element={<Navigate to="/standenbouwer" replace />} />
       </Routes>
     );
   }
