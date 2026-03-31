@@ -91,7 +91,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {allItems.map((item) => {
+              {visibleItems.map((item) => {
                 const isActive =
                   item.url === "/"
                     ? location.pathname === "/"
