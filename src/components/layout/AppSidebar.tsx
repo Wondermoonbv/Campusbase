@@ -10,21 +10,13 @@ import {
   Settings,
   CheckSquare,
   UserCheck,
-  Eye,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth, type UserRole } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useViewAs } from "@/contexts/ViewAsContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Sidebar,
   SidebarContent,
@@ -48,20 +40,13 @@ const navItems = [
   { title: "Rapportage", url: "/rapportage", icon: BarChart3 },
 ];
 
-const VIEW_AS_ROLES: { value: UserRole; label: string }[] = [
-  { value: "admin", label: "Admin" },
-  { value: "editor", label: "Editor" },
-  { value: "viewer", label: "Viewer" },
-  { value: "standenbouwer", label: "Standenbouwer" },
-];
-
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAdmin, logout, platformSettings } = useAuth();
-  const { simulatedRole, setSimulatedRole, simulateUser, effectiveIsAdmin } = useViewAs();
+  const { effectiveIsAdmin } = useViewAs();
 
   // Use effective role for menu visibility
   const allItems = effectiveIsAdmin
