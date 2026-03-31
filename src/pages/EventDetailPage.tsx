@@ -88,6 +88,9 @@ export default function EventDetailPage() {
       <Tabs defaultValue="details" className="space-y-4">
         <TabsList>
           <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="ambassadeurs" className="flex items-center gap-1.5">
+            <UserCheck className="h-3.5 w-3.5" /> Ambassadeurs
+          </TabsTrigger>
           <TabsTrigger value="feedback" className="flex items-center gap-1.5">
             <MessageSquare className="h-3.5 w-3.5" /> Feedback
           </TabsTrigger>
