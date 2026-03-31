@@ -293,11 +293,12 @@ export default function GebruikersPage() {
                       <TableCell>
                         {isAdmin ? (
                           <Select value={u.role} onValueChange={(v) => handleRoleChange(u.id, v as UserRole)} disabled={u.id === currentUser?.id}>
-                            <SelectTrigger className="h-8 w-[120px]"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-8 w-[140px]"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="admin">Admin</SelectItem>
                               <SelectItem value="editor">Editor</SelectItem>
                               <SelectItem value="viewer">Viewer</SelectItem>
+                              <SelectItem value="standenbouwer">Standenbouwer</SelectItem>
                             </SelectContent>
                           </Select>
                         ) : (
