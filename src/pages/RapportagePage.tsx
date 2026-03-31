@@ -61,6 +61,8 @@ export default function RapportagePage() {
   const { evenementen } = useEvenementen();
   const { contracten } = useContracten();
   const { forms: feedbackForms, responses: feedbackResponses } = useAllFeedbackData();
+  const { ambassadeurs } = useAmbassadeurs();
+  const { inschrijvingen: allInschrijvingen } = useAllInschrijvingen();
   const [preset, setPreset] = useState<PeriodPreset>("year");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
