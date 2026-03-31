@@ -1,9 +1,16 @@
 import { createContext, useContext, useState, useCallback } from "react";
 import { useAuth, type UserRole } from "@/contexts/AuthContext";
 
+interface SimulatedUser {
+  name: string;
+  role: UserRole;
+}
+
 interface ViewAsContextType {
   simulatedRole: UserRole | null;
+  simulatedUserName: string | null;
   setSimulatedRole: (role: UserRole | null) => void;
+  simulateUser: (name: string, role: UserRole) => void;
   effectiveRole: UserRole;
   isSimulating: boolean;
   effectiveIsAdmin: boolean;
@@ -16,10 +23,13 @@ const ViewAsContext = createContext<ViewAsContextType | null>(null);
 
 export function ViewAsProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [simulatedRole, setSimulatedRole] = useState<UserRole | null>(null);
+  const [simulated, setSimulated] = useState<SimulatedUser | null>(null);
 
   const realRole = user?.role ?? "viewer";
   const isRealAdmin = realRole === "admin";
+
+  const simulatedRole = simulated?.role ?? null;
+  const simulatedUserName = simulated?.name ?? null;
 
   // Only admins can simulate; if not admin, ignore simulation
   const effectiveRole: UserRole = isRealAdmin && simulatedRole ? simulatedRole : realRole;
@@ -29,12 +39,30 @@ export function ViewAsProvider({ children }: { children: React.ReactNode }) {
   const effectiveCanEdit = effectiveRole === "admin" || effectiveRole === "editor";
   const effectiveIsStandenbouwer = effectiveRole === "standenbouwer";
 
-  const resetSimulation = useCallback(() => setSimulatedRole(null), []);
+  const setSimulatedRole = useCallback((role: UserRole | null) => {
+    if (!role || role === "admin") {
+      setSimulated(null);
+    } else {
+      setSimulated({ name: role, role });
+    }
+  }, []);
+
+  const simulateUser = useCallback((name: string, role: UserRole) => {
+    if (role === "admin") {
+      setSimulated(null);
+    } else {
+      setSimulated({ name, role });
+    }
+  }, []);
+
+  const resetSimulation = useCallback(() => setSimulated(null), []);
 
   return (
     <ViewAsContext.Provider value={{
       simulatedRole,
+      simulatedUserName,
       setSimulatedRole,
+      simulateUser,
       effectiveRole,
       isSimulating,
       effectiveIsAdmin,

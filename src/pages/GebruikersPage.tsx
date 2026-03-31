@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useViewAs } from "@/contexts/ViewAsContext";
 import { useActivity, ActivityAction, ActivityEntityType } from "@/contexts/ActivityContext";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/supabase-helpers";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2, Search, GraduationCap, CalendarDays, FileText, BookOpen, CheckSquare, UserPlus } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, GraduationCap, CalendarDays, FileText, BookOpen, CheckSquare, UserPlus, Eye } from "lucide-react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { toast } from "sonner";
 import type { AppUser, UserRole } from "@/contexts/AuthContext";
@@ -73,6 +74,8 @@ function ActivityRow({ activity: a }: { activity: ReturnType<typeof useActivity>
 
 export default function GebruikersPage() {
   const { users, updateUser, user: currentUser, isAdmin, refreshUsers } = useAuth();
+  const { simulateUser } = useViewAs();
+  const navigate = useNavigate();
   const { activities } = useActivity();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") === "activiteit" ? "activiteit" : "gebruikers";
@@ -196,6 +199,11 @@ export default function GebruikersPage() {
     }
   }, [currentUser, refreshUsers]);
 
+  const handleViewAs = useCallback((u: AppUser) => {
+    simulateUser(u.name, u.role);
+    navigate(u.role === "standenbouwer" ? "/standenbouwer" : "/");
+  }, [simulateUser, navigate]);
+
   const handleTabChange = (value: string) => {
     if (value === "activiteit") setSearchParams({ tab: "activiteit" });
     else setSearchParams({});
@@ -247,6 +255,11 @@ export default function GebruikersPage() {
                     <div className="flex flex-col gap-1 items-center">
                       {isAdmin && (
                         <>
+                          {u.id !== currentUser?.id && (
+                            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleViewAs(u)} title={`Bekijk als ${u.name}`}>
+                              <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                            </Button>
+                          )}
                           <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => openEdit(u)}>
                             <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                           </Button>
@@ -320,9 +333,16 @@ export default function GebruikersPage() {
                       </TableCell>
                       {isAdmin && (
                         <TableCell>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(u)}>
-                            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            {u.id !== currentUser?.id && (
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewAs(u)} title={`Bekijk als ${u.name}`}>
+                                <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(u)}>
+                              <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                            </Button>
+                          </div>
                         </TableCell>
                       )}
                     </TableRow>
