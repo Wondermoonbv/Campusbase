@@ -39,17 +39,18 @@ function AppRoutes() {
   const { user, isAdmin, loading } = useAuth();
   const [timedOut, setTimedOut] = useState(false);
   const pathname = window.location.pathname;
-
-  // Public routes render immediately without waiting for auth
-  if (pathname.startsWith("/feedback/") || pathname.startsWith("/inschrijven/")) {
-    return <PublicRoutes />;
-  }
+  const isPublicRoute = pathname.startsWith("/feedback/") || pathname.startsWith("/inschrijven/");
 
   useEffect(() => {
     if (!loading) return;
     const timer = setTimeout(() => setTimedOut(true), 5000);
     return () => clearTimeout(timer);
   }, [loading]);
+
+  // Public routes render immediately without waiting for auth
+  if (isPublicRoute) {
+    return <PublicRoutes />;
+  }
 
   if (loading) {
     if (timedOut) {
