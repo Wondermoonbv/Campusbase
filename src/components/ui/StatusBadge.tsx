@@ -19,10 +19,14 @@ const statusMap: Record<string, StatusType> = {
   prospect: "info",
   inactief: "neutral",
   inactive: "neutral",
+  uitgenodigd: "neutral",
+  ingeschreven: "info",
+  backup: "warning",
   verlopen: "error",
   expired: "error",
   geannuleerd: "error",
   cancelled: "error",
+  afgemeld: "error",
 };
 
 const statusStyles: Record<StatusType, string> = {

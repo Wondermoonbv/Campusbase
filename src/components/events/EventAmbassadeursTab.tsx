@@ -9,6 +9,7 @@ import { Copy, Link2, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUSES = [
+  { value: "uitgenodigd", label: "Uitgenodigd" },
   { value: "ingeschreven", label: "Ingeschreven" },
   { value: "bevestigd", label: "Bevestigd" },
   { value: "backup", label: "Backup" },
@@ -17,6 +18,7 @@ const STATUSES = [
 
 function statusColor(status: string) {
   switch (status) {
+    case "uitgenodigd": return "bg-muted text-muted-foreground";
     case "bevestigd": return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
     case "backup": return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400";
     case "afgemeld": return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
@@ -40,7 +42,7 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
   }, [inschrijvingen, ambassadeurs]);
 
   const counts = useMemo(() => {
-    const c = { ingeschreven: 0, bevestigd: 0, backup: 0, afgemeld: 0 };
+    const c = { uitgenodigd: 0, ingeschreven: 0, bevestigd: 0, backup: 0, afgemeld: 0 };
     inschrijvingen.forEach((i) => { if (i.status in c) c[i.status as keyof typeof c]++; });
     return c;
   }, [inschrijvingen]);
@@ -54,7 +56,7 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
     try {
       await Promise.all(
         selected.map((ambassadeur_id) =>
-          addInschrijving.mutateAsync({ evenement_id: eventId, ambassadeur_id })
+          addInschrijving.mutateAsync({ evenement_id: eventId, ambassadeur_id, status: "uitgenodigd" })
         )
       );
       toast.success(`${selected.length} ambassadeur(s) uitgenodigd`);
@@ -97,8 +99,9 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {([
+          { label: "Uitgenodigd", value: counts.uitgenodigd },
           { label: "Ingeschreven", value: counts.ingeschreven },
           { label: "Bevestigd", value: counts.bevestigd },
           { label: "Backup", value: counts.backup },
