@@ -23,6 +23,7 @@ import NotFound from "./pages/NotFound";
 import PublicFeedbackPage from "./pages/PublicFeedbackPage";
 import AmbassadeursPage from "./pages/AmbassadeursPage";
 import PublicInschrijvenPage from "./pages/PublicInschrijvenPage";
+import StandenbouwerPage from "./pages/StandenbouwerPage";
 
 const queryClient = new QueryClient();
 
