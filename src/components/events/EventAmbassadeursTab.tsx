@@ -56,7 +56,7 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
     try {
       await Promise.all(
         selected.map((ambassadeur_id) =>
-          addInschrijving.mutateAsync({ evenement_id: eventId, ambassadeur_id })
+          addInschrijving.mutateAsync({ evenement_id: eventId, ambassadeur_id, status: "uitgenodigd" })
         )
       );
       toast.success(`${selected.length} ambassadeur(s) uitgenodigd`);
