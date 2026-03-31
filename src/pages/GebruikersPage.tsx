@@ -232,11 +232,12 @@ export default function GebruikersPage() {
                       <p className="text-xs text-muted-foreground truncate">{u.email}</p>
                       {isAdmin ? (
                         <Select value={u.role} onValueChange={(v) => handleRoleChange(u.id, v as UserRole)}>
-                          <SelectTrigger className="h-7 w-[110px] text-xs mt-1"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="h-7 w-[130px] text-xs mt-1"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="admin">Admin</SelectItem>
                             <SelectItem value="editor">Editor</SelectItem>
                             <SelectItem value="viewer">Viewer</SelectItem>
+                            <SelectItem value="standenbouwer">Standenbouwer</SelectItem>
                           </SelectContent>
                         </Select>
                       ) : (
