@@ -2,6 +2,7 @@ import { useMemo, useState, useCallback, useRef } from "react";
 import { useScholen } from "@/hooks/useScholen";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { useContracten } from "@/hooks/useContracten";
+import { useAllFeedbackData } from "@/hooks/useFeedback";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
