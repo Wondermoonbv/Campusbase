@@ -26,9 +26,24 @@ import PublicInschrijvenPage from "./pages/PublicInschrijvenPage";
 
 const queryClient = new QueryClient();
 
+function PublicRoutes() {
+  return (
+    <Routes>
+      <Route path="/feedback/:formId" element={<PublicFeedbackPage />} />
+      <Route path="/inschrijven/:evenementId" element={<PublicInschrijvenPage />} />
+    </Routes>
+  );
+}
+
 function AppRoutes() {
   const { user, isAdmin, loading } = useAuth();
   const [timedOut, setTimedOut] = useState(false);
+  const pathname = window.location.pathname;
+
+  // Public routes render immediately without waiting for auth
+  if (pathname.startsWith("/feedback/") || pathname.startsWith("/inschrijven/")) {
+    return <PublicRoutes />;
+  }
 
   useEffect(() => {
     if (!loading) return;
@@ -61,8 +76,6 @@ function AppRoutes() {
     return (
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/feedback/:formId" element={<PublicFeedbackPage />} />
-        <Route path="/inschrijven/:evenementId" element={<PublicInschrijvenPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
@@ -71,8 +84,6 @@ function AppRoutes() {
   return (
     <AppLayout>
       <Routes>
-        <Route path="/feedback/:formId" element={<PublicFeedbackPage />} />
-        <Route path="/inschrijven/:evenementId" element={<PublicInschrijvenPage />} />
         <Route path="/ambassadeurs" element={<AmbassadeursPage />} />
         <Route path="/" element={<DashboardPage />} />
         <Route path="/scholen" element={<ScholenPage />} />
