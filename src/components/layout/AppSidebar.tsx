@@ -10,21 +10,13 @@ import {
   Settings,
   CheckSquare,
   UserCheck,
-  Eye,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth, type UserRole } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useViewAs } from "@/contexts/ViewAsContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Sidebar,
   SidebarContent,
@@ -48,20 +40,13 @@ const navItems = [
   { title: "Rapportage", url: "/rapportage", icon: BarChart3 },
 ];
 
-const VIEW_AS_ROLES: { value: UserRole; label: string }[] = [
-  { value: "admin", label: "Admin" },
-  { value: "editor", label: "Editor" },
-  { value: "viewer", label: "Viewer" },
-  { value: "standenbouwer", label: "Standenbouwer" },
-];
-
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAdmin, logout, platformSettings } = useAuth();
-  const { simulatedRole, setSimulatedRole, simulateUser, effectiveIsAdmin } = useViewAs();
+  const { effectiveIsAdmin } = useViewAs();
 
   // Use effective role for menu visibility
   const allItems = effectiveIsAdmin
@@ -157,41 +142,7 @@ export function AppSidebar() {
               </Avatar>
             </div>
           )}
-          {/* View As dropdown — only for real admins */}
-          {isAdmin && !collapsed && (
-            <div className="mb-2">
-              <div className="flex items-center gap-1.5 px-1 mb-1">
-                <Eye className="h-3.5 w-3.5 text-sidebar-foreground/50" />
-                <span className="text-xs text-sidebar-foreground/50">Bekijk als</span>
-              </div>
-              <Select
-                value={simulatedRole ?? "admin"}
-                onValueChange={(val) => setSimulatedRole(val === "admin" ? null : val as UserRole)}
-              >
-                <SelectTrigger className="h-8 text-xs bg-sidebar-accent/30 border-sidebar-border">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {VIEW_AS_ROLES.map((r) => (
-                    <SelectItem key={r.value} value={r.value} className="text-xs">
-                      {r.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          {isAdmin && collapsed && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="w-full text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 mb-1"
-              title="Bekijk als..."
-              onClick={() => setSimulatedRole(simulatedRole ? null : "viewer")}
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-          )}
+          
           <Button
             variant="ghost"
             size={collapsed ? "icon" : "sm"}
