@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      ambassadeurs: {
+        Row: {
+          created_at: string | null
+          department: string | null
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          phone: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department?: string | null
+          email: string
+          full_name: string
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          phone?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          phone?: string | null
+        }
+        Relationships: []
+      }
       contacten: {
         Row: {
           department: string | null
@@ -208,6 +241,51 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "scholen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_inschrijvingen: {
+        Row: {
+          ambassadeur_id: string
+          bevestigd_op: string | null
+          evenement_id: string
+          id: string
+          ingeschreven_op: string | null
+          notities: string | null
+          status: string
+        }
+        Insert: {
+          ambassadeur_id: string
+          bevestigd_op?: string | null
+          evenement_id: string
+          id?: string
+          ingeschreven_op?: string | null
+          notities?: string | null
+          status?: string
+        }
+        Update: {
+          ambassadeur_id?: string
+          bevestigd_op?: string | null
+          evenement_id?: string
+          id?: string
+          ingeschreven_op?: string | null
+          notities?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_inschrijvingen_ambassadeur_id_fkey"
+            columns: ["ambassadeur_id"]
+            isOneToOne: false
+            referencedRelation: "ambassadeurs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_inschrijvingen_evenement_id_fkey"
+            columns: ["evenement_id"]
+            isOneToOne: false
+            referencedRelation: "evenementen"
             referencedColumns: ["id"]
           },
         ]
