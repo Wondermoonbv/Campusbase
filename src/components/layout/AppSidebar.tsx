@@ -33,7 +33,7 @@ const navItems = [
   { title: "Scholen", url: "/scholen", icon: GraduationCap },
   { title: "Opleidingen", url: "/opleidingen", icon: BookOpen },
   { title: "Evenementen", url: "/evenementen", icon: CalendarDays },
-  { title: "Ambassadeurs", url: "/ambassadeurs", icon: Users },
+  { title: "Ambassadeurs", url: "/ambassadeurs", icon: UserCheck },
   { title: "Contracten", url: "/contracten", icon: FileText },
   { title: "Taken", url: "/taken", icon: CheckSquare },
   { title: "Rapportage", url: "/rapportage", icon: BarChart3 },
