@@ -333,9 +333,16 @@ export default function GebruikersPage() {
                       </TableCell>
                       {isAdmin && (
                         <TableCell>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(u)}>
-                            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            {u.id !== currentUser?.id && (
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewAs(u)} title={`Bekijk als ${u.name}`}>
+                                <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(u)}>
+                              <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                            </Button>
+                          </div>
                         </TableCell>
                       )}
                     </TableRow>
