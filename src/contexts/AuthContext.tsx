@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect } from "rea
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/supabase-helpers";
 
-export type UserRole = "admin" | "editor" | "viewer";
+export type UserRole = "admin" | "editor" | "viewer" | "standenbouwer";
 
 export interface NotificationSettings {
   contractExpiry90: boolean;
