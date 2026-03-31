@@ -259,7 +259,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{
-      user, loading, isAdmin, canEdit,
+      user, loading, isAdmin, canEdit, isStandenbouwer,
       login, logout, users, addUser, updateUser, deleteUser,
       updateProfile, changePassword,
       platformSettings, updatePlatformSettings, refreshUsers,
