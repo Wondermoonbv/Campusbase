@@ -28,16 +28,19 @@ import {
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useMemo } from "react";
 
-const navItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Scholen", url: "/scholen", icon: GraduationCap },
-  { title: "Opleidingen", url: "/opleidingen", icon: BookOpen },
-  { title: "Evenementen", url: "/evenementen", icon: CalendarDays },
-  { title: "Ambassadeurs", url: "/ambassadeurs", icon: UserCheck },
-  { title: "Contracten", url: "/contracten", icon: FileText },
-  { title: "Taken", url: "/taken", icon: CheckSquare },
-  { title: "Rapportage", url: "/rapportage", icon: BarChart3 },
+const allNavItems = [
+  { title: "Dashboard", url: "/", icon: LayoutDashboard, roles: ["admin", "editor", "viewer"] },
+  { title: "Scholen", url: "/scholen", icon: GraduationCap, roles: ["admin", "editor", "viewer"] },
+  { title: "Opleidingen", url: "/opleidingen", icon: BookOpen, roles: ["admin", "editor", "viewer"] },
+  { title: "Evenementen", url: "/evenementen", icon: CalendarDays, roles: ["admin", "editor", "viewer"] },
+  { title: "Ambassadeurs", url: "/ambassadeurs", icon: UserCheck, roles: ["admin", "editor", "viewer"] },
+  { title: "Contracten", url: "/contracten", icon: FileText, roles: ["admin", "editor"] },
+  { title: "Taken", url: "/taken", icon: CheckSquare, roles: ["admin", "editor"] },
+  { title: "Rapportage", url: "/rapportage", icon: BarChart3, roles: ["admin", "editor", "viewer"] },
+  { title: "Gebruikers", url: "/gebruikers", icon: Users, roles: ["admin"] },
+  { title: "Instellingen", url: "/instellingen", icon: Settings, roles: ["admin"] },
 ];
 
 export function AppSidebar() {
@@ -45,13 +48,13 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAdmin, logout, platformSettings } = useAuth();
-  const { effectiveIsAdmin } = useViewAs();
+  const { user, logout, platformSettings } = useAuth();
+  const { effectiveRole } = useViewAs();
 
-  // Use effective role for menu visibility
-  const allItems = effectiveIsAdmin
-    ? [...navItems, { title: "Gebruikers", url: "/gebruikers", icon: Users }, { title: "Instellingen", url: "/instellingen", icon: Settings }]
-    : navItems;
+  const visibleItems = useMemo(
+    () => allNavItems.filter((item) => item.roles.includes(effectiveRole)),
+    [effectiveRole]
+  );
 
   const initials = user ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() : "?";
 
