@@ -42,7 +42,7 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
   }, [inschrijvingen, ambassadeurs]);
 
   const counts = useMemo(() => {
-    const c = { ingeschreven: 0, bevestigd: 0, backup: 0, afgemeld: 0 };
+    const c = { uitgenodigd: 0, ingeschreven: 0, bevestigd: 0, backup: 0, afgemeld: 0 };
     inschrijvingen.forEach((i) => { if (i.status in c) c[i.status as keyof typeof c]++; });
     return c;
   }, [inschrijvingen]);
