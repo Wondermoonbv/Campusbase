@@ -21,6 +21,8 @@ import InstellingenPage from "./pages/InstellingenPage";
 import TakenPage from "./pages/TakenPage";
 import NotFound from "./pages/NotFound";
 import PublicFeedbackPage from "./pages/PublicFeedbackPage";
+import AmbassadeursPage from "./pages/AmbassadeursPage";
+import PublicInschrijvenPage from "./pages/PublicInschrijvenPage";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +62,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/feedback/:formId" element={<PublicFeedbackPage />} />
+        <Route path="/inschrijven/:evenementId" element={<PublicInschrijvenPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
@@ -69,6 +72,8 @@ function AppRoutes() {
     <AppLayout>
       <Routes>
         <Route path="/feedback/:formId" element={<PublicFeedbackPage />} />
+        <Route path="/inschrijven/:evenementId" element={<PublicInschrijvenPage />} />
+        <Route path="/ambassadeurs" element={<AmbassadeursPage />} />
         <Route path="/" element={<DashboardPage />} />
         <Route path="/scholen" element={<ScholenPage />} />
         <Route path="/scholen/:id" element={<SchoolDetailPage />} />

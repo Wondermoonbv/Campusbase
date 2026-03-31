@@ -12,11 +12,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap, CheckSquare, MessageSquare } from "lucide-react";
+import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap, CheckSquare, MessageSquare, UserCheck } from "lucide-react";
 import type { Event, StandType, StandSize, EventType, EventStatus } from "@/types/crm";
 import { toast } from "sonner";
 import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 import { EventFeedbackTab } from "@/components/events/EventFeedbackTab";
+import { EventAmbassadeursTab } from "@/components/events/EventAmbassadeursTab";
 
 export default function EventDetailPage() {
   const { id } = useParams();
@@ -87,6 +88,9 @@ export default function EventDetailPage() {
       <Tabs defaultValue="details" className="space-y-4">
         <TabsList>
           <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="ambassadeurs" className="flex items-center gap-1.5">
+            <UserCheck className="h-3.5 w-3.5" /> Ambassadeurs
+          </TabsTrigger>
           <TabsTrigger value="feedback" className="flex items-center gap-1.5">
             <MessageSquare className="h-3.5 w-3.5" /> Feedback
           </TabsTrigger>
@@ -156,6 +160,10 @@ export default function EventDetailPage() {
           {editing ? <Textarea value={form.notes} onChange={(e) => update({ notes: e.target.value })} rows={3} /> : <p className="text-sm">{form.notes || "—"}</p>}
         </section>
       </div>
+        </TabsContent>
+
+        <TabsContent value="ambassadeurs">
+          <EventAmbassadeursTab eventId={event.id} />
         </TabsContent>
 
         <TabsContent value="feedback">

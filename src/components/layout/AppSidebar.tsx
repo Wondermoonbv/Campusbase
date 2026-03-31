@@ -9,7 +9,7 @@ import {
   LogOut,
   Settings,
   CheckSquare,
-  
+  UserCheck,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -32,8 +32,9 @@ const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Scholen", url: "/scholen", icon: GraduationCap },
   { title: "Opleidingen", url: "/opleidingen", icon: BookOpen },
-  { title: "Contracten", url: "/contracten", icon: FileText },
   { title: "Evenementen", url: "/evenementen", icon: CalendarDays },
+  { title: "Ambassadeurs", url: "/ambassadeurs", icon: UserCheck },
+  { title: "Contracten", url: "/contracten", icon: FileText },
   { title: "Taken", url: "/taken", icon: CheckSquare },
   { title: "Rapportage", url: "/rapportage", icon: BarChart3 },
 ];
