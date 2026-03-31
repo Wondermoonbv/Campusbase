@@ -199,6 +199,11 @@ export default function GebruikersPage() {
     }
   }, [currentUser, refreshUsers]);
 
+  const handleViewAs = useCallback((u: AppUser) => {
+    simulateUser(u.name, u.role);
+    navigate(u.role === "standenbouwer" ? "/standenbouwer" : "/");
+  }, [simulateUser, navigate]);
+
   const handleTabChange = (value: string) => {
     if (value === "activiteit") setSearchParams({ tab: "activiteit" });
     else setSearchParams({});
