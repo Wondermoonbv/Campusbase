@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Download, GraduationCap, CalendarDays, Wallet, Users, Star } from "lucide-react";
+import { CalendarIcon, Download, GraduationCap, CalendarDays, Wallet, Users, Star, UserCheck } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, isWithinInterval, getWeek } from "date-fns";
 import { nl } from "date-fns/locale";
 import { cn } from "@/lib/utils";
