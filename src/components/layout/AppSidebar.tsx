@@ -48,14 +48,23 @@ const navItems = [
   { title: "Rapportage", url: "/rapportage", icon: BarChart3 },
 ];
 
+const VIEW_AS_ROLES: { value: UserRole; label: string }[] = [
+  { value: "admin", label: "Admin" },
+  { value: "editor", label: "Editor" },
+  { value: "viewer", label: "Viewer" },
+  { value: "standenbouwer", label: "Standenbouwer" },
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAdmin, logout, platformSettings } = useAuth();
+  const { simulatedRole, setSimulatedRole, effectiveIsAdmin } = useViewAs();
 
-  const allItems = isAdmin
+  // Use effective role for menu visibility
+  const allItems = effectiveIsAdmin
     ? [...navItems, { title: "Gebruikers", url: "/gebruikers", icon: Users }, { title: "Instellingen", url: "/instellingen", icon: Settings }]
     : navItems;
 
