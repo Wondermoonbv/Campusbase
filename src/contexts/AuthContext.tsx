@@ -34,6 +34,7 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   canEdit: boolean;
+  isStandenbouwer: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   users: AppUser[];
