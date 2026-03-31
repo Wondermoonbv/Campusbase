@@ -2,6 +2,7 @@ import { useMemo, useState, useCallback, useRef } from "react";
 import { useScholen } from "@/hooks/useScholen";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { useContracten } from "@/hooks/useContracten";
+import { useAllFeedbackData } from "@/hooks/useFeedback";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -9,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Download, GraduationCap, CalendarDays, Wallet, Users } from "lucide-react";
+import { CalendarIcon, Download, GraduationCap, CalendarDays, Wallet, Users, Star } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, isWithinInterval, getWeek } from "date-fns";
 import { nl } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -58,6 +59,7 @@ export default function RapportagePage() {
   const { scholen } = useScholen();
   const { evenementen } = useEvenementen();
   const { contracten } = useContracten();
+  const { forms: feedbackForms, responses: feedbackResponses } = useAllFeedbackData();
   const [preset, setPreset] = useState<PeriodPreset>("year");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
@@ -86,6 +88,28 @@ export default function RapportagePage() {
   const budgetBySchool = useMemo(() => { const s: Record<string, number> = {}; filteredEvents.forEach((e) => { const name = e.school_id ? (scholen.find((sc) => sc.id === e.school_id)?.name ?? "Onbekend") : "Multi-school"; s[name] = (s[name] || 0) + (e.budget ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents, scholen]);
   const contractsByType = useMemo(() => { const s: Record<string, number> = {}; filteredContracts.forEach((c) => { s[c.contract_type] = (s[c.contract_type] || 0) + (c.value ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredContracts]);
   const totalContractValue = filteredContracts.filter((c) => c.status === "actief").reduce((s, c) => s + (c.value ?? 0), 0);
+
+  const feedbackByEvent = useMemo(() => {
+    return feedbackForms
+      .map((f) => {
+        const event = evenementen.find((e) => e.id === f.evenement_id);
+        if (!event) return null;
+        const resps = feedbackResponses.filter((r) => r.form_id === f.id);
+        if (resps.length === 0) return null;
+        const avgOverall = resps.reduce((s, r) => s + (r.overall_rating ?? 0), 0) / resps.length;
+        return { event, responseCount: resps.length, avgOverall };
+      })
+      .filter(Boolean)
+      .sort((a, b) => new Date(b!.event.date).getTime() - new Date(a!.event.date).getTime()) as {
+      event: typeof evenementen[0];
+      responseCount: number;
+      avgOverall: number;
+    }[];
+  }, [feedbackForms, feedbackResponses, evenementen]);
+
+  const totalFeedbackAvg = feedbackByEvent.length
+    ? feedbackByEvent.reduce((s, f) => s + f.avgOverall, 0) / feedbackByEvent.length
+    : 0;
 
   return (
     <div className="page-container animate-fade-in-up">
@@ -138,6 +162,40 @@ export default function RapportagePage() {
             <div className="divide-y divide-border">{expiringContracts.map((c) => { const school = scholen.find((s) => s.id === c.school_id); return (<div key={c.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1"><div><p className="text-sm font-medium">{school?.name} — <span className="capitalize">{c.contract_type}</span></p><p className="text-xs text-muted-foreground">Vervalt: {new Date(c.end_date).toLocaleDateString("nl-BE")} · Waarde: {c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</p></div></div>); })}</div>
           )}
         </div>
+      </div>
+
+      {/* Feedback overzicht */}
+      <div className="surface-card p-4 sm:p-5 mt-4 sm:mt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm sm:text-base font-semibold flex items-center gap-2">
+            <Star className="h-4 w-4" /> Feedback overzicht
+          </h2>
+          {totalFeedbackAvg > 0 && (
+            <span className="text-sm text-muted-foreground">
+              Jaargemiddelde: <span className="font-semibold text-foreground">{totalFeedbackAvg.toFixed(1)}/5</span>
+            </span>
+          )}
+        </div>
+        {feedbackByEvent.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nog geen feedback data beschikbaar.</p>
+        ) : (
+          <div className="divide-y divide-border">
+            {feedbackByEvent.map((f) => (
+              <div key={f.event.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <div>
+                  <p className="text-sm font-medium">{f.event.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(f.event.date).toLocaleDateString("nl-BE")} · {f.responseCount} responses
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                  <span className="text-sm font-semibold tabular-nums">{f.avgOverall.toFixed(1)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -242,6 +242,94 @@ export type Database = {
           },
         ]
       }
+      feedback_forms: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          evenement_id: string
+          id: string
+          is_active: boolean | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          evenement_id: string
+          id?: string
+          is_active?: boolean | null
+          title?: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          evenement_id?: string
+          id?: string
+          is_active?: boolean | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_forms_evenement_id_fkey"
+            columns: ["evenement_id"]
+            isOneToOne: false
+            referencedRelation: "evenementen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_responses: {
+        Row: {
+          comments: string | null
+          form_id: string
+          id: string
+          organization_rating: number | null
+          overall_rating: number | null
+          relevance_rating: number | null
+          respondent_email: string | null
+          respondent_name: string
+          stand_rating: number | null
+          submitted_at: string | null
+          would_recommend: boolean | null
+        }
+        Insert: {
+          comments?: string | null
+          form_id: string
+          id?: string
+          organization_rating?: number | null
+          overall_rating?: number | null
+          relevance_rating?: number | null
+          respondent_email?: string | null
+          respondent_name: string
+          stand_rating?: number | null
+          submitted_at?: string | null
+          would_recommend?: boolean | null
+        }
+        Update: {
+          comments?: string | null
+          form_id?: string
+          id?: string
+          organization_rating?: number | null
+          overall_rating?: number | null
+          relevance_rating?: number | null
+          respondent_email?: string | null
+          respondent_name?: string
+          stand_rating?: number | null
+          submitted_at?: string | null
+          would_recommend?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_responses_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       opleidingen: {
         Row: {
           faculty: string | null

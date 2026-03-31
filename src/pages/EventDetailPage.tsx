@@ -10,11 +10,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap, CheckSquare } from "lucide-react";
+import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap, CheckSquare, MessageSquare } from "lucide-react";
 import type { Event, StandType, StandSize, EventType, EventStatus } from "@/types/crm";
 import { toast } from "sonner";
 import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
+import { EventFeedbackTab } from "@/components/events/EventFeedbackTab";
 
 export default function EventDetailPage() {
   const { id } = useParams();
@@ -82,6 +84,15 @@ export default function EventDetailPage() {
         ))}
       </div>
 
+      <Tabs defaultValue="details" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="feedback" className="flex items-center gap-1.5">
+            <MessageSquare className="h-3.5 w-3.5" /> Feedback
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="details" className="space-y-4 sm:space-y-6">
       <div className="grid gap-4 sm:gap-6">
         <section className="surface-card p-4 sm:p-5 space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Algemeen</h2>
@@ -145,6 +156,12 @@ export default function EventDetailPage() {
           {editing ? <Textarea value={form.notes} onChange={(e) => update({ notes: e.target.value })} rows={3} /> : <p className="text-sm">{form.notes || "—"}</p>}
         </section>
       </div>
+        </TabsContent>
+
+        <TabsContent value="feedback">
+          <EventFeedbackTab eventId={event.id} eventName={event.name} />
+        </TabsContent>
+      </Tabs>
 
       <TaskFormDialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen} defaultEventId={event.id} defaultSchoolId={event.school_id} />
     </div>

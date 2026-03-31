@@ -20,6 +20,7 @@ import GebruikersPage from "./pages/GebruikersPage";
 import InstellingenPage from "./pages/InstellingenPage";
 import TakenPage from "./pages/TakenPage";
 import NotFound from "./pages/NotFound";
+import PublicFeedbackPage from "./pages/PublicFeedbackPage";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ function AppRoutes() {
     return (
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/feedback/:formId" element={<PublicFeedbackPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
@@ -66,6 +68,7 @@ function AppRoutes() {
   return (
     <AppLayout>
       <Routes>
+        <Route path="/feedback/:formId" element={<PublicFeedbackPage />} />
         <Route path="/" element={<DashboardPage />} />
         <Route path="/scholen" element={<ScholenPage />} />
         <Route path="/scholen/:id" element={<SchoolDetailPage />} />
