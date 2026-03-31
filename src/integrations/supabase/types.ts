@@ -173,7 +173,9 @@ export type Database = {
       }
       evenementen: {
         Row: {
+          afbraak_tijd: string | null
           budget: number | null
+          contactpersoon_stand: string | null
           date: string
           description: string | null
           elia_contact: string | null
@@ -182,19 +184,25 @@ export type Database = {
           location: string | null
           name: string
           notes: string | null
+          opbouw_tijd: string | null
           responsible: string | null
           school_id: string | null
           setup_date: string | null
           setup_time: string | null
+          stand_grootte: string | null
+          stand_notities: string | null
           stand_size: string | null
           stand_type: string | null
+          standenbouwer_nodig: boolean | null
           start_time: string | null
           status: string
           team_members: string[] | null
           type: string
         }
         Insert: {
+          afbraak_tijd?: string | null
           budget?: number | null
+          contactpersoon_stand?: string | null
           date: string
           description?: string | null
           elia_contact?: string | null
@@ -203,19 +211,25 @@ export type Database = {
           location?: string | null
           name: string
           notes?: string | null
+          opbouw_tijd?: string | null
           responsible?: string | null
           school_id?: string | null
           setup_date?: string | null
           setup_time?: string | null
+          stand_grootte?: string | null
+          stand_notities?: string | null
           stand_size?: string | null
           stand_type?: string | null
+          standenbouwer_nodig?: boolean | null
           start_time?: string | null
           status?: string
           team_members?: string[] | null
           type?: string
         }
         Update: {
+          afbraak_tijd?: string | null
           budget?: number | null
+          contactpersoon_stand?: string | null
           date?: string
           description?: string | null
           elia_contact?: string | null
@@ -224,12 +238,16 @@ export type Database = {
           location?: string | null
           name?: string
           notes?: string | null
+          opbouw_tijd?: string | null
           responsible?: string | null
           school_id?: string | null
           setup_date?: string | null
           setup_time?: string | null
+          stand_grootte?: string | null
+          stand_notities?: string | null
           stand_size?: string | null
           stand_type?: string | null
+          standenbouwer_nodig?: boolean | null
           start_time?: string | null
           status?: string
           team_members?: string[] | null
