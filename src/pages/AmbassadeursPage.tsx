@@ -162,10 +162,9 @@ export default function AmbassadeursPage() {
 
       <DeleteConfirmDialog
         open={!!deleteTarget}
-        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
-        title="Ambassadeur verwijderen"
-        description={`Weet je zeker dat je ${deleteTarget?.full_name} wilt verwijderen?`}
+        itemName={deleteTarget?.full_name ?? ""}
       />
     </div>
   );

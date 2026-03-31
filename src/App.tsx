@@ -72,6 +72,8 @@ function AppRoutes() {
     <AppLayout>
       <Routes>
         <Route path="/feedback/:formId" element={<PublicFeedbackPage />} />
+        <Route path="/inschrijven/:evenementId" element={<PublicInschrijvenPage />} />
+        <Route path="/ambassadeurs" element={<AmbassadeursPage />} />
         <Route path="/" element={<DashboardPage />} />
         <Route path="/scholen" element={<ScholenPage />} />
         <Route path="/scholen/:id" element={<SchoolDetailPage />} />

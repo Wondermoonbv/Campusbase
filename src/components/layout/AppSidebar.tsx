@@ -32,8 +32,9 @@ const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Scholen", url: "/scholen", icon: GraduationCap },
   { title: "Opleidingen", url: "/opleidingen", icon: BookOpen },
-  { title: "Contracten", url: "/contracten", icon: FileText },
   { title: "Evenementen", url: "/evenementen", icon: CalendarDays },
+  { title: "Ambassadeurs", url: "/ambassadeurs", icon: Users },
+  { title: "Contracten", url: "/contracten", icon: FileText },
   { title: "Taken", url: "/taken", icon: CheckSquare },
   { title: "Rapportage", url: "/rapportage", icon: BarChart3 },
 ];
