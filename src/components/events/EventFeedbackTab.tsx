@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Copy, Download, Link2, MessageSquare, Star, ThumbsUp, BarChart3 } from "lucide-react";
 import type { FeedbackResponse } from "@/hooks/useFeedback";
 
-const SHARE_BASE = "https://elia-recruit-flow.lovable.app/feedback";
+const getShareUrl = (formId: string) => `${window.location.origin}/feedback/${formId}`;
 
 function avg(arr: (number | null)[]): number {
   const valid = arr.filter((v): v is number => v != null);
