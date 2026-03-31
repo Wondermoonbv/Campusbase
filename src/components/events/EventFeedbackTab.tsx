@@ -90,7 +90,7 @@ export function EventFeedbackTab({ eventId, eventName }: { eventId: string; even
 
   const copyLink = () => {
     if (!form) return;
-    navigator.clipboard.writeText(`${SHARE_BASE}/${form.id}`);
+    navigator.clipboard.writeText(getShareUrl(form.id));
     toast.success("Link gekopieerd!");
   };
 
