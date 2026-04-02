@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, memo } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useTaken } from "@/hooks/useTaken";
 import { useScholen } from "@/hooks/useScholen";
 import { useEvenementen } from "@/hooks/useEvenementen";
