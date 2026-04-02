@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Download, CalendarDays, List, Pencil, Upload, Trash2 } from "lucide-react";
+import { Plus, Search, Download, CalendarDays, List, Pencil, Upload, Trash2, Calendar } from "lucide-react";
 import { EventFormDialog } from "@/components/events/EventFormDialog";
 import { EventCalendar } from "@/components/events/EventCalendar";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
