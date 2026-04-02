@@ -185,11 +185,11 @@ export default function ScholenPage() {
           for (const row of rows) {
             await upsertSchool.mutateAsync({
               name: row.name,
-              type: row.type?.toLowerCase() || "universiteit",
+              type: (row.type?.toLowerCase() || "universiteit") as any,
               city: row.city,
               province: row.province,
-              language: row.language?.toUpperCase() || "NL",
-              status: row.status?.toLowerCase() || "actief",
+              language: (row.language?.toUpperCase() || "NL") as any,
+              status: (row.status?.toLowerCase() || "actief") as any,
               website: row.website || "",
               notes: row.notes || "",
             });
