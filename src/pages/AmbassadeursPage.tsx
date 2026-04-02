@@ -178,7 +178,9 @@ export default function AmbassadeursPage() {
         </Select>
       </div>
 
-      {isLoading ? <ListSkeleton /> : (
+      {isLoading ? <ListSkeleton /> : ambassadeurs.length === 0 ? (
+        <EmptyState icon={Users} title="Nog geen ambassadeurs toegevoegd" description="Voeg je eerste ambassadeur toe." actionLabel="Ambassadeur toevoegen" onAction={() => { setEditing(null); setDialogOpen(true); }} />
+      ) : (
         <>
           {/* Mobile cards */}
           <div className="sm:hidden space-y-2">
