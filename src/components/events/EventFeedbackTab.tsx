@@ -127,6 +127,38 @@ export function EventFeedbackTab({ eventId, eventName }: { eventId: string; even
     : 0;
   const commentsOnly = responses.filter((r) => r.comments?.trim());
 
+  if (responses.length === 0) {
+    return (
+      <div className="space-y-6">
+        {/* Link & controls (same as below) */}
+        <div className="surface-card p-4 sm:p-5 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span className="text-sm text-muted-foreground truncate">{getShareUrl(form.id)}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" size="sm" onClick={copyLink}>
+                <Copy className="h-3.5 w-3.5 mr-1" /> Link kopiëren
+              </Button>
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Actief</Label>
+                <Switch checked={form.is_active ?? false} onCheckedChange={handleToggle} />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="surface-card py-16 px-6 text-center space-y-3">
+          <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+            <MessageSquare className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <p className="text-sm font-medium">Nog geen responses ontvangen</p>
+          <p className="text-xs text-muted-foreground">Deel de feedbacklink om responses te verzamelen.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Link & controls */}

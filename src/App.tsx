@@ -33,7 +33,26 @@ const PublicInschrijvenPage = lazy(() => import("./pages/PublicInschrijvenPage")
 const StandenbouwerPage = lazy(() => import("./pages/StandenbouwerPage"));
 const AuditLogPage = lazy(() => import("./pages/AuditLogPage"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error: any) => {
+        // Don't retry on auth errors
+        if (error?.status === 401 || error?.status === 403) return false;
+        return failureCount < 2;
+      },
+      staleTime: 30_000,
+    },
+    mutations: {
+      onError: (error: any) => {
+        const message = error?.message || "Er is een fout opgetreden";
+        if (message.includes("Failed to fetch") || message.includes("NetworkError") || message.includes("ERR_CONNECTION")) {
+          import("sonner").then(({ toast }) => toast.error("Verbinding mislukt, probeer opnieuw"));
+        }
+      },
+    },
+  },
+});
 
 function PageFallback() {
   return (
