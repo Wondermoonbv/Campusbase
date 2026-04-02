@@ -4,6 +4,7 @@ import { useScholen } from "@/hooks/useScholen";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActivity } from "@/contexts/ActivityContext";
+import { useProfiles } from "@/hooks/useProfiles";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
