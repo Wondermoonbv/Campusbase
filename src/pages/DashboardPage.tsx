@@ -162,10 +162,9 @@ export default function DashboardPage() {
   };
 
   const activityIcon: Record<ActivityItem["type"], React.ReactNode> = {
-    inschrijving: <UserPlus className="h-4 w-4 text-primary shrink-0" />,
-    feedback: <MessageSquare className="h-4 w-4 text-accent shrink-0" />,
-    event: <Calendar className="h-4 w-4 text-primary shrink-0" />,
-    school: <GraduationCap className="h-4 w-4 text-primary shrink-0" />,
+    create: <Plus className="h-4 w-4 text-emerald-600 shrink-0" />,
+    update: <Pencil className="h-4 w-4 text-blue-600 shrink-0" />,
+    delete: <Trash2 className="h-4 w-4 text-red-500 shrink-0" />,
   };
 
   /* ── Role-based sections ── */
