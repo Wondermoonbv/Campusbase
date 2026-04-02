@@ -27,8 +27,8 @@ export function useRecentActivity() {
           .limit(5),
         supabase
           .from("evenementen")
-          .select("id, name, created_at")
-          .order("created_at", { ascending: false })
+          .select("id, name, date")
+          .order("date", { ascending: false })
           .limit(5),
         supabase
           .from("scholen")
