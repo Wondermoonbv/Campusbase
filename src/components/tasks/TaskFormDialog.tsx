@@ -9,6 +9,8 @@ import { useScholen } from "@/hooks/useScholen";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { useProfiles } from "@/hooks/useProfiles";
 import { toast } from "sonner";
+import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
+import { CharacterCounter } from "@/components/ui/CharacterCounter";
 import type { Task, TaskPriority, TaskStatus } from "@/types/crm";
 
 interface TaskFormDialogProps { open: boolean; onOpenChange: (v: boolean) => void; defaultSchoolId?: string | null; defaultEventId?: string | null; task?: Task | null; onSave?: (task: Task) => void; }
@@ -36,7 +38,8 @@ export function TaskFormDialog({ open, onOpenChange, defaultSchoolId, defaultEve
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const saved: Task = { ...(task?.id ? { id: task.id } : {}), title, description: description || "", school_id: schoolId || null, event_id: eventId || null, assigned_to: assignedTo, due_date: dueDate, priority, status } as Task;
+    const sanitized = sanitizeFormData({ title, description, schoolId, eventId, assignedTo, dueDate });
+    const saved: Task = { ...(task?.id ? { id: task.id } : {}), title: sanitized.title, description: sanitized.description || "", school_id: sanitized.schoolId || null, event_id: sanitized.eventId || null, assigned_to: sanitized.assignedTo, due_date: sanitized.dueDate, priority, status } as Task;
     onSave?.(saved);
     toast.success(isEditing ? "Taak bijgewerkt" : "Taak aangemaakt");
     onOpenChange(false);
@@ -47,8 +50,14 @@ export function TaskFormDialog({ open, onOpenChange, defaultSchoolId, defaultEve
       <DialogContent className="sm:max-w-lg">
         <DialogHeader><DialogTitle>{isEditing ? "Taak bewerken" : "Nieuwe taak"}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div><Label>Titel *</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="Wat moet er gebeuren?" /></div>
-          <div><Label>Omschrijving</Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} /></div>
+          <div>
+            <div className="flex items-center justify-between"><Label>Titel *</Label><CharacterCounter current={title.length} max={MAX_LENGTHS.title} /></div>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="Wat moet er gebeuren?" maxLength={MAX_LENGTHS.title} />
+          </div>
+          <div>
+            <div className="flex items-center justify-between"><Label>Omschrijving</Label><CharacterCounter current={description.length} max={MAX_LENGTHS.description} /></div>
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} maxLength={MAX_LENGTHS.description} />
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Toegewezen aan *</Label>

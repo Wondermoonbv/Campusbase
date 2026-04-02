@@ -1,24 +1,19 @@
 import { useState, useEffect } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PROVINCES } from "@/types/crm";
 import type { School } from "@/types/crm";
 import { toast } from "sonner";
+import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
+import { CharacterCounter } from "@/components/ui/CharacterCounter";
 
 interface SchoolFormDialogProps {
   open: boolean;
@@ -30,29 +25,14 @@ interface SchoolFormDialogProps {
 export function SchoolFormDialog({ open, onOpenChange, school, onSave }: SchoolFormDialogProps) {
   const isEdit = !!school;
   const [form, setForm] = useState({
-    name: "",
-    type: "universiteit" as string,
-    province: "",
-    city: "",
-    website: "",
-    language: "NL" as string,
-    notes: "",
-    status: "prospect" as string,
+    name: "", type: "universiteit" as string, province: "", city: "",
+    website: "", language: "NL" as string, notes: "", status: "prospect" as string,
   });
 
   useEffect(() => {
     if (open) {
       if (school) {
-        setForm({
-          name: school.name,
-          type: school.type,
-          province: school.province,
-          city: school.city,
-          website: school.website || "",
-          language: school.language,
-          notes: school.notes || "",
-          status: school.status,
-        });
+        setForm({ name: school.name, type: school.type, province: school.province, city: school.city, website: school.website || "", language: school.language, notes: school.notes || "", status: school.status });
       } else {
         setForm({ name: "", type: "universiteit", province: "", city: "", website: "", language: "NL", notes: "", status: "prospect" });
       }
@@ -67,18 +47,17 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave }: SchoolF
       toast.error("Vul alle verplichte velden in.");
       return;
     }
-    // Build payload matching exact DB column names
-    // For new records: omit id and created_at so Supabase generates them
+    const sanitized = sanitizeFormData(form);
     const saved: Partial<School> & { name: string } = {
       ...(school?.id ? { id: school.id } : {}),
-      name: form.name,
-      type: form.type as School["type"],
-      province: form.province,
-      city: form.city,
-      website: form.website,
-      language: form.language as School["language"],
-      notes: form.notes,
-      status: form.status as School["status"],
+      name: sanitized.name,
+      type: sanitized.type as School["type"],
+      province: sanitized.province,
+      city: sanitized.city,
+      website: sanitized.website,
+      language: sanitized.language as School["language"],
+      notes: sanitized.notes,
+      status: sanitized.status as School["status"],
     };
     onSave?.(saved as School);
     toast.success(isEdit ? "School bijgewerkt." : "School toegevoegd.");
@@ -92,74 +71,23 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave }: SchoolF
           <DialogTitle>{isEdit ? "School bewerken" : "Nieuwe school"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label>Naam *</Label>
-            <Input value={form.name} onChange={(e) => update("name", e.target.value)} />
+          <div><Label>Naam *</Label><Input value={form.name} onChange={(e) => update("name", e.target.value)} maxLength={MAX_LENGTHS.name} /></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div><Label>Type</Label><Select value={form.type} onValueChange={(v) => update("type", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="universiteit">Universiteit</SelectItem><SelectItem value="hogeschool">Hogeschool</SelectItem><SelectItem value="secundair">Secundair</SelectItem></SelectContent></Select></div>
+            <div><Label>Taal</Label><Select value={form.language} onValueChange={(v) => update("language", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="NL">NL</SelectItem><SelectItem value="FR">FR</SelectItem><SelectItem value="EN">EN</SelectItem></SelectContent></Select></div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <Label>Type</Label>
-              <Select value={form.type} onValueChange={(v) => update("type", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="universiteit">Universiteit</SelectItem>
-                  <SelectItem value="hogeschool">Hogeschool</SelectItem>
-                  <SelectItem value="secundair">Secundair</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Taal</Label>
-              <Select value={form.language} onValueChange={(v) => update("language", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="NL">NL</SelectItem>
-                  <SelectItem value="FR">FR</SelectItem>
-                  <SelectItem value="EN">EN</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <div><Label>Stad *</Label><Input value={form.city} onChange={(e) => update("city", e.target.value)} maxLength={MAX_LENGTHS.shortText} /></div>
+            <div><Label>Provincie *</Label><Select value={form.province} onValueChange={(v) => update("province", v)}><SelectTrigger><SelectValue placeholder="Kies..." /></SelectTrigger><SelectContent>{PROVINCES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select></div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <Label>Stad *</Label>
-              <Input value={form.city} onChange={(e) => update("city", e.target.value)} />
-            </div>
-            <div>
-              <Label>Provincie *</Label>
-              <Select value={form.province} onValueChange={(v) => update("province", v)}>
-                <SelectTrigger><SelectValue placeholder="Kies..." /></SelectTrigger>
-                <SelectContent>
-                  {PROVINCES.map((p) => (
-                    <SelectItem key={p} value={p}>{p}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <div><Label>Website</Label><Input value={form.website} onChange={(e) => update("website", e.target.value)} placeholder="https://" maxLength={MAX_LENGTHS.url} /></div>
+          <div><Label>Status</Label><Select value={form.status} onValueChange={(v) => update("status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="actief">Actief</SelectItem><SelectItem value="inactief">Inactief</SelectItem><SelectItem value="prospect">Prospect</SelectItem></SelectContent></Select></div>
           <div>
-            <Label>Website</Label>
-            <Input value={form.website} onChange={(e) => update("website", e.target.value)} placeholder="https://" />
-          </div>
-          <div>
-            <Label>Status</Label>
-            <Select value={form.status} onValueChange={(v) => update("status", v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="actief">Actief</SelectItem>
-                <SelectItem value="inactief">Inactief</SelectItem>
-                <SelectItem value="prospect">Prospect</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Notities</Label>
-            <Textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} rows={3} />
+            <div className="flex items-center justify-between"><Label>Notities</Label><CharacterCounter current={form.notes.length} max={MAX_LENGTHS.notes} /></div>
+            <Textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} rows={3} maxLength={MAX_LENGTHS.notes} />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Annuleren
-            </Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuleren</Button>
             <Button type="submit">{isEdit ? "Opslaan" : "Toevoegen"}</Button>
           </div>
         </form>
