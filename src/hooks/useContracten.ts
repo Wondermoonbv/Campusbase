@@ -8,7 +8,7 @@ export function useContracten() {
 
   const { data: contracten = [], isLoading } = useQuery({
     queryKey: ["contracten"],
-    queryFn: async () => {
+    staleTime: 30_000,
       // Use join to fetch linked events in a single query (fixes N+1)
       const { data, error } = await supabase
         .from("contracten")

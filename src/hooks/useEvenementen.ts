@@ -34,6 +34,7 @@ export function useEvenementen() {
       if (error) { console.error("Error fetching evenementen:", error); return []; }
       return (data as any[]).map(mapEvent);
     },
+    staleTime: 30_000,
   });
 
   const upsertEvent = useMutation({

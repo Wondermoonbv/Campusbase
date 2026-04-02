@@ -36,6 +36,7 @@ export function useAmbassadeurs() {
       if (error) { console.error(error); return []; }
       return data as Ambassadeur[];
     },
+    staleTime: 30_000,
   });
 
   const upsertAmbassadeur = useMutation({
