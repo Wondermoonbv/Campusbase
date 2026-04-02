@@ -82,7 +82,7 @@ export default function DashboardPage() {
   const { ambassadeurs } = useAmbassadeurs();
   const { inschrijvingen } = useAllInschrijvingen();
   const { forms, responses } = useAllFeedbackData();
-  const { activities } = useActivity();
+  const { data: recentActivities = [] } = useRecentActivity();
 
   const firstName = user?.firstName || user?.name?.split(" ")[0] || user?.email?.split("@")[0] || "";
 
