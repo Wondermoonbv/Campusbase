@@ -136,7 +136,9 @@ export default function OpleidingenPage() {
         </div>
       </div>
 
-      {isLoading ? <ListSkeleton /> : (
+      {isLoading ? <ListSkeleton /> : opleidingen.length === 0 ? (
+        <EmptyState icon={BookOpen} title="Nog geen opleidingen toegevoegd" description="Voeg je eerste opleiding toe." actionLabel="Nieuwe opleiding" onAction={() => { setEditProgram(undefined); setDialogOpen(true); }} />
+      ) : (
         <>
           <div className="block md:hidden space-y-2">
             {sorted.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen opleidingen gevonden.</div> : sorted.map((p) => (
