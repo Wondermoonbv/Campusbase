@@ -20,7 +20,8 @@ import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import type { Task, TaskStatus } from "@/types/crm";
+import type { Task } from "@/types/crm";
+import { LastSyncedIndicator } from "@/components/layout/LastSyncedIndicator";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 
 const priorityIcon: Record<string, React.ReactNode> = {
