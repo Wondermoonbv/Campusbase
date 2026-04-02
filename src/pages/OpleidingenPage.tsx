@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Download, Plus, ChevronDown, ChevronRight, Pencil, Trash2, Upload } from "lucide-react";
+import { Search, Download, Plus, ChevronDown, ChevronRight, Pencil, Trash2, Upload, BookOpen } from "lucide-react";
 import { FIELDS_OF_STUDY } from "@/types/crm";
 import type { Program } from "@/types/crm";
 import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
