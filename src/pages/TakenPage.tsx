@@ -41,7 +41,10 @@ export default function TakenPage() {
   const [filterPriority, setFilterPriority] = useState("alle");
   const [filterAssigned, setFilterAssigned] = useState("alle");
 
-  const teamMembers = useMemo(() => [...new Set(taken.map((t) => t.assigned_to))].sort(), [taken]);
+  const teamMembers = useMemo(() => {
+    const assignedIds = [...new Set(taken.map((t) => t.assigned_to).filter(Boolean))];
+    return assignedIds.map((id) => ({ id, name: resolveAssignee(id) })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [taken, resolveAssignee]);
 
   const toggleTaskStatus = async (taskId: string) => {
     const task = taken.find((t) => t.id === taskId);
