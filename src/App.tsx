@@ -11,6 +11,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import ScholenPage from "./pages/ScholenPage";
+import ContactenPage from "./pages/ContactenPage";
 import SchoolDetailPage from "./pages/SchoolDetailPage";
 import OpleidingenPage from "./pages/OpleidingenPage";
 import ContractenPage from "./pages/ContractenPage";
