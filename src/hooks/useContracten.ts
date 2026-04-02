@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { db } from "@/lib/supabase-helpers";
+import { supabase } from "@/integrations/supabase/client";
 import type { Contract } from "@/types/crm";
 import { writeAuditLog } from "@/lib/audit";
 
@@ -9,19 +9,17 @@ export function useContracten() {
   const { data: contracten = [], isLoading } = useQuery({
     queryKey: ["contracten"],
     queryFn: async () => {
-      const { data, error } = await db("contracten").select("*").order("end_date", { ascending: true });
+      // Use join to fetch linked events in a single query (fixes N+1)
+      const { data, error } = await supabase
+        .from("contracten")
+        .select("id, contract_type, school_id, start_date, end_date, renewal_date, value, status, description, notes, document_url, contract_evenementen(event_id)")
+        .order("end_date", { ascending: true });
       if (error) { console.error("Error fetching contracten:", error); return []; }
-      const { data: links } = await db("contract_evenementen").select("*");
-      const linkMap = new Map<string, string[]>();
-      (links ?? []).forEach((l: any) => {
-        const arr = linkMap.get(l.contract_id) ?? [];
-        arr.push(l.event_id);
-        linkMap.set(l.contract_id, arr);
-      });
       return (data as any[]).map((c) => ({
         ...c,
         value: c.value != null ? Number(c.value) : null,
-        linked_event_ids: linkMap.get(c.id) ?? [],
+        linked_event_ids: (c.contract_evenementen ?? []).map((ce: any) => ce.event_id),
+        contract_evenementen: undefined,
       })) as Contract[];
     },
   });
@@ -37,24 +35,25 @@ export function useContracten() {
       let action: "create" | "update";
       if (contract.id) {
         const { id, ...updates } = payload;
-        const { data, error } = await db("contracten").update(updates).eq("id", id).select().single();
+        const { data, error } = await supabase.from("contracten").update(updates).eq("id", id).select().single();
         if (error) throw error;
         savedId = (data as any).id;
         action = "update";
       } else {
         const { id, ...insert } = payload;
-        const { data, error } = await db("contracten").insert(insert).select().single();
+        const { data, error } = await supabase.from("contracten").insert(insert).select().single();
         if (error) throw error;
         savedId = (data as any).id;
         action = "create";
       }
 
       if (linked_event_ids !== undefined) {
-        await db("contract_evenementen").delete().eq("contract_id", savedId);
+        await supabase.from("contract_evenementen").delete().eq("contract_id", savedId);
         if (linked_event_ids.length > 0) {
-          await db("contract_evenementen").insert(
+          const { error } = await supabase.from("contract_evenementen").insert(
             linked_event_ids.map((eid: string) => ({ contract_id: savedId, event_id: eid }))
           );
+          if (error) throw error;
         }
       }
 
@@ -69,7 +68,7 @@ export function useContracten() {
 
   const deleteContract = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      const { error } = await db("contracten").delete().eq("id", id);
+      const { error } = await supabase.from("contracten").delete().eq("id", id);
       if (error) throw error;
       return { id, name };
     },

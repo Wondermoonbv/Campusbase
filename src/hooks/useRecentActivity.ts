@@ -34,7 +34,7 @@ export function useRecentActivity() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("audit_log")
-        .select("*")
+        .select("id, action, entity_type, entity_name, created_at, user_email")
         .order("created_at", { ascending: false })
         .limit(10);
 

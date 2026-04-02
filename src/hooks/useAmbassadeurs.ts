@@ -29,7 +29,10 @@ export function useAmbassadeurs() {
   const { data: ambassadeurs = [], isLoading } = useQuery({
     queryKey: ["ambassadeurs"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("ambassadeurs").select("*").order("full_name");
+      const { data, error } = await supabase
+        .from("ambassadeurs")
+        .select("id, full_name, email, phone, department, notes, is_active, created_at")
+        .order("full_name", { ascending: true });
       if (error) { console.error(error); return []; }
       return data as Ambassadeur[];
     },
@@ -77,7 +80,11 @@ export function useEventInschrijvingen(eventId?: string) {
     queryKey: ["event_inschrijvingen", eventId],
     enabled: !!eventId,
     queryFn: async () => {
-      const { data, error } = await supabase.from("event_inschrijvingen").select("*").eq("evenement_id", eventId!);
+      const { data, error } = await supabase
+        .from("event_inschrijvingen")
+        .select("id, evenement_id, ambassadeur_id, status, ingeschreven_op, bevestigd_op, notities")
+        .eq("evenement_id", eventId!)
+        .order("ingeschreven_op", { ascending: false });
       if (error) { console.error(error); return []; }
       return data as EventInschrijving[];
     },
@@ -132,7 +139,10 @@ export function useAllInschrijvingen() {
   const { data = [], isLoading } = useQuery({
     queryKey: ["event_inschrijvingen_all"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("event_inschrijvingen").select("*");
+      const { data, error } = await supabase
+        .from("event_inschrijvingen")
+        .select("id, evenement_id, ambassadeur_id, status, ingeschreven_op, bevestigd_op, notities")
+        .order("ingeschreven_op", { ascending: false });
       if (error) { console.error(error); return []; }
       return data as EventInschrijving[];
     },

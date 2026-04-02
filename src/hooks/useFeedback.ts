@@ -34,7 +34,7 @@ export function useEventFeedbackForm(eventId: string | undefined) {
       if (!eventId) return null;
       const { data, error } = await supabase
         .from("feedback_forms")
-        .select("*")
+        .select("id, evenement_id, title, description, is_active, created_at, created_by")
         .eq("evenement_id", eventId)
         .maybeSingle();
       if (error) throw error;
@@ -82,7 +82,7 @@ export function useFeedbackResponses(formId: string | undefined) {
       if (!formId) return [];
       const { data, error } = await supabase
         .from("feedback_responses")
-        .select("*")
+        .select("id, form_id, respondent_name, respondent_email, overall_rating, organization_rating, relevance_rating, stand_rating, would_recommend, comments, submitted_at")
         .eq("form_id", formId)
         .order("submitted_at", { ascending: false });
       if (error) throw error;
@@ -96,7 +96,10 @@ export function useAllFeedbackData() {
   const formsQuery = useQuery({
     queryKey: ["feedback_forms_all"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("feedback_forms").select("*");
+      const { data, error } = await supabase
+        .from("feedback_forms")
+        .select("id, evenement_id, title, is_active")
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as FeedbackForm[];
     },
@@ -105,7 +108,10 @@ export function useAllFeedbackData() {
   const responsesQuery = useQuery({
     queryKey: ["feedback_responses_all"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("feedback_responses").select("*");
+      const { data, error } = await supabase
+        .from("feedback_responses")
+        .select("id, form_id, overall_rating, organization_rating, relevance_rating, stand_rating, would_recommend, comments, respondent_name, submitted_at")
+        .order("submitted_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as FeedbackResponse[];
     },

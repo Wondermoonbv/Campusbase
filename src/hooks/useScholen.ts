@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { db } from "@/lib/supabase-helpers";
+import { supabase } from "@/integrations/supabase/client";
 import type { School, Contact } from "@/types/crm";
 import { writeAuditLog } from "@/lib/audit";
 
@@ -9,7 +9,10 @@ export function useScholen() {
   const { data: scholen = [], isLoading } = useQuery({
     queryKey: ["scholen"],
     queryFn: async () => {
-      const { data, error } = await db("scholen").select("*").order("name");
+      const { data, error } = await supabase
+        .from("scholen")
+        .select("id, name, type, province, city, website, language, notes, status, created_at")
+        .order("name", { ascending: true });
       if (error) { console.error("Error fetching scholen:", error); return []; }
       return data as School[];
     },
@@ -20,12 +23,12 @@ export function useScholen() {
       const { contacts, ...rest } = school as any;
       if (school.id) {
         const { id, created_at, ...updates } = rest;
-        const { data, error } = await db("scholen").update(updates).eq("id", id).select().single();
+        const { data, error } = await supabase.from("scholen").update(updates).eq("id", id).select().single();
         if (error) throw error;
         return { data: data as School, action: "update" as const, updates };
       } else {
         const { id, created_at, ...insert } = rest;
-        const { data, error } = await db("scholen").insert(insert).select().single();
+        const { data, error } = await supabase.from("scholen").insert(insert).select().single();
         if (error) throw error;
         return { data: data as School, action: "create" as const, updates: insert };
       }
@@ -38,7 +41,7 @@ export function useScholen() {
 
   const deleteSchool = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      const { error } = await db("scholen").delete().eq("id", id);
+      const { error } = await supabase.from("scholen").delete().eq("id", id);
       if (error) throw error;
       return { id, name };
     },
@@ -57,9 +60,9 @@ export function useContacten(schoolId?: string) {
   const { data: contacten = [], isLoading } = useQuery({
     queryKey: ["contacten", schoolId],
     queryFn: async () => {
-      let query = db("contacten").select("*");
+      let query = supabase.from("contacten").select("id, name, email, phone, role, department, school_id, linkedin_url, notes");
       if (schoolId) query = query.eq("school_id", schoolId);
-      const { data, error } = await query.order("name");
+      const { data, error } = await query.order("name", { ascending: true });
       if (error) { console.error("Error fetching contacten:", error); return []; }
       return data as Contact[];
     },
@@ -69,12 +72,12 @@ export function useContacten(schoolId?: string) {
     mutationFn: async (contact: Partial<Contact> & { name: string }) => {
       if (contact.id) {
         const { id, ...updates } = contact;
-        const { data, error } = await db("contacten").update(updates).eq("id", id).select().single();
+        const { data, error } = await supabase.from("contacten").update(updates).eq("id", id).select().single();
         if (error) throw error;
         return { data: data as Contact, action: "update" as const, updates };
       } else {
         const { id, ...insert } = contact;
-        const { data, error } = await db("contacten").insert(insert).select().single();
+        const { data, error } = await supabase.from("contacten").insert(insert).select().single();
         if (error) throw error;
         return { data: data as Contact, action: "create" as const, updates: insert };
       }
@@ -87,7 +90,7 @@ export function useContacten(schoolId?: string) {
 
   const deleteContact = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      const { error } = await db("contacten").delete().eq("id", id);
+      const { error } = await supabase.from("contacten").delete().eq("id", id);
       if (error) throw error;
       return { id, name };
     },

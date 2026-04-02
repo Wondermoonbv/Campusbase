@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { db } from "@/lib/supabase-helpers";
+import { supabase } from "@/integrations/supabase/client";
 import type { Event } from "@/types/crm";
 import { writeAuditLog } from "@/lib/audit";
 
@@ -27,7 +27,10 @@ export function useEvenementen() {
   const { data: evenementen = [], isLoading } = useQuery({
     queryKey: ["evenementen"],
     queryFn: async () => {
-      const { data, error } = await db("evenementen").select("*").order("date", { ascending: true });
+      const { data, error } = await supabase
+        .from("evenementen")
+        .select("id, name, type, date, start_time, end_time, setup_date, setup_time, location, school_id, responsible, team_members, elia_contact, budget, status, description, stand_type, stand_size, notes, opbouw_tijd, afbraak_tijd, stand_grootte, contactpersoon_stand, stand_notities, standenbouwer_nodig")
+        .order("date", { ascending: true });
       if (error) { console.error("Error fetching evenementen:", error); return []; }
       return (data as any[]).map(mapEvent);
     },
@@ -46,12 +49,12 @@ export function useEvenementen() {
 
       if (event.id) {
         const { id, created_at, ...updates } = payload;
-        const { data, error } = await db("evenementen").update(updates).eq("id", id).select().single();
+        const { data, error } = await supabase.from("evenementen").update(updates).eq("id", id).select().single();
         if (error) throw error;
         return { data: mapEvent(data), action: "update" as const, updates };
       } else {
         const { id, created_at, ...insert } = payload;
-        const { data, error } = await db("evenementen").insert(insert).select().single();
+        const { data, error } = await supabase.from("evenementen").insert(insert).select().single();
         if (error) throw error;
         return { data: mapEvent(data), action: "create" as const, updates: insert };
       }
@@ -64,7 +67,7 @@ export function useEvenementen() {
 
   const deleteEvent = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      const { error } = await db("evenementen").delete().eq("id", id);
+      const { error } = await supabase.from("evenementen").delete().eq("id", id);
       if (error) throw error;
       return { id, name };
     },
