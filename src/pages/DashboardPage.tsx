@@ -7,7 +7,7 @@ import { useAmbassadeurs, useAllInschrijvingen } from "@/hooks/useAmbassadeurs";
 import { useAllFeedbackData } from "@/hooks/useFeedback";
 import { useAuth } from "@/contexts/AuthContext";
 import { useViewAs } from "@/contexts/ViewAsContext";
-import { useActivity } from "@/contexts/ActivityContext";
+import { useRecentActivity, type ActivityItem } from "@/hooks/useRecentActivity";
 
 const BelgiumMap = lazy(() => import("@/components/dashboard/BelgiumMap"));
 import {
