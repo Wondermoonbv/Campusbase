@@ -33,6 +33,7 @@ export default function TakenPage() {
   const { evenementen } = useEvenementen();
   const { user } = useAuth();
   const { logActivity } = useActivity();
+  const { profiles, resolveAssignee } = useProfiles();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
