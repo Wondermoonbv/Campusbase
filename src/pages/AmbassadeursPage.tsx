@@ -81,9 +81,14 @@ export default function AmbassadeursPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
         <h1>Ambassadeurs</h1>
         {canEdit && (
-          <Button onClick={() => { setEditing(null); setDialogOpen(true); }}>
-            <Plus className="h-4 w-4 mr-1" /> Ambassadeur toevoegen
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <Upload className="h-4 w-4 mr-1" /> Import
+            </Button>
+            <Button onClick={() => { setEditing(null); setDialogOpen(true); }}>
+              <Plus className="h-4 w-4 mr-1" /> Ambassadeur toevoegen
+            </Button>
+          </div>
         )}
       </div>
 
