@@ -99,7 +99,7 @@ export default function TakenPage() {
         <div className="relative flex-1 min-w-0 sm:max-w-sm"><Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Zoek taken..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 sm:h-9" /></div>
         <div className="flex gap-2">
           <Select value={filterPriority} onValueChange={setFilterPriority}><SelectTrigger className="w-full sm:w-[140px] h-10 sm:h-9"><SelectValue placeholder="Prioriteit" /></SelectTrigger><SelectContent><SelectItem value="alle">Alle prioriteiten</SelectItem><SelectItem value="hoog">Hoog</SelectItem><SelectItem value="normaal">Normaal</SelectItem><SelectItem value="laag">Laag</SelectItem></SelectContent></Select>
-          <Select value={filterAssigned} onValueChange={setFilterAssigned}><SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9"><SelectValue placeholder="Teamlid" /></SelectTrigger><SelectContent><SelectItem value="alle">Alle teamleden</SelectItem>{teamMembers.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select>
+          <Select value={filterAssigned} onValueChange={setFilterAssigned}><SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9"><SelectValue placeholder="Teamlid" /></SelectTrigger><SelectContent><SelectItem value="alle">Alle teamleden</SelectItem>{teamMembers.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent></Select>
         </div>
       </div>
       <Tabs defaultValue="active">
