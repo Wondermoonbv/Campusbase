@@ -105,12 +105,14 @@ function AppRoutes() {
 
   if (isStandenbouwer && !isSimulating) {
     return (
+      <ErrorBoundary>
       <Suspense fallback={<PageFallback />}>
         <Routes>
           <Route path="/standenbouwer" element={<StandenbouwerPage />} />
           <Route path="*" element={<Navigate to="/standenbouwer" replace />} />
         </Routes>
       </Suspense>
+      </ErrorBoundary>
     );
   }
 
