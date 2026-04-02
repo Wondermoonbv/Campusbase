@@ -21,13 +21,13 @@ export function useProfiles() {
         full_name: [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email,
       })) as TeamMember[];
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes — team members rarely change
   });
 
   const resolveAssignee = (assignedTo: string | null | undefined): string => {
     if (!assignedTo) return "–";
     const profile = profiles.find((p) => p.id === assignedTo);
     if (profile) return profile.full_name;
-    // Graceful fallback: if it's a plain text name (legacy), show as-is
     return assignedTo;
   };
 

@@ -16,6 +16,7 @@ export function useOpleidingen() {
       if (error) { console.error("Error fetching opleidingen:", error); return []; }
       return data as Program[];
     },
+    staleTime: 30_000,
   });
 
   const upsertOpleiding = useMutation({

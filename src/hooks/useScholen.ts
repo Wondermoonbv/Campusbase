@@ -16,6 +16,7 @@ export function useScholen() {
       if (error) { console.error("Error fetching scholen:", error); return []; }
       return data as School[];
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes — reference data
   });
 
   const upsertSchool = useMutation({

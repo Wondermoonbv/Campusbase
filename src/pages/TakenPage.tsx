@@ -20,7 +20,8 @@ import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import type { Task, TaskStatus } from "@/types/crm";
+import type { Task } from "@/types/crm";
+import { LastSyncedIndicator } from "@/components/layout/LastSyncedIndicator";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 
 const priorityIcon: Record<string, React.ReactNode> = {
@@ -47,7 +48,7 @@ function TableSkeleton() {
 }
 
 export default function TakenPage() {
-  const { taken, isLoading, upsertTask, deleteTask: deleteTaskMutation } = useTaken();
+  const { taken, isLoading, upsertTask, deleteTask: deleteTaskMutation, toggleTaskStatus: toggleMutation, lastSynced } = useTaken();
   const { scholen } = useScholen();
   const { evenementen } = useEvenementen();
   const { user } = useAuth();
@@ -68,12 +69,16 @@ export default function TakenPage() {
   const toggleTaskStatus = useCallback(async (taskId: string) => {
     const task = taken.find((t) => t.id === taskId);
     if (!task) return;
-    const newStatus = task.status === "afgerond" ? "open" : "afgerond";
-    try {
-      await upsertTask.mutateAsync({ ...task, status: newStatus as TaskStatus });
-      logActivity({ userId: user?.id ?? "", userName: user?.name ?? "", action: "bewerkt", entityType: "taak", entityName: task.title });
-    } catch { toast.error("Fout."); }
-  }, [taken, upsertTask, logActivity, user]);
+    toggleMutation.mutate(
+      { id: taskId, currentStatus: task.status },
+      {
+        onSuccess: () => {
+          logActivity({ userId: user?.id ?? "", userName: user?.name ?? "", action: "bewerkt", entityType: "taak", entityName: task.title });
+        },
+        onError: () => { toast.error("Status wijzigen mislukt."); },
+      }
+    );
+  }, [taken, toggleMutation, logActivity, user]);
 
   const handleSave = useCallback(async (saved: Task) => {
     const isNew = !taken.find((t) => t.id === saved.id);
@@ -116,7 +121,10 @@ export default function TakenPage() {
   return (
     <div className="page-container animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
-        <h1>Taken</h1>
+        <div className="flex items-center gap-3">
+          <h1>Taken</h1>
+          <LastSyncedIndicator lastSynced={lastSynced} />
+        </div>
         <Button size="sm" className="h-10 sm:h-8" onClick={() => { setEditTask(null); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-1" /> Nieuwe taak</Button>
       </div>
       <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 mb-4">
