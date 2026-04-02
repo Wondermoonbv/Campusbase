@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Search, Download, CalendarDays, List, Pencil, Upload, Trash2 } from "lucide-react";
 import { EventFormDialog } from "@/components/events/EventFormDialog";
-import { CsvImportDialog, CsvColumn } from "@/components/import/CsvImportDialog";
+import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
 import { FIELDS_OF_STUDY } from "@/types/crm";
 import type { Event } from "@/types/crm";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
@@ -18,14 +18,14 @@ import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
 
-const EVENT_CSV_COLUMNS: CsvColumn[] = [
+const EVENT_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "name", label: "Naam", required: true },
   { key: "type", label: "Type", required: true, validate: (v) => ["jobbeurs", "campus presentatie", "workshop", "hackathon", "andere"].includes(v.toLowerCase()) ? null : "Ongeldig type" },
   { key: "date", label: "Datum", required: true, validate: (v) => /^\d{4}-\d{2}-\d{2}$/.test(v) ? null : "Formaat: YYYY-MM-DD" },
   { key: "start_time", label: "Startuur" }, { key: "end_time", label: "Einduur" },
   { key: "location", label: "Locatie", required: true }, { key: "responsible", label: "Verantwoordelijke" },
-  { key: "budget", label: "Budget", validate: (v) => isNaN(Number(v)) ? "Moet een getal zijn" : null },
-  { key: "status", label: "Status", validate: (v) => ["gepland", "bevestigd", "afgelopen", "geannuleerd"].includes(v.toLowerCase()) ? null : "Ongeldige status" },
+  { key: "budget", label: "Budget", validate: (v) => !v || !isNaN(Number(v)) ? null : "Moet een getal zijn" },
+  { key: "status", label: "Status", validate: (v) => !v || ["gepland", "bevestigd", "afgelopen", "geannuleerd"].includes(v.toLowerCase()) ? null : "Ongeldige status" },
   { key: "description", label: "Beschrijving" },
 ];
 
@@ -183,7 +183,30 @@ export default function EventenPage() {
       )}
 
       <EventFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditEvent(undefined); }} event={editEvent} onSave={handleSave} />
-      <CsvImportDialog open={importOpen} onOpenChange={setImportOpen} title="Evenementen importeren" columns={EVENT_CSV_COLUMNS} templateFilename="evenementen_template.csv" onImport={(rows) => { console.log("Import events:", rows); }} />
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Evenementen importeren"
+        columns={EVENT_IMPORT_COLUMNS}
+        templateFilename="evenementen_template.xlsx"
+        duplicateCheck={{ keys: ["name", "date"], existingData: evenementen.map((e) => ({ name: e.name, date: e.date })) }}
+        onImport={async (rows) => {
+          for (const row of rows) {
+            await upsertEvent.mutateAsync({
+              name: row.name,
+              type: (row.type?.toLowerCase() || "jobbeurs") as any,
+              date: row.date,
+              start_time: row.start_time || "",
+              end_time: row.end_time || "",
+              location: row.location || "",
+              responsible: row.responsible || "",
+              budget: row.budget ? Number(row.budget) : null,
+              status: (row.status?.toLowerCase() || "gepland") as any,
+              description: row.description || "",
+            });
+          }
+        }}
+      />
       <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget?.name ?? ""} isLoading={deleteEvent.isPending} />
     </div>
   );

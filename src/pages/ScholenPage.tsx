@@ -11,19 +11,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Search, Download, Pencil, Upload, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
-import { CsvImportDialog, CsvColumn } from "@/components/import/CsvImportDialog";
+import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
 
-const SCHOOL_CSV_COLUMNS: CsvColumn[] = [
+const SCHOOL_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "name", label: "Naam", required: true },
   { key: "type", label: "Type", required: true, validate: (v) => ["universiteit", "hogeschool", "secundair"].includes(v.toLowerCase()) ? null : "Moet universiteit, hogeschool of secundair zijn" },
   { key: "city", label: "Stad", required: true },
   { key: "province", label: "Provincie", required: true, validate: (v) => PROVINCES.includes(v) ? null : "Ongeldige provincie" },
   { key: "language", label: "Taal", required: true, validate: (v) => ["NL", "FR", "EN"].includes(v.toUpperCase()) ? null : "Moet NL, FR of EN zijn" },
-  { key: "status", label: "Status", validate: (v) => ["actief", "inactief", "prospect"].includes(v.toLowerCase()) ? null : "Moet actief, inactief of prospect zijn" },
+  { key: "status", label: "Status", validate: (v) => !v || ["actief", "inactief", "prospect"].includes(v.toLowerCase()) ? null : "Moet actief, inactief of prospect zijn" },
   { key: "website", label: "Website" },
   { key: "notes", label: "Notities" },
 ];
@@ -174,7 +174,28 @@ export default function ScholenPage() {
       </div>
 
       <SchoolFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditSchool(undefined); }} school={editSchool} onSave={handleSave} />
-      <CsvImportDialog open={importOpen} onOpenChange={setImportOpen} title="Scholen importeren" columns={SCHOOL_CSV_COLUMNS} templateFilename="scholen_template.csv" onImport={(rows) => { console.log("Import schools:", rows); }} />
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Scholen importeren"
+        columns={SCHOOL_IMPORT_COLUMNS}
+        templateFilename="scholen_template.xlsx"
+        duplicateCheck={{ keys: ["name", "city"], existingData: scholen.map((s) => ({ name: s.name, city: s.city })) }}
+        onImport={async (rows) => {
+          for (const row of rows) {
+            await upsertSchool.mutateAsync({
+              name: row.name,
+              type: (row.type?.toLowerCase() || "universiteit") as any,
+              city: row.city,
+              province: row.province,
+              language: (row.language?.toUpperCase() || "NL") as any,
+              status: (row.status?.toLowerCase() || "actief") as any,
+              website: row.website || "",
+              notes: row.notes || "",
+            });
+          }
+        }}
+      />
       <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget?.name ?? ""} isLoading={deleteSchool.isPending} />
     </div>
   );

@@ -8,8 +8,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { AmbassadeurFormDialog } from "@/components/ambassadeurs/AmbassadeurFormDialog";
-import { Search, Plus, Pencil, Trash2 } from "lucide-react";
+import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
+import { Search, Plus, Pencil, Trash2, Upload, Download } from "lucide-react";
 import { toast } from "sonner";
+
+const AMB_IMPORT_COLUMNS: ImportColumn[] = [
+  { key: "full_name", label: "Naam", required: true },
+  { key: "email", label: "Email", required: true, validate: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? null : "Ongeldig emailadres" },
+  { key: "phone", label: "Telefoon" },
+  { key: "department", label: "Afdeling" },
+  { key: "notes", label: "Notities" },
+];
 
 export default function AmbassadeursPage() {
   const { canEdit } = useAuth();
@@ -21,6 +30,7 @@ export default function AmbassadeursPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Ambassadeur | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Ambassadeur | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const confirmedCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -71,9 +81,14 @@ export default function AmbassadeursPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
         <h1>Ambassadeurs</h1>
         {canEdit && (
-          <Button onClick={() => { setEditing(null); setDialogOpen(true); }}>
-            <Plus className="h-4 w-4 mr-1" /> Ambassadeur toevoegen
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <Upload className="h-4 w-4 mr-1" /> Import
+            </Button>
+            <Button onClick={() => { setEditing(null); setDialogOpen(true); }}>
+              <Plus className="h-4 w-4 mr-1" /> Ambassadeur toevoegen
+            </Button>
+          </div>
         )}
       </div>
 
@@ -165,6 +180,27 @@ export default function AmbassadeursPage() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
         itemName={deleteTarget?.full_name ?? ""}
+      />
+
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Ambassadeurs importeren"
+        columns={AMB_IMPORT_COLUMNS}
+        templateFilename="ambassadeurs_template.xlsx"
+        duplicateCheck={{ keys: ["email"], existingData: ambassadeurs.map((a) => ({ email: a.email })) }}
+        onImport={async (rows) => {
+          for (const row of rows) {
+            await upsertAmbassadeur.mutateAsync({
+              full_name: row.full_name,
+              email: row.email,
+              phone: row.phone || "",
+              department: row.department || "",
+              notes: row.notes || "",
+              is_active: true,
+            });
+          }
+        }}
       />
     </div>
   );

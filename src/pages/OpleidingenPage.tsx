@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Download, Plus, ChevronDown, ChevronRight, Pencil, Trash2 } from "lucide-react";
+import { Search, Download, Plus, ChevronDown, ChevronRight, Pencil, Trash2, Upload } from "lucide-react";
 import { FIELDS_OF_STUDY } from "@/types/crm";
 import type { Program } from "@/types/crm";
 import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
+import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
@@ -19,6 +20,15 @@ import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
 import { db } from "@/lib/supabase-helpers";
 import { useQueryClient } from "@tanstack/react-query";
+
+const OPLEIDING_IMPORT_COLUMNS: ImportColumn[] = [
+  { key: "name", label: "Naam", required: true },
+  { key: "school_name", label: "School", required: true },
+  { key: "faculty", label: "Faculteit" },
+  { key: "study_level", label: "Niveau", validate: (v) => !v || ["bachelor", "master", "graduaat"].includes(v.toLowerCase()) ? null : "Moet bachelor, master of graduaat zijn" },
+  { key: "field_of_study", label: "Studierichting" },
+  { key: "student_count", label: "Studenten", validate: (v) => !v || !isNaN(Number(v)) ? null : "Moet een getal zijn" },
+];
 
 export default function OpleidingenPage() {
   const { opleidingen, upsertOpleiding } = useOpleidingen();
@@ -32,6 +42,7 @@ export default function OpleidingenPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProgram, setEditProgram] = useState<Program | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Program | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { canEdit } = useAuth();
@@ -93,6 +104,7 @@ export default function OpleidingenPage() {
         <h1>Opleidingen</h1>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={exportCSV}><Download className="h-4 w-4 mr-1" /> Export</Button>
+          {canEdit && <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4 mr-1" /> Import</Button>}
           {canEdit && <Button size="sm" className="h-10 sm:h-8" onClick={() => { setEditProgram(undefined); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-1" /> Nieuwe opleiding</Button>}
         </div>
       </div>
@@ -164,6 +176,28 @@ export default function OpleidingenPage() {
 
       <ProgramFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditProgram(undefined); }} program={editProgram} onSave={handleSave} />
       <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget?.name ?? ""} isLoading={isDeleting} />
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Opleidingen importeren"
+        columns={OPLEIDING_IMPORT_COLUMNS}
+        templateFilename="opleidingen_template.xlsx"
+        duplicateCheck={{ keys: ["name", "school_name"], existingData: opleidingen.map((o) => ({ name: o.name, school_name: scholen.find((s) => s.id === o.school_id)?.name ?? "" })) }}
+        onImport={async (rows) => {
+          for (const row of rows) {
+            const school = scholen.find((s) => s.name.toLowerCase() === row.school_name?.toLowerCase().trim());
+            if (!school) continue;
+            await upsertOpleiding.mutateAsync({
+              name: row.name,
+              school_id: school.id,
+              faculty: row.faculty || "",
+              study_level: (row.study_level?.toLowerCase() || "bachelor") as any,
+              field_of_study: row.field_of_study || "",
+              student_count: row.student_count ? Number(row.student_count) : null,
+            });
+          }
+        }}
+      />
     </div>
   );
 }
