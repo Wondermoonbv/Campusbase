@@ -35,9 +35,13 @@ export default function PublicInschrijvenPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (submitted || submitting) return; // prevent double submit
+    if (submitted || submitting) return;
     setError("");
-    if (!name.trim() || !email.trim()) { setError("Naam en e-mail zijn verplicht."); return; }
+    if (!name.trim() || !email.trim()) {
+      setError("Naam en e-mail zijn verplicht.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -45,45 +49,25 @@ export default function PublicInschrijvenPage() {
       const sanitizedEmail = email.trim().toLowerCase();
       const sanitizedDept = stripHtml(department.trim());
 
-      // Check/create ambassadeur
-      let { data: existing } = await supabase
-        .from("ambassadeurs")
-        .select("id")
-        .eq("email", sanitizedEmail)
-        .maybeSingle();
+      const { data, error: signupError } = await supabase.functions.invoke("public-event-signup", {
+        body: {
+          evenementId,
+          name: sanitizedName,
+          email: sanitizedEmail,
+          department: sanitizedDept,
+        },
+      });
 
-      let ambassadeurId: string;
-      if (existing) {
-        ambassadeurId = existing.id;
-      } else {
-        const { data: created, error: createErr } = await supabase
-          .from("ambassadeurs")
-          .insert({ full_name: sanitizedName, email: sanitizedEmail, department: sanitizedDept })
-          .select("id")
-          .single();
-        if (createErr) throw createErr;
-        ambassadeurId = created.id;
-      }
+      if (signupError) throw signupError;
 
-      // Check if already enrolled
-      const { data: existingEnrollment } = await supabase
-        .from("event_inschrijvingen")
-        .select("id")
-        .eq("evenement_id", evenementId!)
-        .eq("ambassadeur_id", ambassadeurId)
-        .maybeSingle();
-
-      if (existingEnrollment) {
+      if (data?.alreadyEnrolled) {
         setError("Je bent al ingeschreven voor dit event.");
-        setSubmitting(false);
         return;
       }
 
-      // Insert enrollment
-      const { error: insertErr } = await supabase
-        .from("event_inschrijvingen")
-        .insert({ evenement_id: evenementId!, ambassadeur_id: ambassadeurId, status: "ingeschreven" });
-      if (insertErr) throw insertErr;
+      if (!data?.success) {
+        throw new Error("Inschrijving mislukt.");
+      }
 
       setSubmitted(true);
     } catch {
