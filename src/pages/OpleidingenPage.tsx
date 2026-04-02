@@ -21,6 +21,15 @@ import { toast } from "sonner";
 import { db } from "@/lib/supabase-helpers";
 import { useQueryClient } from "@tanstack/react-query";
 
+const OPLEIDING_IMPORT_COLUMNS: ImportColumn[] = [
+  { key: "name", label: "Naam", required: true },
+  { key: "school_name", label: "School", required: true },
+  { key: "faculty", label: "Faculteit" },
+  { key: "study_level", label: "Niveau", validate: (v) => !v || ["bachelor", "master", "graduaat"].includes(v.toLowerCase()) ? null : "Moet bachelor, master of graduaat zijn" },
+  { key: "field_of_study", label: "Studierichting" },
+  { key: "student_count", label: "Studenten", validate: (v) => !v || !isNaN(Number(v)) ? null : "Moet een getal zijn" },
+];
+
 export default function OpleidingenPage() {
   const { opleidingen, upsertOpleiding } = useOpleidingen();
   const { scholen } = useScholen();
