@@ -8,8 +8,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { AmbassadeurFormDialog } from "@/components/ambassadeurs/AmbassadeurFormDialog";
-import { Search, Plus, Pencil, Trash2 } from "lucide-react";
+import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
+import { Search, Plus, Pencil, Trash2, Upload, Download } from "lucide-react";
 import { toast } from "sonner";
+
+const AMB_IMPORT_COLUMNS: ImportColumn[] = [
+  { key: "full_name", label: "Naam", required: true },
+  { key: "email", label: "Email", required: true, validate: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? null : "Ongeldig emailadres" },
+  { key: "phone", label: "Telefoon" },
+  { key: "department", label: "Afdeling" },
+  { key: "notes", label: "Notities" },
+];
 
 export default function AmbassadeursPage() {
   const { canEdit } = useAuth();
