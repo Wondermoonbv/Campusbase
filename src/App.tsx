@@ -10,6 +10,7 @@ import { ViewAsProvider, useViewAs } from "@/contexts/ViewAsContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Analytics } from "@vercel/analytics/react";
 import { Loader2 } from "lucide-react";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 // Lazy-loaded page components
 const LoginPage = lazy(() => import("./pages/LoginPage"));
