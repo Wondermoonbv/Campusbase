@@ -121,7 +121,10 @@ export default function TakenPage() {
   return (
     <div className="page-container animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
-        <h1>Taken</h1>
+        <div className="flex items-center gap-3">
+          <h1>Taken</h1>
+          <LastSyncedIndicator lastSynced={lastSynced} />
+        </div>
         <Button size="sm" className="h-10 sm:h-8" onClick={() => { setEditTask(null); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-1" /> Nieuwe taak</Button>
       </div>
       <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 mb-4">
