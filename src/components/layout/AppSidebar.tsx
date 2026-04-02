@@ -13,6 +13,7 @@ import {
   UserCheck,
   Contact,
   ChevronDown,
+  ClipboardList,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
