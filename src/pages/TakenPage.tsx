@@ -113,7 +113,7 @@ export default function TakenPage() {
   );
 }
 
-function TaskTable({ tasks, scholen, evenementen, done = false, onToggle, onEdit, onDelete }: { tasks: Task[]; scholen: any[]; evenementen: any[]; done?: boolean; onToggle: (id: string) => void; onEdit: (task: Task) => void; onDelete: (task: Task) => void; }) {
+function TaskTable({ tasks, scholen, evenementen, resolveAssignee, done = false, onToggle, onEdit, onDelete }: { tasks: Task[]; scholen: any[]; evenementen: any[]; resolveAssignee: (id: string | null | undefined) => string; done?: boolean; onToggle: (id: string) => void; onEdit: (task: Task) => void; onDelete: (task: Task) => void; }) {
   const now = new Date();
   const { sort, toggleSort } = useSort("title");
   const priorityOrder: Record<string, number> = { hoog: 0, normaal: 1, laag: 2 };
