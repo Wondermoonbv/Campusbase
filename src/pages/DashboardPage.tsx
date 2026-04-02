@@ -331,18 +331,16 @@ export default function DashboardPage() {
               </div>
               <div className="divide-y divide-border">
                 {recentActivities.length === 0 ? (
-                  <EmptyState icon={Clock} message="Nog geen activiteiten geregistreerd." />
+                  <EmptyState icon={Clock} message="Nog geen recente activiteit." />
                 ) : (
                   recentActivities.map((a) => (
-                    <div key={a.id} className="p-3 sm:p-4">
-                      <p className="text-sm">
-                        <span className="font-medium">{a.userName}</span>{" "}
-                        <span className="text-muted-foreground">heeft</span>{" "}
-                        <span className="font-medium">{a.entityName}</span>{" "}
-                        <span className="text-muted-foreground">{a.action}</span>
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{relativeTime(a.timestamp)}</p>
-                    </div>
+                    <Link key={a.id} to={a.link} className="p-3 sm:p-4 flex items-start gap-3 hover:bg-muted/30 transition-[background-color] duration-150 cursor-pointer block active:scale-[0.99]">
+                      {activityIcon[a.type]}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm">{a.label}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{relativeTime(a.timestamp)}</p>
+                      </div>
+                    </Link>
                   ))
                 )}
               </div>
