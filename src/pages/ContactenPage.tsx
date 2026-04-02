@@ -27,8 +27,8 @@ const ContactMobileCard = memo(function ContactMobileCard({
         <span className="font-medium text-sm">{c.name}</span>
         {canEdit && (
           <div className="flex gap-0.5">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(c)}><Edit className="h-3.5 w-3.5" /></Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDelete(c)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} bewerken`} onClick={() => onEdit(c)}><Edit className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} verwijderen`} onClick={() => onDelete(c)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
           </div>
         )}
       </div>
