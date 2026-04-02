@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, memo } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useContacten, useScholen } from "@/hooks/useScholen";
 import { useAuth } from "@/contexts/AuthContext";
 import { ContactFormDialog } from "@/components/schools/ContactFormDialog";
