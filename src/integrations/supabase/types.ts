@@ -623,6 +623,10 @@ export type Database = {
         }
         Returns: Json
       }
+      reset_user_password: {
+        Args: { new_password: string; target_email: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "editor" | "viewer" | "standenbouwer"

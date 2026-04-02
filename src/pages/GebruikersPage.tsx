@@ -13,7 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2, Search, GraduationCap, CalendarDays, FileText, BookOpen, CheckSquare, UserPlus, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, GraduationCap, CalendarDays, FileText, BookOpen, CheckSquare, UserPlus, Eye, KeyRound, Copy, RefreshCw } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { toast } from "sonner";
 import type { AppUser, UserRole } from "@/contexts/AuthContext";
@@ -88,6 +89,54 @@ export default function GebruikersPage() {
   // Invite form
   const [inviteForm, setInviteForm] = useState({ fullName: "", email: "", password: "", role: "editor" as UserRole });
   const [inviteLoading, setInviteLoading] = useState(false);
+
+  // Reset password
+  const [resetUser, setResetUser] = useState<AppUser | null>(null);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
+
+  const generatePassword = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    let pw = "";
+    for (let i = 0; i < 8; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+    setResetPassword(pw);
+  };
+
+  const openResetDialog = (u: AppUser) => {
+    setResetUser(u);
+    setResetPassword("");
+    setResetSuccess(false);
+    setResetOpen(true);
+  };
+
+  const handleResetPassword = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetUser || resetPassword.length < 8) {
+      toast.error("Wachtwoord moet minimaal 8 tekens zijn.");
+      return;
+    }
+    setResetLoading(true);
+    try {
+      const { error } = await supabase.rpc("reset_user_password", {
+        target_email: resetUser.email,
+        new_password: resetPassword,
+      });
+      if (error) throw error;
+      toast.success(`Wachtwoord gereset voor ${resetUser.name}. Deel het tijdelijke wachtwoord via een veilig kanaal (bijv. Teams).`);
+      setResetSuccess(true);
+    } catch (err: any) {
+      toast.error(err?.message ?? "Fout bij resetten van wachtwoord.");
+    } finally {
+      setResetLoading(false);
+    }
+  }, [resetUser, resetPassword]);
+
+  const copyPassword = () => {
+    navigator.clipboard.writeText(resetPassword);
+    toast.success("Wachtwoord gekopieerd naar klembord.");
+  };
 
   const { sort, toggleSort } = useSort("lastName");
 
@@ -263,6 +312,14 @@ export default function GebruikersPage() {
                           <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => openEdit(u)}>
                             <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                           </Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => openResetDialog(u)}>
+                                <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Wachtwoord resetten</TooltipContent>
+                          </Tooltip>
                           <Switch
                             checked={isActive}
                             onCheckedChange={() => handleToggleActive(u.id, isActive)}
@@ -342,6 +399,14 @@ export default function GebruikersPage() {
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(u)}>
                               <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                             </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openResetDialog(u)}>
+                                  <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Wachtwoord resetten</TooltipContent>
+                            </Tooltip>
                           </div>
                         </TableCell>
                       )}
@@ -507,6 +572,64 @@ export default function GebruikersPage() {
               <Button type="submit" className="h-10 sm:h-9">Opslaan</Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={resetOpen} onOpenChange={(open) => { setResetOpen(open); if (!open) setResetSuccess(false); }}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>Wachtwoord resetten voor {resetUser?.name}</DialogTitle>
+          </DialogHeader>
+          {resetSuccess ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Tijdelijk wachtwoord</Label>
+                <div className="flex gap-2">
+                  <Input value={resetPassword} readOnly className="h-10 sm:h-9 font-mono" />
+                  <Button type="button" variant="outline" size="icon" className="h-10 sm:h-9 shrink-0" onClick={copyPassword}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3">
+                <p className="text-sm text-destructive font-medium">Dit wachtwoord wordt niet meer getoond na het sluiten van dit venster.</p>
+              </div>
+              <DialogFooter>
+                <Button onClick={() => setResetOpen(false)} className="h-10 sm:h-9">Sluiten</Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label>E-mailadres</Label>
+                <Input value={resetUser?.email ?? ""} readOnly className="h-10 sm:h-9 bg-muted" />
+              </div>
+              <div className="space-y-2">
+                <Label>Nieuw wachtwoord *</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    value={resetPassword}
+                    onChange={(e) => setResetPassword(e.target.value)}
+                    placeholder="Minimaal 8 tekens"
+                    minLength={8}
+                    required
+                    className="h-10 sm:h-9"
+                  />
+                  <Button type="button" variant="outline" size="sm" className="h-10 sm:h-9 shrink-0 gap-1.5" onClick={generatePassword}>
+                    <RefreshCw className="h-3.5 w-3.5" /> Genereer
+                  </Button>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" className="h-10 sm:h-9" onClick={() => setResetOpen(false)}>Annuleren</Button>
+                <Button type="submit" className="h-10 sm:h-9" disabled={resetLoading || resetPassword.length < 8}>
+                  {resetLoading ? "Resetten..." : "Wachtwoord resetten"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
     </div>
