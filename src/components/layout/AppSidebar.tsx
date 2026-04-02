@@ -13,6 +13,7 @@ import {
   UserCheck,
   Contact,
   ChevronDown,
+  ChevronUp,
   ClipboardList,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
