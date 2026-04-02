@@ -194,14 +194,14 @@ export default function EventenPage() {
           for (const row of rows) {
             await upsertEvent.mutateAsync({
               name: row.name,
-              type: row.type?.toLowerCase() || "jobbeurs",
+              type: (row.type?.toLowerCase() || "jobbeurs") as any,
               date: row.date,
               start_time: row.start_time || "",
               end_time: row.end_time || "",
               location: row.location || "",
               responsible: row.responsible || "",
               budget: row.budget ? Number(row.budget) : null,
-              status: row.status?.toLowerCase() || "gepland",
+              status: (row.status?.toLowerCase() || "gepland") as any,
               description: row.description || "",
             });
           }
