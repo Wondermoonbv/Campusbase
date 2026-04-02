@@ -11,6 +11,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import ScholenPage from "./pages/ScholenPage";
+import ContactenPage from "./pages/ContactenPage";
 import SchoolDetailPage from "./pages/SchoolDetailPage";
 import OpleidingenPage from "./pages/OpleidingenPage";
 import ContractenPage from "./pages/ContractenPage";
@@ -114,6 +115,7 @@ function AppRoutes() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/scholen" element={<ScholenPage />} />
         <Route path="/scholen/:id" element={<SchoolDetailPage />} />
+        <Route path="/contacten" element={<ContactenPage />} />
         <Route path="/opleidingen" element={<OpleidingenPage />} />
         <Route path="/contracten" element={<ContractenPage />} />
         <Route path="/evenementen" element={<EventenPage />} />
