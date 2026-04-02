@@ -152,7 +152,7 @@ export default function ScholenPage() {
                   <div className="min-w-0 flex-1"><p className="font-medium text-sm truncate">{school.name}</p><p className="text-xs text-muted-foreground mt-0.5 capitalize">{school.type} · {school.city} · {school.language}</p></div>
                   <div className="flex items-center gap-1">
                     <StatusBadge status={school.status} />
-                    {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(school); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+                    {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`${school.name} verwijderen`} onClick={(e) => { e.stopPropagation(); setDeleteTarget(school); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
                   </div>
                 </div>
                 {contactMap.get(school.id) && <p className="text-xs text-muted-foreground mt-2">{contactMap.get(school.id)?.name}</p>}
