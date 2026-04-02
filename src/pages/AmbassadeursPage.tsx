@@ -181,6 +181,27 @@ export default function AmbassadeursPage() {
         onConfirm={handleDelete}
         itemName={deleteTarget?.full_name ?? ""}
       />
+
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Ambassadeurs importeren"
+        columns={AMB_IMPORT_COLUMNS}
+        templateFilename="ambassadeurs_template.xlsx"
+        duplicateCheck={{ keys: ["email"], existingData: ambassadeurs.map((a) => ({ email: a.email })) }}
+        onImport={async (rows) => {
+          for (const row of rows) {
+            await upsertAmbassadeur.mutateAsync({
+              full_name: row.full_name,
+              email: row.email,
+              phone: row.phone || "",
+              department: row.department || "",
+              notes: row.notes || "",
+              is_active: true,
+            });
+          }
+        }}
+      />
     </div>
   );
 }

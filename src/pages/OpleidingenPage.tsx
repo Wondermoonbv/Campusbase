@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Download, Plus, ChevronDown, ChevronRight, Pencil, Trash2 } from "lucide-react";
+import { Search, Download, Plus, ChevronDown, ChevronRight, Pencil, Trash2, Upload } from "lucide-react";
 import { FIELDS_OF_STUDY } from "@/types/crm";
 import type { Program } from "@/types/crm";
 import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
