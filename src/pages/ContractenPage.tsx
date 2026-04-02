@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback, memo, Fragment } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useContracten } from "@/hooks/useContracten";
