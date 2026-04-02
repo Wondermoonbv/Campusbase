@@ -196,6 +196,7 @@ export default function ScholenPage() {
             <div className="p-3 border-t border-border text-xs text-muted-foreground">{sorted.length} {sorted.length === 1 ? "school" : "scholen"} gevonden</div>
           </div>
         </>
+        </>
       )}
 
       <SchoolFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditSchool(undefined); }} school={editSchool} onSave={handleSave} />

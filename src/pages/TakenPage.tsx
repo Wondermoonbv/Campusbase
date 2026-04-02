@@ -127,7 +127,9 @@ export default function TakenPage() {
         </div>
       </div>
 
-      {isLoading ? <TableSkeleton /> : (
+      {isLoading ? <TableSkeleton /> : taken.length === 0 ? (
+        <EmptyState icon={ListTodo} title="Nog geen taken aangemaakt" description="Maak je eerste taak aan om aan de slag te gaan." actionLabel="Nieuwe taak" onAction={() => { setEditTask(null); setDialogOpen(true); }} />
+      ) : (
         <Tabs defaultValue="active">
           <TabsList><TabsTrigger value="active">Openstaand ({activeTasks.length})</TabsTrigger><TabsTrigger value="done">Afgerond ({doneTasks.length})</TabsTrigger></TabsList>
           <TabsContent value="active" className="mt-4"><TaskTable tasks={activeTasks} scholen={scholen} evenementen={evenementen} resolveAssignee={resolveAssignee} onToggle={toggleTaskStatus} onEdit={handleEdit} onDelete={setDeleteTarget} /></TabsContent>

@@ -136,8 +136,9 @@ export default function EventenPage() {
         </div>
       </div>
 
-      {isLoading ? <ListSkeleton /> : view === "list" ? (
-        <>
+      {isLoading ? <ListSkeleton /> : evenementen.length === 0 ? (
+        <EmptyState icon={Calendar} title="Geen evenementen gevonden" description="Voeg je eerste evenement toe om te beginnen." actionLabel="Evenement toevoegen" onAction={() => { setEditEvent(undefined); setDialogOpen(true); }} />
+      ) : view === "list" ? (
           <div className="block md:hidden space-y-2">
             {sorted.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen evenementen gevonden.</div> : sorted.map((ev) => (
               <div key={ev.id} className="surface-card p-4 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate(`/evenementen/${ev.id}`)}>

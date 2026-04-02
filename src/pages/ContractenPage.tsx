@@ -192,6 +192,7 @@ export default function ContractenPage() {
             </div>
           </div>
         </>
+        </>
       )}
 
       <ContractFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditContract(undefined); }} contract={editContract} onSave={handleSave} />

@@ -196,6 +196,7 @@ export default function OpleidingenPage() {
             <div className="p-3 border-t border-border text-xs text-muted-foreground">{sorted.length} opleiding{sorted.length !== 1 ? "en" : ""} gevonden</div>
           </div>
         </>
+        </>
       )}
 
       <ProgramFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditProgram(undefined); }} program={editProgram} onSave={handleSave} />
