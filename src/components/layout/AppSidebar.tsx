@@ -306,55 +306,79 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        <div className={`px-3 py-3 border-t border-sidebar-border ${collapsed ? "px-1" : ""}`}>
-          {!collapsed && user && (
-            <div className="w-full flex items-center gap-2.5 mb-2 px-1 py-1.5">
-              <Avatar className="h-8 w-8 border border-sidebar-border">
-                <AvatarImage src={user.avatarUrl} />
-                <AvatarFallback className="text-xs font-semibold bg-sidebar-accent text-sidebar-accent-foreground">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">{user.name}</p>
-                <p className="text-xs text-sidebar-foreground/60 capitalize">{user.role}</p>
-              </div>
-            </div>
-          )}
-          {collapsed && (
-            <div className="w-full flex items-center justify-center mb-2 py-1.5">
-              <Avatar className="h-7 w-7 border border-sidebar-border">
-                <AvatarImage src={user?.avatarUrl} />
-                <AvatarFallback className="text-xs font-semibold bg-sidebar-accent text-sidebar-accent-foreground">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-          )}
-
-          <Button
-            variant="ghost"
-            size={collapsed ? "icon" : "sm"}
-            className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-            onClick={logout}
-            aria-label="Uitloggen"
-          >
-            <LogOut className="h-4 w-4 shrink-0" />
-            {!collapsed && <span className="ml-2">Uitloggen</span>}
-          </Button>
-          {!collapsed && (
-            <p className="text-[10px] text-sidebar-foreground/30 text-center mt-3 tracking-wide">
-              Powered by{" "}
-              <a
-                href="https://wondermoon.be"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium hover:text-sidebar-foreground/50 transition-colors"
+        {!collapsed && (
+          <p className="text-[10px] text-sidebar-foreground/30 text-center tracking-wide px-3">
+            Powered by{" "}
+            <a
+              href="https://wondermoon.be"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium hover:text-sidebar-foreground/50 transition-colors"
+            >
+              CampusBase
+            </a>
+          </p>
+        )}
+        <div className={cn("border-t border-sidebar-border", collapsed ? "px-1 py-1" : "px-2 py-1")}>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                aria-haspopup="menu"
+                aria-label="Profielmenu openen"
+                className={cn(
+                  "flex items-center w-full gap-2 rounded-md transition-colors hover:bg-sidebar-accent/50 h-10",
+                  collapsed ? "justify-center px-1" : "px-2"
+                )}
               >
-                CampusBase
-              </a>
-            </p>
-          )}
+                <Avatar className="h-8 w-8 shrink-0 border border-sidebar-border">
+                  <AvatarImage src={user?.avatarUrl} />
+                  <AvatarFallback className="text-xs font-semibold bg-sidebar-accent text-sidebar-accent-foreground">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                {!collapsed && (
+                  <>
+                    <span className="flex-1 text-sm font-medium text-sidebar-foreground truncate text-left">
+                      {user?.firstName}
+                    </span>
+                    <ChevronUp className="h-4 w-4 shrink-0 text-sidebar-foreground/50" />
+                  </>
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              side="top"
+              align="start"
+              sideOffset={8}
+              className="w-[var(--radix-popover-trigger-width)] p-0 bg-sidebar border-sidebar-border"
+            >
+              <div className="px-3 py-2.5">
+                <p className="text-sm font-medium text-sidebar-foreground">{user?.name}</p>
+                <p className="text-xs text-sidebar-foreground/60 capitalize">{user?.role}</p>
+                {user?.email && (
+                  <p className="text-xs text-sidebar-foreground/40 mt-0.5 truncate">{user.email}</p>
+                )}
+              </div>
+              <Separator className="bg-sidebar-border" />
+              {effectiveRole === "admin" && (
+                <button
+                  onClick={() => navigate("/instellingen")}
+                  className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors"
+                >
+                  <Settings className="h-4 w-4" />
+                  Instellingen
+                </button>
+              )}
+              <button
+                onClick={logout}
+                aria-label="Uitloggen"
+                className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                Uitloggen
+              </button>
+            </PopoverContent>
+          </Popover>
         </div>
       </SidebarFooter>
     </Sidebar>
