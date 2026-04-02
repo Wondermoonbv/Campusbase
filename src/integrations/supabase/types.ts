@@ -57,7 +57,7 @@ export type Database = {
           notes: string | null
           phone: string | null
           role: string | null
-          school_id: string
+          school_id: string | null
         }
         Insert: {
           department?: string | null
@@ -68,7 +68,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           role?: string | null
-          school_id: string
+          school_id?: string | null
         }
         Update: {
           department?: string | null
@@ -79,7 +79,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           role?: string | null
-          school_id?: string
+          school_id?: string | null
         }
         Relationships: [
           {
