@@ -18,14 +18,14 @@ import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
 
-const EVENT_CSV_COLUMNS: CsvColumn[] = [
+const EVENT_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "name", label: "Naam", required: true },
   { key: "type", label: "Type", required: true, validate: (v) => ["jobbeurs", "campus presentatie", "workshop", "hackathon", "andere"].includes(v.toLowerCase()) ? null : "Ongeldig type" },
   { key: "date", label: "Datum", required: true, validate: (v) => /^\d{4}-\d{2}-\d{2}$/.test(v) ? null : "Formaat: YYYY-MM-DD" },
   { key: "start_time", label: "Startuur" }, { key: "end_time", label: "Einduur" },
   { key: "location", label: "Locatie", required: true }, { key: "responsible", label: "Verantwoordelijke" },
-  { key: "budget", label: "Budget", validate: (v) => isNaN(Number(v)) ? "Moet een getal zijn" : null },
-  { key: "status", label: "Status", validate: (v) => ["gepland", "bevestigd", "afgelopen", "geannuleerd"].includes(v.toLowerCase()) ? null : "Ongeldige status" },
+  { key: "budget", label: "Budget", validate: (v) => !v || !isNaN(Number(v)) ? null : "Moet een getal zijn" },
+  { key: "status", label: "Status", validate: (v) => !v || ["gepland", "bevestigd", "afgelopen", "geannuleerd"].includes(v.toLowerCase()) ? null : "Ongeldige status" },
   { key: "description", label: "Beschrijving" },
 ];
 
