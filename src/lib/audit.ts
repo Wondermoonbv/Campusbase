@@ -24,7 +24,7 @@ export async function writeAuditLog(entry: AuditEntry) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    await supabase.from("audit_log").insert({
+    await supabase.from("audit_log").insert([{
       user_id: user.id,
       user_email: user.email ?? null,
       action: entry.action,
