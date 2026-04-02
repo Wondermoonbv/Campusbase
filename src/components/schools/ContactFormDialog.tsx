@@ -4,34 +4,51 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useScholen } from "@/hooks/useScholen";
 import type { Contact } from "@/types/crm";
 import { toast } from "sonner";
 
 interface ContactFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  schoolId: string;
+  schoolId?: string | null;
   contact?: Contact;
   onSave?: (contact: Contact) => void;
+  showSchoolSelect?: boolean;
 }
 
-export function ContactFormDialog({ open, onOpenChange, schoolId, contact, onSave }: ContactFormDialogProps) {
+export function ContactFormDialog({ open, onOpenChange, schoolId, contact, onSave, showSchoolSelect = false }: ContactFormDialogProps) {
   const isEdit = !!contact;
-  const [form, setForm] = useState({ name: "", email: "", phone: "", role: "", department: "", notes: "", linkedin_url: "" });
+  const { scholen } = useScholen();
+  const [form, setForm] = useState({ name: "", email: "", phone: "", role: "", department: "", notes: "", linkedin_url: "", school_id: schoolId ?? "" });
 
   useEffect(() => {
     if (open) {
-      if (contact) { setForm({ name: contact.name, email: contact.email, phone: contact.phone, role: contact.role, department: contact.department, notes: contact.notes, linkedin_url: contact.linkedin_url }); }
-      else { setForm({ name: "", email: "", phone: "", role: "", department: "", notes: "", linkedin_url: "" }); }
+      if (contact) {
+        setForm({ name: contact.name, email: contact.email, phone: contact.phone, role: contact.role, department: contact.department, notes: contact.notes, linkedin_url: contact.linkedin_url, school_id: contact.school_id ?? "" });
+      } else {
+        setForm({ name: "", email: "", phone: "", role: "", department: "", notes: "", linkedin_url: "", school_id: schoolId ?? "" });
+      }
     }
-  }, [open, contact]);
+  }, [open, contact, schoolId]);
 
   const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name) { toast.error("Naam is verplicht."); return; }
-    const saved: Contact = { ...(contact?.id ? { id: contact.id } : {}), school_id: schoolId, ...form } as Contact;
+    const saved: Contact = {
+      ...(contact?.id ? { id: contact.id } : {}),
+      school_id: form.school_id || null,
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      role: form.role,
+      department: form.department,
+      notes: form.notes,
+      linkedin_url: form.linkedin_url,
+    } as Contact;
     onSave?.(saved);
     toast.success(isEdit ? "Contactpersoon bijgewerkt." : "Contactpersoon toegevoegd.");
     onOpenChange(false);
@@ -43,6 +60,20 @@ export function ContactFormDialog({ open, onOpenChange, schoolId, contact, onSav
         <DialogHeader><DialogTitle>{isEdit ? "Contact bewerken" : "Nieuw contactpersoon"}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div><Label>Naam *</Label><Input value={form.name} onChange={(e) => update("name", e.target.value)} /></div>
+          {showSchoolSelect && (
+            <div>
+              <Label>School</Label>
+              <Select value={form.school_id} onValueChange={(v) => update("school_id", v === "__none__" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Geen school" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Geen school</SelectItem>
+                  {scholen.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div><Label>Functie / Rol</Label><Input value={form.role} onChange={(e) => update("role", e.target.value)} placeholder="bv. Career Services Manager" /></div>
           <div><Label>Afdeling</Label><Input value={form.department} onChange={(e) => update("department", e.target.value)} /></div>
           <div className="grid grid-cols-2 gap-3"><div><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} /></div><div><Label>Telefoon</Label><Input value={form.phone} onChange={(e) => update("phone", e.target.value)} /></div></div>

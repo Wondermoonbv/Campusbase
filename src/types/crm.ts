@@ -27,7 +27,7 @@ export interface School {
 
 export interface Contact {
   id: string;
-  school_id: string;
+  school_id: string | null;
   name: string;
   email: string;
   phone: string;

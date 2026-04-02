@@ -60,7 +60,7 @@ export function useContacten(schoolId?: string) {
   });
 
   const upsertContact = useMutation({
-    mutationFn: async (contact: Partial<Contact> & { name: string; school_id: string }) => {
+    mutationFn: async (contact: Partial<Contact> & { name: string }) => {
       if (contact.id) {
         const { id, ...updates } = contact;
         const { data, error } = await db("contacten").update(updates).eq("id", id).select().single();
