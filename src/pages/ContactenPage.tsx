@@ -205,7 +205,6 @@ export default function ContactenPage() {
             </Table>
           </div>
         </>
-        </>
       )}
 
       <ContactFormDialog open={dialogOpen} onOpenChange={setDialogOpen} contact={editContact} onSave={handleSave} showSchoolSelect />
