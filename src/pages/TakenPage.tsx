@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, AlertTriangle, ArrowUp, Minus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, AlertTriangle, ArrowUp, Minus, Pencil, Trash2, ListTodo } from "lucide-react";
 import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
