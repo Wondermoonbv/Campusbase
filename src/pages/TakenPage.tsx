@@ -136,7 +136,7 @@ function TaskTable({ tasks, scholen, evenementen, resolveAssignee, done = false,
                   <p className={`text-sm font-medium ${task.status === "afgerond" ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>
                   <div className="flex flex-wrap items-center gap-2 mt-2">
                     <span className="inline-flex items-center gap-1 text-xs capitalize">{priorityIcon[task.priority]} {task.priority}</span>
-                    <span className="text-xs text-muted-foreground">{task.assigned_to}</span>
+                    <span className="text-xs text-muted-foreground">{resolveAssignee(task.assigned_to)}</span>
                     <span className={`text-xs tabular-nums ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>{new Date(task.due_date).toLocaleDateString("nl-BE")}{overdue && " ⚠"}</span>
                   </div>
                   <div className="flex items-center justify-between mt-2">
