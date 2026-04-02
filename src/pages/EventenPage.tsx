@@ -170,17 +170,7 @@ export default function EventenPage() {
           </div>
         </>
       ) : (
-        <div className="space-y-6">{byMonth.map(([month, events]) => (
-          <div key={month}><h2 className="mb-3 capitalize">{month}</h2><div className="space-y-2">{events.map((ev) => (
-            <div key={ev.id} className="surface-card p-3 sm:p-4 flex items-center justify-between cursor-pointer hover:bg-muted/30 active:scale-[0.99] transition-[transform,colors]" onClick={() => navigate(`/evenementen/${ev.id}`)}>
-              <div className="flex items-center gap-3 sm:gap-4"><div className="text-center min-w-[40px] sm:min-w-[48px]"><div className="text-xl sm:text-2xl font-semibold tabular-nums">{new Date(ev.date).getDate()}</div><div className="text-xs text-muted-foreground uppercase">{new Date(ev.date).toLocaleDateString("nl-BE", { weekday: "short" })}</div></div><div><p className="font-medium text-sm">{ev.name}</p><p className="text-xs text-muted-foreground">{ev.location}</p></div></div>
-              <div className="flex items-center gap-1">
-                <StatusBadge status={ev.status} />
-                {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(ev); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
-              </div>
-            </div>
-          ))}</div></div>
-        ))}</div>
+        <EventCalendar events={filtered} />
       )}
 
       <EventFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditEvent(undefined); }} event={editEvent} onSave={handleSave} />
