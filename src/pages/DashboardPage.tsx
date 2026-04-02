@@ -333,7 +333,7 @@ export default function DashboardPage() {
                   <EmptyState icon={Clock} message="Nog geen recente activiteit." />
                 ) : (
                   recentActivities.map((a) => (
-                    <Link key={a.id} to={a.link} className="p-3 sm:p-4 flex items-start gap-3 hover:bg-muted/30 transition-[background-color] duration-150 cursor-pointer block active:scale-[0.99]">
+                    <div key={a.id} className="p-3 sm:p-4 flex items-start gap-3 hover:bg-muted/30 transition-[background-color] duration-150 block active:scale-[0.99]">
                       {activityIcon[a.type]}
                       <div className="min-w-0 flex-1">
                         <p className="text-sm">{a.label}</p>
