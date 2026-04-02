@@ -312,6 +312,14 @@ export default function GebruikersPage() {
                           <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => openEdit(u)}>
                             <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                           </Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => openResetDialog(u)}>
+                                <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Wachtwoord resetten</TooltipContent>
+                          </Tooltip>
                           <Switch
                             checked={isActive}
                             onCheckedChange={() => handleToggleActive(u.id, isActive)}
