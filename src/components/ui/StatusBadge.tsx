@@ -33,7 +33,7 @@ const statusStyles: Record<StatusType, string> = {
   success: "bg-success/10 text-success border-success/20",
   error: "bg-destructive/10 text-destructive border-destructive/20",
   info: "bg-info/10 text-info border-info/20",
-  warning: "bg-accent/10 text-foreground border-accent/20",
+  warning: "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800",
   neutral: "bg-muted text-muted-foreground border-border",
 };
 

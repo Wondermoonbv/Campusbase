@@ -170,8 +170,8 @@ export default function EventenPage() {
                   <TableCell><StatusBadge status={ev.status} /></TableCell>
                   <TableCell>
                     <div className="flex gap-0.5">
-                      {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); navigate(`/evenementen/${ev.id}`); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
-                      {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setDeleteTarget(ev); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+                      {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${ev.name} bewerken`} onClick={(e) => { e.stopPropagation(); navigate(`/evenementen/${ev.id}`); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
+                      {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${ev.name} verwijderen`} onClick={(e) => { e.stopPropagation(); setDeleteTarget(ev); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
                     </div>
                   </TableCell>
                 </TableRow>

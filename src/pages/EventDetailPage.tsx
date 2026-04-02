@@ -68,7 +68,7 @@ export default function EventDetailPage() {
     <div className="page-container animate-fade-in-up max-w-4xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <Button variant="ghost" size="sm" className="shrink-0" onClick={() => navigate("/evenementen")}><ArrowLeft className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="sm" className="shrink-0" aria-label="Terug naar evenementen" onClick={() => navigate("/evenementen")}><ArrowLeft className="h-4 w-4" /></Button>
           <div className="min-w-0"><h1 className="text-lg sm:text-xl font-semibold truncate">{event.name}</h1><p className="text-xs sm:text-sm text-muted-foreground">{event.location}</p></div>
           <StatusBadge status={event.status} />
         </div>

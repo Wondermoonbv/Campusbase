@@ -185,8 +185,8 @@ export default function ScholenPage() {
                     <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{contactMap.get(school.id)?.name || "—"}</TableCell>
                     <TableCell>
                       <div className="flex gap-0.5">
-                        {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditSchool(school); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
-                        {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setDeleteTarget(school); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+                        {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${school.name} bewerken`} onClick={(e) => { e.stopPropagation(); setEditSchool(school); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
+                        {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${school.name} verwijderen`} onClick={(e) => { e.stopPropagation(); setDeleteTarget(school); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
                       </div>
                     </TableCell>
                   </TableRow>

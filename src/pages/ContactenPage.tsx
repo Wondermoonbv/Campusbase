@@ -132,7 +132,7 @@ export default function ContactenPage() {
   return (
     <div className="page-container animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold">Contacten</h1>
+        <h1>Contacten</h1>
         {canEdit && (
           <Button size="sm" onClick={() => { setEditContact(undefined); setDialogOpen(true); }}>
             <Plus className="h-4 w-4 mr-1" /> Contact toevoegen
