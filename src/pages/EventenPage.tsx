@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEvenementen } from "@/hooks/useEvenementen";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Download, CalendarDays, List, Pencil, Upload, Trash2 } from "lucide-react";
 import { EventFormDialog } from "@/components/events/EventFormDialog";
 import { EventCalendar } from "@/components/events/EventCalendar";
@@ -30,11 +31,24 @@ const EVENT_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "description", label: "Beschrijving" },
 ];
 
+function ListSkeleton() {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="surface-card p-4 space-y-2">
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-3 w-40" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function EventenPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialPeriod = searchParams.get("period") ?? "all";
-  const { evenementen, upsertEvent, deleteEvent } = useEvenementen();
+  const { evenementen, isLoading, upsertEvent, deleteEvent } = useEvenementen();
   const { opleidingen } = useOpleidingen();
   const { eventOpleidingen } = useEventOpleidingen();
   const [search, setSearch] = useState("");
@@ -50,11 +64,11 @@ export default function EventenPage() {
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
 
-  const handleSave = async (saved: Event) => {
+  const handleSave = useCallback(async (saved: Event) => {
     try { await upsertEvent.mutateAsync(saved); } catch { toast.error("Fout bij opslaan."); }
-  };
+  }, [upsertEvent]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;
     try {
       await deleteEvent.mutateAsync({ id: deleteTarget.id, name: deleteTarget.name });
@@ -63,7 +77,7 @@ export default function EventenPage() {
       handleDeleteError(error, "evenement");
     }
     setDeleteTarget(null);
-  };
+  }, [deleteTarget, deleteEvent]);
 
   const filtered = useMemo(() => {
     const now = new Date(); const in30Days = new Date(now.getTime() + 30 * 86400000);
@@ -88,13 +102,12 @@ export default function EventenPage() {
     switch (key) { case "name": return e.name; case "date": return new Date(e.date).getTime(); case "location": return e.location; case "status": return e.status; default: return e.name; }
   }), [filtered, sort]);
 
-
-  const exportCSV = () => {
+  const exportCSV = useCallback(() => {
     const headers = ["Naam", "Type", "Datum", "Locatie", "Status", "Verantwoordelijke", "Budget"];
     const rows = sorted.map((e) => [e.name, e.type, e.date, e.location, e.status, e.responsible, e.budget ?? ""]);
     const csv = [headers, ...rows].map((r) => r.join(";")).join("\n"); const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "evenementen_export.csv"; a.click();
-  };
+  }, [sorted]);
 
   return (
     <div className="page-container animate-fade-in-up">
@@ -122,7 +135,7 @@ export default function EventenPage() {
         </div>
       </div>
 
-      {view === "list" ? (
+      {isLoading ? <ListSkeleton /> : view === "list" ? (
         <>
           <div className="block md:hidden space-y-2">
             {sorted.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen evenementen gevonden.</div> : sorted.map((ev) => (

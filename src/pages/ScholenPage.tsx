@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useScholen, useContacten } from "@/hooks/useScholen";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Download, Pencil, Upload, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
@@ -28,9 +29,22 @@ const SCHOOL_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "notes", label: "Notities" },
 ];
 
+function ListSkeleton() {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="surface-card p-4 space-y-2">
+          <Skeleton className="h-4 w-52" />
+          <Skeleton className="h-3 w-36" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function ScholenPage() {
   const [searchParams] = useSearchParams();
-  const { scholen, upsertSchool, deleteSchool } = useScholen();
+  const { scholen, isLoading, upsertSchool, deleteSchool } = useScholen();
   const { contacten } = useContacten();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
@@ -45,11 +59,11 @@ export default function ScholenPage() {
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
 
-  const handleSave = async (saved: School) => {
+  const handleSave = useCallback(async (saved: School) => {
     try { await upsertSchool.mutateAsync(saved); } catch { toast.error("Fout bij opslaan."); }
-  };
+  }, [upsertSchool]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;
     try {
       await deleteSchool.mutateAsync({ id: deleteTarget.id, name: deleteTarget.name });
@@ -58,7 +72,7 @@ export default function ScholenPage() {
       handleDeleteError(error, "school");
     }
     setDeleteTarget(null);
-  };
+  }, [deleteTarget, deleteSchool]);
 
   const filtered = useMemo(() => {
     return scholen.filter((s) => {
@@ -82,19 +96,23 @@ export default function ScholenPage() {
     }
   }), [filtered, sort]);
 
-  const getFirstContact = (schoolId: string) => contacten.find(c => c.school_id === schoolId);
+  const contactMap = useMemo(() => {
+    const map = new Map<string, typeof contacten[0]>();
+    contacten.forEach((c) => { if (c.school_id && !map.has(c.school_id)) map.set(c.school_id, c); });
+    return map;
+  }, [contacten]);
 
-  const exportCSV = () => {
+  const exportCSV = useCallback(() => {
     const headers = ["Naam", "Type", "Stad", "Provincie", "Taal", "Status", "Contact", "Email"];
     const rows = sorted.map((s) => {
-      const contact = getFirstContact(s.id);
+      const contact = contactMap.get(s.id);
       return [s.name, s.type, s.city, s.province, s.language, s.status, contact?.name || "", contact?.email || ""];
     });
     const csv = [headers, ...rows].map((r) => r.join(";")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "scholen_export.csv"; a.click();
-  };
+  }, [sorted, contactMap]);
 
   return (
     <div className="page-container animate-fade-in-up">
@@ -122,56 +140,60 @@ export default function ScholenPage() {
         </div>
       </div>
 
-      <div className="block md:hidden space-y-2">
-        {sorted.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen scholen gevonden.</div> : sorted.map((school) => (
-          <div key={school.id} className="surface-card p-4 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate(`/scholen/${school.id}`)}>
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1"><p className="font-medium text-sm truncate">{school.name}</p><p className="text-xs text-muted-foreground mt-0.5 capitalize">{school.type} · {school.city} · {school.language}</p></div>
-              <div className="flex items-center gap-1">
-                <StatusBadge status={school.status} />
-                {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(school); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
-              </div>
-            </div>
-            {getFirstContact(school.id) && <p className="text-xs text-muted-foreground mt-2">{getFirstContact(school.id)?.name}</p>}
-          </div>
-        ))}
-        <div className="text-xs text-muted-foreground px-1 pt-2">{sorted.length} {sorted.length === 1 ? "school" : "scholen"} gevonden</div>
-      </div>
-
-      <div className="surface-card overflow-hidden hidden md:block">
-        <Table>
-          <TableHeader><TableRow>
-            <SortableTableHead sortKey="name" currentSort={sort} onSort={toggleSort}>Naam</SortableTableHead>
-            <SortableTableHead sortKey="type" currentSort={sort} onSort={toggleSort}>Type</SortableTableHead>
-            <SortableTableHead sortKey="city" currentSort={sort} onSort={toggleSort}>Stad</SortableTableHead>
-            <SortableTableHead sortKey="province" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Provincie</SortableTableHead>
-            <SortableTableHead sortKey="language" currentSort={sort} onSort={toggleSort}>Taal</SortableTableHead>
-            <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
-            <TableHead className="hidden lg:table-cell">Contact</TableHead>
-            <TableHead className="w-20" />
-          </TableRow></TableHeader>
-          <TableBody>
-            {sorted.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen scholen gevonden.</TableCell></TableRow> : sorted.map((school) => (
-              <TableRow key={school.id} className="cursor-pointer hover:bg-muted/30" onClick={() => navigate(`/scholen/${school.id}`)}>
-                <TableCell className="font-medium">{school.name}</TableCell>
-                <TableCell className="capitalize">{school.type}</TableCell>
-                <TableCell>{school.city}</TableCell>
-                <TableCell className="hidden lg:table-cell">{school.province}</TableCell>
-                <TableCell>{school.language}</TableCell>
-                <TableCell><StatusBadge status={school.status} /></TableCell>
-                <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{getFirstContact(school.id)?.name || "—"}</TableCell>
-                <TableCell>
-                  <div className="flex gap-0.5">
-                    {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditSchool(school); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
-                    {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setDeleteTarget(school); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+      {isLoading ? <ListSkeleton /> : (
+        <>
+          <div className="block md:hidden space-y-2">
+            {sorted.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen scholen gevonden.</div> : sorted.map((school) => (
+              <div key={school.id} className="surface-card p-4 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate(`/scholen/${school.id}`)}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1"><p className="font-medium text-sm truncate">{school.name}</p><p className="text-xs text-muted-foreground mt-0.5 capitalize">{school.type} · {school.city} · {school.language}</p></div>
+                  <div className="flex items-center gap-1">
+                    <StatusBadge status={school.status} />
+                    {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(school); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
                   </div>
-                </TableCell>
-              </TableRow>
+                </div>
+                {contactMap.get(school.id) && <p className="text-xs text-muted-foreground mt-2">{contactMap.get(school.id)?.name}</p>}
+              </div>
             ))}
-          </TableBody>
-        </Table>
-        <div className="p-3 border-t border-border text-xs text-muted-foreground">{sorted.length} {sorted.length === 1 ? "school" : "scholen"} gevonden</div>
-      </div>
+            <div className="text-xs text-muted-foreground px-1 pt-2">{sorted.length} {sorted.length === 1 ? "school" : "scholen"} gevonden</div>
+          </div>
+
+          <div className="surface-card overflow-hidden hidden md:block">
+            <Table>
+              <TableHeader><TableRow>
+                <SortableTableHead sortKey="name" currentSort={sort} onSort={toggleSort}>Naam</SortableTableHead>
+                <SortableTableHead sortKey="type" currentSort={sort} onSort={toggleSort}>Type</SortableTableHead>
+                <SortableTableHead sortKey="city" currentSort={sort} onSort={toggleSort}>Stad</SortableTableHead>
+                <SortableTableHead sortKey="province" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Provincie</SortableTableHead>
+                <SortableTableHead sortKey="language" currentSort={sort} onSort={toggleSort}>Taal</SortableTableHead>
+                <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
+                <TableHead className="hidden lg:table-cell">Contact</TableHead>
+                <TableHead className="w-20" />
+              </TableRow></TableHeader>
+              <TableBody>
+                {sorted.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen scholen gevonden.</TableCell></TableRow> : sorted.map((school) => (
+                  <TableRow key={school.id} className="cursor-pointer hover:bg-muted/30" onClick={() => navigate(`/scholen/${school.id}`)}>
+                    <TableCell className="font-medium">{school.name}</TableCell>
+                    <TableCell className="capitalize">{school.type}</TableCell>
+                    <TableCell>{school.city}</TableCell>
+                    <TableCell className="hidden lg:table-cell">{school.province}</TableCell>
+                    <TableCell>{school.language}</TableCell>
+                    <TableCell><StatusBadge status={school.status} /></TableCell>
+                    <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{contactMap.get(school.id)?.name || "—"}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-0.5">
+                        {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditSchool(school); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
+                        {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setDeleteTarget(school); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="p-3 border-t border-border text-xs text-muted-foreground">{sorted.length} {sorted.length === 1 ? "school" : "scholen"} gevonden</div>
+          </div>
+        </>
+      )}
 
       <SchoolFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditSchool(undefined); }} school={editSchool} onSave={handleSave} />
       <ImportDialog
