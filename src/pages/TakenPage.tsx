@@ -104,8 +104,8 @@ export default function TakenPage() {
       </div>
       <Tabs defaultValue="active">
         <TabsList><TabsTrigger value="active">Openstaand ({activeTasks.length})</TabsTrigger><TabsTrigger value="done">Afgerond ({doneTasks.length})</TabsTrigger></TabsList>
-        <TabsContent value="active" className="mt-4"><TaskTable tasks={activeTasks} scholen={scholen} evenementen={evenementen} onToggle={toggleTaskStatus} onEdit={(t) => { setEditTask(t); setDialogOpen(true); }} onDelete={setDeleteTarget} /></TabsContent>
-        <TabsContent value="done" className="mt-4"><TaskTable tasks={doneTasks} scholen={scholen} evenementen={evenementen} done onToggle={toggleTaskStatus} onEdit={(t) => { setEditTask(t); setDialogOpen(true); }} onDelete={setDeleteTarget} /></TabsContent>
+        <TabsContent value="active" className="mt-4"><TaskTable tasks={activeTasks} scholen={scholen} evenementen={evenementen} resolveAssignee={resolveAssignee} onToggle={toggleTaskStatus} onEdit={(t) => { setEditTask(t); setDialogOpen(true); }} onDelete={setDeleteTarget} /></TabsContent>
+        <TabsContent value="done" className="mt-4"><TaskTable tasks={doneTasks} scholen={scholen} evenementen={evenementen} resolveAssignee={resolveAssignee} done onToggle={toggleTaskStatus} onEdit={(t) => { setEditTask(t); setDialogOpen(true); }} onDelete={setDeleteTarget} /></TabsContent>
       </Tabs>
       <TaskFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditTask(null); }} task={editTask} onSave={handleSave} />
       <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget?.title ?? ""} isLoading={deleteTaskMutation.isPending} />
