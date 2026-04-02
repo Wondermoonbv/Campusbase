@@ -339,7 +339,7 @@ export default function DashboardPage() {
                         <p className="text-sm">{a.label}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">{relativeTime(a.timestamp)}</p>
                       </div>
-                    </Link>
+                    </div>
                   ))
                 )}
               </div>
