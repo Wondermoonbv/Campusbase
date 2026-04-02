@@ -30,6 +30,7 @@ export default function AmbassadeursPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Ambassadeur | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Ambassadeur | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const confirmedCounts = useMemo(() => {
     const counts: Record<string, number> = {};
