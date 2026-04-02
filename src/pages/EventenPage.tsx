@@ -116,8 +116,8 @@ export default function EventenPage() {
         <h1>Evenementen</h1>
         <div className="flex flex-wrap gap-2">
           <div className="flex border border-border rounded overflow-hidden">
-            <button onClick={() => setView("list")} className={`px-3 py-2 sm:py-1.5 text-sm ${view === "list" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted"}`}><List className="h-4 w-4" /></button>
-            <button onClick={() => setView("calendar")} className={`px-3 py-2 sm:py-1.5 text-sm ${view === "calendar" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted"}`}><CalendarDays className="h-4 w-4" /></button>
+            <button onClick={() => setView("list")} aria-label="Lijstweergave" aria-pressed={view === "list"} className={`px-3 py-2 sm:py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${view === "list" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted"}`}><List className="h-4 w-4" /></button>
+            <button onClick={() => setView("calendar")} aria-label="Kalenderweergave" aria-pressed={view === "calendar"} className={`px-3 py-2 sm:py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${view === "calendar" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted"}`}><CalendarDays className="h-4 w-4" /></button>
           </div>
           <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={exportCSV}><Download className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Export</span></Button>
           {canEdit && <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Import</span></Button>}
