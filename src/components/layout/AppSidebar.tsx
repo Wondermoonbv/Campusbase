@@ -335,6 +335,7 @@ export function AppSidebar() {
             size={collapsed ? "icon" : "sm"}
             className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
             onClick={logout}
+            aria-label="Uitloggen"
           >
             <LogOut className="h-4 w-4 shrink-0" />
             {!collapsed && <span className="ml-2">Uitloggen</span>}

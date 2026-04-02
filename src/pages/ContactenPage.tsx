@@ -27,8 +27,8 @@ const ContactMobileCard = memo(function ContactMobileCard({
         <span className="font-medium text-sm">{c.name}</span>
         {canEdit && (
           <div className="flex gap-0.5">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(c)}><Edit className="h-3.5 w-3.5" /></Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDelete(c)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} bewerken`} onClick={() => onEdit(c)}><Edit className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} verwijderen`} onClick={() => onDelete(c)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
           </div>
         )}
       </div>
@@ -68,8 +68,8 @@ const ContactTableRow = memo(function ContactTableRow({
       {canEdit && (
         <TableCell>
           <div className="flex gap-0.5">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(c)}><Edit className="h-3.5 w-3.5" /></Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDelete(c)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} bewerken`} onClick={() => onEdit(c)}><Edit className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} verwijderen`} onClick={() => onDelete(c)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
           </div>
         </TableCell>
       )}
@@ -132,7 +132,7 @@ export default function ContactenPage() {
   return (
     <div className="page-container animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold">Contacten</h1>
+        <h1>Contacten</h1>
         {canEdit && (
           <Button size="sm" onClick={() => { setEditContact(undefined); setDialogOpen(true); }}>
             <Plus className="h-4 w-4 mr-1" /> Contact toevoegen

@@ -169,8 +169,8 @@ export default function ContractenPage() {
                       <TableCell className="text-right tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
                       <TableCell>
                         <div className="flex gap-0.5">
-                          {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditContract(c); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
-                          {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+                          {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Contract bewerken" onClick={(e) => { e.stopPropagation(); setEditContract(c); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
+                          {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Contract verwijderen" onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
                         </div>
                       </TableCell>
                     </TableRow>

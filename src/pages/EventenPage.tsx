@@ -116,8 +116,8 @@ export default function EventenPage() {
         <h1>Evenementen</h1>
         <div className="flex flex-wrap gap-2">
           <div className="flex border border-border rounded overflow-hidden">
-            <button onClick={() => setView("list")} className={`px-3 py-2 sm:py-1.5 text-sm ${view === "list" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted"}`}><List className="h-4 w-4" /></button>
-            <button onClick={() => setView("calendar")} className={`px-3 py-2 sm:py-1.5 text-sm ${view === "calendar" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted"}`}><CalendarDays className="h-4 w-4" /></button>
+            <button onClick={() => setView("list")} aria-label="Lijstweergave" aria-pressed={view === "list"} className={`px-3 py-2 sm:py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${view === "list" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted"}`}><List className="h-4 w-4" /></button>
+            <button onClick={() => setView("calendar")} aria-label="Kalenderweergave" aria-pressed={view === "calendar"} className={`px-3 py-2 sm:py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${view === "calendar" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted"}`}><CalendarDays className="h-4 w-4" /></button>
           </div>
           <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={exportCSV}><Download className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Export</span></Button>
           {canEdit && <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Import</span></Button>}
@@ -147,7 +147,7 @@ export default function EventenPage() {
                   <div className="min-w-0 flex-1"><p className="font-medium text-sm truncate">{ev.name}</p><p className="text-xs text-muted-foreground mt-0.5">{new Date(ev.date).toLocaleDateString("nl-BE")} · {ev.location}</p></div>
                   <div className="flex items-center gap-1">
                     <StatusBadge status={ev.status} />
-                    {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(ev); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+                    {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`${ev.name} verwijderen`} onClick={(e) => { e.stopPropagation(); setDeleteTarget(ev); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
                   </div>
                 </div>
               </div>
@@ -170,8 +170,8 @@ export default function EventenPage() {
                   <TableCell><StatusBadge status={ev.status} /></TableCell>
                   <TableCell>
                     <div className="flex gap-0.5">
-                      {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); navigate(`/evenementen/${ev.id}`); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
-                      {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setDeleteTarget(ev); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+                      {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${ev.name} bewerken`} onClick={(e) => { e.stopPropagation(); navigate(`/evenementen/${ev.id}`); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
+                      {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${ev.name} verwijderen`} onClick={(e) => { e.stopPropagation(); setDeleteTarget(ev); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
                     </div>
                   </TableCell>
                 </TableRow>
