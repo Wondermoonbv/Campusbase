@@ -88,12 +88,6 @@ export default function EventenPage() {
     switch (key) { case "name": return e.name; case "date": return new Date(e.date).getTime(); case "location": return e.location; case "status": return e.status; default: return e.name; }
   }), [filtered, sort]);
 
-  const byMonth = useMemo(() => {
-    const sortedByDate = [...filtered].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    const groups: Record<string, typeof filtered> = {};
-    sortedByDate.forEach((e) => { const key = new Date(e.date).toLocaleDateString("nl-BE", { year: "numeric", month: "long" }); if (!groups[key]) groups[key] = []; groups[key].push(e); });
-    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-  }, [filtered]);
 
   const exportCSV = () => {
     const headers = ["Naam", "Type", "Datum", "Locatie", "Status", "Verantwoordelijke", "Budget"];
