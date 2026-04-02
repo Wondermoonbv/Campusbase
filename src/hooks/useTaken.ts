@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/lib/supabase-helpers";
 import type { Task } from "@/types/crm";
+import { writeAuditLog } from "@/lib/audit";
 
 export function useTaken() {
   const qc = useQueryClient();
@@ -30,24 +31,30 @@ export function useTaken() {
         const { id, created_at, ...updates } = payload;
         const { data, error } = await db("taken").update(updates).eq("id", id).select().single();
         if (error) throw error;
-        return data as Task;
+        return { data: data as Task, action: "update" as const, updates };
       } else {
-        // INSERT — strip id and created_at so Supabase generates them
         const { id, created_at, ...insert } = payload;
         const { data, error } = await db("taken").insert(insert).select().single();
         if (error) throw error;
-        return data as Task;
+        return { data: data as Task, action: "create" as const, updates: insert };
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["taken"] }),
+    onSuccess: ({ data, action, updates }) => {
+      qc.invalidateQueries({ queryKey: ["taken"] });
+      writeAuditLog({ action, entity_type: "taak", entity_id: data.id, entity_name: data.title, changes: updates });
+    },
   });
 
   const deleteTask = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, title }: { id: string; title: string }) => {
       const { error } = await db("taken").delete().eq("id", id);
       if (error) throw error;
+      return { id, title };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["taken"] }),
+    onSuccess: ({ id, title }) => {
+      qc.invalidateQueries({ queryKey: ["taken"] });
+      writeAuditLog({ action: "delete", entity_type: "taak", entity_id: id, entity_name: title });
+    },
   });
 
   return { taken, isLoading, upsertTask, deleteTask };

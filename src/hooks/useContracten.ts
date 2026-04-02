@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/lib/supabase-helpers";
 import type { Contract } from "@/types/crm";
+import { writeAuditLog } from "@/lib/audit";
 
 export function useContracten() {
   const qc = useQueryClient();
@@ -10,7 +11,6 @@ export function useContracten() {
     queryFn: async () => {
       const { data, error } = await db("contracten").select("*").order("end_date", { ascending: true });
       if (error) { console.error("Error fetching contracten:", error); return []; }
-      // Fetch linked events for each contract
       const { data: links } = await db("contract_evenementen").select("*");
       const linkMap = new Map<string, string[]>();
       (links ?? []).forEach((l: any) => {
@@ -34,19 +34,21 @@ export function useContracten() {
       if (payload.renewal_date === "") payload.renewal_date = null;
 
       let savedId: string;
+      let action: "create" | "update";
       if (contract.id) {
         const { id, ...updates } = payload;
         const { data, error } = await db("contracten").update(updates).eq("id", id).select().single();
         if (error) throw error;
         savedId = (data as any).id;
+        action = "update";
       } else {
         const { id, ...insert } = payload;
         const { data, error } = await db("contracten").insert(insert).select().single();
         if (error) throw error;
         savedId = (data as any).id;
+        action = "create";
       }
 
-      // Update linked events
       if (linked_event_ids !== undefined) {
         await db("contract_evenementen").delete().eq("contract_id", savedId);
         if (linked_event_ids.length > 0) {
@@ -56,17 +58,25 @@ export function useContracten() {
         }
       }
 
-      return { ...payload, id: savedId, linked_event_ids: linked_event_ids ?? [] } as Contract;
+      const result = { ...payload, id: savedId, linked_event_ids: linked_event_ids ?? [] } as Contract;
+      return { data: result, action };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["contracten"] }),
+    onSuccess: ({ data, action }) => {
+      qc.invalidateQueries({ queryKey: ["contracten"] });
+      writeAuditLog({ action, entity_type: "contract", entity_id: data.id, entity_name: `Contract ${data.contract_type}`, changes: {} });
+    },
   });
 
   const deleteContract = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
       const { error } = await db("contracten").delete().eq("id", id);
       if (error) throw error;
+      return { id, name };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["contracten"] }),
+    onSuccess: ({ id, name }) => {
+      qc.invalidateQueries({ queryKey: ["contracten"] });
+      writeAuditLog({ action: "delete", entity_type: "contract", entity_id: id, entity_name: name });
+    },
   });
 
   return { contracten, isLoading, upsertContract, deleteContract };

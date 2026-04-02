@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/lib/supabase-helpers";
 import type { Event } from "@/types/crm";
+import { writeAuditLog } from "@/lib/audit";
 
 function mapTime(t: string | null | undefined): string {
   if (!t) return "";
@@ -35,7 +36,6 @@ export function useEvenementen() {
   const upsertEvent = useMutation({
     mutationFn: async (event: Partial<Event> & { name: string }) => {
       const { school, target_program_ids, ...rest } = event as any;
-      // Normalize budget and school_id
       const payload: any = { ...rest };
       if (payload.budget === "" || payload.budget === undefined) payload.budget = null;
       if (payload.school_id === "" || payload.school_id === "none") payload.school_id = null;
@@ -48,23 +48,30 @@ export function useEvenementen() {
         const { id, created_at, ...updates } = payload;
         const { data, error } = await db("evenementen").update(updates).eq("id", id).select().single();
         if (error) throw error;
-        return mapEvent(data);
+        return { data: mapEvent(data), action: "update" as const, updates };
       } else {
         const { id, created_at, ...insert } = payload;
         const { data, error } = await db("evenementen").insert(insert).select().single();
         if (error) throw error;
-        return mapEvent(data);
+        return { data: mapEvent(data), action: "create" as const, updates: insert };
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["evenementen"] }),
+    onSuccess: ({ data, action, updates }) => {
+      qc.invalidateQueries({ queryKey: ["evenementen"] });
+      writeAuditLog({ action, entity_type: "evenement", entity_id: data.id, entity_name: data.name, changes: updates });
+    },
   });
 
   const deleteEvent = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
       const { error } = await db("evenementen").delete().eq("id", id);
       if (error) throw error;
+      return { id, name };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["evenementen"] }),
+    onSuccess: ({ id, name }) => {
+      qc.invalidateQueries({ queryKey: ["evenementen"] });
+      writeAuditLog({ action: "delete", entity_type: "evenement", entity_id: id, entity_name: name });
+    },
   });
 
   return { evenementen, isLoading, upsertEvent, deleteEvent };
