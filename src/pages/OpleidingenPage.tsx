@@ -104,6 +104,7 @@ export default function OpleidingenPage() {
         <h1>Opleidingen</h1>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={exportCSV}><Download className="h-4 w-4 mr-1" /> Export</Button>
+          {canEdit && <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4 mr-1" /> Import</Button>}
           {canEdit && <Button size="sm" className="h-10 sm:h-8" onClick={() => { setEditProgram(undefined); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-1" /> Nieuwe opleiding</Button>}
         </div>
       </div>
