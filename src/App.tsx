@@ -124,6 +124,7 @@ function AppRoutes() {
         <Route path="/rapportage" element={<RapportagePage />} />
         <Route path="/taken" element={<TakenPage />} />
         {effectiveIsAdmin && <Route path="/gebruikers" element={<GebruikersPage />} />}
+        {effectiveIsAdmin && <Route path="/audit-log" element={<AuditLogPage />} />}
         {effectiveIsAdmin ? (
           <Route path="/instellingen" element={<InstellingenPage />} />
         ) : (
