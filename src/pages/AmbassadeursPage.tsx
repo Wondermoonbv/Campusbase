@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAmbassadeurs, useAllInschrijvingen } from "@/hooks/useAmbassadeurs";
 import type { Ambassadeur } from "@/hooks/useAmbassadeurs";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { AmbassadeurFormDialog } from "@/components/ambassadeurs/AmbassadeurFormDialog";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
@@ -20,9 +21,75 @@ const AMB_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "notes", label: "Notities" },
 ];
 
+const AmbassadeurMobileCard = memo(function AmbassadeurMobileCard({
+  amb, confirmedCount, canEdit, onEdit, onDelete,
+}: {
+  amb: Ambassadeur; confirmedCount: number; canEdit: boolean;
+  onEdit: (a: Ambassadeur) => void; onDelete: (a: Ambassadeur) => void;
+}) {
+  return (
+    <div className="surface-card p-4 space-y-1">
+      <div className="flex items-center justify-between">
+        <span className="font-medium text-sm">{amb.full_name}</span>
+        <StatusBadge status={amb.is_active ? "actief" : "inactief"} />
+      </div>
+      <p className="text-xs text-muted-foreground">{amb.email}</p>
+      {amb.department && <p className="text-xs text-muted-foreground">{amb.department}</p>}
+      <div className="flex items-center justify-between pt-1">
+        <span className="text-xs text-muted-foreground">{confirmedCount} events bevestigd</span>
+        {canEdit && (
+          <div className="flex gap-1">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(amb)}><Pencil className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => onDelete(amb)}><Trash2 className="h-3.5 w-3.5" /></Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
+
+const AmbassadeurTableRow = memo(function AmbassadeurTableRow({
+  amb, confirmedCount, canEdit, onEdit, onDelete,
+}: {
+  amb: Ambassadeur; confirmedCount: number; canEdit: boolean;
+  onEdit: (a: Ambassadeur) => void; onDelete: (a: Ambassadeur) => void;
+}) {
+  return (
+    <tr className="hover:bg-muted/30 transition-colors">
+      <td className="px-4 py-3 font-medium">{amb.full_name}</td>
+      <td className="px-4 py-3 text-muted-foreground">{amb.email}</td>
+      <td className="px-4 py-3 text-muted-foreground">{amb.department || "—"}</td>
+      <td className="px-4 py-3 text-center tabular-nums">{confirmedCount}</td>
+      <td className="px-4 py-3"><StatusBadge status={amb.is_active ? "actief" : "inactief"} /></td>
+      {canEdit && (
+        <td className="px-4 py-3 text-right">
+          <div className="flex justify-end gap-1">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(amb)}><Pencil className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => onDelete(amb)}><Trash2 className="h-3.5 w-3.5" /></Button>
+          </div>
+        </td>
+      )}
+    </tr>
+  );
+});
+
+function ListSkeleton() {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="surface-card p-4 space-y-2">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-3 w-56" />
+          <Skeleton className="h-3 w-24" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function AmbassadeursPage() {
   const { canEdit } = useAuth();
-  const { ambassadeurs, upsertAmbassadeur, deleteAmbassadeur } = useAmbassadeurs();
+  const { ambassadeurs, isLoading, upsertAmbassadeur, deleteAmbassadeur } = useAmbassadeurs();
   const { inschrijvingen } = useAllInschrijvingen();
 
   const [search, setSearch] = useState("");
@@ -50,7 +117,7 @@ export default function AmbassadeursPage() {
     });
   }, [ambassadeurs, search, statusFilter]);
 
-  const handleSave = async (amb: Partial<Ambassadeur> & { full_name: string; email: string }) => {
+  const handleSave = useCallback(async (amb: Partial<Ambassadeur> & { full_name: string; email: string }) => {
     try {
       await upsertAmbassadeur.mutateAsync(amb);
       toast.success(amb.id ? "Ambassadeur bijgewerkt" : "Ambassadeur toegevoegd");
@@ -59,9 +126,9 @@ export default function AmbassadeursPage() {
     } catch {
       toast.error("Fout bij opslaan");
     }
-  };
+  }, [upsertAmbassadeur]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;
     try {
       await deleteAmbassadeur.mutateAsync({ id: deleteTarget.id, name: deleteTarget.full_name });
@@ -74,7 +141,10 @@ export default function AmbassadeursPage() {
         toast.error("Fout bij verwijderen");
       }
     }
-  };
+  }, [deleteTarget, deleteAmbassadeur]);
+
+  const handleEdit = useCallback((a: Ambassadeur) => { setEditing(a); setDialogOpen(true); }, []);
+  const handleDeleteClick = useCallback((a: Ambassadeur) => setDeleteTarget(a), []);
 
   return (
     <div className="page-container animate-fade-in-up">
@@ -107,66 +177,54 @@ export default function AmbassadeursPage() {
         </Select>
       </div>
 
-      {/* Mobile cards */}
-      <div className="sm:hidden space-y-2">
-        {filtered.map((a) => (
-          <div key={a.id} className="surface-card p-4 space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="font-medium text-sm">{a.full_name}</span>
-              <StatusBadge status={a.is_active ? "actief" : "inactief"} />
-            </div>
-            <p className="text-xs text-muted-foreground">{a.email}</p>
-            {a.department && <p className="text-xs text-muted-foreground">{a.department}</p>}
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-xs text-muted-foreground">{confirmedCounts[a.id] ?? 0} events bevestigd</span>
-              {canEdit && (
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(a); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteTarget(a)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Desktop table */}
-      <div className="hidden sm:block surface-card overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border text-left">
-              <th className="px-4 py-3 font-medium text-muted-foreground">Naam</th>
-              <th className="px-4 py-3 font-medium text-muted-foreground">Email</th>
-              <th className="px-4 py-3 font-medium text-muted-foreground">Afdeling</th>
-              <th className="px-4 py-3 font-medium text-muted-foreground text-center">Events</th>
-              <th className="px-4 py-3 font-medium text-muted-foreground">Status</th>
-              {canEdit && <th className="px-4 py-3 font-medium text-muted-foreground text-right">Acties</th>}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
+      {isLoading ? <ListSkeleton /> : (
+        <>
+          {/* Mobile cards */}
+          <div className="sm:hidden space-y-2">
             {filtered.map((a) => (
-              <tr key={a.id} className="hover:bg-muted/30 transition-colors">
-                <td className="px-4 py-3 font-medium">{a.full_name}</td>
-                <td className="px-4 py-3 text-muted-foreground">{a.email}</td>
-                <td className="px-4 py-3 text-muted-foreground">{a.department || "—"}</td>
-                <td className="px-4 py-3 text-center tabular-nums">{confirmedCounts[a.id] ?? 0}</td>
-                <td className="px-4 py-3"><StatusBadge status={a.is_active ? "actief" : "inactief"} /></td>
-                {canEdit && (
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(a); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteTarget(a)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                    </div>
-                  </td>
-                )}
-              </tr>
+              <AmbassadeurMobileCard
+                key={a.id}
+                amb={a}
+                confirmedCount={confirmedCounts[a.id] ?? 0}
+                canEdit={canEdit}
+                onEdit={handleEdit}
+                onDelete={handleDeleteClick}
+              />
             ))}
-          </tbody>
-        </table>
-        {filtered.length === 0 && (
-          <p className="text-center text-sm text-muted-foreground py-8">Geen ambassadeurs gevonden.</p>
-        )}
-      </div>
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden sm:block surface-card overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left">
+                  <th className="px-4 py-3 font-medium text-muted-foreground">Naam</th>
+                  <th className="px-4 py-3 font-medium text-muted-foreground">Email</th>
+                  <th className="px-4 py-3 font-medium text-muted-foreground">Afdeling</th>
+                  <th className="px-4 py-3 font-medium text-muted-foreground text-center">Events</th>
+                  <th className="px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  {canEdit && <th className="px-4 py-3 font-medium text-muted-foreground text-right">Acties</th>}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filtered.map((a) => (
+                  <AmbassadeurTableRow
+                    key={a.id}
+                    amb={a}
+                    confirmedCount={confirmedCounts[a.id] ?? 0}
+                    canEdit={canEdit}
+                    onEdit={handleEdit}
+                    onDelete={handleDeleteClick}
+                  />
+                ))}
+              </tbody>
+            </table>
+            {filtered.length === 0 && (
+              <p className="text-center text-sm text-muted-foreground py-8">Geen ambassadeurs gevonden.</p>
+            )}
+          </div>
+        </>
+      )}
 
       <AmbassadeurFormDialog
         open={dialogOpen}

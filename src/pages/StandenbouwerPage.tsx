@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo, memo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useTaken } from "@/hooks/useTaken";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 import {
@@ -36,6 +37,23 @@ const priorityIcon: Record<string, React.ReactNode> = {
   laag: <ArrowUp className="h-3.5 w-3.5 text-info rotate-180" />,
 };
 
+function EventsSkeleton() {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <Card key={i}>
+          <CardHeader className="pb-2"><Skeleton className="h-5 w-48" /></CardHeader>
+          <CardContent className="space-y-2">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-4 w-56" />
+            <Skeleton className="h-4 w-32" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 export default function StandenbouwerPage() {
   const { logout, user } = useAuth();
   const { taken, upsertTask } = useTaken();
@@ -59,20 +77,19 @@ export default function StandenbouwerPage() {
   }, []);
 
   const today = new Date().toISOString().slice(0, 10);
-  const now = new Date();
-  const eventIds = events.map((e) => e.id);
+  const now = useMemo(() => new Date(), []);
+  const eventIds = useMemo(() => events.map((e) => e.id), [events]);
 
-  // Tasks: assigned to me OR linked to a standenbouwer event
-  const myTasks = taken.filter((t) => {
+  const myTasks = useMemo(() => taken.filter((t) => {
     const assignedToMe = t.assigned_to === user?.id || t.assigned_to === user?.name;
     const linkedToEvent = t.event_id && eventIds.includes(t.event_id);
     return assignedToMe || linkedToEvent;
-  });
+  }), [taken, user, eventIds]);
 
-  const activeTasks = myTasks.filter((t) => t.status !== "afgerond");
-  const doneTasks = myTasks.filter((t) => t.status === "afgerond");
+  const activeTasks = useMemo(() => myTasks.filter((t) => t.status !== "afgerond"), [myTasks]);
+  const doneTasks = useMemo(() => myTasks.filter((t) => t.status === "afgerond"), [myTasks]);
 
-  const toggleTaskStatus = async (taskId: string) => {
+  const toggleTaskStatus = useCallback(async (taskId: string) => {
     const task = taken.find((t) => t.id === taskId);
     if (!task) return;
     const newStatus: TaskStatus = task.status === "afgerond" ? "open" : "afgerond";
@@ -81,21 +98,20 @@ export default function StandenbouwerPage() {
     } catch {
       toast.error("Fout bij bijwerken taak.");
     }
-  };
+  }, [taken, upsertTask]);
 
-  const handleSaveTask = async (saved: Task) => {
+  const handleSaveTask = useCallback(async (saved: Task) => {
     try {
       await upsertTask.mutateAsync(saved);
     } catch {
       toast.error("Fout bij opslaan.");
     }
-  };
+  }, [upsertTask]);
 
-  const eventMap = new Map(events.map((e) => [e.id, e.name]));
+  const eventMap = useMemo(() => new Map(events.map((e) => [e.id, e.name])), [events]);
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-card px-4 sm:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">CB</div>
@@ -110,7 +126,6 @@ export default function StandenbouwerPage() {
         </div>
       </header>
 
-      {/* Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <Tabs defaultValue="events">
           <TabsList>
@@ -129,11 +144,10 @@ export default function StandenbouwerPage() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Events tab */}
           <TabsContent value="events" className="mt-6">
             <h2 className="text-xl font-semibold mb-4">Evenementen overzicht</h2>
             {loading ? (
-              <div className="text-sm text-muted-foreground animate-pulse">Laden...</div>
+              <EventsSkeleton />
             ) : events.length === 0 ? (
               <p className="text-sm text-muted-foreground">Geen evenementen gevonden waar een standenbouwer nodig is.</p>
             ) : (
@@ -175,7 +189,6 @@ export default function StandenbouwerPage() {
             )}
           </TabsContent>
 
-          {/* Taken tab */}
           <TabsContent value="taken" className="mt-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Mijn taken</h2>
@@ -193,7 +206,6 @@ export default function StandenbouwerPage() {
               <p className="text-sm text-muted-foreground">Geen taken gevonden.</p>
             ) : (
               <div className="space-y-4">
-                {/* Active tasks */}
                 {activeTasks.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Openstaand ({activeTasks.length})</p>
@@ -209,8 +221,6 @@ export default function StandenbouwerPage() {
                     ))}
                   </div>
                 )}
-
-                {/* Done tasks */}
                 {doneTasks.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Afgerond ({doneTasks.length})</p>
@@ -243,7 +253,7 @@ export default function StandenbouwerPage() {
   );
 }
 
-function TaskRow({
+const TaskRow = memo(function TaskRow({
   task, now, eventMap, resolveAssignee, onToggle, done = false,
 }: {
   task: Task; now: Date; eventMap: Map<string, string>;
@@ -286,9 +296,9 @@ function TaskRow({
       </div>
     </div>
   );
-}
+});
 
-function Detail({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | null | undefined }) {
+const Detail = memo(function Detail({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | null | undefined }) {
   if (!value) return null;
   return (
     <div className="flex items-center gap-2">
@@ -297,4 +307,4 @@ function Detail({ icon: Icon, label, value }: { icon: React.ElementType; label: 
       <span className="font-medium">{value}</span>
     </div>
   );
-}
+});
