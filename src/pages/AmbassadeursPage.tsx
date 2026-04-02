@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, memo } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAmbassadeurs, useAllInschrijvingen } from "@/hooks/useAmbassadeurs";
 import type { Ambassadeur } from "@/hooks/useAmbassadeurs";
