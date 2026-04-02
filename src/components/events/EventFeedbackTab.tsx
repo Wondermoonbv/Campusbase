@@ -95,7 +95,16 @@ export function EventFeedbackTab({ eventId, eventName }: { eventId: string; even
     toast.success("Link gekopieerd!");
   };
 
-  if (isLoading) return <div className="py-8 text-center text-muted-foreground text-sm animate-pulse">Laden...</div>;
+  if (isLoading) return (
+    <div className="space-y-4 py-6">
+      <Skeleton className="h-16 w-full rounded-lg" />
+      <div className="grid grid-cols-3 gap-3">
+        <Skeleton className="h-20 rounded-lg" />
+        <Skeleton className="h-20 rounded-lg" />
+        <Skeleton className="h-20 rounded-lg" />
+      </div>
+    </div>
+  );
 
   if (!form) {
     return (
