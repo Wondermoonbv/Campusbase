@@ -69,7 +69,7 @@ export function useRecentActivity() {
           id: `ev-${e.id}`,
           type: "event",
           label: `Nieuw event aangemaakt: ${e.name}`,
-          timestamp: e.created_at ?? "",
+          timestamp: e.date ?? "",
           link: `/evenementen/${e.id}`,
         });
       });
