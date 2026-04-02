@@ -16,7 +16,7 @@ interface AuditEntry {
   entity_type: AuditEntityType;
   entity_id: string;
   entity_name: string;
-  changes?: Record<string, unknown>;
+  changes?: Record<string, unknown> | null;
 }
 
 export async function writeAuditLog(entry: AuditEntry) {
