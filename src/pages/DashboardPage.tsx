@@ -161,8 +161,12 @@ export default function DashboardPage() {
     laag: <ArrowUp className="h-3.5 w-3.5 text-info rotate-180" />,
   };
 
-  /* ── Recent activity ── */
-  const recentActivities = activities.slice(0, 5);
+  const activityIcon: Record<ActivityItem["type"], React.ReactNode> = {
+    inschrijving: <UserPlus className="h-4 w-4 text-primary shrink-0" />,
+    feedback: <MessageSquare className="h-4 w-4 text-accent shrink-0" />,
+    event: <Calendar className="h-4 w-4 text-primary shrink-0" />,
+    school: <GraduationCap className="h-4 w-4 text-primary shrink-0" />,
+  };
 
   /* ── Role-based sections ── */
   const showKpis = effectiveRole === "admin" || effectiveRole === "editor";
