@@ -90,6 +90,54 @@ export default function GebruikersPage() {
   const [inviteForm, setInviteForm] = useState({ fullName: "", email: "", password: "", role: "editor" as UserRole });
   const [inviteLoading, setInviteLoading] = useState(false);
 
+  // Reset password
+  const [resetUser, setResetUser] = useState<AppUser | null>(null);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
+
+  const generatePassword = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    let pw = "";
+    for (let i = 0; i < 8; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+    setResetPassword(pw);
+  };
+
+  const openResetDialog = (u: AppUser) => {
+    setResetUser(u);
+    setResetPassword("");
+    setResetSuccess(false);
+    setResetOpen(true);
+  };
+
+  const handleResetPassword = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetUser || resetPassword.length < 8) {
+      toast.error("Wachtwoord moet minimaal 8 tekens zijn.");
+      return;
+    }
+    setResetLoading(true);
+    try {
+      const { error } = await supabase.rpc("reset_user_password", {
+        target_email: resetUser.email,
+        new_password: resetPassword,
+      });
+      if (error) throw error;
+      toast.success(`Wachtwoord gereset voor ${resetUser.name}. Deel het tijdelijke wachtwoord via een veilig kanaal (bijv. Teams).`);
+      setResetSuccess(true);
+    } catch (err: any) {
+      toast.error(err?.message ?? "Fout bij resetten van wachtwoord.");
+    } finally {
+      setResetLoading(false);
+    }
+  }, [resetUser, resetPassword]);
+
+  const copyPassword = () => {
+    navigator.clipboard.writeText(resetPassword);
+    toast.success("Wachtwoord gekopieerd naar klembord.");
+  };
+
   const { sort, toggleSort } = useSort("lastName");
 
   const [actSearch, setActSearch] = useState("");
