@@ -169,7 +169,7 @@ function TaskTable({ tasks, scholen, evenementen, resolveAssignee, done = false,
                 <TableCell><Checkbox checked={task.status === "afgerond"} onCheckedChange={() => onToggle(task.id)} /></TableCell>
                 <TableCell><p className={`text-sm font-medium ${task.status === "afgerond" ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>{task.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>}</TableCell>
                 <TableCell><span className="inline-flex items-center gap-1 text-xs capitalize">{priorityIcon[task.priority]} {task.priority}</span></TableCell>
-                <TableCell className="text-sm">{task.assigned_to}</TableCell>
+                <TableCell className="text-sm">{resolveAssignee(task.assigned_to)}</TableCell>
                 <TableCell><span className={`text-sm tabular-nums ${overdue ? "text-destructive font-medium" : ""}`}>{new Date(task.due_date).toLocaleDateString("nl-BE")}{overdue && <AlertTriangle className="inline h-3 w-3 ml-1 -mt-0.5" />}</span></TableCell>
                 <TableCell className="hidden lg:table-cell"><div className="flex flex-col gap-0.5">{school && <Link to={`/scholen/${school.id}`} className="text-xs text-primary hover:underline">{school.name}</Link>}{event && <Link to={`/evenementen/${event.id}`} className="text-xs text-primary hover:underline">{event.name}</Link>}{!school && !event && <span className="text-xs text-muted-foreground">—</span>}</div></TableCell>
                 <TableCell><StatusBadge status={task.status} /></TableCell>
