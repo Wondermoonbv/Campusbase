@@ -42,6 +42,7 @@ export default function OpleidingenPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProgram, setEditProgram] = useState<Program | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Program | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { canEdit } = useAuth();
