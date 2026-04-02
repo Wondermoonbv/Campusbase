@@ -140,6 +140,32 @@
   }
 }
 
+/* Mobile touch targets — 44px minimum */
+@media (max-width: 640px) {
+  button,
+  [role="button"],
+  a[href],
+  input[type="checkbox"],
+  [role="menuitem"],
+  [role="option"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Exempt small icon buttons that are inside larger tap areas */
+  .surface-card button[data-size="icon"],
+  table button {
+    min-height: 40px;
+    min-width: 40px;
+  }
+
+  /* Select items need comfortable touch targets */
+  [role="option"] {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+}
+
 /* Leaflet custom pin overrides */
 .custom-map-pin {
   background: transparent !important;
