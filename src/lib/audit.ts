@@ -31,7 +31,7 @@ export async function writeAuditLog(entry: AuditEntry) {
       entity_type: entry.entity_type,
       entity_id: entry.entity_id,
       entity_name: entry.entity_name,
-      changes: entry.changes ?? {},
+      changes: (entry.changes ?? {}) as any,
     }]);
   } catch (err) {
     console.error("Audit log write failed:", err);

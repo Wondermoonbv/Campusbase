@@ -62,7 +62,7 @@ export default function TakenPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await deleteTaskMutation.mutateAsync(deleteTarget.id);
+      await deleteTaskMutation.mutateAsync({ id: deleteTarget.id, title: deleteTarget.title });
       logActivity({ userId: user?.id ?? "", userName: user?.name ?? "", action: "verwijderd", entityType: "taak", entityName: deleteTarget.title });
       toast.success("Taak verwijderd.");
     } catch (error) {

@@ -40,7 +40,7 @@ export default function ContactenPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await deleteContact.mutateAsync(deleteTarget.id);
+      await deleteContact.mutateAsync({ id: deleteTarget.id, name: deleteTarget.name });
       toast.success("Contact verwijderd.");
     } catch (error) {
       handleDeleteError(error, "contact");

@@ -64,7 +64,7 @@ export default function AmbassadeursPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await deleteAmbassadeur.mutateAsync(deleteTarget.id);
+      await deleteAmbassadeur.mutateAsync({ id: deleteTarget.id, name: deleteTarget.full_name });
       toast.success("Ambassadeur verwijderd");
       setDeleteTarget(null);
     } catch (err: any) {
