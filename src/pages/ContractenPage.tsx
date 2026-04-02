@@ -105,7 +105,9 @@ export default function ContractenPage() {
         </div>
       </div>
 
-      {isLoading ? <ListSkeleton /> : (
+      {isLoading ? <ListSkeleton /> : contracten.length === 0 ? (
+        <EmptyState icon={FileText} title="Nog geen contracten toegevoegd" description="Voeg je eerste contract toe." actionLabel="Contract toevoegen" onAction={() => { setEditContract(undefined); setDialogOpen(true); }} />
+      ) : (
         <>
           <div className="block md:hidden space-y-2">
             {sorted.map((c) => {
