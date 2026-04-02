@@ -47,7 +47,7 @@ function TableSkeleton() {
 }
 
 export default function TakenPage() {
-  const { taken, isLoading, upsertTask, deleteTask: deleteTaskMutation } = useTaken();
+  const { taken, isLoading, upsertTask, deleteTask: deleteTaskMutation, toggleTaskStatus: toggleMutation, lastSynced } = useTaken();
   const { scholen } = useScholen();
   const { evenementen } = useEvenementen();
   const { user } = useAuth();
