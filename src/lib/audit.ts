@@ -32,7 +32,7 @@ export async function writeAuditLog(entry: AuditEntry) {
       entity_id: entry.entity_id,
       entity_name: entry.entity_name,
       changes: entry.changes ?? {},
-    });
+    }]);
   } catch (err) {
     console.error("Audit log write failed:", err);
   }
