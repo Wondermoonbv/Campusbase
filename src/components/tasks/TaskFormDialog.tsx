@@ -7,16 +7,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useScholen } from "@/hooks/useScholen";
 import { useEvenementen } from "@/hooks/useEvenementen";
+import { useProfiles } from "@/hooks/useProfiles";
 import { toast } from "sonner";
 import type { Task, TaskPriority, TaskStatus } from "@/types/crm";
 
 interface TaskFormDialogProps { open: boolean; onOpenChange: (v: boolean) => void; defaultSchoolId?: string | null; defaultEventId?: string | null; task?: Task | null; onSave?: (task: Task) => void; }
 
-const teamMembers = ["Ellen Geerts", "Naomi Geyskens", "Matthias Peeters", "Sarah Zekhnini", "Eline ten Cate"];
-
 export function TaskFormDialog({ open, onOpenChange, defaultSchoolId, defaultEventId, task, onSave }: TaskFormDialogProps) {
   const { scholen } = useScholen();
   const { evenementen } = useEvenementen();
+  const { profiles, isLoading: profilesLoading } = useProfiles();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [schoolId, setSchoolId] = useState("");
@@ -50,7 +50,19 @@ export function TaskFormDialog({ open, onOpenChange, defaultSchoolId, defaultEve
           <div><Label>Titel *</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="Wat moet er gebeuren?" /></div>
           <div><Label>Omschrijving</Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} /></div>
           <div className="grid grid-cols-2 gap-4">
-            <div><Label>Toegewezen aan *</Label><Select value={assignedTo} onValueChange={setAssignedTo} required><SelectTrigger><SelectValue placeholder="Selecteer" /></SelectTrigger><SelectContent>{teamMembers.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select></div>
+            <div>
+              <Label>Toegewezen aan *</Label>
+              <Select value={assignedTo} onValueChange={setAssignedTo} required>
+                <SelectTrigger>
+                  <SelectValue placeholder={profilesLoading ? "Laden..." : "Selecteer"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {profiles.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label>Prioriteit</Label><Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="laag">Laag</SelectItem><SelectItem value="normaal">Normaal</SelectItem><SelectItem value="hoog">Hoog</SelectItem></SelectContent></Select></div>
           </div>
           <div className="grid grid-cols-2 gap-4">

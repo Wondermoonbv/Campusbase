@@ -148,9 +148,10 @@ export default function DashboardPage() {
 
   /* ── My tasks ── */
   const myTasks = useMemo(() => {
+    const userId = user?.id || "";
     const userName = user?.name || "";
     return taken
-      .filter((t) => t.status !== "afgerond" && t.assigned_to === userName)
+      .filter((t) => t.status !== "afgerond" && (t.assigned_to === userId || t.assigned_to === userName))
       .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
       .slice(0, 5);
   }, [taken, user]);
