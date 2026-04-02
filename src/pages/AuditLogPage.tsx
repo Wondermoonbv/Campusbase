@@ -58,7 +58,7 @@ export default function AuditLogPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("audit_log")
-        .select("*")
+        .select("id, user_id, user_email, action, entity_type, entity_id, entity_name, changes, created_at")
         .order("created_at", { ascending: false })
         .limit(500);
       if (error) { console.error(error); return []; }
