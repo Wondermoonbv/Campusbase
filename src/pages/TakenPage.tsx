@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, memo } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useTaken } from "@/hooks/useTaken";
 import { useScholen } from "@/hooks/useScholen";
 import { useEvenementen } from "@/hooks/useEvenementen";
@@ -13,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, AlertTriangle, ArrowUp, Minus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, AlertTriangle, ArrowUp, Minus, Pencil, Trash2, ListTodo } from "lucide-react";
 import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
@@ -126,7 +127,9 @@ export default function TakenPage() {
         </div>
       </div>
 
-      {isLoading ? <TableSkeleton /> : (
+      {isLoading ? <TableSkeleton /> : taken.length === 0 ? (
+        <EmptyState icon={ListTodo} title="Nog geen taken aangemaakt" description="Maak je eerste taak aan om aan de slag te gaan." actionLabel="Nieuwe taak" onAction={() => { setEditTask(null); setDialogOpen(true); }} />
+      ) : (
         <Tabs defaultValue="active">
           <TabsList><TabsTrigger value="active">Openstaand ({activeTasks.length})</TabsTrigger><TabsTrigger value="done">Afgerond ({doneTasks.length})</TabsTrigger></TabsList>
           <TabsContent value="active" className="mt-4"><TaskTable tasks={activeTasks} scholen={scholen} evenementen={evenementen} resolveAssignee={resolveAssignee} onToggle={toggleTaskStatus} onEdit={handleEdit} onDelete={setDeleteTarget} /></TabsContent>

@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useScholen, useContacten } from "@/hooks/useScholen";
@@ -9,7 +10,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Download, Pencil, Upload, Trash2 } from "lucide-react";
+import { Plus, Search, Download, Pencil, Upload, Trash2, GraduationCap } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
@@ -140,7 +141,9 @@ export default function ScholenPage() {
         </div>
       </div>
 
-      {isLoading ? <ListSkeleton /> : (
+      {isLoading ? <ListSkeleton /> : scholen.length === 0 ? (
+        <EmptyState icon={GraduationCap} title="Nog geen scholen toegevoegd" description="Voeg je eerste school toe om te beginnen." actionLabel="School toevoegen" onAction={() => { setEditSchool(undefined); setDialogOpen(true); }} />
+      ) : (
         <>
           <div className="block md:hidden space-y-2">
             {sorted.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen scholen gevonden.</div> : sorted.map((school) => (

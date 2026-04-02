@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, memo } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useContacten, useScholen } from "@/hooks/useScholen";
 import { useAuth } from "@/contexts/AuthContext";
 import { ContactFormDialog } from "@/components/schools/ContactFormDialog";
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Edit, Trash2, Mail, Phone } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Mail, Phone, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import type { Contact } from "@/types/crm";
@@ -154,7 +155,9 @@ export default function ContactenPage() {
         </Select>
       </div>
 
-      {isLoading ? <ListSkeleton /> : (
+      {isLoading ? <ListSkeleton /> : contacten.length === 0 ? (
+        <EmptyState icon={Users} title="Nog geen contacten toegevoegd" description="Voeg je eerste contact toe." actionLabel="Contact toevoegen" onAction={() => { setEditContact(undefined); setDialogOpen(true); }} />
+      ) : (
         <>
           {/* Mobile cards */}
           <div className="md:hidden space-y-3">

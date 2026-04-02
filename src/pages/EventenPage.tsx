@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEvenementen } from "@/hooks/useEvenementen";
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Download, CalendarDays, List, Pencil, Upload, Trash2 } from "lucide-react";
+import { Plus, Search, Download, CalendarDays, List, Pencil, Upload, Trash2, Calendar } from "lucide-react";
 import { EventFormDialog } from "@/components/events/EventFormDialog";
 import { EventCalendar } from "@/components/events/EventCalendar";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
@@ -135,7 +136,9 @@ export default function EventenPage() {
         </div>
       </div>
 
-      {isLoading ? <ListSkeleton /> : view === "list" ? (
+      {isLoading ? <ListSkeleton /> : evenementen.length === 0 ? (
+        <EmptyState icon={Calendar} title="Geen evenementen gevonden" description="Voeg je eerste evenement toe om te beginnen." actionLabel="Evenement toevoegen" onAction={() => { setEditEvent(undefined); setDialogOpen(true); }} />
+      ) : view === "list" ? (
         <>
           <div className="block md:hidden space-y-2">
             {sorted.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen evenementen gevonden.</div> : sorted.map((ev) => (

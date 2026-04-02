@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, memo } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAmbassadeurs, useAllInschrijvingen } from "@/hooks/useAmbassadeurs";
 import type { Ambassadeur } from "@/hooks/useAmbassadeurs";
@@ -10,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { AmbassadeurFormDialog } from "@/components/ambassadeurs/AmbassadeurFormDialog";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
-import { Search, Plus, Pencil, Trash2, Upload, Download } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Upload, Download, Users } from "lucide-react";
 import { toast } from "sonner";
 
 const AMB_IMPORT_COLUMNS: ImportColumn[] = [
@@ -177,7 +178,9 @@ export default function AmbassadeursPage() {
         </Select>
       </div>
 
-      {isLoading ? <ListSkeleton /> : (
+      {isLoading ? <ListSkeleton /> : ambassadeurs.length === 0 ? (
+        <EmptyState icon={Users} title="Nog geen ambassadeurs toegevoegd" description="Voeg je eerste ambassadeur toe." actionLabel="Ambassadeur toevoegen" onAction={() => { setEditing(null); setDialogOpen(true); }} />
+      ) : (
         <>
           {/* Mobile cards */}
           <div className="sm:hidden space-y-2">

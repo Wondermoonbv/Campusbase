@@ -10,6 +10,7 @@ import { ViewAsProvider, useViewAs } from "@/contexts/ViewAsContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Analytics } from "@vercel/analytics/react";
 import { Loader2 } from "lucide-react";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 // Lazy-loaded page components
 const LoginPage = lazy(() => import("./pages/LoginPage"));
@@ -32,7 +33,26 @@ const PublicInschrijvenPage = lazy(() => import("./pages/PublicInschrijvenPage")
 const StandenbouwerPage = lazy(() => import("./pages/StandenbouwerPage"));
 const AuditLogPage = lazy(() => import("./pages/AuditLogPage"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error: any) => {
+        // Don't retry on auth errors
+        if (error?.status === 401 || error?.status === 403) return false;
+        return failureCount < 2;
+      },
+      staleTime: 30_000,
+    },
+    mutations: {
+      onError: (error: any) => {
+        const message = error?.message || "Er is een fout opgetreden";
+        if (message.includes("Failed to fetch") || message.includes("NetworkError") || message.includes("ERR_CONNECTION")) {
+          import("sonner").then(({ toast }) => toast.error("Verbinding mislukt, probeer opnieuw"));
+        }
+      },
+    },
+  },
+});
 
 function PageFallback() {
   return (
@@ -104,30 +124,35 @@ function AppRoutes() {
 
   if (isStandenbouwer && !isSimulating) {
     return (
+      <ErrorBoundary>
       <Suspense fallback={<PageFallback />}>
         <Routes>
           <Route path="/standenbouwer" element={<StandenbouwerPage />} />
           <Route path="*" element={<Navigate to="/standenbouwer" replace />} />
         </Routes>
       </Suspense>
+      </ErrorBoundary>
     );
   }
 
   if (effectiveIsStandenbouwer && isSimulating) {
     return (
       <AppLayout>
+        <ErrorBoundary>
         <Suspense fallback={<PageFallback />}>
           <Routes>
             <Route path="/standenbouwer" element={<StandenbouwerPage />} />
             <Route path="*" element={<Navigate to="/standenbouwer" replace />} />
           </Routes>
         </Suspense>
+        </ErrorBoundary>
       </AppLayout>
     );
   }
 
   return (
     <AppLayout>
+      <ErrorBoundary>
       <Suspense fallback={<PageFallback />}>
         <Routes>
           <Route path="/ambassadeurs" element={<AmbassadeursPage />} />
@@ -152,6 +177,7 @@ function AppRoutes() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
+      </ErrorBoundary>
     </AppLayout>
   );
 }

@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback, memo, Fragment } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useContracten } from "@/hooks/useContracten";
@@ -7,7 +8,7 @@ import { useEvenementen } from "@/hooks/useEvenementen";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, Plus, ChevronDown, ChevronUp, ExternalLink, Calendar, Pencil, Trash2 } from "lucide-react";
+import { Download, Plus, ChevronDown, ChevronUp, ExternalLink, Calendar, Pencil, Trash2, FileText } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContractFormDialog } from "@/components/contracts/ContractFormDialog";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
@@ -104,7 +105,9 @@ export default function ContractenPage() {
         </div>
       </div>
 
-      {isLoading ? <ListSkeleton /> : (
+      {isLoading ? <ListSkeleton /> : contracten.length === 0 ? (
+        <EmptyState icon={FileText} title="Nog geen contracten toegevoegd" description="Voeg je eerste contract toe." actionLabel="Contract toevoegen" onAction={() => { setEditContract(undefined); setDialogOpen(true); }} />
+      ) : (
         <>
           <div className="block md:hidden space-y-2">
             {sorted.map((c) => {
