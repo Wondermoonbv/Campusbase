@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEventFeedbackForm, useFeedbackResponses } from "@/hooks/useFeedback";
 import { Button } from "@/components/ui/button";
