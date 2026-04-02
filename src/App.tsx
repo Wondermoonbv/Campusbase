@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -8,34 +8,48 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ActivityProvider } from "@/contexts/ActivityContext";
 import { ViewAsProvider, useViewAs } from "@/contexts/ViewAsContext";
 import { AppLayout } from "@/components/layout/AppLayout";
-import LoginPage from "./pages/LoginPage";
-import DashboardPage from "./pages/DashboardPage";
-import ScholenPage from "./pages/ScholenPage";
-import ContactenPage from "./pages/ContactenPage";
-import SchoolDetailPage from "./pages/SchoolDetailPage";
-import OpleidingenPage from "./pages/OpleidingenPage";
-import ContractenPage from "./pages/ContractenPage";
-import EventenPage from "./pages/EventenPage";
-import EventDetailPage from "./pages/EventDetailPage";
-import RapportagePage from "./pages/RapportagePage";
-import GebruikersPage from "./pages/GebruikersPage";
-import InstellingenPage from "./pages/InstellingenPage";
-import TakenPage from "./pages/TakenPage";
-import NotFound from "./pages/NotFound";
-import PublicFeedbackPage from "./pages/PublicFeedbackPage";
-import AmbassadeursPage from "./pages/AmbassadeursPage";
-import PublicInschrijvenPage from "./pages/PublicInschrijvenPage";
-import StandenbouwerPage from "./pages/StandenbouwerPage";
-import AuditLogPage from "./pages/AuditLogPage";
+import { Analytics } from "@vercel/analytics/react";
+import { Loader2 } from "lucide-react";
+
+// Lazy-loaded page components
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const ScholenPage = lazy(() => import("./pages/ScholenPage"));
+const ContactenPage = lazy(() => import("./pages/ContactenPage"));
+const SchoolDetailPage = lazy(() => import("./pages/SchoolDetailPage"));
+const OpleidingenPage = lazy(() => import("./pages/OpleidingenPage"));
+const ContractenPage = lazy(() => import("./pages/ContractenPage"));
+const EventenPage = lazy(() => import("./pages/EventenPage"));
+const EventDetailPage = lazy(() => import("./pages/EventDetailPage"));
+const RapportagePage = lazy(() => import("./pages/RapportagePage"));
+const GebruikersPage = lazy(() => import("./pages/GebruikersPage"));
+const InstellingenPage = lazy(() => import("./pages/InstellingenPage"));
+const TakenPage = lazy(() => import("./pages/TakenPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const PublicFeedbackPage = lazy(() => import("./pages/PublicFeedbackPage"));
+const AmbassadeursPage = lazy(() => import("./pages/AmbassadeursPage"));
+const PublicInschrijvenPage = lazy(() => import("./pages/PublicInschrijvenPage"));
+const StandenbouwerPage = lazy(() => import("./pages/StandenbouwerPage"));
+const AuditLogPage = lazy(() => import("./pages/AuditLogPage"));
 
 const queryClient = new QueryClient();
 
+function PageFallback() {
+  return (
+    <div className="flex-1 flex items-center justify-center py-12">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
 function PublicRoutes() {
   return (
-    <Routes>
-      <Route path="/feedback/:formId" element={<PublicFeedbackPage />} />
-      <Route path="/inschrijven/:evenementId" element={<PublicInschrijvenPage />} />
-    </Routes>
+    <Suspense fallback={<PageFallback />}>
+      <Routes>
+        <Route path="/feedback/:formId" element={<PublicFeedbackPage />} />
+        <Route path="/inschrijven/:evenementId" element={<PublicInschrijvenPage />} />
+      </Routes>
+    </Suspense>
   );
 }
 
@@ -52,7 +66,6 @@ function AppRoutes() {
     return () => clearTimeout(timer);
   }, [loading]);
 
-  // Public routes render immediately without waiting for auth
   if (isPublicRoute) {
     return <PublicRoutes />;
   }
@@ -73,66 +86,72 @@ function AppRoutes() {
     }
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Laden...</div>
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
+      <Suspense fallback={<PageFallback />}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Suspense>
     );
   }
 
-  // Real standenbouwer (not simulating) gets isolated routes
   if (isStandenbouwer && !isSimulating) {
     return (
-      <Routes>
-        <Route path="/standenbouwer" element={<StandenbouwerPage />} />
-        <Route path="*" element={<Navigate to="/standenbouwer" replace />} />
-      </Routes>
-    );
-  }
-
-  // Admin simulating standenbouwer → show standenbouwer page within a simulated layout
-  if (effectiveIsStandenbouwer && isSimulating) {
-    return (
-      <AppLayout>
+      <Suspense fallback={<PageFallback />}>
         <Routes>
           <Route path="/standenbouwer" element={<StandenbouwerPage />} />
           <Route path="*" element={<Navigate to="/standenbouwer" replace />} />
         </Routes>
+      </Suspense>
+    );
+  }
+
+  if (effectiveIsStandenbouwer && isSimulating) {
+    return (
+      <AppLayout>
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
+            <Route path="/standenbouwer" element={<StandenbouwerPage />} />
+            <Route path="*" element={<Navigate to="/standenbouwer" replace />} />
+          </Routes>
+        </Suspense>
       </AppLayout>
     );
   }
 
   return (
     <AppLayout>
-      <Routes>
-        <Route path="/ambassadeurs" element={<AmbassadeursPage />} />
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="/scholen" element={<ScholenPage />} />
-        <Route path="/scholen/:id" element={<SchoolDetailPage />} />
-        <Route path="/contacten" element={<ContactenPage />} />
-        <Route path="/opleidingen" element={<OpleidingenPage />} />
-        <Route path="/contracten" element={<ContractenPage />} />
-        <Route path="/evenementen" element={<EventenPage />} />
-        <Route path="/evenementen/:id" element={<EventDetailPage />} />
-        <Route path="/rapportage" element={<RapportagePage />} />
-        <Route path="/taken" element={<TakenPage />} />
-        {effectiveIsAdmin && <Route path="/gebruikers" element={<GebruikersPage />} />}
-        {effectiveIsAdmin && <Route path="/audit-log" element={<AuditLogPage />} />}
-        {effectiveIsAdmin ? (
-          <Route path="/instellingen" element={<InstellingenPage />} />
-        ) : (
-          <Route path="/instellingen" element={<Navigate to="/" replace />} />
-        )}
-        <Route path="/login" element={<Navigate to="/" replace />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <Suspense fallback={<PageFallback />}>
+        <Routes>
+          <Route path="/ambassadeurs" element={<AmbassadeursPage />} />
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/scholen" element={<ScholenPage />} />
+          <Route path="/scholen/:id" element={<SchoolDetailPage />} />
+          <Route path="/contacten" element={<ContactenPage />} />
+          <Route path="/opleidingen" element={<OpleidingenPage />} />
+          <Route path="/contracten" element={<ContractenPage />} />
+          <Route path="/evenementen" element={<EventenPage />} />
+          <Route path="/evenementen/:id" element={<EventDetailPage />} />
+          <Route path="/rapportage" element={<RapportagePage />} />
+          <Route path="/taken" element={<TakenPage />} />
+          {effectiveIsAdmin && <Route path="/gebruikers" element={<GebruikersPage />} />}
+          {effectiveIsAdmin && <Route path="/audit-log" element={<AuditLogPage />} />}
+          {effectiveIsAdmin ? (
+            <Route path="/instellingen" element={<InstellingenPage />} />
+          ) : (
+            <Route path="/instellingen" element={<Navigate to="/" replace />} />
+          )}
+          <Route path="/login" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
     </AppLayout>
   );
 }
@@ -152,6 +171,7 @@ const App = () => (
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
+    <Analytics />
   </QueryClientProvider>
 );
 
