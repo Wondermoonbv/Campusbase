@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Edit, Trash2, Mail, Phone } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Mail, Phone, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import type { Contact } from "@/types/crm";
