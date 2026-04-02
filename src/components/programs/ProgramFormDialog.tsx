@@ -39,7 +39,7 @@ export function ProgramFormDialog({ open, onOpenChange, program, schoolId, onSav
           <div className="space-y-2"><Label>Naam *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
           <div className="space-y-2"><Label>School *</Label><Select value={form.school_id} onValueChange={(v) => setForm({ ...form, school_id: v })} required><SelectTrigger><SelectValue placeholder="Selecteer een school" /></SelectTrigger><SelectContent>{scholen.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-2"><Label>Faculteit</Label><Input value={form.faculty} onChange={(e) => setForm({ ...form, faculty: e.target.value })} /></div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2"><Label>Niveau *</Label><Select value={form.study_level} onValueChange={(v) => setForm({ ...form, study_level: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="bachelor">Bachelor</SelectItem><SelectItem value="master">Master</SelectItem><SelectItem value="graduaat">Graduaat</SelectItem></SelectContent></Select></div>
             <div className="space-y-2"><Label>Studierichting</Label><Select value={form.field_of_study} onValueChange={(v) => setForm({ ...form, field_of_study: v })}><SelectTrigger><SelectValue placeholder="Kies..." /></SelectTrigger><SelectContent>{FIELDS_OF_STUDY.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent></Select></div>
           </div>
