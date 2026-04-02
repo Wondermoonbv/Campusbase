@@ -51,17 +51,17 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
         <DialogHeader><DialogTitle>{isEdit ? "Contract bewerken" : "Nieuw contract"}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div><Label>School *</Label><Select value={form.school_id} onValueChange={(v) => update("school_id", v)}><SelectTrigger><SelectValue placeholder="Kies een school..." /></SelectTrigger><SelectContent>{scholen.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Type</Label><Select value={form.contract_type} onValueChange={(v) => update("contract_type", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="partnership">Partnership</SelectItem><SelectItem value="sponsoring">Sponsoring</SelectItem><SelectItem value="stage-overeenkomst">Stage-overeenkomst</SelectItem><SelectItem value="andere">Andere</SelectItem></SelectContent></Select></div>
             <div><Label>Status</Label><Select value={form.status} onValueChange={(v) => update("status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="actief">Actief</SelectItem><SelectItem value="verlopen">Verlopen</SelectItem><SelectItem value="in onderhandeling">In onderhandeling</SelectItem></SelectContent></Select></div>
           </div>
           <div><Label>Beschrijving</Label><Textarea value={form.description} onChange={(e) => update("description", e.target.value)} rows={3} /></div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div><Label>Startdatum *</Label><Input type="date" value={form.start_date} onChange={(e) => update("start_date", e.target.value)} /></div>
             <div><Label>Einddatum *</Label><Input type="date" value={form.end_date} onChange={(e) => update("end_date", e.target.value)} /></div>
             <div><Label>Vernieuwingsdatum</Label><Input type="date" value={form.renewal_date} onChange={(e) => update("renewal_date", e.target.value)} /></div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Waarde (€)</Label><Input type="number" value={form.value} onChange={(e) => update("value", e.target.value)} placeholder="0" /></div>
             <div><Label>Document URL</Label><Input value={form.document_url} onChange={(e) => update("document_url", e.target.value)} placeholder="https://..." /></div>
           </div>

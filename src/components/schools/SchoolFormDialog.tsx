@@ -96,7 +96,7 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave }: SchoolF
             <Label>Naam *</Label>
             <Input value={form.name} onChange={(e) => update("name", e.target.value)} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label>Type</Label>
               <Select value={form.type} onValueChange={(v) => update("type", v)}>
@@ -120,7 +120,7 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave }: SchoolF
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label>Stad *</Label>
               <Input value={form.city} onChange={(e) => update("city", e.target.value)} />

@@ -76,7 +76,7 @@ export function ContactFormDialog({ open, onOpenChange, schoolId, contact, onSav
           )}
           <div><Label>Functie / Rol</Label><Input value={form.role} onChange={(e) => update("role", e.target.value)} placeholder="bv. Career Services Manager" /></div>
           <div><Label>Afdeling</Label><Input value={form.department} onChange={(e) => update("department", e.target.value)} /></div>
-          <div className="grid grid-cols-2 gap-3"><div><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} /></div><div><Label>Telefoon</Label><Input value={form.phone} onChange={(e) => update("phone", e.target.value)} /></div></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} /></div><div><Label>Telefoon</Label><Input value={form.phone} onChange={(e) => update("phone", e.target.value)} /></div></div>
           <div><Label>LinkedIn</Label><Input value={form.linkedin_url} onChange={(e) => update("linkedin_url", e.target.value)} placeholder="https://linkedin.com/in/..." /></div>
           <div><Label>Notities</Label><Textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} rows={2} /></div>
           <div className="flex justify-end gap-2 pt-2"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuleren</Button><Button type="submit">{isEdit ? "Opslaan" : "Toevoegen"}</Button></div>
