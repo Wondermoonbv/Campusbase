@@ -8,7 +8,7 @@ import { useEvenementen } from "@/hooks/useEvenementen";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, Plus, ChevronDown, ChevronUp, ExternalLink, Calendar, Pencil, Trash2 } from "lucide-react";
+import { Download, Plus, ChevronDown, ChevronUp, ExternalLink, Calendar, Pencil, Trash2, FileText } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContractFormDialog } from "@/components/contracts/ContractFormDialog";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
