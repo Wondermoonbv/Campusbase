@@ -129,6 +129,7 @@ function AppRoutes() {
 
   return (
     <AppLayout>
+      <ErrorBoundary>
       <Suspense fallback={<PageFallback />}>
         <Routes>
           <Route path="/ambassadeurs" element={<AmbassadeursPage />} />
