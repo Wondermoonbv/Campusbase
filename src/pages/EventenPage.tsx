@@ -183,7 +183,30 @@ export default function EventenPage() {
       )}
 
       <EventFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditEvent(undefined); }} event={editEvent} onSave={handleSave} />
-      <CsvImportDialog open={importOpen} onOpenChange={setImportOpen} title="Evenementen importeren" columns={EVENT_CSV_COLUMNS} templateFilename="evenementen_template.csv" onImport={(rows) => { console.log("Import events:", rows); }} />
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Evenementen importeren"
+        columns={EVENT_IMPORT_COLUMNS}
+        templateFilename="evenementen_template.xlsx"
+        duplicateCheck={{ keys: ["name", "date"], existingData: evenementen.map((e) => ({ name: e.name, date: e.date })) }}
+        onImport={async (rows) => {
+          for (const row of rows) {
+            await upsertEvent.mutateAsync({
+              name: row.name,
+              type: row.type?.toLowerCase() || "jobbeurs",
+              date: row.date,
+              start_time: row.start_time || "",
+              end_time: row.end_time || "",
+              location: row.location || "",
+              responsible: row.responsible || "",
+              budget: row.budget ? Number(row.budget) : null,
+              status: row.status?.toLowerCase() || "gepland",
+              description: row.description || "",
+            });
+          }
+        }}
+      />
       <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget?.name ?? ""} isLoading={deleteEvent.isPending} />
     </div>
   );

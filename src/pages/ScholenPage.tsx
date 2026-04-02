@@ -174,7 +174,28 @@ export default function ScholenPage() {
       </div>
 
       <SchoolFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditSchool(undefined); }} school={editSchool} onSave={handleSave} />
-      <CsvImportDialog open={importOpen} onOpenChange={setImportOpen} title="Scholen importeren" columns={SCHOOL_CSV_COLUMNS} templateFilename="scholen_template.csv" onImport={(rows) => { console.log("Import schools:", rows); }} />
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Scholen importeren"
+        columns={SCHOOL_IMPORT_COLUMNS}
+        templateFilename="scholen_template.xlsx"
+        duplicateCheck={{ keys: ["name", "city"], existingData: scholen.map((s) => ({ name: s.name, city: s.city })) }}
+        onImport={async (rows) => {
+          for (const row of rows) {
+            await upsertSchool.mutateAsync({
+              name: row.name,
+              type: row.type?.toLowerCase() || "universiteit",
+              city: row.city,
+              province: row.province,
+              language: row.language?.toUpperCase() || "NL",
+              status: row.status?.toLowerCase() || "actief",
+              website: row.website || "",
+              notes: row.notes || "",
+            });
+          }
+        }}
+      />
       <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget?.name ?? ""} isLoading={deleteSchool.isPending} />
     </div>
   );
