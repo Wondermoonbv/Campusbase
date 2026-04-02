@@ -574,6 +574,64 @@ export default function GebruikersPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={resetOpen} onOpenChange={(open) => { setResetOpen(open); if (!open) setResetSuccess(false); }}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>Wachtwoord resetten voor {resetUser?.name}</DialogTitle>
+          </DialogHeader>
+          {resetSuccess ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Tijdelijk wachtwoord</Label>
+                <div className="flex gap-2">
+                  <Input value={resetPassword} readOnly className="h-10 sm:h-9 font-mono" />
+                  <Button type="button" variant="outline" size="icon" className="h-10 sm:h-9 shrink-0" onClick={copyPassword}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3">
+                <p className="text-sm text-destructive font-medium">Dit wachtwoord wordt niet meer getoond na het sluiten van dit venster.</p>
+              </div>
+              <DialogFooter>
+                <Button onClick={() => setResetOpen(false)} className="h-10 sm:h-9">Sluiten</Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label>E-mailadres</Label>
+                <Input value={resetUser?.email ?? ""} readOnly className="h-10 sm:h-9 bg-muted" />
+              </div>
+              <div className="space-y-2">
+                <Label>Nieuw wachtwoord *</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    value={resetPassword}
+                    onChange={(e) => setResetPassword(e.target.value)}
+                    placeholder="Minimaal 8 tekens"
+                    minLength={8}
+                    required
+                    className="h-10 sm:h-9"
+                  />
+                  <Button type="button" variant="outline" size="sm" className="h-10 sm:h-9 shrink-0 gap-1.5" onClick={generatePassword}>
+                    <RefreshCw className="h-3.5 w-3.5" /> Genereer
+                  </Button>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" className="h-10 sm:h-9" onClick={() => setResetOpen(false)}>Annuleren</Button>
+                <Button type="submit" className="h-10 sm:h-9" disabled={resetLoading || resetPassword.length < 8}>
+                  {resetLoading ? "Resetten..." : "Wachtwoord resetten"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
