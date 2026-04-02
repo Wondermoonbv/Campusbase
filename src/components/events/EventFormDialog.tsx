@@ -60,11 +60,11 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
             </div>
             {form.standenbouwer_nodig && (
               <div className="space-y-3 pl-1">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><Label>Opbouwtijd</Label><Input placeholder="bijv. 08:00" value={form.opbouw_tijd} onChange={(e) => setForm({ ...form, opbouw_tijd: e.target.value })} /></div>
                   <div><Label>Afbraaktijd</Label><Input placeholder="bijv. 18:00" value={form.afbraak_tijd} onChange={(e) => setForm({ ...form, afbraak_tijd: e.target.value })} /></div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><Label>Standgrootte</Label><Input placeholder="bijv. 3x3m" value={form.stand_grootte} onChange={(e) => setForm({ ...form, stand_grootte: e.target.value })} /></div>
                   <div><Label>Contactpersoon stand</Label><Input value={form.contactpersoon_stand} onChange={(e) => setForm({ ...form, contactpersoon_stand: e.target.value })} /></div>
                 </div>

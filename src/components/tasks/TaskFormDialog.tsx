@@ -49,7 +49,7 @@ export function TaskFormDialog({ open, onOpenChange, defaultSchoolId, defaultEve
         <form onSubmit={handleSubmit} className="space-y-4">
           <div><Label>Titel *</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="Wat moet er gebeuren?" /></div>
           <div><Label>Omschrijving</Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} /></div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Toegewezen aan *</Label>
               <Select value={assignedTo} onValueChange={setAssignedTo} required>
@@ -65,11 +65,11 @@ export function TaskFormDialog({ open, onOpenChange, defaultSchoolId, defaultEve
             </div>
             <div><Label>Prioriteit</Label><Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="laag">Laag</SelectItem><SelectItem value="normaal">Normaal</SelectItem><SelectItem value="hoog">Hoog</SelectItem></SelectContent></Select></div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><Label>Vervaldatum *</Label><Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} required /></div>
             <div><Label>Status</Label><Select value={status} onValueChange={(v) => setStatus(v as TaskStatus)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="open">Open</SelectItem><SelectItem value="in behandeling">In behandeling</SelectItem><SelectItem value="afgerond">Afgerond</SelectItem></SelectContent></Select></div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><Label>School</Label><Select value={schoolId} onValueChange={setSchoolId}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{scholen.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
             <div><Label>Evenement</Label><Select value={eventId} onValueChange={setEventId}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{evenementen.map((ev) => <SelectItem key={ev.id} value={ev.id}>{ev.name}</SelectItem>)}</SelectContent></Select></div>
           </div>

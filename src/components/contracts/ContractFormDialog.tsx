@@ -61,7 +61,7 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
             <div><Label>Einddatum *</Label><Input type="date" value={form.end_date} onChange={(e) => update("end_date", e.target.value)} /></div>
             <div><Label>Vernieuwingsdatum</Label><Input type="date" value={form.renewal_date} onChange={(e) => update("renewal_date", e.target.value)} /></div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Waarde (€)</Label><Input type="number" value={form.value} onChange={(e) => update("value", e.target.value)} placeholder="0" /></div>
             <div><Label>Document URL</Label><Input value={form.document_url} onChange={(e) => update("document_url", e.target.value)} placeholder="https://..." /></div>
           </div>
