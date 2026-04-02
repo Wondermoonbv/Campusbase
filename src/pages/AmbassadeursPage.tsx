@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { AmbassadeurFormDialog } from "@/components/ambassadeurs/AmbassadeurFormDialog";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
-import { Search, Plus, Pencil, Trash2, Upload, Download } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Upload, Download, Users } from "lucide-react";
 import { toast } from "sonner";
 
 const AMB_IMPORT_COLUMNS: ImportColumn[] = [
