@@ -141,7 +141,9 @@ export default function ScholenPage() {
         </div>
       </div>
 
-      {isLoading ? <ListSkeleton /> : (
+      {isLoading ? <ListSkeleton /> : scholen.length === 0 ? (
+        <EmptyState icon={GraduationCap} title="Nog geen scholen toegevoegd" description="Voeg je eerste school toe om te beginnen." actionLabel="School toevoegen" onAction={() => { setEditSchool(undefined); setDialogOpen(true); }} />
+      ) : (
         <>
           <div className="block md:hidden space-y-2">
             {sorted.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen scholen gevonden.</div> : sorted.map((school) => (
