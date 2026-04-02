@@ -155,7 +155,9 @@ export default function ContactenPage() {
         </Select>
       </div>
 
-      {isLoading ? <ListSkeleton /> : (
+      {isLoading ? <ListSkeleton /> : contacten.length === 0 ? (
+        <EmptyState icon={Users} title="Nog geen contacten toegevoegd" description="Voeg je eerste contact toe." actionLabel="Contact toevoegen" onAction={() => { setEditContact(undefined); setDialogOpen(true); }} />
+      ) : (
         <>
           {/* Mobile cards */}
           <div className="md:hidden space-y-3">
