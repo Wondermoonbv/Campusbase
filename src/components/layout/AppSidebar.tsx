@@ -34,6 +34,7 @@ import { useMemo } from "react";
 const allNavItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, roles: ["admin", "editor", "viewer"] },
   { title: "Scholen", url: "/scholen", icon: GraduationCap, roles: ["admin", "editor", "viewer"] },
+  { title: "Contacten", url: "/contacten", icon: Contact, roles: ["admin", "editor", "viewer"] },
   { title: "Opleidingen", url: "/opleidingen", icon: BookOpen, roles: ["admin", "editor", "viewer"] },
   { title: "Evenementen", url: "/evenementen", icon: CalendarDays, roles: ["admin", "editor", "viewer"] },
   { title: "Ambassadeurs", url: "/ambassadeurs", icon: UserCheck, roles: ["admin", "editor", "viewer"] },
