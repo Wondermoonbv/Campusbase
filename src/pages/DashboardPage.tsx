@@ -13,7 +13,7 @@ const BelgiumMap = lazy(() => import("@/components/dashboard/BelgiumMap"));
 import {
   GraduationCap, CalendarDays, ListTodo, Users, ArrowUp, Minus,
   TrendingUp, Star, BarChart3, Clock, CalendarPlus, ClipboardList,
-  UserPlus, MessageSquare, Calendar,
+  Plus, Pencil, Trash2,
 } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Link } from "react-router-dom";
