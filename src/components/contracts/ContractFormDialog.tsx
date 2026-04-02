@@ -11,6 +11,8 @@ import { useScholen } from "@/hooks/useScholen";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import type { Contract } from "@/types/crm";
 import { toast } from "sonner";
+import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
+import { CharacterCounter } from "@/components/ui/CharacterCounter";
 
 interface ContractFormDialogProps { open: boolean; onOpenChange: (open: boolean) => void; contract?: Contract; onSave?: (contract: Contract) => void; }
 
@@ -37,7 +39,8 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.school_id || !form.start_date || !form.end_date) { toast.error("Vul school, startdatum en einddatum in."); return; }
-    const saved: Contract = { ...(contract?.id ? { id: contract.id } : {}), school_id: form.school_id, contract_type: form.contract_type as Contract["contract_type"], start_date: form.start_date, end_date: form.end_date, renewal_date: form.renewal_date, status: form.status as Contract["status"], value: form.value ? Number(form.value) : null, description: form.description, document_url: form.document_url, notes: form.notes, linked_event_ids: form.linked_event_ids } as Contract;
+    const sanitized = sanitizeFormData(form);
+    const saved: Contract = { ...(contract?.id ? { id: contract.id } : {}), school_id: sanitized.school_id, contract_type: sanitized.contract_type as Contract["contract_type"], start_date: sanitized.start_date, end_date: sanitized.end_date, renewal_date: sanitized.renewal_date, status: sanitized.status as Contract["status"], value: sanitized.value ? Number(sanitized.value) : null, description: sanitized.description, document_url: sanitized.document_url, notes: sanitized.notes, linked_event_ids: form.linked_event_ids } as Contract;
     onSave?.(saved);
     toast.success(isEdit ? "Contract bijgewerkt." : "Contract toegevoegd.");
     onOpenChange(false);
@@ -55,7 +58,10 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
             <div><Label>Type</Label><Select value={form.contract_type} onValueChange={(v) => update("contract_type", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="partnership">Partnership</SelectItem><SelectItem value="sponsoring">Sponsoring</SelectItem><SelectItem value="stage-overeenkomst">Stage-overeenkomst</SelectItem><SelectItem value="andere">Andere</SelectItem></SelectContent></Select></div>
             <div><Label>Status</Label><Select value={form.status} onValueChange={(v) => update("status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="actief">Actief</SelectItem><SelectItem value="verlopen">Verlopen</SelectItem><SelectItem value="in onderhandeling">In onderhandeling</SelectItem></SelectContent></Select></div>
           </div>
-          <div><Label>Beschrijving</Label><Textarea value={form.description} onChange={(e) => update("description", e.target.value)} rows={3} /></div>
+          <div>
+            <div className="flex items-center justify-between"><Label>Beschrijving</Label><CharacterCounter current={form.description.length} max={MAX_LENGTHS.description} /></div>
+            <Textarea value={form.description} onChange={(e) => update("description", e.target.value)} rows={3} maxLength={MAX_LENGTHS.description} />
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div><Label>Startdatum *</Label><Input type="date" value={form.start_date} onChange={(e) => update("start_date", e.target.value)} /></div>
             <div><Label>Einddatum *</Label><Input type="date" value={form.end_date} onChange={(e) => update("end_date", e.target.value)} /></div>
@@ -63,9 +69,12 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Waarde (€)</Label><Input type="number" value={form.value} onChange={(e) => update("value", e.target.value)} placeholder="0" /></div>
-            <div><Label>Document URL</Label><Input value={form.document_url} onChange={(e) => update("document_url", e.target.value)} placeholder="https://..." /></div>
+            <div><Label>Document URL</Label><Input value={form.document_url} onChange={(e) => update("document_url", e.target.value)} placeholder="https://..." maxLength={MAX_LENGTHS.url} /></div>
           </div>
-          <div><Label>Notities</Label><Textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} rows={2} /></div>
+          <div>
+            <div className="flex items-center justify-between"><Label>Notities</Label><CharacterCounter current={form.notes.length} max={MAX_LENGTHS.notes} /></div>
+            <Textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} rows={2} maxLength={MAX_LENGTHS.notes} />
+          </div>
           <div><Label className="mb-2 block">Gekoppelde evenementen</Label><div className="border border-border rounded-lg max-h-40 overflow-y-auto p-2 space-y-1.5">{relevantEvents.length === 0 ? <p className="text-xs text-muted-foreground p-1">Geen evenementen beschikbaar.</p> : relevantEvents.map((event) => <label key={event.id} className="flex items-center gap-2 text-sm p-1.5 rounded hover:bg-muted/40 cursor-pointer"><Checkbox checked={form.linked_event_ids.includes(event.id)} onCheckedChange={() => toggleEvent(event.id)} /><span className="flex-1">{event.name}</span><span className="text-xs text-muted-foreground">{new Date(event.date).toLocaleDateString("nl-BE")}</span></label>)}</div></div>
           <div className="flex justify-end gap-2 pt-2"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuleren</Button><Button type="submit">{isEdit ? "Opslaan" : "Toevoegen"}</Button></div>
         </form>

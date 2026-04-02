@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Star, CheckCircle2 } from "lucide-react";
+import { stripHtml, MAX_LENGTHS } from "@/lib/sanitize";
+import { CharacterCounter } from "@/components/ui/CharacterCounter";
 
 const BRAND = "#0E6575";
 
@@ -69,6 +70,7 @@ export default function PublicFeedbackPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitted || submitting) return; // prevent double submit
     setError("");
     if (!name.trim()) { setError("Naam is verplicht."); return; }
     if (overall === 0) { setError("Geef een algemene beoordeling."); return; }
@@ -76,14 +78,14 @@ export default function PublicFeedbackPage() {
     try {
       const { error: insertError } = await supabase.from("feedback_responses").insert({
         form_id: formId!,
-        respondent_name: name.trim(),
+        respondent_name: stripHtml(name.trim()),
         respondent_email: email.trim() || null,
         overall_rating: overall,
         organization_rating: organization || null,
         relevance_rating: relevance || null,
         stand_rating: stand || null,
         would_recommend: recommend,
-        comments: comments.trim() || null,
+        comments: stripHtml(comments.trim()) || null,
       });
       if (insertError) throw insertError;
       setSubmitted(true);
@@ -154,12 +156,12 @@ export default function PublicFeedbackPage() {
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-7 space-y-6">
           <div className="space-y-1.5">
             <Label htmlFor="name">Naam *</Label>
-            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Jouw naam" className="h-11" />
+            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Jouw naam" className="h-11" maxLength={MAX_LENGTHS.name} />
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="email">E-mail</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voornaam.achternaam@elia.be" className="h-11" />
+            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voornaam.achternaam@elia.be" className="h-11" maxLength={MAX_LENGTHS.email} />
           </div>
 
           <hr className="border-gray-100" />
@@ -180,8 +182,11 @@ export default function PublicFeedbackPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="comments">Opmerkingen</Label>
-            <Textarea id="comments" value={comments} onChange={(e) => setComments(e.target.value)} placeholder="Deel je ervaring..." rows={3} />
+            <div className="flex items-center justify-between">
+              <Label htmlFor="comments">Opmerkingen</Label>
+              <CharacterCounter current={comments.length} max={MAX_LENGTHS.description} />
+            </div>
+            <Textarea id="comments" value={comments} onChange={(e) => setComments(e.target.value)} placeholder="Deel je ervaring..." rows={3} maxLength={MAX_LENGTHS.description} />
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
@@ -190,7 +195,7 @@ export default function PublicFeedbackPage() {
             type="submit"
             className="w-full h-12 text-base font-medium"
             style={{ backgroundColor: BRAND }}
-            disabled={submitting}
+            disabled={submitting || submitted}
           >
             {submitting ? "Verzenden..." : "Feedback verzenden"}
           </Button>

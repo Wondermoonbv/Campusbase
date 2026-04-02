@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CalendarDays, MapPin, CheckCircle2 } from "lucide-react";
+import { stripHtml, MAX_LENGTHS } from "@/lib/sanitize";
 
 const BRAND = "#0E6575";
 
@@ -34,16 +35,21 @@ export default function PublicInschrijvenPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitted || submitting) return; // prevent double submit
     setError("");
     if (!name.trim() || !email.trim()) { setError("Naam en e-mail zijn verplicht."); return; }
     setSubmitting(true);
 
     try {
+      const sanitizedName = stripHtml(name.trim());
+      const sanitizedEmail = email.trim().toLowerCase();
+      const sanitizedDept = stripHtml(department.trim());
+
       // Check/create ambassadeur
       let { data: existing } = await supabase
         .from("ambassadeurs")
         .select("id")
-        .eq("email", email.trim().toLowerCase())
+        .eq("email", sanitizedEmail)
         .maybeSingle();
 
       let ambassadeurId: string;
@@ -52,7 +58,7 @@ export default function PublicInschrijvenPage() {
       } else {
         const { data: created, error: createErr } = await supabase
           .from("ambassadeurs")
-          .insert({ full_name: name.trim(), email: email.trim().toLowerCase(), department: department.trim() })
+          .insert({ full_name: sanitizedName, email: sanitizedEmail, department: sanitizedDept })
           .select("id")
           .single();
         if (createErr) throw createErr;
@@ -134,22 +140,22 @@ export default function PublicInschrijvenPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label>Naam *</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Je volledige naam" className="h-11" />
+            <Input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Je volledige naam" className="h-11" maxLength={MAX_LENGTHS.name} />
           </div>
           <div>
             <Label>E-mail *</Label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="je.email@elia.be" className="h-11" />
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="je.email@elia.be" className="h-11" maxLength={MAX_LENGTHS.email} />
           </div>
           <div>
             <Label>Afdeling <span className="text-muted-foreground">(optioneel)</span></Label>
-            <Input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="bv. Grid Operations" className="h-11" />
+            <Input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="bv. Grid Operations" className="h-11" maxLength={MAX_LENGTHS.shortText} />
           </div>
 
           {error && <p className="text-sm text-destructive font-medium">{error}</p>}
 
           <Button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || submitted}
             className="w-full h-11 text-base font-semibold"
             style={{ backgroundColor: BRAND }}
           >
