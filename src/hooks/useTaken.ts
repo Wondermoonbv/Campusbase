@@ -1,3 +1,4 @@
+import { useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Task } from "@/types/crm";
@@ -5,8 +6,9 @@ import { writeAuditLog } from "@/lib/audit";
 
 export function useTaken() {
   const qc = useQueryClient();
+  const lastSyncRef = useRef<Date>(new Date());
 
-  const { data: taken = [], isLoading } = useQuery({
+  const { data: taken = [], isLoading, dataUpdatedAt } = useQuery({
     queryKey: ["taken"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -14,6 +16,7 @@ export function useTaken() {
         .select("id, title, description, school_id, event_id, assigned_to, due_date, priority, status, created_at")
         .order("due_date", { ascending: true });
       if (error) { console.error("Error fetching taken:", error); return []; }
+      lastSyncRef.current = new Date();
       return (data as any[]).map((t) => ({
         ...t,
         school_id: t.school_id ?? null,
@@ -21,7 +24,26 @@ export function useTaken() {
         description: t.description ?? "",
       })) as Task[];
     },
+    staleTime: 30_000,
   });
+
+  // Realtime subscription — invalidate query on any change
+  useEffect(() => {
+    const channel = supabase
+      .channel("taken-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "taken" },
+        () => {
+          qc.invalidateQueries({ queryKey: ["taken"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc]);
 
   const upsertTask = useMutation({
     mutationFn: async (task: Partial<Task> & { title: string }) => {
@@ -48,6 +70,38 @@ export function useTaken() {
     },
   });
 
+  // Optimistic status toggle
+  const toggleTaskStatus = useMutation({
+    mutationFn: async ({ id, currentStatus }: { id: string; currentStatus: string }) => {
+      const newStatus = currentStatus === "afgerond" ? "open" : "afgerond";
+      const { data, error } = await supabase
+        .from("taken")
+        .update({ status: newStatus })
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Task;
+    },
+    onMutate: async ({ id, currentStatus }) => {
+      await qc.cancelQueries({ queryKey: ["taken"] });
+      const previous = qc.getQueryData<Task[]>(["taken"]);
+      const newStatus = currentStatus === "afgerond" ? "open" : "afgerond";
+      qc.setQueryData<Task[]>(["taken"], (old) =>
+        old?.map((t) => (t.id === id ? { ...t, status: newStatus } : t)) ?? []
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        qc.setQueryData(["taken"], context.previous);
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["taken"] });
+    },
+  });
+
   const deleteTask = useMutation({
     mutationFn: async ({ id, title }: { id: string; title: string }) => {
       const { error } = await supabase.from("taken").delete().eq("id", id);
@@ -60,5 +114,7 @@ export function useTaken() {
     },
   });
 
-  return { taken, isLoading, upsertTask, deleteTask };
+  const lastSynced = dataUpdatedAt ? new Date(dataUpdatedAt) : lastSyncRef.current;
+
+  return { taken, isLoading, upsertTask, deleteTask, toggleTaskStatus, lastSynced };
 }
