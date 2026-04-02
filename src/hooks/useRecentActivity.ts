@@ -3,91 +3,51 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface ActivityItem {
   id: string;
-  type: "inschrijving" | "feedback" | "event" | "school";
+  type: "create" | "update" | "delete";
+  entity_type: string;
   label: string;
   timestamp: string;
-  link: string;
+  user_email: string | null;
 }
+
+const ACTION_LABELS: Record<string, string> = {
+  create: "aangemaakt",
+  update: "gewijzigd",
+  delete: "verwijderd",
+};
+
+const ENTITY_LABELS: Record<string, string> = {
+  school: "School",
+  contact: "Contact",
+  opleiding: "Opleiding",
+  evenement: "Evenement",
+  contract: "Contract",
+  taak: "Taak",
+  ambassadeur: "Ambassadeur",
+  inschrijving: "Inschrijving",
+};
 
 export function useRecentActivity() {
   return useQuery<ActivityItem[]>({
     queryKey: ["recent-activity"],
     refetchInterval: 60_000,
     queryFn: async () => {
-      const [inschrijvingen, feedback, events, scholen] = await Promise.all([
-        supabase
-          .from("event_inschrijvingen")
-          .select("id, ingeschreven_op, ambassadeur_id, evenement_id, ambassadeurs(full_name), evenementen(name)")
-          .order("ingeschreven_op", { ascending: false })
-          .limit(5),
-        supabase
-          .from("feedback_responses")
-          .select("id, submitted_at, form_id, feedback_forms(title, evenement_id, evenementen(name))")
-          .order("submitted_at", { ascending: false })
-          .limit(5),
-        supabase
-          .from("evenementen")
-          .select("id, name, date")
-          .order("date", { ascending: false })
-          .limit(5),
-        supabase
-          .from("scholen")
-          .select("id, name, created_at")
-          .order("created_at", { ascending: false })
-          .limit(5),
-      ]);
+      const { data, error } = await supabase
+        .from("audit_log")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(10);
 
-      const items: ActivityItem[] = [];
+      if (error) { console.error(error); return []; }
 
-      (inschrijvingen.data ?? []).forEach((i: any) => {
-        const ambName = i.ambassadeurs?.full_name ?? "Onbekend";
-        const evName = i.evenementen?.name ?? "onbekend event";
-        items.push({
-          id: `insc-${i.id}`,
-          type: "inschrijving",
-          label: `${ambName} heeft zich ingeschreven voor ${evName}`,
-          timestamp: i.ingeschreven_op ?? "",
-          link: `/evenementen/${i.evenement_id}`,
-        });
-      });
-
-      (feedback.data ?? []).forEach((f: any) => {
-        const form = f.feedback_forms as any;
-        const evName = form?.evenementen?.name ?? "onbekend event";
-        const evId = form?.evenement_id;
-        items.push({
-          id: `fb-${f.id}`,
-          type: "feedback",
-          label: `Nieuwe feedback ontvangen voor ${evName}`,
-          timestamp: f.submitted_at ?? "",
-          link: evId ? `/evenementen/${evId}` : "/evenementen",
-        });
-      });
-
-      (events.data ?? []).forEach((e: any) => {
-        items.push({
-          id: `ev-${e.id}`,
-          type: "event",
-          label: `Nieuw event aangemaakt: ${e.name}`,
-          timestamp: e.date ?? "",
-          link: `/evenementen/${e.id}`,
-        });
-      });
-
-      (scholen.data ?? []).forEach((s: any) => {
-        items.push({
-          id: `sch-${s.id}`,
-          type: "school",
-          label: `Nieuwe school toegevoegd: ${s.name}`,
-          timestamp: s.created_at ?? "",
-          link: `/scholen/${s.id}`,
-        });
-      });
-
-      return items
-        .filter((i) => i.timestamp)
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-        .slice(0, 10);
+      return (data ?? []).map((entry: any) => ({
+        id: entry.id,
+        type: entry.action as ActivityItem["type"],
+        entity_type: entry.entity_type,
+        label: `${ENTITY_LABELS[entry.entity_type] ?? entry.entity_type} "${entry.entity_name ?? "?"}" ${ACTION_LABELS[entry.action] ?? entry.action}${entry.user_email ? ` door ${entry.user_email.split("@")[0]}` : ""}`,
+        timestamp: entry.created_at ?? "",
+        user_email: entry.user_email,
+      }));
     },
   });
 }

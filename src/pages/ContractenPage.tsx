@@ -43,7 +43,7 @@ export default function ContractenPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await deleteContract.mutateAsync(deleteTarget.id);
+      await deleteContract.mutateAsync({ id: deleteTarget.id, name: `Contract ${deleteTarget.contract_type}` });
       toast.success("Contract verwijderd.");
     } catch (error) {
       handleDeleteError(error, "contract");

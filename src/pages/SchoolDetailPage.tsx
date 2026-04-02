@@ -60,7 +60,7 @@ export default function SchoolDetailPage() {
   const handleDeleteContact = async () => {
     if (!deleteContactTarget) return;
     try {
-      await deleteContact.mutateAsync(deleteContactTarget.id);
+      await deleteContact.mutateAsync({ id: deleteContactTarget.id, name: deleteContactTarget.name });
       toast.success("Contact verwijderd.");
     } catch (error) {
       handleDeleteError(error, "contact");

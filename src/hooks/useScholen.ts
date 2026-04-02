@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/lib/supabase-helpers";
 import type { School, Contact } from "@/types/crm";
+import { writeAuditLog } from "@/lib/audit";
 
 export function useScholen() {
   const qc = useQueryClient();
@@ -18,28 +19,33 @@ export function useScholen() {
     mutationFn: async (school: Partial<School> & { name: string }) => {
       const { contacts, ...rest } = school as any;
       if (school.id) {
-        // UPDATE existing record
         const { id, created_at, ...updates } = rest;
         const { data, error } = await db("scholen").update(updates).eq("id", id).select().single();
         if (error) throw error;
-        return data as School;
+        return { data: data as School, action: "update" as const, updates };
       } else {
-        // INSERT new record — let Supabase generate the UUID
         const { id, created_at, ...insert } = rest;
         const { data, error } = await db("scholen").insert(insert).select().single();
         if (error) throw error;
-        return data as School;
+        return { data: data as School, action: "create" as const, updates: insert };
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["scholen"] }),
+    onSuccess: ({ data, action, updates }) => {
+      qc.invalidateQueries({ queryKey: ["scholen"] });
+      writeAuditLog({ action, entity_type: "school", entity_id: data.id, entity_name: data.name, changes: updates });
+    },
   });
 
   const deleteSchool = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
       const { error } = await db("scholen").delete().eq("id", id);
       if (error) throw error;
+      return { id, name };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["scholen"] }),
+    onSuccess: ({ id, name }) => {
+      qc.invalidateQueries({ queryKey: ["scholen"] });
+      writeAuditLog({ action: "delete", entity_type: "school", entity_id: id, entity_name: name });
+    },
   });
 
   return { scholen, isLoading, upsertSchool, deleteSchool };
@@ -65,24 +71,30 @@ export function useContacten(schoolId?: string) {
         const { id, ...updates } = contact;
         const { data, error } = await db("contacten").update(updates).eq("id", id).select().single();
         if (error) throw error;
-        return data as Contact;
+        return { data: data as Contact, action: "update" as const, updates };
       } else {
-        // INSERT — strip id so Supabase generates it
         const { id, ...insert } = contact;
         const { data, error } = await db("contacten").insert(insert).select().single();
         if (error) throw error;
-        return data as Contact;
+        return { data: data as Contact, action: "create" as const, updates: insert };
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["contacten"] }),
+    onSuccess: ({ data, action, updates }) => {
+      qc.invalidateQueries({ queryKey: ["contacten"] });
+      writeAuditLog({ action, entity_type: "contact", entity_id: data.id, entity_name: data.name, changes: updates });
+    },
   });
 
   const deleteContact = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
       const { error } = await db("contacten").delete().eq("id", id);
       if (error) throw error;
+      return { id, name };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["contacten"] }),
+    onSuccess: ({ id, name }) => {
+      qc.invalidateQueries({ queryKey: ["contacten"] });
+      writeAuditLog({ action: "delete", entity_type: "contact", entity_id: id, entity_name: name });
+    },
   });
 
   return { contacten, isLoading, upsertContact, deleteContact };

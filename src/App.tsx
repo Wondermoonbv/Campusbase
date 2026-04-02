@@ -26,6 +26,7 @@ import PublicFeedbackPage from "./pages/PublicFeedbackPage";
 import AmbassadeursPage from "./pages/AmbassadeursPage";
 import PublicInschrijvenPage from "./pages/PublicInschrijvenPage";
 import StandenbouwerPage from "./pages/StandenbouwerPage";
+import AuditLogPage from "./pages/AuditLogPage";
 
 const queryClient = new QueryClient();
 
@@ -123,6 +124,7 @@ function AppRoutes() {
         <Route path="/rapportage" element={<RapportagePage />} />
         <Route path="/taken" element={<TakenPage />} />
         {effectiveIsAdmin && <Route path="/gebruikers" element={<GebruikersPage />} />}
+        {effectiveIsAdmin && <Route path="/audit-log" element={<AuditLogPage />} />}
         {effectiveIsAdmin ? (
           <Route path="/instellingen" element={<InstellingenPage />} />
         ) : (

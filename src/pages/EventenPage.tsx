@@ -57,7 +57,7 @@ export default function EventenPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await deleteEvent.mutateAsync(deleteTarget.id);
+      await deleteEvent.mutateAsync({ id: deleteTarget.id, name: deleteTarget.name });
       toast.success("Evenement verwijderd.");
     } catch (error) {
       handleDeleteError(error, "evenement");

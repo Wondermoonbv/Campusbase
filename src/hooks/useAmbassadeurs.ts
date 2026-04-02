@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { writeAuditLog } from "@/lib/audit";
 
 export interface Ambassadeur {
   id: string;
@@ -28,10 +29,7 @@ export function useAmbassadeurs() {
   const { data: ambassadeurs = [], isLoading } = useQuery({
     queryKey: ["ambassadeurs"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ambassadeurs")
-        .select("*")
-        .order("full_name");
+      const { data, error } = await supabase.from("ambassadeurs").select("*").order("full_name");
       if (error) { console.error(error); return []; }
       return data as Ambassadeur[];
     },
@@ -41,34 +39,32 @@ export function useAmbassadeurs() {
     mutationFn: async (amb: Partial<Ambassadeur> & { full_name: string; email: string }) => {
       if (amb.id) {
         const { id, created_at, ...updates } = amb as any;
-        const { data, error } = await supabase
-          .from("ambassadeurs")
-          .update(updates)
-          .eq("id", id)
-          .select()
-          .single();
+        const { data, error } = await supabase.from("ambassadeurs").update(updates).eq("id", id).select().single();
         if (error) throw error;
-        return data as Ambassadeur;
+        return { data: data as Ambassadeur, action: "update" as const, updates };
       } else {
         const { id, created_at, ...insert } = amb as any;
-        const { data, error } = await supabase
-          .from("ambassadeurs")
-          .insert(insert)
-          .select()
-          .single();
+        const { data, error } = await supabase.from("ambassadeurs").insert(insert).select().single();
         if (error) throw error;
-        return data as Ambassadeur;
+        return { data: data as Ambassadeur, action: "create" as const, updates: insert };
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["ambassadeurs"] }),
+    onSuccess: ({ data, action, updates }) => {
+      qc.invalidateQueries({ queryKey: ["ambassadeurs"] });
+      writeAuditLog({ action, entity_type: "ambassadeur", entity_id: data.id, entity_name: data.full_name, changes: updates });
+    },
   });
 
   const deleteAmbassadeur = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
       const { error } = await supabase.from("ambassadeurs").delete().eq("id", id);
       if (error) throw error;
+      return { id, name };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["ambassadeurs"] }),
+    onSuccess: ({ id, name }) => {
+      qc.invalidateQueries({ queryKey: ["ambassadeurs"] });
+      writeAuditLog({ action: "delete", entity_type: "ambassadeur", entity_id: id, entity_name: name });
+    },
   });
 
   return { ambassadeurs, isLoading, upsertAmbassadeur, deleteAmbassadeur };
@@ -81,10 +77,7 @@ export function useEventInschrijvingen(eventId?: string) {
     queryKey: ["event_inschrijvingen", eventId],
     enabled: !!eventId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("event_inschrijvingen")
-        .select("*")
-        .eq("evenement_id", eventId!);
+      const { data, error } = await supabase.from("event_inschrijvingen").select("*").eq("evenement_id", eventId!);
       if (error) { console.error(error); return []; }
       return data as EventInschrijving[];
     },
@@ -100,28 +93,36 @@ export function useEventInschrijvingen(eventId?: string) {
       if (error) throw error;
       return data as EventInschrijving;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["event_inschrijvingen", eventId] }),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["event_inschrijvingen", eventId] });
+      writeAuditLog({ action: "create", entity_type: "inschrijving", entity_id: data.id, entity_name: `Inschrijving ${data.ambassadeur_id}`, changes: { evenement_id: data.evenement_id, ambassadeur_id: data.ambassadeur_id } });
+    },
   });
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const updates: any = { status };
       if (status === "bevestigd") updates.bevestigd_op = new Date().toISOString();
-      const { error } = await supabase
-        .from("event_inschrijvingen")
-        .update(updates)
-        .eq("id", id);
+      const { error } = await supabase.from("event_inschrijvingen").update(updates).eq("id", id);
       if (error) throw error;
+      return { id, status };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["event_inschrijvingen", eventId] }),
+    onSuccess: ({ id, status }) => {
+      qc.invalidateQueries({ queryKey: ["event_inschrijvingen", eventId] });
+      writeAuditLog({ action: "update", entity_type: "inschrijving", entity_id: id, entity_name: `Inschrijving`, changes: { status } });
+    },
   });
 
   const deleteInschrijving = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("event_inschrijvingen").delete().eq("id", id);
       if (error) throw error;
+      return id;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["event_inschrijvingen", eventId] }),
+    onSuccess: (id) => {
+      qc.invalidateQueries({ queryKey: ["event_inschrijvingen", eventId] });
+      writeAuditLog({ action: "delete", entity_type: "inschrijving", entity_id: id, entity_name: "Inschrijving" });
+    },
   });
 
   return { inschrijvingen, isLoading, addInschrijving, updateStatus, deleteInschrijving };
@@ -131,9 +132,7 @@ export function useAllInschrijvingen() {
   const { data = [], isLoading } = useQuery({
     queryKey: ["event_inschrijvingen_all"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("event_inschrijvingen")
-        .select("*");
+      const { data, error } = await supabase.from("event_inschrijvingen").select("*");
       if (error) { console.error(error); return []; }
       return data as EventInschrijving[];
     },

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/lib/supabase-helpers";
 import type { Program, EventProgram } from "@/types/crm";
+import { writeAuditLog } from "@/lib/audit";
 
 export function useOpleidingen() {
   const qc = useQueryClient();
@@ -13,6 +14,7 @@ export function useOpleidingen() {
       return data as Program[];
     },
   });
+
   const upsertOpleiding = useMutation({
     mutationFn: async (program: Partial<Program> & { name: string; school_id: string }) => {
       const { school, ...rest } = program as any;
@@ -20,15 +22,18 @@ export function useOpleidingen() {
         const { id, ...updates } = rest;
         const { data, error } = await db("opleidingen").update(updates).eq("id", id).select().single();
         if (error) throw error;
-        return data as Program;
+        return { data: data as Program, action: "update" as const, updates };
       } else {
         const { id, ...insert } = rest;
         const { data, error } = await db("opleidingen").insert(insert).select().single();
         if (error) throw error;
-        return data as Program;
+        return { data: data as Program, action: "create" as const, updates: insert };
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["opleidingen"] }),
+    onSuccess: ({ data, action, updates }) => {
+      qc.invalidateQueries({ queryKey: ["opleidingen"] });
+      writeAuditLog({ action, entity_type: "opleiding", entity_id: data.id, entity_name: data.name, changes: updates });
+    },
   });
 
   return { opleidingen, isLoading, upsertOpleiding };

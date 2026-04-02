@@ -13,7 +13,7 @@ const BelgiumMap = lazy(() => import("@/components/dashboard/BelgiumMap"));
 import {
   GraduationCap, CalendarDays, ListTodo, Users, ArrowUp, Minus,
   TrendingUp, Star, BarChart3, Clock, CalendarPlus, ClipboardList,
-  UserPlus, MessageSquare, Calendar,
+  Plus, Pencil, Trash2,
 } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Link } from "react-router-dom";
@@ -162,10 +162,9 @@ export default function DashboardPage() {
   };
 
   const activityIcon: Record<ActivityItem["type"], React.ReactNode> = {
-    inschrijving: <UserPlus className="h-4 w-4 text-primary shrink-0" />,
-    feedback: <MessageSquare className="h-4 w-4 text-accent shrink-0" />,
-    event: <Calendar className="h-4 w-4 text-primary shrink-0" />,
-    school: <GraduationCap className="h-4 w-4 text-primary shrink-0" />,
+    create: <Plus className="h-4 w-4 text-emerald-600 shrink-0" />,
+    update: <Pencil className="h-4 w-4 text-blue-600 shrink-0" />,
+    delete: <Trash2 className="h-4 w-4 text-red-500 shrink-0" />,
   };
 
   /* ── Role-based sections ── */
@@ -334,13 +333,13 @@ export default function DashboardPage() {
                   <EmptyState icon={Clock} message="Nog geen recente activiteit." />
                 ) : (
                   recentActivities.map((a) => (
-                    <Link key={a.id} to={a.link} className="p-3 sm:p-4 flex items-start gap-3 hover:bg-muted/30 transition-[background-color] duration-150 cursor-pointer block active:scale-[0.99]">
+                    <div key={a.id} className="p-3 sm:p-4 flex items-start gap-3 hover:bg-muted/30 transition-[background-color] duration-150 block active:scale-[0.99]">
                       {activityIcon[a.type]}
                       <div className="min-w-0 flex-1">
                         <p className="text-sm">{a.label}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">{relativeTime(a.timestamp)}</p>
                       </div>
-                    </Link>
+                    </div>
                   ))
                 )}
               </div>

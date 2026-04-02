@@ -52,7 +52,7 @@ export default function ScholenPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await deleteSchool.mutateAsync(deleteTarget.id);
+      await deleteSchool.mutateAsync({ id: deleteTarget.id, name: deleteTarget.name });
       toast.success("School verwijderd.");
     } catch (error) {
       handleDeleteError(error, "school");
