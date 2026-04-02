@@ -176,6 +176,28 @@ export default function OpleidingenPage() {
 
       <ProgramFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditProgram(undefined); }} program={editProgram} onSave={handleSave} />
       <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget?.name ?? ""} isLoading={isDeleting} />
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Opleidingen importeren"
+        columns={OPLEIDING_IMPORT_COLUMNS}
+        templateFilename="opleidingen_template.xlsx"
+        duplicateCheck={{ keys: ["name", "school_name"], existingData: opleidingen.map((o) => ({ name: o.name, school_name: scholen.find((s) => s.id === o.school_id)?.name ?? "" })) }}
+        onImport={async (rows) => {
+          for (const row of rows) {
+            const school = scholen.find((s) => s.name.toLowerCase() === row.school_name?.toLowerCase().trim());
+            if (!school) continue;
+            await upsertOpleiding.mutateAsync({
+              name: row.name,
+              school_id: school.id,
+              faculty: row.faculty || "",
+              study_level: (row.study_level?.toLowerCase() || "bachelor") as any,
+              field_of_study: row.field_of_study || "",
+              student_count: row.student_count ? Number(row.student_count) : null,
+            });
+          }
+        }}
+      />
     </div>
   );
 }
