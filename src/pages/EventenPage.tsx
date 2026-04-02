@@ -57,7 +57,7 @@ export default function EventenPage() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterFieldOfStudy, setFilterFieldOfStudy] = useState("all");
   const [filterPeriod] = useState(initialPeriod);
-  const [view, setView] = useState<"list" | "calendar">("list");
+  const [view, setView] = useState<"list" | "calendar">("calendar");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editEvent, setEditEvent] = useState<Event | undefined>();
   const [importOpen, setImportOpen] = useState(false);
