@@ -68,12 +68,16 @@ export default function TakenPage() {
   const toggleTaskStatus = useCallback(async (taskId: string) => {
     const task = taken.find((t) => t.id === taskId);
     if (!task) return;
-    const newStatus = task.status === "afgerond" ? "open" : "afgerond";
-    try {
-      await upsertTask.mutateAsync({ ...task, status: newStatus as TaskStatus });
-      logActivity({ userId: user?.id ?? "", userName: user?.name ?? "", action: "bewerkt", entityType: "taak", entityName: task.title });
-    } catch { toast.error("Fout."); }
-  }, [taken, upsertTask, logActivity, user]);
+    toggleMutation.mutate(
+      { id: taskId, currentStatus: task.status },
+      {
+        onSuccess: () => {
+          logActivity({ userId: user?.id ?? "", userName: user?.name ?? "", action: "bewerkt", entityType: "taak", entityName: task.title });
+        },
+        onError: () => { toast.error("Status wijzigen mislukt."); },
+      }
+    );
+  }, [taken, toggleMutation, logActivity, user]);
 
   const handleSave = useCallback(async (saved: Task) => {
     const isNew = !taken.find((t) => t.id === saved.id);
