@@ -56,7 +56,7 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
             <div><Label>Status</Label><Select value={form.status} onValueChange={(v) => update("status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="actief">Actief</SelectItem><SelectItem value="verlopen">Verlopen</SelectItem><SelectItem value="in onderhandeling">In onderhandeling</SelectItem></SelectContent></Select></div>
           </div>
           <div><Label>Beschrijving</Label><Textarea value={form.description} onChange={(e) => update("description", e.target.value)} rows={3} /></div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div><Label>Startdatum *</Label><Input type="date" value={form.start_date} onChange={(e) => update("start_date", e.target.value)} /></div>
             <div><Label>Einddatum *</Label><Input type="date" value={form.end_date} onChange={(e) => update("end_date", e.target.value)} /></div>
             <div><Label>Vernieuwingsdatum</Label><Input type="date" value={form.renewal_date} onChange={(e) => update("renewal_date", e.target.value)} /></div>
