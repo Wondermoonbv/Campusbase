@@ -7,12 +7,13 @@ import { useAmbassadeurs, useAllInschrijvingen } from "@/hooks/useAmbassadeurs";
 import { useAllFeedbackData } from "@/hooks/useFeedback";
 import { useAuth } from "@/contexts/AuthContext";
 import { useViewAs } from "@/contexts/ViewAsContext";
-import { useActivity } from "@/contexts/ActivityContext";
+import { useRecentActivity, type ActivityItem } from "@/hooks/useRecentActivity";
 
 const BelgiumMap = lazy(() => import("@/components/dashboard/BelgiumMap"));
 import {
   GraduationCap, CalendarDays, ListTodo, Users, ArrowUp, Minus,
   TrendingUp, Star, BarChart3, Clock, CalendarPlus, ClipboardList,
+  UserPlus, MessageSquare, Calendar,
 } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Link } from "react-router-dom";
@@ -81,7 +82,7 @@ export default function DashboardPage() {
   const { ambassadeurs } = useAmbassadeurs();
   const { inschrijvingen } = useAllInschrijvingen();
   const { forms, responses } = useAllFeedbackData();
-  const { activities } = useActivity();
+  const { data: recentActivities = [] } = useRecentActivity();
 
   const firstName = user?.firstName || user?.name?.split(" ")[0] || user?.email?.split("@")[0] || "";
 
@@ -160,8 +161,12 @@ export default function DashboardPage() {
     laag: <ArrowUp className="h-3.5 w-3.5 text-info rotate-180" />,
   };
 
-  /* ── Recent activity ── */
-  const recentActivities = activities.slice(0, 5);
+  const activityIcon: Record<ActivityItem["type"], React.ReactNode> = {
+    inschrijving: <UserPlus className="h-4 w-4 text-primary shrink-0" />,
+    feedback: <MessageSquare className="h-4 w-4 text-accent shrink-0" />,
+    event: <Calendar className="h-4 w-4 text-primary shrink-0" />,
+    school: <GraduationCap className="h-4 w-4 text-primary shrink-0" />,
+  };
 
   /* ── Role-based sections ── */
   const showKpis = effectiveRole === "admin" || effectiveRole === "editor";
@@ -326,18 +331,16 @@ export default function DashboardPage() {
               </div>
               <div className="divide-y divide-border">
                 {recentActivities.length === 0 ? (
-                  <EmptyState icon={Clock} message="Nog geen activiteiten geregistreerd." />
+                  <EmptyState icon={Clock} message="Nog geen recente activiteit." />
                 ) : (
                   recentActivities.map((a) => (
-                    <div key={a.id} className="p-3 sm:p-4">
-                      <p className="text-sm">
-                        <span className="font-medium">{a.userName}</span>{" "}
-                        <span className="text-muted-foreground">heeft</span>{" "}
-                        <span className="font-medium">{a.entityName}</span>{" "}
-                        <span className="text-muted-foreground">{a.action}</span>
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{relativeTime(a.timestamp)}</p>
-                    </div>
+                    <Link key={a.id} to={a.link} className="p-3 sm:p-4 flex items-start gap-3 hover:bg-muted/30 transition-[background-color] duration-150 cursor-pointer block active:scale-[0.99]">
+                      {activityIcon[a.type]}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm">{a.label}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{relativeTime(a.timestamp)}</p>
+                      </div>
+                    </Link>
                   ))
                 )}
               </div>
