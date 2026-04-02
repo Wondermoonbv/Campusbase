@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Search, Download, CalendarDays, List, Pencil, Upload, Trash2 } from "lucide-react";
 import { EventFormDialog } from "@/components/events/EventFormDialog";
+import { EventCalendar } from "@/components/events/EventCalendar";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
 import { FIELDS_OF_STUDY } from "@/types/crm";
 import type { Event } from "@/types/crm";
@@ -87,12 +88,6 @@ export default function EventenPage() {
     switch (key) { case "name": return e.name; case "date": return new Date(e.date).getTime(); case "location": return e.location; case "status": return e.status; default: return e.name; }
   }), [filtered, sort]);
 
-  const byMonth = useMemo(() => {
-    const sortedByDate = [...filtered].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    const groups: Record<string, typeof filtered> = {};
-    sortedByDate.forEach((e) => { const key = new Date(e.date).toLocaleDateString("nl-BE", { year: "numeric", month: "long" }); if (!groups[key]) groups[key] = []; groups[key].push(e); });
-    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-  }, [filtered]);
 
   const exportCSV = () => {
     const headers = ["Naam", "Type", "Datum", "Locatie", "Status", "Verantwoordelijke", "Budget"];
@@ -169,17 +164,7 @@ export default function EventenPage() {
           </div>
         </>
       ) : (
-        <div className="space-y-6">{byMonth.map(([month, events]) => (
-          <div key={month}><h2 className="mb-3 capitalize">{month}</h2><div className="space-y-2">{events.map((ev) => (
-            <div key={ev.id} className="surface-card p-3 sm:p-4 flex items-center justify-between cursor-pointer hover:bg-muted/30 active:scale-[0.99] transition-[transform,colors]" onClick={() => navigate(`/evenementen/${ev.id}`)}>
-              <div className="flex items-center gap-3 sm:gap-4"><div className="text-center min-w-[40px] sm:min-w-[48px]"><div className="text-xl sm:text-2xl font-semibold tabular-nums">{new Date(ev.date).getDate()}</div><div className="text-xs text-muted-foreground uppercase">{new Date(ev.date).toLocaleDateString("nl-BE", { weekday: "short" })}</div></div><div><p className="font-medium text-sm">{ev.name}</p><p className="text-xs text-muted-foreground">{ev.location}</p></div></div>
-              <div className="flex items-center gap-1">
-                <StatusBadge status={ev.status} />
-                {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(ev); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
-              </div>
-            </div>
-          ))}</div></div>
-        ))}</div>
+        <EventCalendar events={filtered} />
       )}
 
       <EventFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditEvent(undefined); }} event={editEvent} onSave={handleSave} />
