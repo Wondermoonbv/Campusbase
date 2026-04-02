@@ -1,11 +1,22 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useTaken } from "@/hooks/useTaken";
+import { useProfiles } from "@/hooks/useProfiles";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, MapPin, Clock, Ruler, User, StickyNote, CalendarDays } from "lucide-react";
-import { format, isPast, parseISO } from "date-fns";
+import { Checkbox } from "@/components/ui/checkbox";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
+import {
+  LogOut, MapPin, Clock, Ruler, User, StickyNote, CalendarDays,
+  ListTodo, Plus, ArrowUp, Minus, AlertTriangle,
+} from "lucide-react";
+import { format, parseISO } from "date-fns";
 import { nl } from "date-fns/locale";
+import { toast } from "sonner";
+import type { Task, TaskStatus } from "@/types/crm";
 
 interface StandEvent {
   id: string;
@@ -19,10 +30,20 @@ interface StandEvent {
   stand_notities: string | null;
 }
 
+const priorityIcon: Record<string, React.ReactNode> = {
+  hoog: <ArrowUp className="h-3.5 w-3.5 text-destructive" />,
+  normaal: <Minus className="h-3.5 w-3.5 text-muted-foreground" />,
+  laag: <ArrowUp className="h-3.5 w-3.5 text-info rotate-180" />,
+};
+
 export default function StandenbouwerPage() {
   const { logout, user } = useAuth();
+  const { taken, upsertTask } = useTaken();
+  const { resolveAssignee } = useProfiles();
   const [events, setEvents] = useState<StandEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [taskDefaultEventId, setTaskDefaultEventId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -38,6 +59,39 @@ export default function StandenbouwerPage() {
   }, []);
 
   const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const eventIds = events.map((e) => e.id);
+
+  // Tasks: assigned to me OR linked to a standenbouwer event
+  const myTasks = taken.filter((t) => {
+    const assignedToMe = t.assigned_to === user?.id || t.assigned_to === user?.name;
+    const linkedToEvent = t.event_id && eventIds.includes(t.event_id);
+    return assignedToMe || linkedToEvent;
+  });
+
+  const activeTasks = myTasks.filter((t) => t.status !== "afgerond");
+  const doneTasks = myTasks.filter((t) => t.status === "afgerond");
+
+  const toggleTaskStatus = async (taskId: string) => {
+    const task = taken.find((t) => t.id === taskId);
+    if (!task) return;
+    const newStatus: TaskStatus = task.status === "afgerond" ? "open" : "afgerond";
+    try {
+      await upsertTask.mutateAsync({ ...task, status: newStatus });
+    } catch {
+      toast.error("Fout bij bijwerken taak.");
+    }
+  };
+
+  const handleSaveTask = async (saved: Task) => {
+    try {
+      await upsertTask.mutateAsync(saved);
+    } catch {
+      toast.error("Fout bij opslaan.");
+    }
+  };
+
+  const eventMap = new Map(events.map((e) => [e.id, e.name]));
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,50 +112,178 @@ export default function StandenbouwerPage() {
 
       {/* Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <h1 className="text-xl font-semibold mb-6">Evenementen overzicht</h1>
+        <Tabs defaultValue="events">
+          <TabsList>
+            <TabsTrigger value="events" className="gap-1.5">
+              <CalendarDays className="h-3.5 w-3.5" />
+              Evenementen
+            </TabsTrigger>
+            <TabsTrigger value="taken" className="gap-1.5">
+              <ListTodo className="h-3.5 w-3.5" />
+              Taken
+              {activeTasks.length > 0 && (
+                <span className="ml-1 text-xs bg-primary/10 text-primary rounded-full px-1.5 py-0.5 tabular-nums">
+                  {activeTasks.length}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
 
-        {loading ? (
-          <div className="text-sm text-muted-foreground animate-pulse">Laden...</div>
-        ) : events.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Geen evenementen gevonden waar een standenbouwer nodig is.</p>
-        ) : (
-          <div className="space-y-3">
-            {events.map((ev) => {
-              const past = ev.date < today;
-              return (
-                <Card key={ev.id} className={past ? "opacity-50" : ""}>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-base">{ev.name}</CardTitle>
-                      {past && (
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0">
-                          Afgelopen
-                        </span>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="grid gap-2 text-sm">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <Detail icon={CalendarDays} label="Datum" value={format(parseISO(ev.date), "d MMMM yyyy", { locale: nl })} />
-                      <Detail icon={MapPin} label="Locatie" value={ev.location} />
-                      <Detail icon={Clock} label="Opbouwtijd" value={ev.opbouw_tijd} />
-                      <Detail icon={Clock} label="Afbraaktijd" value={ev.afbraak_tijd} />
-                      <Detail icon={Ruler} label="Standgrootte" value={ev.stand_grootte} />
-                      <Detail icon={User} label="Contactpersoon" value={ev.contactpersoon_stand} />
-                    </div>
-                    {ev.stand_notities && (
-                      <div className="flex gap-2 mt-1 pt-2 border-t border-border">
-                        <StickyNote className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                        <p className="text-muted-foreground text-xs leading-relaxed">{ev.stand_notities}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
+          {/* Events tab */}
+          <TabsContent value="events" className="mt-6">
+            <h2 className="text-xl font-semibold mb-4">Evenementen overzicht</h2>
+            {loading ? (
+              <div className="text-sm text-muted-foreground animate-pulse">Laden...</div>
+            ) : events.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Geen evenementen gevonden waar een standenbouwer nodig is.</p>
+            ) : (
+              <div className="space-y-3">
+                {events.map((ev) => {
+                  const past = ev.date < today;
+                  return (
+                    <Card key={ev.id} className={past ? "opacity-50" : ""}>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <CardTitle className="text-base">{ev.name}</CardTitle>
+                          {past && (
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0">
+                              Afgelopen
+                            </span>
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="grid gap-2 text-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <Detail icon={CalendarDays} label="Datum" value={format(parseISO(ev.date), "d MMMM yyyy", { locale: nl })} />
+                          <Detail icon={MapPin} label="Locatie" value={ev.location} />
+                          <Detail icon={Clock} label="Opbouwtijd" value={ev.opbouw_tijd} />
+                          <Detail icon={Clock} label="Afbraaktijd" value={ev.afbraak_tijd} />
+                          <Detail icon={Ruler} label="Standgrootte" value={ev.stand_grootte} />
+                          <Detail icon={User} label="Contactpersoon" value={ev.contactpersoon_stand} />
+                        </div>
+                        {ev.stand_notities && (
+                          <div className="flex gap-2 mt-1 pt-2 border-t border-border">
+                            <StickyNote className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                            <p className="text-muted-foreground text-xs leading-relaxed">{ev.stand_notities}</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Taken tab */}
+          <TabsContent value="taken" className="mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Mijn taken</h2>
+              <Button
+                size="sm"
+                className="h-8 gap-1.5"
+                onClick={() => { setTaskDefaultEventId(null); setTaskDialogOpen(true); }}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Nieuwe taak
+              </Button>
+            </div>
+
+            {myTasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Geen taken gevonden.</p>
+            ) : (
+              <div className="space-y-4">
+                {/* Active tasks */}
+                {activeTasks.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Openstaand ({activeTasks.length})</p>
+                    {activeTasks.map((task) => (
+                      <TaskRow
+                        key={task.id}
+                        task={task}
+                        now={now}
+                        eventMap={eventMap}
+                        resolveAssignee={resolveAssignee}
+                        onToggle={toggleTaskStatus}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Done tasks */}
+                {doneTasks.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Afgerond ({doneTasks.length})</p>
+                    {doneTasks.map((task) => (
+                      <TaskRow
+                        key={task.id}
+                        task={task}
+                        now={now}
+                        eventMap={eventMap}
+                        resolveAssignee={resolveAssignee}
+                        onToggle={toggleTaskStatus}
+                        done
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        <TaskFormDialog
+          open={taskDialogOpen}
+          onOpenChange={setTaskDialogOpen}
+          defaultEventId={taskDefaultEventId}
+          onSave={handleSaveTask}
+        />
       </main>
+    </div>
+  );
+}
+
+function TaskRow({
+  task, now, eventMap, resolveAssignee, onToggle, done = false,
+}: {
+  task: Task; now: Date; eventMap: Map<string, string>;
+  resolveAssignee: (id: string | null | undefined) => string;
+  onToggle: (id: string) => void; done?: boolean;
+}) {
+  const overdue = !done && task.due_date && new Date(task.due_date) < now;
+  const eventName = task.event_id ? eventMap.get(task.event_id) : null;
+
+  return (
+    <div className={`surface-card p-3 sm:p-4 flex items-start gap-3 ${done ? "opacity-50" : ""}`}>
+      <Checkbox
+        checked={task.status === "afgerond"}
+        onCheckedChange={() => onToggle(task.id)}
+        className="mt-0.5 h-5 w-5"
+      />
+      <div className="flex-1 min-w-0">
+        <p className={`text-sm font-medium ${done ? "line-through text-muted-foreground" : ""}`}>
+          {task.title}
+        </p>
+        {task.description && (
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
+        )}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
+          <span className="inline-flex items-center gap-1 text-xs capitalize">
+            {priorityIcon[task.priority]} {task.priority}
+          </span>
+          <span className="text-xs text-muted-foreground">{resolveAssignee(task.assigned_to)}</span>
+          {task.due_date && (
+            <span className={`text-xs tabular-nums ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+              {new Date(task.due_date).toLocaleDateString("nl-BE", { day: "numeric", month: "short" })}
+              {overdue && <AlertTriangle className="inline h-3 w-3 ml-1 -mt-0.5" />}
+            </span>
+          )}
+          {eventName && (
+            <span className="text-xs text-primary">{eventName}</span>
+          )}
+          <StatusBadge status={task.status} />
+        </div>
+      </div>
     </div>
   );
 }
