@@ -282,6 +282,35 @@ export default function AmbassadeurPortaalPage() {
     toast.success("Je persoonlijke portaallink is gekopieerd!");
   };
 
+  const canDownloadIcs = (status: string | null) =>
+    status === "ingeschreven" || status === "bevestigd";
+
+  const downloadIcs = (ev: PortalEvent) => {
+    const descParts: string[] = [];
+    if (ev.school_name) descParts.push(`School: ${ev.school_name}`);
+    if (ev.opbouw_tijd) descParts.push(`Opbouwtijd: ${ev.opbouw_tijd}`);
+    if (ev.contactpersoon_stand) descParts.push(`Contactpersoon: ${ev.contactpersoon_stand}`);
+    if (ev.description) descParts.push(ev.description);
+
+    const ics = generateICS({
+      name: ev.name,
+      date: ev.date,
+      start_time: ev.start_time,
+      end_time: ev.end_time,
+      location: ev.location || undefined,
+      description: descParts.join("\n") || undefined,
+    });
+
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${ev.name.replace(/[^a-zA-Z0-9]/g, "_")}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Agenda-bestand gedownload");
+  };
+
   const statusBadge = (status: string | null) => {
     switch (status) {
       case "ingeschreven":
