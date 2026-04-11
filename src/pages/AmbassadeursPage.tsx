@@ -444,7 +444,7 @@ export default function AmbassadeursPage() {
                       </tr>
                       {isExpanded && (
                         <tr>
-                          <td colSpan={canEdit ? 8 : 7} className="bg-muted/20 px-8 py-3">
+                          <td colSpan={canEdit ? 9 : 7} className="bg-muted/20 px-8 py-3">
                             {ambInschrijvingen.length === 0 ? (
                               <p className="text-sm text-muted-foreground">Geen event-koppelingen</p>
                             ) : (
