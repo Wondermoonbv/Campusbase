@@ -157,6 +157,36 @@ export default function EventDetailPage() {
         </section>
 
         <section className="surface-card p-4 sm:p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><Users className="h-4 w-4" /> Ambassadeurs & Standenbouwer</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs text-muted-foreground">Max. ambassadeurs (optioneel)</Label>
+              {editing ? <Input type="number" min={0} placeholder="Geen limiet" value={(form as any).max_ambassadeurs ?? ""} onChange={(e) => update({ max_ambassadeurs: e.target.value ? Number(e.target.value) : null } as any)} className="h-10 sm:h-9" /> : <p className="text-sm mt-1">{(form as any).max_ambassadeurs ?? "Geen limiet"}</p>}
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t border-border/40">
+            <Label className="text-xs text-muted-foreground">Standenbouwer nodig</Label>
+            {editing ? <Switch checked={(form as any).standenbouwer_nodig ?? false} onCheckedChange={(v) => update({ standenbouwer_nodig: v } as any)} /> : <p className="text-sm">{(form as any).standenbouwer_nodig ? "Ja" : "Nee"}</p>}
+          </div>
+          {(form as any).standenbouwer_nodig && (
+            <div className="space-y-4 pl-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Opbouwtijd" value={(form as any).opbouw_tijd || ""} editing={editing} onChange={(v) => update({ opbouw_tijd: v } as any)} />
+                <Field label="Afbraaktijd" value={(form as any).afbraak_tijd || ""} editing={editing} onChange={(v) => update({ afbraak_tijd: v } as any)} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Standgrootte" value={(form as any).stand_grootte || ""} editing={editing} onChange={(v) => update({ stand_grootte: v } as any)} />
+                <Field label="Contactpersoon stand" value={(form as any).contactpersoon_stand || ""} editing={editing} onChange={(v) => update({ contactpersoon_stand: v } as any)} />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Stand notities</Label>
+                {editing ? <Textarea value={(form as any).stand_notities || ""} onChange={(e) => update({ stand_notities: e.target.value } as any)} rows={2} /> : <p className="text-sm mt-1">{(form as any).stand_notities || "—"}</p>}
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section className="surface-card p-4 sm:p-5 space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Extra opmerkingen</h2>
           {editing ? <Textarea value={form.notes} onChange={(e) => update({ notes: e.target.value })} rows={3} /> : <p className="text-sm">{form.notes || "—"}</p>}
         </section>
