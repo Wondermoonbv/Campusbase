@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { buildEmailLogoHtml } from "@/lib/logo";
 
 interface SendEmailParams {
   to: string;
