@@ -107,6 +107,11 @@ export default function AmbassadeurPortaalPage() {
           signup_count: signupCount,
           my_status: mySignup?.status || null,
           my_inschrijving_id: mySignup?.id || null,
+          start_time: e.start_time || null,
+          end_time: e.end_time || null,
+          opbouw_tijd: e.opbouw_tijd || null,
+          contactpersoon_stand: e.contactpersoon_stand || null,
+          description: e.description || null,
         };
       });
 
