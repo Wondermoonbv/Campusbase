@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { useScholen } from "@/hooks/useScholen";
@@ -153,6 +154,36 @@ export default function EventDetailPage() {
             <div><Label className="text-xs text-muted-foreground">Type stand</Label>{editing ? <Select value={form.stand_type} onValueChange={(v) => update({ stand_type: v as StandType })}><SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="jobbeurs stand">Jobbeurs stand</SelectItem><SelectItem value="infotafel">Infotafel</SelectItem><SelectItem value="presentatie">Presentatie</SelectItem><SelectItem value="workshop">Workshop</SelectItem><SelectItem value="anders">Anders</SelectItem></SelectContent></Select> : <p className="text-sm capitalize mt-1">{form.stand_type}</p>}</div>
             <div><Label className="text-xs text-muted-foreground">Standformaat</Label>{editing ? <Select value={form.stand_size} onValueChange={(v) => update({ stand_size: v as StandSize })}><SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="klein 2m²">Klein 2m²</SelectItem><SelectItem value="medium 4m²">Medium 4m²</SelectItem><SelectItem value="groot 6m²+">Groot 6m²+</SelectItem><SelectItem value="anders">Anders</SelectItem></SelectContent></Select> : <p className="text-sm capitalize mt-1">{form.stand_size}</p>}</div>
           </div>
+        </section>
+
+        <section className="surface-card p-4 sm:p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><Users className="h-4 w-4" /> Ambassadeurs & Standenbouwer</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs text-muted-foreground">Max. ambassadeurs (optioneel)</Label>
+              {editing ? <Input type="number" min={0} placeholder="Geen limiet" value={(form as any).max_ambassadeurs ?? ""} onChange={(e) => update({ max_ambassadeurs: e.target.value ? Number(e.target.value) : null } as any)} className="h-10 sm:h-9" /> : <p className="text-sm mt-1">{(form as any).max_ambassadeurs ?? "Geen limiet"}</p>}
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t border-border/40">
+            <Label className="text-xs text-muted-foreground">Standenbouwer nodig</Label>
+            {editing ? <Switch checked={(form as any).standenbouwer_nodig ?? false} onCheckedChange={(v) => update({ standenbouwer_nodig: v } as any)} /> : <p className="text-sm">{(form as any).standenbouwer_nodig ? "Ja" : "Nee"}</p>}
+          </div>
+          {(form as any).standenbouwer_nodig && (
+            <div className="space-y-4 pl-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Opbouwtijd" value={(form as any).opbouw_tijd || ""} editing={editing} onChange={(v) => update({ opbouw_tijd: v } as any)} />
+                <Field label="Afbraaktijd" value={(form as any).afbraak_tijd || ""} editing={editing} onChange={(v) => update({ afbraak_tijd: v } as any)} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Standgrootte" value={(form as any).stand_grootte || ""} editing={editing} onChange={(v) => update({ stand_grootte: v } as any)} />
+                <Field label="Contactpersoon stand" value={(form as any).contactpersoon_stand || ""} editing={editing} onChange={(v) => update({ contactpersoon_stand: v } as any)} />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Stand notities</Label>
+                {editing ? <Textarea value={(form as any).stand_notities || ""} onChange={(e) => update({ stand_notities: e.target.value } as any)} rows={2} /> : <p className="text-sm mt-1">{(form as any).stand_notities || "—"}</p>}
+              </div>
+            </div>
+          )}
         </section>
 
         <section className="surface-card p-4 sm:p-5 space-y-4">
