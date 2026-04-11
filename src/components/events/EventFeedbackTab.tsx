@@ -2,12 +2,14 @@ import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEventFeedbackForm, useFeedbackResponses } from "@/hooks/useFeedback";
+import { useAmbassadeurs, useEventInschrijvingen } from "@/hooks/useAmbassadeurs";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Copy, Download, Link2, MessageSquare, Star, ThumbsUp, BarChart3 } from "lucide-react";
+import { Copy, Download, Link2, MessageSquare, Star, ThumbsUp, BarChart3, Mail } from "lucide-react";
 import type { FeedbackResponse } from "@/hooks/useFeedback";
+import { sendBulkEmails, buildFeedbackEmail } from "@/lib/email";
 
 const getShareUrl = (formId: string) => `${window.location.origin}/feedback/${formId}`;
 
@@ -55,6 +57,78 @@ function exportResponsesCSV(responses: FeedbackResponse[], eventName: string) {
   a.href = URL.createObjectURL(blob);
   a.download = `feedback-${eventName.replace(/\s+/g, "-").toLowerCase()}.csv`;
   a.click();
+}
+
+function FeedbackLinkControls({
+  form,
+  eventId,
+  eventName,
+  copyLink,
+  handleToggle,
+}: {
+  form: { id: string; is_active: boolean | null };
+  eventId: string;
+  eventName: string;
+  copyLink: () => void;
+  handleToggle: (active: boolean) => void;
+}) {
+  const { ambassadeurs } = useAmbassadeurs();
+  const { inschrijvingen } = useEventInschrijvingen(eventId);
+  const [sending, setSending] = useState(false);
+
+  const handleSendFeedbackEmails = async () => {
+    const confirmed = inschrijvingen.filter((i) => i.status === "bevestigd");
+    if (confirmed.length === 0) {
+      toast.warning("Geen bevestigde ambassadeurs om feedback aan te vragen.");
+      return;
+    }
+
+    setSending(true);
+    try {
+      const feedbackUrl = getShareUrl(form.id);
+      const emails = confirmed.map((ins) => {
+        const amb = ambassadeurs.find((a) => a.id === ins.ambassadeur_id);
+        return {
+          to: amb?.email ?? "",
+          subject: `Feedback gevraagd: ${eventName}`,
+          html: buildFeedbackEmail(amb?.full_name ?? "Ambassadeur", eventName, feedbackUrl),
+        };
+      }).filter((e) => e.to);
+
+      const result = await sendBulkEmails(emails);
+      if (result.sent > 0) toast.success(`Feedback link verstuurd naar ${result.sent} ambassadeur(s)`);
+      if (result.failed.length > 0) {
+        result.failed.forEach((f) => toast.error(`Email naar ${f.to} mislukt: ${f.error}`));
+      }
+    } catch {
+      toast.error("Fout bij versturen van feedback emails.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="surface-card p-4 sm:p-5 space-y-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="text-sm text-muted-foreground truncate">{getShareUrl(form.id)}</span>
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <Button variant="outline" size="sm" onClick={copyLink}>
+            <Copy className="h-3.5 w-3.5 mr-1" /> Link kopiëren
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleSendFeedbackEmails} disabled={sending}>
+            <Mail className="h-3.5 w-3.5 mr-1" /> {sending ? "Versturen..." : "Feedback link versturen"}
+          </Button>
+          <div className="flex items-center gap-2">
+            <Label className="text-xs text-muted-foreground">Actief</Label>
+            <Switch checked={form.is_active ?? false} onCheckedChange={handleToggle} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function EventFeedbackTab({ eventId, eventName }: { eventId: string; eventName: string }) {
@@ -130,24 +204,7 @@ export function EventFeedbackTab({ eventId, eventName }: { eventId: string; even
   if (responses.length === 0) {
     return (
       <div className="space-y-6">
-        {/* Link & controls (same as below) */}
-        <div className="surface-card p-4 sm:p-5 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span className="text-sm text-muted-foreground truncate">{getShareUrl(form.id)}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" onClick={copyLink}>
-                <Copy className="h-3.5 w-3.5 mr-1" /> Link kopiëren
-              </Button>
-              <div className="flex items-center gap-2">
-                <Label className="text-xs text-muted-foreground">Actief</Label>
-                <Switch checked={form.is_active ?? false} onCheckedChange={handleToggle} />
-              </div>
-            </div>
-          </div>
-        </div>
+        <FeedbackLinkControls form={form} eventId={eventId} eventName={eventName} copyLink={copyLink} handleToggle={handleToggle} />
         <div className="surface-card py-16 px-6 text-center space-y-3">
           <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center">
             <MessageSquare className="h-6 w-6 text-muted-foreground" />
@@ -161,24 +218,7 @@ export function EventFeedbackTab({ eventId, eventName }: { eventId: string; even
 
   return (
     <div className="space-y-6">
-      {/* Link & controls */}
-      <div className="surface-card p-4 sm:p-5 space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
-            <span className="text-sm text-muted-foreground truncate">{getShareUrl(form.id)}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" onClick={copyLink}>
-              <Copy className="h-3.5 w-3.5 mr-1" /> Link kopiëren
-            </Button>
-            <div className="flex items-center gap-2">
-              <Label className="text-xs text-muted-foreground">Actief</Label>
-              <Switch checked={form.is_active ?? false} onCheckedChange={handleToggle} />
-            </div>
-          </div>
-        </div>
-      </div>
+      <FeedbackLinkControls form={form} eventId={eventId} eventName={eventName} copyLink={copyLink} handleToggle={handleToggle} />
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

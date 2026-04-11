@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { useAmbassadeurs, useEventInschrijvingen } from "@/hooks/useAmbassadeurs";
+import { useEvenementen } from "@/hooks/useEvenementen";
+import { useScholen } from "@/hooks/useScholen";
 import type { Ambassadeur } from "@/hooks/useAmbassadeurs";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -7,6 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Checkbox } from "@/components/ui/checkbox";
 import { Copy, Link2, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
+import { sendEmail, buildConfirmationEmail } from "@/lib/email";
+import type { EventEmailData } from "@/lib/email";
+import { generateICS } from "@/lib/ics";
 
 const STATUSES = [
   { value: "uitgenodigd", label: "Uitgenodigd" },
@@ -29,8 +34,13 @@ function statusColor(status: string) {
 export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
   const { ambassadeurs } = useAmbassadeurs();
   const { inschrijvingen, addInschrijving, updateStatus } = useEventInschrijvingen(eventId);
+  const { evenementen } = useEvenementen();
+  const { scholen } = useScholen();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
+
+  const event = useMemo(() => evenementen.find((e) => e.id === eventId), [evenementen, eventId]);
+  const school = useMemo(() => event?.school_id ? scholen.find((s) => s.id === event.school_id) : null, [event, scholen]);
 
   const enrolledIds = useMemo(() => new Set(inschrijvingen.map((i) => i.ambassadeur_id)), [inschrijvingen]);
 
@@ -71,6 +81,45 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
     try {
       await updateStatus.mutateAsync({ id, status });
       toast.success("Status bijgewerkt");
+
+      // Send confirmation email when status changes to 'bevestigd'
+      if (status === "bevestigd" && event) {
+        const enrollment = enriched.find((e) => e.id === id);
+        const amb = enrollment?.ambassadeur;
+        if (amb?.email) {
+          const eventData: EventEmailData = {
+            eventName: event.name,
+            date: event.date,
+            location: event.location,
+            schoolName: school?.name,
+            startTime: event.start_time,
+            endTime: event.end_time,
+            opbouwTijd: event.opbouw_tijd,
+            afbraakTijd: event.afbraak_tijd,
+            contactpersoon: event.elia_contact,
+          };
+
+          const portalUrl = `${window.location.origin}/ambassadeur-portaal?token=${amb.access_token}`;
+          const html = buildConfirmationEmail(amb.full_name, eventData, portalUrl);
+          const icsContent = generateICS({
+            name: event.name,
+            date: event.date,
+            start_time: event.start_time,
+            end_time: event.end_time,
+            location: event.location,
+            description: `Ambassadeur voor ${event.name}${school ? ` - ${school.name}` : ""}`,
+          });
+
+          const subject = `Bevestiging: ${event.name} - ${new Date(event.date).toLocaleDateString("nl-BE")}`;
+          const result = await sendEmail({ to: amb.email, subject, html, icsContent });
+
+          if (result.success) {
+            toast.success(`Bevestigingsmail verstuurd naar ${amb.email}`);
+          } else {
+            toast.warning(`Status bijgewerkt, maar email naar ${amb.email} is mislukt: ${result.error}`);
+          }
+        }
+      }
     } catch {
       toast.error("Fout bij wijzigen");
     }
