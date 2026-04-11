@@ -185,6 +185,7 @@ export default function AmbassadeurPortaalPage() {
         .single();
 
       if (error) throw error;
+      localStorage.setItem(STORAGE_KEY, cleanEmail);
       setAmbassadeur(data as Ambassadeur);
       setStep("overview");
       await loadEvents(data.id);
