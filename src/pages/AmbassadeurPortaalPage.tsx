@@ -369,7 +369,7 @@ export default function AmbassadeurPortaalPage() {
                 <h2 className="text-xl font-semibold text-gray-900">Hallo, {ambassadeur.full_name}</h2>
                 <p className="text-sm text-muted-foreground">{ambassadeur.email}</p>
               </div>
-              <Button variant="outline" size="sm" onClick={() => { setStep("identify"); setAmbassadeur(null); setEmail(""); }}>
+              <Button variant="outline" size="sm" onClick={() => { localStorage.removeItem(STORAGE_KEY); setStep("identify"); setAmbassadeur(null); setEmail(""); }}>
                 Afmelden
               </Button>
             </div>
