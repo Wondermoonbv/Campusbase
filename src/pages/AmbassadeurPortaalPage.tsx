@@ -30,6 +30,8 @@ interface PortalEvent {
   my_inschrijving_id: string | null;
 }
 
+const STORAGE_KEY = "ambassadeur_portal_email";
+
 export default function AmbassadeurPortaalPage() {
   const [step, setStep] = useState<"identify" | "register" | "overview">("identify");
   const [email, setEmail] = useState("");
