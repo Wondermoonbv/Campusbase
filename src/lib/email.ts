@@ -99,3 +99,11 @@ export function buildPortalLinkEmail(
 ): string {
   return `${WRAPPER_START}${getHeader()}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Jouw Elia Campus Portaal</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${ambassadeurName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Via onderstaande link kan je je inschrijven voor aankomende Elia campus events en je beschikbaarheid beheren.</p>`)}${row(`<div style="text-align:center;margin:24px 0;"><a href="${portalUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Open mijn portaal</a></div><p style="font-size:12px;color:#71717a;text-align:center;">Bewaar deze link — het is je persoonlijke toegang.</p>`)}${WRAPPER_END}`;
 }
+
+export function buildInvitationEmail(
+  ambassadeurName: string,
+  event: EventEmailData,
+  portalUrl: string
+): string {
+  return `${WRAPPER_START}${getHeader()}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Uitnodiging als ambassadeur</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${ambassadeurName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Je bent uitgenodigd als ambassadeur voor <strong>${event.eventName}</strong>. Bekijk de details en schrijf je in via je persoonlijk portaal.</p>`)}${row(`<table cellpadding="0" cellspacing="0" style="width:100%;margin:16px 0;">${infoRow("📅 Datum", formatDate(event.date))}${infoRow("📍 Locatie", event.location)}${infoRow("🏫 School", event.schoolName)}</table>`)}${row(`<div style="text-align:center;margin:24px 0;"><a href="${portalUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Bekijk en schrijf je in</a></div>`)}${WRAPPER_END}`;
+}
