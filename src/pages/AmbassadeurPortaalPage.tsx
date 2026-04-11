@@ -312,36 +312,20 @@ export default function AmbassadeurPortaalPage() {
   };
 
   const statusBadge = (status: string | null) => {
-    const config: Record<string, { badge: React.ReactNode; subtitle: string }> = {
-      uitgenodigd: {
-        badge: <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100"><Mail className="h-3 w-3 mr-1" />Uitgenodigd</Badge>,
-        subtitle: "Je bent uitgenodigd. Schrijf je in om je interesse te bevestigen.",
-      },
-      ingeschreven: {
-        badge: <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100"><Clock className="h-3 w-3 mr-1" />Ingeschreven</Badge>,
-        subtitle: "Je inschrijving is ontvangen. Het team bevestigt binnenkort.",
-      },
-      bevestigd: {
-        badge: <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100"><CheckCircle2 className="h-3 w-3 mr-1" />Bevestigd ✓</Badge>,
-        subtitle: "Je bent bevestigd voor dit event!",
-      },
-      backup: {
-        badge: <Badge className="bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100"><AlertCircle className="h-3 w-3 mr-1" />Reservelijst</Badge>,
-        subtitle: "Je staat op de reservelijst. We contacteren je als er een plaats vrijkomt.",
-      },
-      afgemeld: {
-        badge: <Badge className="bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-100">Afgemeld</Badge>,
-        subtitle: "Je hebt je afgemeld voor dit event.",
-      },
-    };
-    const c = status ? config[status] : null;
-    if (!c) return null;
-    return (
-      <div className="flex flex-col items-end gap-1">
-        {c.badge}
-        <p className="text-xs italic text-muted-foreground text-right max-w-[260px]">{c.subtitle}</p>
-      </div>
-    );
+    switch (status) {
+      case "uitgenodigd":
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100"><Mail className="h-3 w-3 mr-1" />Uitgenodigd</Badge>;
+      case "ingeschreven":
+        return <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100"><Clock className="h-3 w-3 mr-1" />Ingeschreven</Badge>;
+      case "bevestigd":
+        return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100"><CheckCircle2 className="h-3 w-3 mr-1" />Bevestigd ✓</Badge>;
+      case "backup":
+        return <Badge className="bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100"><AlertCircle className="h-3 w-3 mr-1" />Reservelijst</Badge>;
+      case "afgemeld":
+        return <Badge className="bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-100">Afgemeld</Badge>;
+      default:
+        return null;
+    }
   };
 
   const formatTime = (t: string | null) => t ? t.slice(0, 5) : null;
