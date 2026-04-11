@@ -6,9 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, MapPin, CalendarDays, School, Users, CheckCircle2, Clock, AlertCircle, Mail, Link2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { Loader2, MapPin, CalendarDays, School, Users, CheckCircle2, Clock, AlertCircle, Mail, Link2, CalendarPlus, User, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { stripHtml } from "@/lib/sanitize";
+import { generateICS } from "@/lib/ics";
 
 const BRAND = { petrol: "#0E6575" };
 
