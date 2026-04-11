@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { useScholen } from "@/hooks/useScholen";
