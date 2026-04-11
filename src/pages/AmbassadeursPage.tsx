@@ -80,6 +80,50 @@ export default function AmbassadeursPage() {
   const [deleteTarget, setDeleteTarget] = useState<Ambassadeur | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sendingLinks, setSendingLinks] = useState(false);
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((a) => a.id)));
+    }
+  };
+
+  const handleSendPortalLinks = async () => {
+    const selected = ambassadeurs.filter((a) => selectedIds.has(a.id) && a.access_token);
+    if (selected.length === 0) {
+      toast.warning("Geen ambassadeurs geselecteerd.");
+      return;
+    }
+    setSendingLinks(true);
+    try {
+      const emails = selected.map((a) => ({
+        to: a.email,
+        subject: "Jouw CampusBase Ambassadeur Portaal",
+        html: buildPortalLinkEmail(a.full_name, `${window.location.origin}/ambassadeur-portaal?token=${a.access_token}`),
+      }));
+      const result = await sendBulkEmails(emails);
+      if (result.sent > 0) toast.success(`Portaallink verstuurd naar ${result.sent} ambassadeur(s)`);
+      if (result.failed.length > 0) {
+        result.failed.forEach((f) => toast.error(`Email naar ${f.to} mislukt: ${f.error}`));
+      }
+      setSelectedIds(new Set());
+    } catch {
+      toast.error("Fout bij versturen.");
+    } finally {
+      setSendingLinks(false);
+    }
+  };
 
   // Build maps
   const eventMap = useMemo(() => {
