@@ -113,7 +113,7 @@ export default function PublicInschrijvenPage() {
     <div className="min-h-screen flex items-center justify-center px-4 py-8" style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #0a4f5c 100%)` }}>
       <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-w-md w-full space-y-6">
         <div className="text-center space-y-2">
-          <h1 className="text-xl font-bold" style={{ color: BRAND }}>Inschrijving ambassadeur</h1>
+          <h1 className="text-xl font-bold" style={{ color: BRAND }}>Elia Campus Recruitment</h1>
           <h2 className="text-lg font-semibold">{event.name}</h2>
           <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />{new Date(event.date).toLocaleDateString("nl-BE")}</span>

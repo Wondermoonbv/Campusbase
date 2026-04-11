@@ -295,8 +295,8 @@ export default function AmbassadeurPortaalPage() {
             <span className="text-white font-bold text-sm">E</span>
           </div>
           <div>
-            <h1 className="text-white text-lg font-semibold leading-tight">Ambassadeur Portaal</h1>
-            <p className="text-white/70 text-xs">Elia Campus Events</p>
+            <h1 className="text-white text-lg font-semibold leading-tight">Elia Campus Events</h1>
+            <p className="text-white/70 text-xs">Ambassadeur Portaal</p>
           </div>
         </div>
       </header>
@@ -479,7 +479,7 @@ export default function AmbassadeurPortaalPage() {
       </main>
 
       <footer className="py-6 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Elia Group — Ambassadeur Portaal
+        © {new Date().getFullYear()} Elia Group — Campus Recruitment
       </footer>
     </div>
   );

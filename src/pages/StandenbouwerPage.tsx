@@ -114,8 +114,8 @@ export default function StandenbouwerPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card px-4 sm:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">CB</div>
-          <span className="font-semibold text-sm">CampusBase</span>
+          <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">E</div>
+          <span className="font-semibold text-sm">Elia Campus Events</span>
         </div>
         <div className="flex items-center gap-3">
           {user && <span className="text-xs text-muted-foreground hidden sm:inline">{user.name}</span>}

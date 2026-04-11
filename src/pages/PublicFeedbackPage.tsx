@@ -201,7 +201,7 @@ export default function PublicFeedbackPage() {
           </Button>
         </form>
 
-        <p className="text-center text-xs text-gray-400 mt-6">Powered by CampusBase</p>
+        <p className="text-center text-xs text-gray-400 mt-6">© {new Date().getFullYear()} Elia Group — Campus Recruitment</p>
       </div>
     </div>
   );

@@ -46,10 +46,10 @@ export async function sendBulkEmails(
 // ── HTML email templates ──
 
 const WRAPPER_START = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;"><tr><td align="center" style="padding:32px 16px;"><table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;">`;
-const WRAPPER_END = `<tr><td style="padding:24px 32px;background:#f4f4f5;text-align:center;font-size:12px;color:#71717a;line-height:1.6;">Dit is een automatisch bericht van CampusBase.<br/>Vragen? Antwoord op deze email of contacteer <a href="mailto:campusbase@wondermoon.be" style="color:#0E6575;text-decoration:underline;">campusbase@wondermoon.be</a>.<br/><br/>© ${new Date().getFullYear()} Elia Group — Campus Recruitment</td></tr></table></td></tr></table></body></html>`;
+const WRAPPER_END = `<tr><td style="padding:24px 32px;background:#f4f4f5;text-align:center;font-size:12px;color:#71717a;line-height:1.6;">Dit is een automatisch bericht verstuurd via CampusBase.<br/>Vragen? Antwoord op deze email of contacteer <a href="mailto:campusbase@wondermoon.be" style="color:#0E6575;text-decoration:underline;">campusbase@wondermoon.be</a>.<br/><br/>© ${new Date().getFullYear()} Elia Group — Campus Recruitment</td></tr></table></td></tr></table></body></html>`;
 function getHeader() {
   const logoHtml = buildEmailLogoHtml();
-  return `<tr><td style="background:#0E6575;padding:24px 32px;">${logoHtml}<br/><span style="color:#ffffff;font-size:11px;letter-spacing:1px;text-transform:uppercase;">Campus Recruitment</span></td></tr>`;
+  return `<tr><td style="background:#0E6575;padding:24px 32px;">${logoHtml}<br/><span style="color:#ffffff;font-size:11px;letter-spacing:1px;text-transform:uppercase;">Elia Campus Recruitment</span></td></tr>`;
 }
 
 function row(content: string) {
@@ -97,5 +97,5 @@ export function buildPortalLinkEmail(
   ambassadeurName: string,
   portalUrl: string
 ): string {
-  return `${WRAPPER_START}${getHeader()}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Jouw CampusBase Portaal</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${ambassadeurName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Via onderstaande link kan je je inschrijven voor aankomende campus events en je beschikbaarheid beheren.</p>`)}${row(`<div style="text-align:center;margin:24px 0;"><a href="${portalUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Open mijn portaal</a></div><p style="font-size:12px;color:#71717a;text-align:center;">Bewaar deze link — het is je persoonlijke toegang.</p>`)}${WRAPPER_END}`;
+  return `${WRAPPER_START}${getHeader()}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Jouw Elia Campus Portaal</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${ambassadeurName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Via onderstaande link kan je je inschrijven voor aankomende Elia campus events en je beschikbaarheid beheren.</p>`)}${row(`<div style="text-align:center;margin:24px 0;"><a href="${portalUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Open mijn portaal</a></div><p style="font-size:12px;color:#71717a;text-align:center;">Bewaar deze link — het is je persoonlijke toegang.</p>`)}${WRAPPER_END}`;
 }
