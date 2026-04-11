@@ -439,8 +439,8 @@ export default function AmbassadeurPortaalPage() {
                         <div className="flex items-start justify-between gap-3">
                           <h4 className="font-semibold text-foreground text-lg leading-tight">{ev.name}</h4>
                           {ev.my_status && (
-                            <div className="flex flex-col items-end gap-1 shrink-0">
-                              {statusBadge(ev.my_status)?.props.children[0] ?? statusBadge(ev.my_status)}
+                            <div className="shrink-0">
+                              {statusBadge(ev.my_status)}
                             </div>
                           )}
                         </div>
