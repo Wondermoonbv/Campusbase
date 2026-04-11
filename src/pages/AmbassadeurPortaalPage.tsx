@@ -458,10 +458,12 @@ export default function AmbassadeurPortaalPage() {
                                   <School className="h-3.5 w-3.5" />{ev.school_name}
                                 </span>
                               )}
-                              <span className="flex items-center gap-1">
-                                <Users className="h-3.5 w-3.5" />
-                                {ev.signup_count}{ev.max_ambassadeurs !== null ? `/${ev.max_ambassadeurs}` : ""} plaatsen
-                              </span>
+                              {ev.max_ambassadeurs !== null && (
+                                <span className="flex items-center gap-1">
+                                  <Users className="h-3.5 w-3.5" />
+                                  {ev.signup_count}/{ev.max_ambassadeurs} plaatsen
+                                </span>
+                              )}
                             </div>
 
                             {(ev.opbouw_tijd || ev.contactpersoon_stand || ev.description) && (
