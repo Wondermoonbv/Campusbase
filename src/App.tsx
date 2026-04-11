@@ -32,6 +32,7 @@ const AmbassadeursPage = lazy(() => import("./pages/AmbassadeursPage"));
 const PublicInschrijvenPage = lazy(() => import("./pages/PublicInschrijvenPage"));
 const StandenbouwerPage = lazy(() => import("./pages/StandenbouwerPage"));
 const AuditLogPage = lazy(() => import("./pages/AuditLogPage"));
+const AmbassadeurPortaalPage = lazy(() => import("./pages/AmbassadeurPortaalPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -68,6 +69,7 @@ function PublicRoutes() {
       <Routes>
         <Route path="/feedback/:formId" element={<PublicFeedbackPage />} />
         <Route path="/inschrijven/:evenementId" element={<PublicInschrijvenPage />} />
+        <Route path="/ambassadeur-portaal" element={<AmbassadeurPortaalPage />} />
       </Routes>
     </Suspense>
   );
@@ -78,7 +80,7 @@ function AppRoutes() {
   const { effectiveIsAdmin, effectiveIsStandenbouwer, effectiveCanEdit, isSimulating } = useViewAs();
   const [timedOut, setTimedOut] = useState(false);
   const pathname = window.location.pathname;
-  const isPublicRoute = pathname.startsWith("/feedback/") || pathname.startsWith("/inschrijven/");
+  const isPublicRoute = pathname.startsWith("/feedback/") || pathname.startsWith("/inschrijven/") || pathname.startsWith("/ambassadeur-portaal");
 
   useEffect(() => {
     if (!loading) return;
