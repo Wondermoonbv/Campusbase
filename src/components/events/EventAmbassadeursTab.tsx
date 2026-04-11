@@ -34,7 +34,7 @@ function statusColor(status: string) {
 
 export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
   const { ambassadeurs } = useAmbassadeurs();
-  const { inschrijvingen, addInschrijving, updateStatus } = useEventInschrijvingen(eventId);
+  const { inschrijvingen, addInschrijving, updateStatus, deleteInschrijving } = useEventInschrijvingen(eventId);
   const { evenementen } = useEvenementen();
   const { scholen } = useScholen();
   const [inviteOpen, setInviteOpen] = useState(false);
