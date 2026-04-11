@@ -392,6 +392,7 @@ export default function AmbassadeursPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left">
+                  {canEdit && <th className="px-4 py-3 w-8"><Checkbox checked={selectedIds.size === filtered.length && filtered.length > 0} onCheckedChange={toggleSelectAll} /></th>}
                   <th className="px-4 py-3 font-medium text-muted-foreground w-8"></th>
                   <th className="px-4 py-3 font-medium text-muted-foreground">Naam</th>
                   <th className="px-4 py-3 font-medium text-muted-foreground">Email</th>
