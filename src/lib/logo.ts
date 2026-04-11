@@ -6,7 +6,7 @@ const LOGO_STORAGE_KEY = "campusbase_logo_url";
 /**
  * Generate an inline SVG data URI for the "CB" fallback logo (petrol square).
  */
-export const CB_FALLBACK_LOGO = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='40' viewBox='0 0 120 40'%3E%3Crect width='40' height='40' rx='6' fill='%230E6575'/%3E%3Ctext x='20' y='27' font-family='Arial,sans-serif' font-size='20' font-weight='bold' fill='white' text-anchor='middle'%3ECB%3C/text%3E%3Ctext x='50' y='27' font-family='Arial,sans-serif' font-size='16' font-weight='600' fill='%230E6575' text-anchor='start'%3ECampusBase%3C/text%3E%3C/svg%3E`;
+export const CB_FALLBACK_LOGO = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'%3E%3Ctext x='0' y='27' font-family='Arial,sans-serif' font-size='16' font-weight='700' fill='%230E6575'%3EElia Campus Recruitment%3C/text%3E%3C/svg%3E`;
 
 /**
  * Upload a logo file to Supabase Storage and return the public URL.
@@ -64,8 +64,8 @@ export function getEmailLogoUrl(): string {
 export function buildEmailLogoHtml(): string {
   const url = getEmailLogoUrl();
   if (url) {
-    return `<img src="${url}" alt="CampusBase" height="32" style="height:32px;max-width:200px;" />`;
+    return `<img src="${url}" alt="Elia Campus Recruitment" height="32" style="height:32px;max-width:200px;" />`;
   }
-  // Inline HTML fallback - "CB" petrol box + text
-  return `<table cellpadding="0" cellspacing="0" style="display:inline-block;"><tr><td style="background:#0E6575;border-radius:6px;padding:4px 8px;"><span style="color:#ffffff;font-size:16px;font-weight:bold;font-family:Arial,Helvetica,sans-serif;">CB</span></td><td style="padding-left:8px;"><span style="color:#ffffff;font-size:14px;font-weight:600;font-family:Arial,Helvetica,sans-serif;">CampusBase</span></td></tr></table>`;
+  // Inline HTML fallback - "Elia" text logo
+  return `<table cellpadding="0" cellspacing="0" style="display:inline-block;"><tr><td><span style="color:#ffffff;font-size:16px;font-weight:bold;font-family:Arial,Helvetica,sans-serif;">Elia</span></td></tr></table>`;
 }
