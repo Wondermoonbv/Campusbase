@@ -70,6 +70,37 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
         )
       );
       toast.success(`${selected.length} ambassadeur(s) uitgenodigd`);
+
+      // Send invitation emails
+      if (event) {
+        const eventData: EventEmailData = {
+          eventName: event.name,
+          date: event.date,
+          location: event.location,
+          schoolName: school?.name,
+        };
+
+        const emails = selected
+          .map((id) => ambassadeurs.find((a) => a.id === id))
+          .filter((a): a is Ambassadeur => !!a && !!a.email)
+          .map((a) => {
+            const portalUrl = `${window.location.origin}/ambassadeur-portaal?token=${a.access_token}`;
+            const html = buildInvitationEmail(a.full_name, eventData, portalUrl);
+            const subject = `Uitnodiging: ${event.name} - ${new Date(event.date).toLocaleDateString("nl-BE")}`;
+            return { to: a.email, subject, html };
+          });
+
+        if (emails.length > 0) {
+          const result = await sendBulkEmails(emails);
+          if (result.sent > 0) {
+            toast.success(`Uitnodiging verstuurd naar ${result.sent} ambassadeur(s)`);
+          }
+          result.failed.forEach((f) => {
+            toast.error(`Email naar ${f.to} mislukt: ${f.error}`);
+          });
+        }
+      }
+
       setSelected([]);
       setInviteOpen(false);
     } catch {
