@@ -6,9 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, MapPin, CalendarDays, School, Users, CheckCircle2, Clock, AlertCircle, Mail, Link2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { Loader2, MapPin, CalendarDays, School, Users, CheckCircle2, Clock, AlertCircle, Mail, Link2, CalendarPlus, User, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { stripHtml } from "@/lib/sanitize";
+import { generateICS } from "@/lib/ics";
 
 const BRAND = { petrol: "#0E6575" };
 
@@ -30,6 +32,11 @@ interface PortalEvent {
   signup_count: number;
   my_status: string | null;
   my_inschrijving_id: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  opbouw_tijd: string | null;
+  contactpersoon_stand: string | null;
+  description: string | null;
 }
 
 const STORAGE_KEY = "ambassadeur_portal_token";
@@ -55,7 +62,7 @@ export default function AmbassadeurPortaalPage() {
 
       const { data: evts, error: evtErr } = await supabase
         .from("evenementen")
-        .select("id, name, date, location, school_id, max_ambassadeurs")
+        .select("id, name, date, location, school_id, max_ambassadeurs, start_time, end_time, opbouw_tijd, contactpersoon_stand, description")
         .gte("date", today)
         .neq("status", "geannuleerd")
         .order("date", { ascending: true });
@@ -100,6 +107,11 @@ export default function AmbassadeurPortaalPage() {
           signup_count: signupCount,
           my_status: mySignup?.status || null,
           my_inschrijving_id: mySignup?.id || null,
+          start_time: e.start_time || null,
+          end_time: e.end_time || null,
+          opbouw_tijd: e.opbouw_tijd || null,
+          contactpersoon_stand: e.contactpersoon_stand || null,
+          description: e.description || null,
         };
       });
 
@@ -270,6 +282,35 @@ export default function AmbassadeurPortaalPage() {
     toast.success("Je persoonlijke portaallink is gekopieerd!");
   };
 
+  const canDownloadIcs = (status: string | null) =>
+    status === "ingeschreven" || status === "bevestigd";
+
+  const downloadIcs = (ev: PortalEvent) => {
+    const descParts: string[] = [];
+    if (ev.school_name) descParts.push(`School: ${ev.school_name}`);
+    if (ev.opbouw_tijd) descParts.push(`Opbouwtijd: ${ev.opbouw_tijd}`);
+    if (ev.contactpersoon_stand) descParts.push(`Contactpersoon: ${ev.contactpersoon_stand}`);
+    if (ev.description) descParts.push(ev.description);
+
+    const ics = generateICS({
+      name: ev.name,
+      date: ev.date,
+      start_time: ev.start_time,
+      end_time: ev.end_time,
+      location: ev.location || undefined,
+      description: descParts.join("\n") || undefined,
+    });
+
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${ev.name.replace(/[^a-zA-Z0-9]/g, "_")}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Agenda-bestand gedownload");
+  };
+
   const statusBadge = (status: string | null) => {
     switch (status) {
       case "ingeschreven":
@@ -287,7 +328,10 @@ export default function AmbassadeurPortaalPage() {
     }
   };
 
+  const formatTime = (t: string | null) => t ? t.slice(0, 5) : null;
+
   return (
+    <TooltipProvider>
     <div className="min-h-screen bg-gray-50">
       <header className="w-full py-4 px-4 sm:px-6" style={{ backgroundColor: BRAND.petrol }}>
         <div className="max-w-3xl mx-auto flex items-center gap-3">
@@ -398,6 +442,11 @@ export default function AmbassadeurPortaalPage() {
                               <span className="flex items-center gap-1">
                                 <CalendarDays className="h-3.5 w-3.5" />
                                 {new Date(ev.date).toLocaleDateString("nl-BE", { weekday: "short", day: "numeric", month: "long", year: "numeric" })}
+                                {(formatTime(ev.start_time) || formatTime(ev.end_time)) && (
+                                  <span className="ml-1">
+                                    {formatTime(ev.start_time)}{formatTime(ev.end_time) ? ` – ${formatTime(ev.end_time)}` : ""}
+                                  </span>
+                                )}
                               </span>
                               {ev.location && (
                                 <span className="flex items-center gap-1">
@@ -414,9 +463,45 @@ export default function AmbassadeurPortaalPage() {
                                 {ev.signup_count}{ev.max_ambassadeurs !== null ? `/${ev.max_ambassadeurs}` : ""} plaatsen
                               </span>
                             </div>
+
+                            {(ev.opbouw_tijd || ev.contactpersoon_stand || ev.description) && (
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground pt-1 border-t border-border/40 mt-1.5">
+                                {ev.opbouw_tijd && (
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />Opbouw: {ev.opbouw_tijd}
+                                  </span>
+                                )}
+                                {ev.contactpersoon_stand && (
+                                  <span className="flex items-center gap-1">
+                                    <User className="h-3 w-3" />{ev.contactpersoon_stand}
+                                  </span>
+                                )}
+                                {ev.description && (
+                                  <span className="flex items-center gap-1">
+                                    <FileText className="h-3 w-3" />{ev.description.length > 80 ? ev.description.slice(0, 80) + "…" : ev.description}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
 
                           <div className="flex items-center gap-2 shrink-0">
+                            {canDownloadIcs(ev.my_status) && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8"
+                                    onClick={() => downloadIcs(ev)}
+                                  >
+                                    <CalendarPlus className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Toevoegen aan agenda</TooltipContent>
+                              </Tooltip>
+                            )}
+
                             {ev.my_status && statusBadge(ev.my_status)}
 
                             {!ev.my_status && (
@@ -482,5 +567,6 @@ export default function AmbassadeurPortaalPage() {
         © {new Date().getFullYear()} Elia Group — Campus Recruitment
       </footer>
     </div>
+    </TooltipProvider>
   );
 }
