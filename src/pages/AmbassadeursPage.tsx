@@ -15,7 +15,7 @@ import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { AmbassadeurFormDialog } from "@/components/ambassadeurs/AmbassadeurFormDialog";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Plus, Pencil, Trash2, Upload, Users, ChevronDown, ChevronRight, UserCheck, Clock, Mail, CheckCircle2 } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Upload, Users, ChevronDown, ChevronRight, UserCheck, Clock, Mail, CheckCircle2, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -382,6 +382,7 @@ export default function AmbassadeursPage() {
                         {canEdit && (
                           <td className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Portaallink ${a.full_name} kopiëren`} onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/ambassadeur-portaal?token=${(a as any).access_token}`); toast.success("Persoonlijke portaallink gekopieerd"); }}><Link2 className="h-3.5 w-3.5" /></Button>
                               <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${a.full_name} bewerken`} onClick={() => handleEdit(a)}><Pencil className="h-3.5 w-3.5" /></Button>
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" aria-label={`${a.full_name} verwijderen`} onClick={() => handleDeleteClick(a)}><Trash2 className="h-3.5 w-3.5" /></Button>
                             </div>
