@@ -87,6 +87,7 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
         const enrollment = enriched.find((e) => e.id === id);
         const amb = enrollment?.ambassadeur;
         if (amb?.email) {
+          const rawEvent = event as any;
           const eventData: EventEmailData = {
             eventName: event.name,
             date: event.date,
@@ -94,8 +95,8 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
             schoolName: school?.name,
             startTime: event.start_time,
             endTime: event.end_time,
-            opbouwTijd: event.opbouw_tijd,
-            afbraakTijd: event.afbraak_tijd,
+            opbouwTijd: rawEvent.opbouw_tijd,
+            afbraakTijd: rawEvent.afbraak_tijd,
             contactpersoon: event.elia_contact,
           };
 
