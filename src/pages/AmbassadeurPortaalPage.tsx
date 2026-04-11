@@ -312,36 +312,20 @@ export default function AmbassadeurPortaalPage() {
   };
 
   const statusBadge = (status: string | null) => {
-    const config: Record<string, { badge: React.ReactNode; subtitle: string }> = {
-      uitgenodigd: {
-        badge: <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100"><Mail className="h-3 w-3 mr-1" />Uitgenodigd</Badge>,
-        subtitle: "Je bent uitgenodigd. Schrijf je in om je interesse te bevestigen.",
-      },
-      ingeschreven: {
-        badge: <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100"><Clock className="h-3 w-3 mr-1" />Ingeschreven</Badge>,
-        subtitle: "Je inschrijving is ontvangen. Het team bevestigt binnenkort.",
-      },
-      bevestigd: {
-        badge: <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100"><CheckCircle2 className="h-3 w-3 mr-1" />Bevestigd ✓</Badge>,
-        subtitle: "Je bent bevestigd voor dit event!",
-      },
-      backup: {
-        badge: <Badge className="bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100"><AlertCircle className="h-3 w-3 mr-1" />Reservelijst</Badge>,
-        subtitle: "Je staat op de reservelijst. We contacteren je als er een plaats vrijkomt.",
-      },
-      afgemeld: {
-        badge: <Badge className="bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-100">Afgemeld</Badge>,
-        subtitle: "Je hebt je afgemeld voor dit event.",
-      },
-    };
-    const c = status ? config[status] : null;
-    if (!c) return null;
-    return (
-      <div className="flex flex-col items-end gap-1">
-        {c.badge}
-        <p className="text-xs italic text-muted-foreground text-right max-w-[260px]">{c.subtitle}</p>
-      </div>
-    );
+    switch (status) {
+      case "uitgenodigd":
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100"><Mail className="h-3 w-3 mr-1" />Uitgenodigd</Badge>;
+      case "ingeschreven":
+        return <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100"><Clock className="h-3 w-3 mr-1" />Ingeschreven</Badge>;
+      case "bevestigd":
+        return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100"><CheckCircle2 className="h-3 w-3 mr-1" />Bevestigd ✓</Badge>;
+      case "backup":
+        return <Badge className="bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100"><AlertCircle className="h-3 w-3 mr-1" />Reservelijst</Badge>;
+      case "afgemeld":
+        return <Badge className="bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-100">Afgemeld</Badge>;
+      default:
+        return null;
+    }
   };
 
   const formatTime = (t: string | null) => t ? t.slice(0, 5) : null;
@@ -450,126 +434,142 @@ export default function AmbassadeurPortaalPage() {
 
                   return (
                     <Card key={ev.id} className="shadow-sm hover:shadow-md transition-shadow">
-                      <CardContent className="p-4 sm:p-5">
-                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0 space-y-1.5">
-                            <h4 className="font-semibold text-gray-900 text-base">{ev.name}</h4>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <CalendarDays className="h-3.5 w-3.5" />
-                                {new Date(ev.date).toLocaleDateString("nl-BE", { weekday: "short", day: "numeric", month: "long", year: "numeric" })}
-                                {(formatTime(ev.start_time) || formatTime(ev.end_time)) && (
-                                  <span className="ml-1">
-                                    {formatTime(ev.start_time)}{formatTime(ev.end_time) ? ` – ${formatTime(ev.end_time)}` : ""}
-                                  </span>
-                                )}
-                              </span>
-                              {ev.location && (
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="h-3.5 w-3.5" />{ev.location}
-                                </span>
-                              )}
-                              {ev.school_name && (
-                                <span className="flex items-center gap-1">
-                                  <School className="h-3.5 w-3.5" />{ev.school_name}
-                                </span>
-                              )}
-                              {ev.max_ambassadeurs !== null && (
-                                <span className="flex items-center gap-1">
-                                  <Users className="h-3.5 w-3.5" />
-                                  {ev.signup_count}/{ev.max_ambassadeurs} plaatsen
-                                </span>
-                              )}
+                      <CardContent className="p-4 sm:p-5 space-y-3">
+                        {/* Header: naam + badge */}
+                        <div className="flex items-start justify-between gap-3">
+                          <h4 className="font-semibold text-foreground text-lg leading-tight">{ev.name}</h4>
+                          {ev.my_status && (
+                            <div className="flex flex-col items-end gap-1 shrink-0">
+                              {statusBadge(ev.my_status)?.props.children[0] ?? statusBadge(ev.my_status)}
                             </div>
+                          )}
+                        </div>
 
-                            {(ev.opbouw_tijd || ev.contactpersoon_stand || ev.description) && (
-                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground pt-1 border-t border-border/40 mt-1.5">
-                                {ev.opbouw_tijd && (
-                                  <span className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />Opbouw: {ev.opbouw_tijd}
-                                  </span>
-                                )}
-                                {ev.contactpersoon_stand && (
-                                  <span className="flex items-center gap-1">
-                                    <User className="h-3 w-3" />{ev.contactpersoon_stand}
-                                  </span>
-                                )}
-                                {ev.description && (
-                                  <span className="flex items-center gap-1">
-                                    <FileText className="h-3 w-3" />{ev.description.length > 80 ? ev.description.slice(0, 80) + "…" : ev.description}
-                                  </span>
-                                )}
-                              </div>
+                        {/* Details grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1.5">
+                            <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                            {new Date(ev.date).toLocaleDateString("nl-BE", { weekday: "short", day: "numeric", month: "long", year: "numeric" })}
+                            {(formatTime(ev.start_time) || formatTime(ev.end_time)) && (
+                              <span className="ml-1">
+                                {formatTime(ev.start_time)}{formatTime(ev.end_time) ? ` – ${formatTime(ev.end_time)}` : ""}
+                              </span>
                             )}
-                          </div>
+                          </span>
+                          {ev.location && (
+                            <span className="flex items-center gap-1.5">
+                              <MapPin className="h-3.5 w-3.5 shrink-0" />{ev.location}
+                            </span>
+                          )}
+                          {ev.school_name && (
+                            <span className="flex items-center gap-1.5">
+                              <School className="h-3.5 w-3.5 shrink-0" />{ev.school_name}
+                            </span>
+                          )}
+                          {ev.opbouw_tijd && (
+                            <span className="flex items-center gap-1.5">
+                              <Clock className="h-3.5 w-3.5 shrink-0" />Opbouw: {ev.opbouw_tijd}
+                            </span>
+                          )}
+                          {ev.contactpersoon_stand && (
+                            <span className="flex items-center gap-1.5">
+                              <User className="h-3.5 w-3.5 shrink-0" />{ev.contactpersoon_stand}
+                            </span>
+                          )}
+                          {ev.max_ambassadeurs !== null && (
+                            <span className="flex items-center gap-1.5">
+                              <Users className="h-3.5 w-3.5 shrink-0" />
+                              {ev.signup_count}/{ev.max_ambassadeurs} plaatsen
+                            </span>
+                          )}
+                        </div>
 
-                          <div className="flex items-center gap-2 shrink-0">
-                            {canDownloadIcs(ev.my_status) && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    className="h-8 w-8"
-                                    onClick={() => downloadIcs(ev)}
-                                  >
-                                    <CalendarPlus className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Toevoegen aan agenda</TooltipContent>
-                              </Tooltip>
-                            )}
+                        {ev.description && (
+                          <p className="text-xs italic text-muted-foreground">
+                            {ev.description.length > 120 ? ev.description.slice(0, 120) + "…" : ev.description}
+                          </p>
+                        )}
 
-                            {ev.my_status && statusBadge(ev.my_status)}
+                        {/* Status toelichting */}
+                        {ev.my_status && (() => {
+                          const subtitles: Record<string, string> = {
+                            uitgenodigd: "Je bent uitgenodigd. Schrijf je in om je interesse te bevestigen.",
+                            ingeschreven: "Je inschrijving is ontvangen. Het team bevestigt binnenkort.",
+                            bevestigd: "Je bent bevestigd voor dit event!",
+                            backup: "Je staat op de reservelijst. We contacteren je als er een plaats vrijkomt.",
+                            afgemeld: "Je hebt je afgemeld voor dit event.",
+                          };
+                          return subtitles[ev.my_status] ? (
+                            <p className="text-xs italic text-muted-foreground">{subtitles[ev.my_status]}</p>
+                          ) : null;
+                        })()}
 
-                            {!ev.my_status && (
-                              <Button
-                                size="sm"
-                                disabled={isFull || isActioning}
-                                onClick={() => handleSignup(ev.id)}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                              >
-                                {isActioning && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
-                                {isFull ? "Volzet" : "Inschrijven"}
-                              </Button>
-                            )}
+                        {/* Separator */}
+                        <div className="border-t border-border/50" />
 
-                            {ev.my_status === "uitgenodigd" && ev.my_inschrijving_id && (
-                              <Button
-                                size="sm"
-                                disabled={isFull || isActioning}
-                                onClick={() => handleReSignup(ev.my_inschrijving_id!, ev.id)}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                              >
-                                {isActioning && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
-                                {isFull ? "Volzet" : "Inschrijven"}
-                              </Button>
-                            )}
+                        {/* Actie-rij */}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                          {!ev.my_status && (
+                            <Button
+                              size="sm"
+                              disabled={isFull || isActioning}
+                              onClick={() => handleSignup(ev.id)}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto"
+                            >
+                              {isActioning && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+                              {isFull ? "Volzet" : "Inschrijven"}
+                            </Button>
+                          )}
 
-                            {ev.my_status === "ingeschreven" && ev.my_inschrijving_id && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                disabled={isActioning}
-                                onClick={() => handleCancel(ev.my_inschrijving_id!, ev.id)}
-                              >
-                                {isActioning && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
-                                Afmelden
-                              </Button>
-                            )}
+                          {ev.my_status === "uitgenodigd" && ev.my_inschrijving_id && (
+                            <Button
+                              size="sm"
+                              disabled={isFull || isActioning}
+                              onClick={() => handleReSignup(ev.my_inschrijving_id!, ev.id)}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto"
+                            >
+                              {isActioning && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+                              {isFull ? "Volzet" : "Inschrijven"}
+                            </Button>
+                          )}
 
-                            {ev.my_status === "afgemeld" && ev.my_inschrijving_id && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                disabled={isFull || isActioning}
-                                onClick={() => handleReSignup(ev.my_inschrijving_id!, ev.id)}
-                              >
-                                {isActioning && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
-                                {isFull ? "Volzet" : "Opnieuw inschrijven"}
-                              </Button>
-                            )}
-                          </div>
+                          {ev.my_status === "ingeschreven" && ev.my_inschrijving_id && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={isActioning}
+                              onClick={() => handleCancel(ev.my_inschrijving_id!, ev.id)}
+                              className="w-full sm:w-auto"
+                            >
+                              {isActioning && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+                              Afmelden
+                            </Button>
+                          )}
+
+                          {ev.my_status === "afgemeld" && ev.my_inschrijving_id && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={isFull || isActioning}
+                              onClick={() => handleReSignup(ev.my_inschrijving_id!, ev.id)}
+                              className="w-full sm:w-auto"
+                            >
+                              {isActioning && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+                              {isFull ? "Volzet" : "Opnieuw inschrijven"}
+                            </Button>
+                          )}
+
+                          {canDownloadIcs(ev.my_status) && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => downloadIcs(ev)}
+                              className="w-full sm:w-auto"
+                            >
+                              <CalendarPlus className="h-3.5 w-3.5 mr-1.5" />
+                              Toevoegen aan agenda
+                            </Button>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
