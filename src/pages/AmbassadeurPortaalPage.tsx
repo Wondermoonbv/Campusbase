@@ -1,11 +1,11 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, MapPin, CalendarDays, School, Users, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { Loader2, MapPin, CalendarDays, School, Users, CheckCircle2, Clock, AlertCircle, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { stripHtml } from "@/lib/sanitize";
 
@@ -38,7 +38,11 @@ export default function AmbassadeurPortaalPage() {
   const [events, setEvents] = useState<PortalEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [eventsLoading, setEventsLoading] = useState(false);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionLoadingMap, setActionLoadingMap] = useState<Record<string, boolean>>({});
+
+  const setActionLoading = (key: string, value: boolean) => {
+    setActionLoadingMap(prev => ({ ...prev, [key]: value }));
+  };
 
   const loadEvents = useCallback(async (ambId: string) => {
     setEventsLoading(true);
@@ -54,7 +58,7 @@ export default function AmbassadeurPortaalPage() {
 
       if (evtErr) throw evtErr;
 
-      // Get all school ids
+      // Get school names
       const schoolIds = [...new Set((evts || []).map(e => e.school_id).filter(Boolean))] as string[];
       let schoolMap: Record<string, string> = {};
       if (schoolIds.length > 0) {
@@ -65,16 +69,25 @@ export default function AmbassadeurPortaalPage() {
         schoolMap = Object.fromEntries((schools || []).map(s => [s.id, s.name]));
       }
 
-      // Get all signups for these events
+      // Get ALL signups for counting, and ambassador's own signups separately
       const eventIds = (evts || []).map(e => e.id);
-      const { data: allSignups } = await supabase
-        .from("event_inschrijvingen")
-        .select("id, evenement_id, ambassadeur_id, status")
-        .in("evenement_id", eventIds);
+
+      const [{ data: allSignups }, { data: mySignups }] = await Promise.all([
+        supabase
+          .from("event_inschrijvingen")
+          .select("evenement_id, status")
+          .in("evenement_id", eventIds)
+          .neq("status", "afgemeld"),
+        supabase
+          .from("event_inschrijvingen")
+          .select("id, evenement_id, status")
+          .eq("ambassadeur_id", ambId)
+          .in("evenement_id", eventIds),
+      ]);
 
       const portalEvents: PortalEvent[] = (evts || []).map(e => {
-        const signups = (allSignups || []).filter(s => s.evenement_id === e.id && s.status !== "afgemeld");
-        const mySignup = (allSignups || []).find(s => s.evenement_id === e.id && s.ambassadeur_id === ambId);
+        const signupCount = (allSignups || []).filter(s => s.evenement_id === e.id).length;
+        const mySignup = (mySignups || []).find(s => s.evenement_id === e.id);
         return {
           id: e.id,
           name: e.name,
@@ -82,7 +95,7 @@ export default function AmbassadeurPortaalPage() {
           location: e.location || "",
           school_name: e.school_id ? schoolMap[e.school_id] || null : null,
           max_ambassadeurs: e.max_ambassadeurs,
-          signup_count: signups.length,
+          signup_count: signupCount,
           my_status: mySignup?.status || null,
           my_inschrijving_id: mySignup?.id || null,
         };
@@ -153,7 +166,7 @@ export default function AmbassadeurPortaalPage() {
 
   const handleSignup = async (eventId: string) => {
     if (!ambassadeur) return;
-    setActionLoading(eventId);
+    setActionLoading(eventId, true);
     try {
       const ev = events.find(e => e.id === eventId);
       if (ev?.max_ambassadeurs && ev.signup_count >= ev.max_ambassadeurs) {
@@ -175,13 +188,13 @@ export default function AmbassadeurPortaalPage() {
     } catch {
       toast.error("Inschrijving mislukt.");
     } finally {
-      setActionLoading(null);
+      setActionLoading(eventId, false);
     }
   };
 
-  const handleCancel = async (inschrijvingId: string) => {
+  const handleCancel = async (inschrijvingId: string, eventId: string) => {
     if (!ambassadeur) return;
-    setActionLoading(inschrijvingId);
+    setActionLoading(eventId, true);
     try {
       const { error } = await supabase
         .from("event_inschrijvingen")
@@ -194,13 +207,13 @@ export default function AmbassadeurPortaalPage() {
     } catch {
       toast.error("Afmelden mislukt.");
     } finally {
-      setActionLoading(null);
+      setActionLoading(eventId, false);
     }
   };
 
   const handleReSignup = async (inschrijvingId: string, eventId: string) => {
     if (!ambassadeur) return;
-    setActionLoading(inschrijvingId);
+    setActionLoading(eventId, true);
     try {
       const ev = events.find(e => e.id === eventId);
       if (ev?.max_ambassadeurs && ev.signup_count >= ev.max_ambassadeurs) {
@@ -219,7 +232,7 @@ export default function AmbassadeurPortaalPage() {
     } catch {
       toast.error("Herinschrijving mislukt.");
     } finally {
-      setActionLoading(null);
+      setActionLoading(eventId, false);
     }
   };
 
@@ -233,6 +246,8 @@ export default function AmbassadeurPortaalPage() {
         return <Badge className="bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100"><AlertCircle className="h-3 w-3 mr-1" />Backup</Badge>;
       case "afgemeld":
         return <Badge className="bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-100">Afgemeld</Badge>;
+      case "uitgenodigd":
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100"><Mail className="h-3 w-3 mr-1" />Uitgenodigd</Badge>;
       default:
         return null;
     }
@@ -240,7 +255,6 @@ export default function AmbassadeurPortaalPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="w-full py-4 px-4 sm:px-6" style={{ backgroundColor: BRAND.petrol }}>
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <div className="w-8 h-8 rounded-md bg-white/20 flex items-center justify-center">
@@ -254,7 +268,6 @@ export default function AmbassadeurPortaalPage() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-        {/* Step: Identify */}
         {step === "identify" && (
           <Card className="max-w-md mx-auto shadow-md">
             <CardContent className="pt-6 pb-6 space-y-4">
@@ -275,12 +288,7 @@ export default function AmbassadeurPortaalPage() {
                     className="mt-1"
                   />
                 </div>
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={loading}
-                  style={{ backgroundColor: BRAND.petrol }}
-                >
+                <Button type="submit" className="w-full" disabled={loading} style={{ backgroundColor: BRAND.petrol }}>
                   {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                   Verder
                 </Button>
@@ -289,7 +297,6 @@ export default function AmbassadeurPortaalPage() {
           </Card>
         )}
 
-        {/* Step: Register */}
         {step === "register" && (
           <Card className="max-w-md mx-auto shadow-md">
             <CardContent className="pt-6 pb-6 space-y-4">
@@ -322,7 +329,6 @@ export default function AmbassadeurPortaalPage() {
           </Card>
         )}
 
-        {/* Step: Overview */}
         {step === "overview" && ambassadeur && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -352,7 +358,7 @@ export default function AmbassadeurPortaalPage() {
               <div className="space-y-3">
                 {events.map(ev => {
                   const isFull = ev.max_ambassadeurs !== null && ev.signup_count >= ev.max_ambassadeurs;
-                  const isActioning = actionLoading === ev.id || actionLoading === ev.my_inschrijving_id;
+                  const isActioning = !!actionLoadingMap[ev.id];
 
                   return (
                     <Card key={ev.id} className="shadow-sm hover:shadow-md transition-shadow">
@@ -385,6 +391,7 @@ export default function AmbassadeurPortaalPage() {
                           <div className="flex items-center gap-2 shrink-0">
                             {ev.my_status && statusBadge(ev.my_status)}
 
+                            {/* No registration → show signup button */}
                             {!ev.my_status && (
                               <Button
                                 size="sm"
@@ -397,18 +404,33 @@ export default function AmbassadeurPortaalPage() {
                               </Button>
                             )}
 
+                            {/* Uitgenodigd → show signup button */}
+                            {ev.my_status === "uitgenodigd" && ev.my_inschrijving_id && (
+                              <Button
+                                size="sm"
+                                disabled={isFull || isActioning}
+                                onClick={() => handleReSignup(ev.my_inschrijving_id!, ev.id)}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                              >
+                                {isActioning && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                {isFull ? "Volzet" : "Inschrijven"}
+                              </Button>
+                            )}
+
+                            {/* Ingeschreven → cancel button */}
                             {ev.my_status === "ingeschreven" && ev.my_inschrijving_id && (
                               <Button
                                 size="sm"
                                 variant="outline"
                                 disabled={isActioning}
-                                onClick={() => handleCancel(ev.my_inschrijving_id!)}
+                                onClick={() => handleCancel(ev.my_inschrijving_id!, ev.id)}
                               >
                                 {isActioning && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
                                 Afmelden
                               </Button>
                             )}
 
+                            {/* Afgemeld → re-signup button */}
                             {ev.my_status === "afgemeld" && ev.my_inschrijving_id && (
                               <Button
                                 size="sm"
