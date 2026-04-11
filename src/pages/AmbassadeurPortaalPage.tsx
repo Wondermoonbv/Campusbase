@@ -62,7 +62,7 @@ export default function AmbassadeurPortaalPage() {
 
       const { data: evts, error: evtErr } = await supabase
         .from("evenementen")
-        .select("id, name, date, location, school_id, max_ambassadeurs")
+        .select("id, name, date, location, school_id, max_ambassadeurs, start_time, end_time, opbouw_tijd, contactpersoon_stand, description")
         .gte("date", today)
         .neq("status", "geannuleerd")
         .order("date", { ascending: true });
