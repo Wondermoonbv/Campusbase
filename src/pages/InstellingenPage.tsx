@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { User, Shield, Bell, Settings, Camera, Check } from "lucide-react";
+import { User, Shield, Bell, Settings, Camera, Check, Loader2 } from "lucide-react";
+import { uploadLogo, CB_FALLBACK_LOGO } from "@/lib/logo";
 
 function ProfileTab() {
   const { user, updateProfile } = useAuth();
