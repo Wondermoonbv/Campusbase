@@ -328,8 +328,10 @@ export default function AmbassadeurPortaalPage() {
     }
   };
 
+  const formatTime = (t: string | null) => t ? t.slice(0, 5) : null;
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <TooltipProvider>
       <header className="w-full py-4 px-4 sm:px-6" style={{ backgroundColor: BRAND.petrol }}>
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <div className="w-8 h-8 rounded-md bg-white/20 flex items-center justify-center">
