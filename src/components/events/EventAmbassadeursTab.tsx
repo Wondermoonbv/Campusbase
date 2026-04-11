@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Checkbox } from "@/components/ui/checkbox";
 import { Copy, Link2, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
-import { sendEmail, buildConfirmationEmail } from "@/lib/email";
+import { sendEmail, sendBulkEmails, buildConfirmationEmail, buildInvitationEmail } from "@/lib/email";
 import type { EventEmailData } from "@/lib/email";
 import { generateICS } from "@/lib/ics";
 
