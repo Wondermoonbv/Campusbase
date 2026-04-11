@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,8 @@ interface PortalEvent {
   my_status: string | null;
   my_inschrijving_id: string | null;
 }
+
+const STORAGE_KEY = "ambassadeur_portal_email";
 
 export default function AmbassadeurPortaalPage() {
   const [step, setStep] = useState<"identify" | "register" | "overview">("identify");
@@ -109,6 +111,35 @@ export default function AmbassadeurPortaalPage() {
     }
   }, []);
 
+  // Auto-login from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+    (async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("ambassadeurs")
+          .select("id, full_name, email, department")
+          .eq("email", saved)
+          .maybeSingle();
+        if (error) throw error;
+        if (data) {
+          setAmbassadeur(data as Ambassadeur);
+          setEmail(saved);
+          setStep("overview");
+          await loadEvents(data.id);
+        } else {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [loadEvents]);
+
   const handleIdentify = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanEmail = stripHtml(email).toLowerCase().trim();
@@ -124,6 +155,7 @@ export default function AmbassadeurPortaalPage() {
       if (error) throw error;
 
       if (data) {
+        localStorage.setItem(STORAGE_KEY, cleanEmail);
         setAmbassadeur(data as Ambassadeur);
         setStep("overview");
         await loadEvents(data.id);
@@ -153,6 +185,7 @@ export default function AmbassadeurPortaalPage() {
         .single();
 
       if (error) throw error;
+      localStorage.setItem(STORAGE_KEY, cleanEmail);
       setAmbassadeur(data as Ambassadeur);
       setStep("overview");
       await loadEvents(data.id);
@@ -336,7 +369,7 @@ export default function AmbassadeurPortaalPage() {
                 <h2 className="text-xl font-semibold text-gray-900">Hallo, {ambassadeur.full_name}</h2>
                 <p className="text-sm text-muted-foreground">{ambassadeur.email}</p>
               </div>
-              <Button variant="outline" size="sm" onClick={() => { setStep("identify"); setAmbassadeur(null); setEmail(""); }}>
+              <Button variant="outline" size="sm" onClick={() => { localStorage.removeItem(STORAGE_KEY); setStep("identify"); setAmbassadeur(null); setEmail(""); }}>
                 Afmelden
               </Button>
             </div>
