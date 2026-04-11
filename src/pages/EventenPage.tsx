@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Download, CalendarDays, List, Pencil, Upload, Trash2, Calendar } from "lucide-react";
+import { Plus, Search, Download, CalendarDays, List, Pencil, Upload, Trash2, Calendar, Link2 } from "lucide-react";
 import { EventFormDialog } from "@/components/events/EventFormDialog";
 import { EventCalendar } from "@/components/events/EventCalendar";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
@@ -115,6 +115,14 @@ export default function EventenPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
         <h1>Evenementen</h1>
         <div className="flex flex-wrap gap-2">
+          {canEdit && (
+            <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => {
+              navigator.clipboard.writeText(`${window.location.origin}/ambassadeur-portaal`);
+              toast.success("Portaallink gekopieerd!");
+            }}>
+              <Link2 className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Portaallink</span>
+            </Button>
+          )}
           <div className="flex border border-border rounded overflow-hidden">
             <button onClick={() => setView("list")} aria-label="Lijstweergave" aria-pressed={view === "list"} className={`px-3 py-2 sm:py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${view === "list" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted"}`}><List className="h-4 w-4" /></button>
             <button onClick={() => setView("calendar")} aria-label="Kalenderweergave" aria-pressed={view === "calendar"} className={`px-3 py-2 sm:py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${view === "calendar" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted"}`}><CalendarDays className="h-4 w-4" /></button>
