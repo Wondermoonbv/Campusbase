@@ -185,6 +185,7 @@ function PlatformTab() {
   const { platformSettings, updatePlatformSettings, isAdmin } = useAuth();
   const [companyName, setCompanyName] = useState(platformSettings.companyName);
   const [logoUrl, setLogoUrl] = useState(platformSettings.companyLogoUrl);
+  const [uploading, setUploading] = useState(false);
 
   if (!isAdmin) {
     return (
@@ -195,12 +196,27 @@ function PlatformTab() {
     );
   }
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setLogoUrl(reader.result as string);
-    reader.readAsDataURL(file);
+    if (file.size > 1024 * 1024) {
+      toast.error("Logo mag maximaal 1MB zijn.");
+      return;
+    }
+    if (!["image/png", "image/jpeg", "image/svg+xml"].includes(file.type)) {
+      toast.error("Alleen PNG, JPG of SVG bestanden.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const url = await uploadLogo(file);
+      setLogoUrl(url);
+      toast.success("Logo geüpload.");
+    } catch (err: any) {
+      toast.error(`Upload mislukt: ${err.message}`);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSave = () => {
@@ -249,13 +265,21 @@ function PlatformTab() {
 
         <div className="space-y-1.5">
           <Label>Bedrijfslogo</Label>
+          <p className="text-xs text-muted-foreground">PNG, JPG of SVG, max 1MB. Dit logo verschijnt in alle uitgaande emails.</p>
           <div className="flex items-center gap-3">
-            {logoUrl && <img src={logoUrl} alt="Logo" className="h-10 w-10 rounded object-contain border border-border" />}
+            <img
+              src={logoUrl || CB_FALLBACK_LOGO}
+              alt="Logo"
+              className="h-10 w-auto max-w-[160px] rounded border border-border object-contain bg-white p-1"
+            />
             <label className="cursor-pointer">
-              <Button variant="outline" size="sm" className="h-10 sm:h-8" asChild>
-                <span><Camera className="h-3.5 w-3.5 mr-1.5" /> Logo uploaden</span>
+              <Button variant="outline" size="sm" className="h-10 sm:h-8" asChild disabled={uploading}>
+                <span>
+                  {uploading ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Camera className="h-3.5 w-3.5 mr-1.5" />}
+                  {uploading ? "Uploaden..." : "Logo uploaden"}
+                </span>
               </Button>
-              <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+              <input type="file" accept="image/png,image/jpeg,image/svg+xml" className="hidden" onChange={handleLogoUpload} disabled={uploading} />
             </label>
           </div>
         </div>
