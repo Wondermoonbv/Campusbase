@@ -109,7 +109,7 @@ export default function AmbassadeursPage() {
     try {
       const emails = selected.map((a) => ({
         to: a.email,
-        subject: "Jouw CampusBase Ambassadeur Portaal",
+        subject: "Elia Campus Events — Ambassadeur Portaal",
         html: buildPortalLinkEmail(a.full_name, `${window.location.origin}/ambassadeur-portaal?token=${a.access_token}`),
       }));
       const result = await sendBulkEmails(emails);
