@@ -416,6 +416,7 @@ export default function AmbassadeursPage() {
                         className="hover:bg-muted/30 transition-colors cursor-pointer"
                         onClick={() => setExpandedId(isExpanded ? null : a.id)}
                       >
+                        {canEdit && <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}><Checkbox checked={selectedIds.has(a.id)} onCheckedChange={() => toggleSelected(a.id)} /></td>}
                         <td className="px-4 py-3">
                           {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
                         </td>
