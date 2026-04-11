@@ -116,6 +116,8 @@ export function AppSidebar() {
   const { user, logout, platformSettings } = useAuth();
   const { effectiveRole } = useViewAs();
 
+  const pendingCount = usePendingInschrijvingenCount();
+
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(loadCollapsedGroups);
   const [expandedSubmenus, setExpandedSubmenus] = useState<Record<string, boolean>>({});
 
