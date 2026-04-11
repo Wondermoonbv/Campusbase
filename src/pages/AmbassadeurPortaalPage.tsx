@@ -32,6 +32,11 @@ interface PortalEvent {
   signup_count: number;
   my_status: string | null;
   my_inschrijving_id: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  opbouw_tijd: string | null;
+  contactpersoon_stand: string | null;
+  description: string | null;
 }
 
 const STORAGE_KEY = "ambassadeur_portal_token";
