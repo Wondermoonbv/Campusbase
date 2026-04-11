@@ -284,6 +284,22 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
         </div>
       )}
 
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Ambassadeur verwijderen</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Wil je <strong>{deleteTarget?.name}</strong> verwijderen van dit event? De ambassadeur kan daarna opnieuw uitgenodigd worden.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Annuleren</Button>
+            <Button variant="destructive" onClick={handleDeleteEnrollment}>Verwijderen</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Invite dialog */}
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
         <DialogContent className="sm:max-w-md">
