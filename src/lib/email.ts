@@ -9,6 +9,8 @@ interface SendEmailParams {
   replyTo?: string;
 }
 
+// NOTE: The Edge Function send-email uses from name "CampusBase" (noreply@send.wondermoon.be).
+// This should be changed to "Elia Campus Recruitment" in the Edge Function configuration.
 const REPLY_TO = "campusbase@wondermoon.be";
 
 export async function sendEmail(params: SendEmailParams): Promise<{ success: boolean; error?: string }> {
