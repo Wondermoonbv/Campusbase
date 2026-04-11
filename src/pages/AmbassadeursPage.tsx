@@ -15,10 +15,12 @@ import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { AmbassadeurFormDialog } from "@/components/ambassadeurs/AmbassadeurFormDialog";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Plus, Pencil, Trash2, Upload, Users, ChevronDown, ChevronRight, UserCheck, Clock, Mail, CheckCircle2, Link2 } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Upload, Users, ChevronDown, ChevronRight, UserCheck, Clock, Mail, CheckCircle2, Link2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { Checkbox } from "@/components/ui/checkbox";
+import { sendBulkEmails, buildPortalLinkEmail } from "@/lib/email";
 
 const AMB_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "full_name", label: "Naam", required: true },
@@ -78,6 +80,50 @@ export default function AmbassadeursPage() {
   const [deleteTarget, setDeleteTarget] = useState<Ambassadeur | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sendingLinks, setSendingLinks] = useState(false);
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((a) => a.id)));
+    }
+  };
+
+  const handleSendPortalLinks = async () => {
+    const selected = ambassadeurs.filter((a) => selectedIds.has(a.id) && a.access_token);
+    if (selected.length === 0) {
+      toast.warning("Geen ambassadeurs geselecteerd.");
+      return;
+    }
+    setSendingLinks(true);
+    try {
+      const emails = selected.map((a) => ({
+        to: a.email,
+        subject: "Jouw CampusBase Ambassadeur Portaal",
+        html: buildPortalLinkEmail(a.full_name, `${window.location.origin}/ambassadeur-portaal?token=${a.access_token}`),
+      }));
+      const result = await sendBulkEmails(emails);
+      if (result.sent > 0) toast.success(`Portaallink verstuurd naar ${result.sent} ambassadeur(s)`);
+      if (result.failed.length > 0) {
+        result.failed.forEach((f) => toast.error(`Email naar ${f.to} mislukt: ${f.error}`));
+      }
+      setSelectedIds(new Set());
+    } catch {
+      toast.error("Fout bij versturen.");
+    } finally {
+      setSendingLinks(false);
+    }
+  };
 
   // Build maps
   const eventMap = useMemo(() => {
@@ -188,7 +234,12 @@ export default function AmbassadeursPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
         <h1>Ambassadeurs</h1>
         {canEdit && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            {selectedIds.size > 0 && (
+              <Button variant="outline" onClick={handleSendPortalLinks} disabled={sendingLinks}>
+                <Send className="h-4 w-4 mr-1" /> {sendingLinks ? "Versturen..." : `Portaallinks versturen (${selectedIds.size})`}
+              </Button>
+            )}
             <Button variant="outline" onClick={() => setImportOpen(true)}>
               <Upload className="h-4 w-4 mr-1" /> Import
             </Button>
@@ -341,6 +392,7 @@ export default function AmbassadeursPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left">
+                  {canEdit && <th className="px-4 py-3 w-8"><Checkbox checked={selectedIds.size === filtered.length && filtered.length > 0} onCheckedChange={toggleSelectAll} /></th>}
                   <th className="px-4 py-3 font-medium text-muted-foreground w-8"></th>
                   <th className="px-4 py-3 font-medium text-muted-foreground">Naam</th>
                   <th className="px-4 py-3 font-medium text-muted-foreground">Email</th>
@@ -364,6 +416,7 @@ export default function AmbassadeursPage() {
                         className="hover:bg-muted/30 transition-colors cursor-pointer"
                         onClick={() => setExpandedId(isExpanded ? null : a.id)}
                       >
+                        {canEdit && <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}><Checkbox checked={selectedIds.has(a.id)} onCheckedChange={() => toggleSelected(a.id)} /></td>}
                         <td className="px-4 py-3">
                           {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
                         </td>
@@ -391,7 +444,7 @@ export default function AmbassadeursPage() {
                       </tr>
                       {isExpanded && (
                         <tr>
-                          <td colSpan={canEdit ? 8 : 7} className="bg-muted/20 px-8 py-3">
+                          <td colSpan={canEdit ? 9 : 7} className="bg-muted/20 px-8 py-3">
                             {ambInschrijvingen.length === 0 ? (
                               <p className="text-sm text-muted-foreground">Geen event-koppelingen</p>
                             ) : (
