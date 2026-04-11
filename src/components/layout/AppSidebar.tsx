@@ -248,7 +248,14 @@ export function AppSidebar() {
                                     <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r bg-accent" />
                                   )}
                                   <item.icon className="h-4 w-4 shrink-0" />
-                                  {!collapsed && <span>{item.title}</span>}
+                                  {!collapsed && (
+                                    <span className="flex-1">{item.title}</span>
+                                  )}
+                                  {!collapsed && item.url === "/ambassadeurs" && pendingCount > 0 && (
+                                    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white px-1">
+                                      {pendingCount}
+                                    </span>
+                                  )}
                                 </NavLink>
                                 {hasChildren && !collapsed && (
                                   <button
