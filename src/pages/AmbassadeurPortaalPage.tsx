@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, MapPin, CalendarDays, School, Users, CheckCircle2, Clock, AlertCircle, Mail } from "lucide-react";
+import { Loader2, MapPin, CalendarDays, School, Users, CheckCircle2, Clock, AlertCircle, Mail, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { stripHtml } from "@/lib/sanitize";
 
@@ -16,6 +17,7 @@ interface Ambassadeur {
   full_name: string;
   email: string;
   department: string;
+  access_token: string;
 }
 
 interface PortalEvent {
@@ -30,11 +32,11 @@ interface PortalEvent {
   my_inschrijving_id: string | null;
 }
 
-const STORAGE_KEY = "ambassadeur_portal_email";
+const STORAGE_KEY = "ambassadeur_portal_token";
 
 export default function AmbassadeurPortaalPage() {
-  const [step, setStep] = useState<"identify" | "register" | "overview">("identify");
-  const [email, setEmail] = useState("");
+  const [searchParams] = useSearchParams();
+  const [step, setStep] = useState<"loading" | "register" | "overview" | "invalid">("loading");
   const [ambassadeur, setAmbassadeur] = useState<Ambassadeur | null>(null);
   const [regForm, setRegForm] = useState({ full_name: "", email: "", department: "" });
   const [events, setEvents] = useState<PortalEvent[]>([]);
@@ -60,7 +62,6 @@ export default function AmbassadeurPortaalPage() {
 
       if (evtErr) throw evtErr;
 
-      // Get school names
       const schoolIds = [...new Set((evts || []).map(e => e.school_id).filter(Boolean))] as string[];
       let schoolMap: Record<string, string> = {};
       if (schoolIds.length > 0) {
@@ -71,7 +72,6 @@ export default function AmbassadeurPortaalPage() {
         schoolMap = Object.fromEntries((schools || []).map(s => [s.id, s.name]));
       }
 
-      // Get ALL signups for counting, and ambassador's own signups separately
       const eventIds = (evts || []).map(e => e.id);
 
       const [{ data: allSignups }, { data: mySignups }] = await Promise.all([
@@ -111,64 +111,47 @@ export default function AmbassadeurPortaalPage() {
     }
   }, []);
 
-  // Auto-login from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return;
-    (async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from("ambassadeurs")
-          .select("id, full_name, email, department")
-          .eq("email", saved)
-          .maybeSingle();
-        if (error) throw error;
-        if (data) {
-          setAmbassadeur(data as Ambassadeur);
-          setEmail(saved);
-          setStep("overview");
-          await loadEvents(data.id);
-        } else {
-          localStorage.removeItem(STORAGE_KEY);
-        }
-      } catch {
-        localStorage.removeItem(STORAGE_KEY);
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const loginWithToken = useCallback(async (token: string): Promise<boolean> => {
+    const { data, error } = await supabase
+      .from("ambassadeurs")
+      .select("id, full_name, email, department, access_token")
+      .eq("access_token", token)
+      .maybeSingle();
+
+    if (error || !data) return false;
+
+    setAmbassadeur(data as Ambassadeur);
+    localStorage.setItem(STORAGE_KEY, token);
+    // Update URL to include token
+    window.history.replaceState(null, "", `${window.location.pathname}?token=${token}`);
+    setStep("overview");
+    await loadEvents(data.id);
+    return true;
   }, [loadEvents]);
 
-  const handleIdentify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanEmail = stripHtml(email).toLowerCase().trim();
-    if (!cleanEmail) return;
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("ambassadeurs")
-        .select("id, full_name, email, department")
-        .eq("email", cleanEmail)
-        .maybeSingle();
+  // Init: check URL token → localStorage token → show register
+  useEffect(() => {
+    const urlToken = searchParams.get("token");
+    const savedToken = localStorage.getItem(STORAGE_KEY);
+    const token = urlToken || savedToken;
 
-      if (error) throw error;
-
-      if (data) {
-        localStorage.setItem(STORAGE_KEY, cleanEmail);
-        setAmbassadeur(data as Ambassadeur);
-        setStep("overview");
-        await loadEvents(data.id);
-      } else {
-        setRegForm({ full_name: "", email: cleanEmail, department: "" });
-        setStep("register");
-      }
-    } catch {
-      toast.error("Er ging iets mis. Probeer opnieuw.");
-    } finally {
-      setLoading(false);
+    if (!token) {
+      setStep("register");
+      return;
     }
-  };
+
+    (async () => {
+      const ok = await loginWithToken(token);
+      if (!ok) {
+        localStorage.removeItem(STORAGE_KEY);
+        if (urlToken) {
+          setStep("invalid");
+        } else {
+          setStep("register");
+        }
+      }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,20 +164,31 @@ export default function AmbassadeurPortaalPage() {
       const { data, error } = await supabase
         .from("ambassadeurs")
         .insert({ full_name: name, email: cleanEmail, department: dept })
-        .select("id, full_name, email, department")
+        .select("id, full_name, email, department, access_token")
         .single();
 
       if (error) throw error;
-      localStorage.setItem(STORAGE_KEY, cleanEmail);
-      setAmbassadeur(data as Ambassadeur);
+
+      const amb = data as Ambassadeur;
+      setAmbassadeur(amb);
+      localStorage.setItem(STORAGE_KEY, amb.access_token);
+      window.history.replaceState(null, "", `${window.location.pathname}?token=${amb.access_token}`);
       setStep("overview");
-      await loadEvents(data.id);
-      toast.success("Welkom! Je bent geregistreerd als ambassadeur.");
+      await loadEvents(amb.id);
+      toast.success("Welkom! Bewaar deze link om in de toekomst direct toegang te krijgen tot je portaal.", { duration: 8000 });
     } catch {
       toast.error("Registratie mislukt. Probeer opnieuw.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setAmbassadeur(null);
+    setEvents([]);
+    window.history.replaceState(null, "", window.location.pathname);
+    setStep("register");
   };
 
   const handleSignup = async (eventId: string) => {
@@ -269,6 +263,13 @@ export default function AmbassadeurPortaalPage() {
     }
   };
 
+  const copyPortalLink = () => {
+    if (!ambassadeur) return;
+    const link = `${window.location.origin}/ambassadeur-portaal?token=${ambassadeur.access_token}`;
+    navigator.clipboard.writeText(link);
+    toast.success("Je persoonlijke portaallink is gekopieerd!");
+  };
+
   const statusBadge = (status: string | null) => {
     switch (status) {
       case "ingeschreven":
@@ -301,31 +302,23 @@ export default function AmbassadeurPortaalPage() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-        {step === "identify" && (
+        {step === "loading" && (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        )}
+
+        {step === "invalid" && (
           <Card className="max-w-md mx-auto shadow-md">
-            <CardContent className="pt-6 pb-6 space-y-4">
-              <div className="text-center mb-2">
-                <h2 className="text-xl font-semibold text-gray-900">Welkom</h2>
-                <p className="text-sm text-muted-foreground mt-1">Vul je e-mailadres in om je events te bekijken</p>
-              </div>
-              <form onSubmit={handleIdentify} className="space-y-4">
-                <div>
-                  <Label htmlFor="portal-email">E-mailadres</Label>
-                  <Input
-                    id="portal-email"
-                    type="email"
-                    required
-                    placeholder="naam@bedrijf.be"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading} style={{ backgroundColor: BRAND.petrol }}>
-                  {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                  Verder
-                </Button>
-              </form>
+            <CardContent className="pt-6 pb-6 text-center space-y-4">
+              <AlertCircle className="h-12 w-12 mx-auto text-destructive" />
+              <h2 className="text-xl font-semibold text-gray-900">Ongeldige link</h2>
+              <p className="text-sm text-muted-foreground">
+                Deze link is niet geldig. Neem contact op met het campus recruitment team voor een nieuwe link.
+              </p>
+              <Button variant="outline" onClick={() => setStep("register")}>
+                Nieuw registreren
+              </Button>
             </CardContent>
           </Card>
         )}
@@ -334,8 +327,8 @@ export default function AmbassadeurPortaalPage() {
           <Card className="max-w-md mx-auto shadow-md">
             <CardContent className="pt-6 pb-6 space-y-4">
               <div className="text-center mb-2">
-                <h2 className="text-xl font-semibold text-gray-900">Registreren</h2>
-                <p className="text-sm text-muted-foreground mt-1">We kennen je nog niet. Vul je gegevens aan om je te registreren.</p>
+                <h2 className="text-xl font-semibold text-gray-900">Registreren als ambassadeur</h2>
+                <p className="text-sm text-muted-foreground mt-1">Vul je gegevens in om je te registreren. Je krijgt een persoonlijke link voor toekomstige toegang.</p>
               </div>
               <form onSubmit={handleRegister} className="space-y-4">
                 <div>
@@ -350,13 +343,10 @@ export default function AmbassadeurPortaalPage() {
                   <Label htmlFor="reg-dept">Afdeling</Label>
                   <Input id="reg-dept" value={regForm.department} onChange={e => setRegForm({ ...regForm, department: e.target.value })} className="mt-1" maxLength={200} />
                 </div>
-                <div className="flex gap-2">
-                  <Button type="button" variant="outline" className="flex-1" onClick={() => setStep("identify")}>Terug</Button>
-                  <Button type="submit" className="flex-1" disabled={loading} style={{ backgroundColor: BRAND.petrol }}>
-                    {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                    Registreren
-                  </Button>
-                </div>
+                <Button type="submit" className="w-full" disabled={loading} style={{ backgroundColor: BRAND.petrol }}>
+                  {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  Registreren
+                </Button>
               </form>
             </CardContent>
           </Card>
@@ -369,9 +359,14 @@ export default function AmbassadeurPortaalPage() {
                 <h2 className="text-xl font-semibold text-gray-900">Hallo, {ambassadeur.full_name}</h2>
                 <p className="text-sm text-muted-foreground">{ambassadeur.email}</p>
               </div>
-              <Button variant="outline" size="sm" onClick={() => { localStorage.removeItem(STORAGE_KEY); setStep("identify"); setAmbassadeur(null); setEmail(""); }}>
-                Afmelden
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={copyPortalLink} title="Kopieer je persoonlijke portaallink">
+                  <Link2 className="h-4 w-4 mr-1" /> Link kopiëren
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  Afmelden
+                </Button>
+              </div>
             </div>
 
             <h3 className="text-lg font-medium text-gray-900">Aankomende campus events</h3>
@@ -424,7 +419,6 @@ export default function AmbassadeurPortaalPage() {
                           <div className="flex items-center gap-2 shrink-0">
                             {ev.my_status && statusBadge(ev.my_status)}
 
-                            {/* No registration → show signup button */}
                             {!ev.my_status && (
                               <Button
                                 size="sm"
@@ -437,7 +431,6 @@ export default function AmbassadeurPortaalPage() {
                               </Button>
                             )}
 
-                            {/* Uitgenodigd → show signup button */}
                             {ev.my_status === "uitgenodigd" && ev.my_inschrijving_id && (
                               <Button
                                 size="sm"
@@ -450,7 +443,6 @@ export default function AmbassadeurPortaalPage() {
                               </Button>
                             )}
 
-                            {/* Ingeschreven → cancel button */}
                             {ev.my_status === "ingeschreven" && ev.my_inschrijving_id && (
                               <Button
                                 size="sm"
@@ -463,7 +455,6 @@ export default function AmbassadeurPortaalPage() {
                               </Button>
                             )}
 
-                            {/* Afgemeld → re-signup button */}
                             {ev.my_status === "afgemeld" && ev.my_inschrijving_id && (
                               <Button
                                 size="sm"

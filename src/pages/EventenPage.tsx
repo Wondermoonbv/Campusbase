@@ -118,7 +118,7 @@ export default function EventenPage() {
           {canEdit && (
             <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => {
               navigator.clipboard.writeText(`${window.location.origin}/ambassadeur-portaal`);
-              toast.success("Portaallink gekopieerd!");
+              toast.success("Portaallink gekopieerd! (voor nieuwe registraties)");
             }}>
               <Link2 className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Portaallink</span>
             </Button>
