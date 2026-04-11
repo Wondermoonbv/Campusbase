@@ -64,8 +64,8 @@ export function getEmailLogoUrl(): string {
 export function buildEmailLogoHtml(): string {
   const url = getEmailLogoUrl();
   if (url) {
-    return `<img src="${url}" alt="CampusBase" height="32" style="height:32px;max-width:200px;" />`;
+    return `<img src="${url}" alt="Elia Campus Recruitment" height="32" style="height:32px;max-width:200px;" />`;
   }
-  // Inline HTML fallback - "CB" petrol box + text
-  return `<table cellpadding="0" cellspacing="0" style="display:inline-block;"><tr><td style="background:#0E6575;border-radius:6px;padding:4px 8px;"><span style="color:#ffffff;font-size:16px;font-weight:bold;font-family:Arial,Helvetica,sans-serif;">CB</span></td><td style="padding-left:8px;"><span style="color:#ffffff;font-size:14px;font-weight:600;font-family:Arial,Helvetica,sans-serif;">CampusBase</span></td></tr></table>`;
+  // Inline HTML fallback - "Elia" text logo
+  return `<table cellpadding="0" cellspacing="0" style="display:inline-block;"><tr><td><span style="color:#ffffff;font-size:16px;font-weight:bold;font-family:Arial,Helvetica,sans-serif;">Elia</span></td></tr></table>`;
 }
