@@ -442,6 +442,11 @@ export default function AmbassadeurPortaalPage() {
                               <span className="flex items-center gap-1">
                                 <CalendarDays className="h-3.5 w-3.5" />
                                 {new Date(ev.date).toLocaleDateString("nl-BE", { weekday: "short", day: "numeric", month: "long", year: "numeric" })}
+                                {(formatTime(ev.start_time) || formatTime(ev.end_time)) && (
+                                  <span className="ml-1">
+                                    {formatTime(ev.start_time)}{formatTime(ev.end_time) ? ` – ${formatTime(ev.end_time)}` : ""}
+                                  </span>
+                                )}
                               </span>
                               {ev.location && (
                                 <span className="flex items-center gap-1">
@@ -458,9 +463,45 @@ export default function AmbassadeurPortaalPage() {
                                 {ev.signup_count}{ev.max_ambassadeurs !== null ? `/${ev.max_ambassadeurs}` : ""} plaatsen
                               </span>
                             </div>
+
+                            {(ev.opbouw_tijd || ev.contactpersoon_stand || ev.description) && (
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground pt-1 border-t border-border/40 mt-1.5">
+                                {ev.opbouw_tijd && (
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />Opbouw: {ev.opbouw_tijd}
+                                  </span>
+                                )}
+                                {ev.contactpersoon_stand && (
+                                  <span className="flex items-center gap-1">
+                                    <User className="h-3 w-3" />{ev.contactpersoon_stand}
+                                  </span>
+                                )}
+                                {ev.description && (
+                                  <span className="flex items-center gap-1">
+                                    <FileText className="h-3 w-3" />{ev.description.length > 80 ? ev.description.slice(0, 80) + "…" : ev.description}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
 
                           <div className="flex items-center gap-2 shrink-0">
+                            {canDownloadIcs(ev.my_status) && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8"
+                                    onClick={() => downloadIcs(ev)}
+                                  >
+                                    <CalendarPlus className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Toevoegen aan agenda</TooltipContent>
+                              </Tooltip>
+                            )}
+
                             {ev.my_status && statusBadge(ev.my_status)}
 
                             {!ev.my_status && (
