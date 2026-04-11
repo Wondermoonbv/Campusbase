@@ -525,5 +525,6 @@ export default function AmbassadeurPortaalPage() {
         © {new Date().getFullYear()} Elia Group — Campus Recruitment
       </footer>
     </div>
+    </TooltipProvider>
   );
 }
