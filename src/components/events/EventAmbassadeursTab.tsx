@@ -5,9 +5,10 @@ import { useScholen } from "@/hooks/useScholen";
 import type { Ambassadeur } from "@/hooks/useAmbassadeurs";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Copy, Link2, UserPlus, Users } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Copy, Link2, Mail, Trash2, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { sendEmail, sendBulkEmails, buildConfirmationEmail, buildInvitationEmail } from "@/lib/email";
 import type { EventEmailData } from "@/lib/email";
@@ -33,11 +34,12 @@ function statusColor(status: string) {
 
 export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
   const { ambassadeurs } = useAmbassadeurs();
-  const { inschrijvingen, addInschrijving, updateStatus } = useEventInschrijvingen(eventId);
+  const { inschrijvingen, addInschrijving, updateStatus, deleteInschrijving } = useEventInschrijvingen(eventId);
   const { evenementen } = useEvenementen();
   const { scholen } = useScholen();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const event = useMemo(() => evenementen.find((e) => e.id === eventId), [evenementen, eventId]);
   const school = useMemo(() => event?.school_id ? scholen.find((s) => s.id === event.school_id) : null, [event, scholen]);
@@ -162,6 +164,37 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
     toast.success("Inschrijflink gekopieerd!");
   };
 
+  const handleResendInvite = async (enrollment: typeof enriched[0]) => {
+    const amb = enrollment.ambassadeur;
+    if (!amb?.email || !event) return;
+    const eventData: EventEmailData = {
+      eventName: event.name,
+      date: event.date,
+      location: event.location,
+      schoolName: school?.name,
+    };
+    const portalUrl = `${window.location.origin}/ambassadeur-portaal?token=${amb.access_token}`;
+    const html = buildInvitationEmail(amb.full_name, eventData, portalUrl);
+    const subject = `Uitnodiging: ${event.name} - ${new Date(event.date).toLocaleDateString("nl-BE")}`;
+    const result = await sendEmail({ to: amb.email, subject, html });
+    if (result.success) {
+      toast.success(`Uitnodiging opnieuw verstuurd naar ${amb.full_name}`);
+    } else {
+      toast.error(`Email naar ${amb.email} mislukt: ${result.error}`);
+    }
+  };
+
+  const handleDeleteEnrollment = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteInschrijving.mutateAsync(deleteTarget.id);
+      toast.success(`${deleteTarget.name} verwijderd van dit event`);
+      setDeleteTarget(null);
+    } catch {
+      toast.error("Fout bij verwijderen");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Registration link */}
@@ -216,22 +249,56 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
                 <p className="text-sm font-medium">{e.ambassadeur?.full_name ?? "Onbekend"}</p>
                 <p className="text-xs text-muted-foreground">{e.ambassadeur?.email} {e.ambassadeur?.department ? `· ${e.ambassadeur.department}` : ""}</p>
               </div>
-              <Select value={e.status} onValueChange={(v) => handleStatusChange(e.id, v)}>
-                <SelectTrigger className="w-40 h-9">
-                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColor(e.status)}`}>
-                    {STATUSES.find((s) => s.value === e.status)?.label ?? e.status}
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUSES.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleResendInvite(e)}>
+                      <Mail className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Uitnodiging opnieuw versturen</TooltipContent>
+                </Tooltip>
+                <Select value={e.status} onValueChange={(v) => handleStatusChange(e.id, v)}>
+                  <SelectTrigger className="w-40 h-9">
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColor(e.status)}`}>
+                      {STATUSES.find((s) => s.value === e.status)?.label ?? e.status}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUSES.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteTarget({ id: e.id, name: e.ambassadeur?.full_name ?? "Onbekend" })}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Verwijderen van event</TooltipContent>
+                </Tooltip>
+              </div>
             </div>
           ))}
         </div>
       )}
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Ambassadeur verwijderen</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Wil je <strong>{deleteTarget?.name}</strong> verwijderen van dit event? De ambassadeur kan daarna opnieuw uitgenodigd worden.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Annuleren</Button>
+            <Button variant="destructive" onClick={handleDeleteEnrollment}>Verwijderen</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Invite dialog */}
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
