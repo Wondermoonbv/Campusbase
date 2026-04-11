@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       ambassadeurs: {
         Row: {
+          access_token: string | null
           created_at: string | null
           department: string | null
           email: string
@@ -26,6 +27,7 @@ export type Database = {
           phone: string | null
         }
         Insert: {
+          access_token?: string | null
           created_at?: string | null
           department?: string | null
           email: string
@@ -36,6 +38,7 @@ export type Database = {
           phone?: string | null
         }
         Update: {
+          access_token?: string | null
           created_at?: string | null
           department?: string | null
           email?: string
