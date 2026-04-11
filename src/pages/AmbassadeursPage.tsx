@@ -15,10 +15,12 @@ import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { AmbassadeurFormDialog } from "@/components/ambassadeurs/AmbassadeurFormDialog";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Plus, Pencil, Trash2, Upload, Users, ChevronDown, ChevronRight, UserCheck, Clock, Mail, CheckCircle2, Link2 } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Upload, Users, ChevronDown, ChevronRight, UserCheck, Clock, Mail, CheckCircle2, Link2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { Checkbox } from "@/components/ui/checkbox";
+import { sendBulkEmails, buildPortalLinkEmail } from "@/lib/email";
 
 const AMB_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "full_name", label: "Naam", required: true },
