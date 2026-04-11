@@ -218,6 +218,7 @@ export type Database = {
           end_time: string | null
           id: string
           location: string | null
+          max_ambassadeurs: number | null
           name: string
           notes: string | null
           opbouw_tijd: string | null
@@ -245,6 +246,7 @@ export type Database = {
           end_time?: string | null
           id?: string
           location?: string | null
+          max_ambassadeurs?: number | null
           name: string
           notes?: string | null
           opbouw_tijd?: string | null
@@ -272,6 +274,7 @@ export type Database = {
           end_time?: string | null
           id?: string
           location?: string | null
+          max_ambassadeurs?: number | null
           name?: string
           notes?: string | null
           opbouw_tijd?: string | null
