@@ -249,18 +249,36 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
                 <p className="text-sm font-medium">{e.ambassadeur?.full_name ?? "Onbekend"}</p>
                 <p className="text-xs text-muted-foreground">{e.ambassadeur?.email} {e.ambassadeur?.department ? `· ${e.ambassadeur.department}` : ""}</p>
               </div>
-              <Select value={e.status} onValueChange={(v) => handleStatusChange(e.id, v)}>
-                <SelectTrigger className="w-40 h-9">
-                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColor(e.status)}`}>
-                    {STATUSES.find((s) => s.value === e.status)?.label ?? e.status}
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUSES.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleResendInvite(e)}>
+                      <Mail className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Uitnodiging opnieuw versturen</TooltipContent>
+                </Tooltip>
+                <Select value={e.status} onValueChange={(v) => handleStatusChange(e.id, v)}>
+                  <SelectTrigger className="w-40 h-9">
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColor(e.status)}`}>
+                      {STATUSES.find((s) => s.value === e.status)?.label ?? e.status}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUSES.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteTarget({ id: e.id, name: e.ambassadeur?.full_name ?? "Onbekend" })}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Verwijderen van event</TooltipContent>
+                </Tooltip>
+              </div>
             </div>
           ))}
         </div>
