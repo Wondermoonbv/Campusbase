@@ -6,7 +6,7 @@ const LOGO_STORAGE_KEY = "campusbase_logo_url";
 /**
  * Generate an inline SVG data URI for the "CB" fallback logo (petrol square).
  */
-export const CB_FALLBACK_LOGO = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='40' viewBox='0 0 120 40'%3E%3Crect width='40' height='40' rx='6' fill='%230E6575'/%3E%3Ctext x='20' y='27' font-family='Arial,sans-serif' font-size='20' font-weight='bold' fill='white' text-anchor='middle'%3ECB%3C/text%3E%3Ctext x='50' y='27' font-family='Arial,sans-serif' font-size='16' font-weight='600' fill='%230E6575' text-anchor='start'%3ECampusBase%3C/text%3E%3C/svg%3E`;
+export const CB_FALLBACK_LOGO = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'%3E%3Ctext x='0' y='27' font-family='Arial,sans-serif' font-size='16' font-weight='700' fill='%230E6575'%3EElia Campus Recruitment%3C/text%3E%3C/svg%3E`;
 
 /**
  * Upload a logo file to Supabase Storage and return the public URL.
