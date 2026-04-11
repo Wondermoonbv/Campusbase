@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Copy, Link2, UserPlus, Users } from "lucide-react";
+import { Copy, Link2, Mail, Trash2, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { sendEmail, sendBulkEmails, buildConfirmationEmail, buildInvitationEmail } from "@/lib/email";
 import type { EventEmailData } from "@/lib/email";
