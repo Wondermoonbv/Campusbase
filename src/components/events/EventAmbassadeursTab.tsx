@@ -164,6 +164,37 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
     toast.success("Inschrijflink gekopieerd!");
   };
 
+  const handleResendInvite = async (enrollment: typeof enriched[0]) => {
+    const amb = enrollment.ambassadeur;
+    if (!amb?.email || !event) return;
+    const eventData: EventEmailData = {
+      eventName: event.name,
+      date: event.date,
+      location: event.location,
+      schoolName: school?.name,
+    };
+    const portalUrl = `${window.location.origin}/ambassadeur-portaal?token=${amb.access_token}`;
+    const html = buildInvitationEmail(amb.full_name, eventData, portalUrl);
+    const subject = `Uitnodiging: ${event.name} - ${new Date(event.date).toLocaleDateString("nl-BE")}`;
+    const result = await sendEmail({ to: amb.email, subject, html });
+    if (result.success) {
+      toast.success(`Uitnodiging opnieuw verstuurd naar ${amb.full_name}`);
+    } else {
+      toast.error(`Email naar ${amb.email} mislukt: ${result.error}`);
+    }
+  };
+
+  const handleDeleteEnrollment = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteInschrijving.mutateAsync(deleteTarget.id);
+      toast.success(`${deleteTarget.name} verwijderd van dit event`);
+      setDeleteTarget(null);
+    } catch {
+      toast.error("Fout bij verwijderen");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Registration link */}
