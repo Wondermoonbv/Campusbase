@@ -339,7 +339,7 @@ export default function AmbassadeurPortaalPage() {
     return (
       <div className="flex flex-col items-end gap-1">
         {c.badge}
-        <p className="text-sm text-muted-foreground text-right max-w-[260px]">{c.subtitle}</p>
+        <p className="text-xs italic text-muted-foreground text-right max-w-[260px]">{c.subtitle}</p>
       </div>
     );
   };
