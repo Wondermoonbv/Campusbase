@@ -56,7 +56,9 @@ export default function AmbassadeurPortaalPage() {
   const [step, setStep] = useState<"loading" | "register" | "overview" | "invalid">("loading");
   const [ambassadeur, setAmbassadeur] = useState<Ambassadeur | null>(null);
   const [regForm, setRegForm] = useState({ full_name: "", email: "", department: "" });
+  const [events, setEvents] = useState<PortalEvent[]>([]);
   const [pastEvents, setPastEvents] = useState<PastEvent[]>([]);
+  const [loading, setLoading] = useState(false);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [actionLoadingMap, setActionLoadingMap] = useState<Record<string, boolean>>({});
