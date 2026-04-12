@@ -386,6 +386,8 @@ export type Database = {
           created_by: string | null
           description: string | null
           evenement_id: string
+          feedback_mail_sent: boolean | null
+          feedback_mail_sent_at: string | null
           id: string
           is_active: boolean | null
           title: string
@@ -395,6 +397,8 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           evenement_id: string
+          feedback_mail_sent?: boolean | null
+          feedback_mail_sent_at?: string | null
           id?: string
           is_active?: boolean | null
           title?: string
@@ -404,6 +408,8 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           evenement_id?: string
+          feedback_mail_sent?: boolean | null
+          feedback_mail_sent_at?: string | null
           id?: string
           is_active?: boolean | null
           title?: string
