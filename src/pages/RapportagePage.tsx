@@ -1,5 +1,7 @@
 import { useMemo, useState, useCallback, useRef } from "react";
 import { useScholen } from "@/hooks/useScholen";
+import { AmbassadeurPrestaties } from "@/components/rapportage/AmbassadeurPrestaties";
+import { EventFeedbackOverzicht } from "@/components/rapportage/EventFeedbackOverzicht";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { useContracten } from "@/hooks/useContracten";
 import { useAllFeedbackData } from "@/hooks/useFeedback";
