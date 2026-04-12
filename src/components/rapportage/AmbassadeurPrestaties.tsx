@@ -2,21 +2,19 @@ import { useMemo, useState } from "react";
 import { useAmbassadeurs, useAllInschrijvingen } from "@/hooks/useAmbassadeurs";
 import { useAllFeedbackData } from "@/hooks/useFeedback";
 import { useEvenementen } from "@/hooks/useEvenementen";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, UserCheck, CalendarDays, MessageSquare, TrendingUp } from "lucide-react";
-import { SortableTableHead } from "@/components/ui/SortableTableHead";
-
-type SortKey = "name" | "confirmed" | "enrolled" | "feedback" | "ratio";
+import { Download, UserCheck, CalendarDays, MessageSquare } from "lucide-react";
+import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 
 function getAcademicYears(eventDates: string[]): string[] {
   const years = new Set<string>();
   eventDates.forEach((d) => {
     const date = new Date(d);
-    const m = date.getMonth(); // 0-based
+    const m = date.getMonth();
     const y = date.getFullYear();
-    const startYear = m >= 8 ? y : y - 1; // Sept=8
+    const startYear = m >= 8 ? y : y - 1;
     years.add(`${startYear}-${startYear + 1}`);
   });
   return Array.from(years).sort().reverse();
@@ -25,8 +23,8 @@ function getAcademicYears(eventDates: string[]): string[] {
 function isInAcademicYear(dateStr: string, academicYear: string): boolean {
   if (academicYear === "all") return true;
   const [startY] = academicYear.split("-").map(Number);
-  const start = new Date(startY, 8, 1); // Sept 1
-  const end = new Date(startY + 1, 7, 31); // Aug 31
+  const start = new Date(startY, 8, 1);
+  const end = new Date(startY + 1, 7, 31);
   const d = new Date(dateStr);
   return d >= start && d <= end;
 }
@@ -47,33 +45,25 @@ export function AmbassadeurPrestaties() {
   const { evenementen } = useEvenementen();
 
   const [academicYear, setAcademicYear] = useState("all");
-  const [sortKey, setSortKey] = useState<SortKey>("confirmed");
-  const [sortAsc, setSortAsc] = useState(false);
+  const { sort, toggleSort } = useSort("confirmed", "desc");
 
   const academicYears = useMemo(() => getAcademicYears(evenementen.map((e) => e.date)), [evenementen]);
 
-  // Map event IDs in range
   const eventIdsInRange = useMemo(() => {
     const ids = new Set<string>();
-    evenementen.forEach((e) => {
-      if (isInAcademicYear(e.date, academicYear)) ids.add(e.id);
-    });
+    evenementen.forEach((e) => { if (isInAcademicYear(e.date, academicYear)) ids.add(e.id); });
     return ids;
   }, [evenementen, academicYear]);
 
-  // Map form IDs to event IDs
   const formEventMap = useMemo(() => {
     const m = new Map<string, string>();
     forms.forEach((f) => m.set(f.id, f.evenement_id));
     return m;
   }, [forms]);
 
-  // Map event IDs that have forms (in range)
   const eventIdsWithForms = useMemo(() => {
     const s = new Set<string>();
-    forms.forEach((f) => {
-      if (eventIdsInRange.has(f.evenement_id)) s.add(f.evenement_id);
-    });
+    forms.forEach((f) => { if (eventIdsInRange.has(f.evenement_id)) s.add(f.evenement_id); });
     return s;
   }, [forms, eventIdsInRange]);
 
@@ -84,31 +74,24 @@ export function AmbassadeurPrestaties() {
       );
       const confirmed = ambInschr.filter((i) => i.status === "bevestigd").length;
       const enrolled = ambInschr.filter((i) => i.status !== "afgemeld").length;
-
-      // Feedback: match on email in responses for forms in range
       const feedbackCount = responses.filter((r) => {
         const eventId = formEventMap.get(r.form_id);
         return eventId && eventIdsInRange.has(eventId) && r.respondent_email === amb.email;
       }).length;
-
-      // Confirmed events with forms
       const confirmedWithForm = ambInschr.filter(
         (i) => i.status === "bevestigd" && eventIdsWithForms.has(i.evenement_id)
       ).length;
-
       const ratio = confirmedWithForm > 0 ? (feedbackCount / confirmedWithForm) * 100 : 0;
-
       return { id: amb.id, name: amb.full_name, confirmed, enrolled, feedback: feedbackCount, ratio };
     });
   }, [ambassadeurs, inschrijvingen, responses, eventIdsInRange, formEventMap, eventIdsWithForms]);
 
   const sorted = useMemo(() => {
-    return [...rows].sort((a, b) => {
-      const mul = sortAsc ? 1 : -1;
-      if (sortKey === "name") return mul * a.name.localeCompare(b.name);
-      return mul * (a[sortKey] - b[sortKey]);
+    return sortItems(rows, sort, (item, key) => {
+      if (key === "name") return item.name;
+      return item[key as keyof AmbRow] as number;
     });
-  }, [rows, sortKey, sortAsc]);
+  }, [rows, sort]);
 
   const totals = useMemo(() => {
     const active = rows.filter((r) => r.confirmed > 0 || r.enrolled > 0);
@@ -116,25 +99,16 @@ export function AmbassadeurPrestaties() {
     const avgEvents = totalActive > 0 ? rows.reduce((s, r) => s + r.confirmed, 0) / totalActive : 0;
     const withFeedbackEligible = rows.filter((r) => r.confirmed > 0);
     const avgRatio = withFeedbackEligible.length > 0
-      ? withFeedbackEligible.reduce((s, r) => s + r.ratio, 0) / withFeedbackEligible.length
-      : 0;
+      ? withFeedbackEligible.reduce((s, r) => s + r.ratio, 0) / withFeedbackEligible.length : 0;
     return { totalActive, avgEvents, avgRatio, totalAmbassadeurs: ambassadeurs.length };
   }, [rows, ambassadeurs]);
-
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) setSortAsc(!sortAsc);
-    else { setSortKey(key); setSortAsc(key === "name"); }
-  };
 
   const exportCSV = () => {
     const header = "Naam;Events deelgenomen;Events ingeschreven;Feedback ingevuld;Feedback ratio (%)";
     const lines = sorted.map((r) => `${r.name};${r.confirmed};${r.enrolled};${r.feedback};${r.ratio.toFixed(1)}`);
     const csv = [header, ...lines].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `ambassadeur-prestaties-${academicYear}.csv`;
-    a.click();
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `ambassadeur-prestaties-${academicYear}.csv`; a.click();
   };
 
   return (
@@ -145,14 +119,10 @@ export function AmbassadeurPrestaties() {
         </h2>
         <div className="flex items-center gap-2">
           <Select value={academicYear} onValueChange={setAcademicYear}>
-            <SelectTrigger className="h-8 text-xs w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger className="h-8 text-xs w-[140px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Alle periodes</SelectItem>
-              {academicYears.map((y) => (
-                <SelectItem key={y} value={y}>{y}</SelectItem>
-              ))}
+              {academicYears.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
             </SelectContent>
           </Select>
           <Button variant="outline" size="sm" className="h-8 text-xs" onClick={exportCSV}>
@@ -161,7 +131,6 @@ export function AmbassadeurPrestaties() {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         {[
           { icon: UserCheck, label: "Actieve ambassadeurs", value: totals.totalActive },
@@ -180,16 +149,15 @@ export function AmbassadeurPrestaties() {
         ))}
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <SortableTableHead sorted={sortKey === "name"} ascending={sortAsc} onSort={() => handleSort("name")}>Naam</SortableTableHead>
-              <SortableTableHead sorted={sortKey === "confirmed"} ascending={sortAsc} onSort={() => handleSort("confirmed")} className="text-right">Deelgenomen</SortableTableHead>
-              <SortableTableHead sorted={sortKey === "enrolled"} ascending={sortAsc} onSort={() => handleSort("enrolled")} className="text-right">Ingeschreven</SortableTableHead>
-              <SortableTableHead sorted={sortKey === "feedback"} ascending={sortAsc} onSort={() => handleSort("feedback")} className="text-right">Feedback</SortableTableHead>
-              <SortableTableHead sorted={sortKey === "ratio"} ascending={sortAsc} onSort={() => handleSort("ratio")} className="text-right">Feedback ratio</SortableTableHead>
+              <SortableTableHead sortKey="name" currentSort={sort} onSort={toggleSort}>Naam</SortableTableHead>
+              <SortableTableHead sortKey="confirmed" currentSort={sort} onSort={toggleSort} className="text-right">Deelgenomen</SortableTableHead>
+              <SortableTableHead sortKey="enrolled" currentSort={sort} onSort={toggleSort} className="text-right">Ingeschreven</SortableTableHead>
+              <SortableTableHead sortKey="feedback" currentSort={sort} onSort={toggleSort} className="text-right">Feedback</SortableTableHead>
+              <SortableTableHead sortKey="ratio" currentSort={sort} onSort={toggleSort} className="text-right">Feedback ratio</SortableTableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -208,14 +176,10 @@ export function AmbassadeurPrestaties() {
           <TableFooter>
             <TableRow>
               <TableCell className="font-semibold text-sm">{totals.totalAmbassadeurs} ambassadeurs</TableCell>
-              <TableCell className="text-right font-semibold tabular-nums text-sm">
-                ø {totals.avgEvents.toFixed(1)}
-              </TableCell>
+              <TableCell className="text-right font-semibold tabular-nums text-sm">ø {totals.avgEvents.toFixed(1)}</TableCell>
               <TableCell className="text-right text-sm">—</TableCell>
               <TableCell className="text-right text-sm">—</TableCell>
-              <TableCell className="text-right font-semibold tabular-nums text-sm">
-                ø {totals.avgRatio.toFixed(0)}%
-              </TableCell>
+              <TableCell className="text-right font-semibold tabular-nums text-sm">ø {totals.avgRatio.toFixed(0)}%</TableCell>
             </TableRow>
           </TableFooter>
         </Table>

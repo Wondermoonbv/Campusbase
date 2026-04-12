@@ -3,14 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { useAllFeedbackData } from "@/hooks/useFeedback";
 import { useAllInschrijvingen } from "@/hooks/useAmbassadeurs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, Star, MessageSquare, TrendingUp, BarChart3 } from "lucide-react";
-import { SortableTableHead } from "@/components/ui/SortableTableHead";
+import { Download, Star, MessageSquare, TrendingUp } from "lucide-react";
+import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 import { Progress } from "@/components/ui/progress";
-
-type SortKey = "name" | "date" | "confirmed" | "responses" | "responseRate" | "overall" | "organization" | "relevance" | "stand" | "recommend";
 
 function getAcademicYears(eventDates: string[]): string[] {
   const years = new Set<string>();
@@ -33,14 +31,13 @@ function isInAcademicYear(dateStr: string, academicYear: string): boolean {
   return d >= start && d <= end;
 }
 
-function avg(nums: (number | null)[]): number {
+function avgNums(nums: (number | null)[]): number {
   const valid = nums.filter((n): n is number => n != null);
   return valid.length > 0 ? valid.reduce((s, n) => s + n, 0) / valid.length : 0;
 }
 
 interface EventRow {
   eventId: string;
-  formId: string;
   name: string;
   date: string;
   confirmed: number;
@@ -53,11 +50,11 @@ interface EventRow {
   recommend: number;
 }
 
-function ScoreBar({ value, max = 5 }: { value: number; max?: number }) {
-  if (value === 0) return <span className="text-muted-foreground">—</span>;
+function ScoreBar({ value }: { value: number }) {
+  if (value === 0) return <span className="text-muted-foreground text-sm">—</span>;
   return (
     <div className="flex items-center gap-1.5 min-w-[80px]">
-      <Progress value={(value / max) * 100} className="h-1.5 flex-1" />
+      <Progress value={(value / 5) * 100} className="h-1.5 flex-1" />
       <span className="text-xs tabular-nums font-medium w-7 text-right">{value.toFixed(1)}</span>
     </div>
   );
@@ -70,8 +67,7 @@ export function EventFeedbackOverzicht() {
   const { inschrijvingen } = useAllInschrijvingen();
 
   const [academicYear, setAcademicYear] = useState("all");
-  const [sortKey, setSortKey] = useState<SortKey>("date");
-  const [sortAsc, setSortAsc] = useState(false);
+  const { sort, toggleSort } = useSort("date", "desc");
 
   const academicYears = useMemo(() => getAcademicYears(evenementen.map((e) => e.date)), [evenementen]);
 
@@ -80,29 +76,20 @@ export function EventFeedbackOverzicht() {
       .map((f) => {
         const event = evenementen.find((e) => e.id === f.evenement_id);
         if (!event || !isInAcademicYear(event.date, academicYear)) return null;
-
         const resps = responses.filter((r) => r.form_id === f.id);
         const confirmed = inschrijvingen.filter(
           (i) => i.evenement_id === event.id && i.status === "bevestigd"
         ).length;
-
         const responseRate = confirmed > 0 ? (resps.length / confirmed) * 100 : 0;
         const recommendPct = resps.length > 0
-          ? (resps.filter((r) => r.would_recommend === true).length / resps.length) * 100
-          : 0;
-
+          ? (resps.filter((r) => r.would_recommend === true).length / resps.length) * 100 : 0;
         return {
-          eventId: event.id,
-          formId: f.id,
-          name: event.name,
-          date: event.date,
-          confirmed,
-          responses: resps.length,
-          responseRate,
-          overall: avg(resps.map((r) => r.overall_rating)),
-          organization: avg(resps.map((r) => r.organization_rating)),
-          relevance: avg(resps.map((r) => r.relevance_rating)),
-          stand: avg(resps.map((r) => r.stand_rating)),
+          eventId: event.id, name: event.name, date: event.date, confirmed,
+          responses: resps.length, responseRate,
+          overall: avgNums(resps.map((r) => r.overall_rating)),
+          organization: avgNums(resps.map((r) => r.organization_rating)),
+          relevance: avgNums(resps.map((r) => r.relevance_rating)),
+          stand: avgNums(resps.map((r) => r.stand_rating)),
           recommend: recommendPct,
         };
       })
@@ -110,13 +97,12 @@ export function EventFeedbackOverzicht() {
   }, [forms, evenementen, responses, inschrijvingen, academicYear]);
 
   const sorted = useMemo(() => {
-    return [...rows].sort((a, b) => {
-      const mul = sortAsc ? 1 : -1;
-      if (sortKey === "name") return mul * a.name.localeCompare(b.name);
-      if (sortKey === "date") return mul * (new Date(a.date).getTime() - new Date(b.date).getTime());
-      return mul * (a[sortKey] - b[sortKey]);
+    return sortItems(rows, sort, (item, key) => {
+      if (key === "name") return item.name;
+      if (key === "date") return new Date(item.date).getTime();
+      return item[key as keyof EventRow] as number;
     });
-  }, [rows, sortKey, sortAsc]);
+  }, [rows, sort]);
 
   const totals = useMemo(() => {
     const withResponses = rows.filter((r) => r.responses > 0);
@@ -127,11 +113,6 @@ export function EventFeedbackOverzicht() {
     };
   }, [rows]);
 
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) setSortAsc(!sortAsc);
-    else { setSortKey(key); setSortAsc(key === "name" || key === "date"); }
-  };
-
   const exportCSV = () => {
     const header = "Event;Datum;Bevestigd;Responses;Response rate (%);Overall;Organisatie;Relevantie;Stand;Zou aanraden (%)";
     const lines = sorted.map((r) =>
@@ -139,10 +120,7 @@ export function EventFeedbackOverzicht() {
     );
     const csv = [header, ...lines].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `event-feedback-${academicYear}.csv`;
-    a.click();
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `event-feedback-${academicYear}.csv`; a.click();
   };
 
   return (
@@ -153,14 +131,10 @@ export function EventFeedbackOverzicht() {
         </h2>
         <div className="flex items-center gap-2">
           <Select value={academicYear} onValueChange={setAcademicYear}>
-            <SelectTrigger className="h-8 text-xs w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger className="h-8 text-xs w-[140px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Alle periodes</SelectItem>
-              {academicYears.map((y) => (
-                <SelectItem key={y} value={y}>{y}</SelectItem>
-              ))}
+              {academicYears.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
             </SelectContent>
           </Select>
           <Button variant="outline" size="sm" className="h-8 text-xs" onClick={exportCSV}>
@@ -169,7 +143,6 @@ export function EventFeedbackOverzicht() {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         {[
           { icon: MessageSquare, label: "Totaal responses", value: totals.totalResponses },
@@ -188,21 +161,20 @@ export function EventFeedbackOverzicht() {
         ))}
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <SortableTableHead sorted={sortKey === "name"} ascending={sortAsc} onSort={() => handleSort("name")}>Event</SortableTableHead>
-              <SortableTableHead sorted={sortKey === "date"} ascending={sortAsc} onSort={() => handleSort("date")}>Datum</SortableTableHead>
-              <SortableTableHead sorted={sortKey === "confirmed"} ascending={sortAsc} onSort={() => handleSort("confirmed")} className="text-right">Bevestigd</SortableTableHead>
-              <SortableTableHead sorted={sortKey === "responses"} ascending={sortAsc} onSort={() => handleSort("responses")} className="text-right">Responses</SortableTableHead>
-              <SortableTableHead sorted={sortKey === "responseRate"} ascending={sortAsc} onSort={() => handleSort("responseRate")} className="text-right">Rate</SortableTableHead>
-              <SortableTableHead sorted={sortKey === "overall"} ascending={sortAsc} onSort={() => handleSort("overall")}>Overall</SortableTableHead>
-              <SortableTableHead sorted={sortKey === "organization"} ascending={sortAsc} onSort={() => handleSort("organization")}>Organisatie</SortableTableHead>
-              <SortableTableHead sorted={sortKey === "relevance"} ascending={sortAsc} onSort={() => handleSort("relevance")}>Relevantie</SortableTableHead>
-              <SortableTableHead sorted={sortKey === "stand"} ascending={sortAsc} onSort={() => handleSort("stand")}>Stand</SortableTableHead>
-              <SortableTableHead sorted={sortKey === "recommend"} ascending={sortAsc} onSort={() => handleSort("recommend")} className="text-right">Aanraden</SortableTableHead>
+              <SortableTableHead sortKey="name" currentSort={sort} onSort={toggleSort}>Event</SortableTableHead>
+              <SortableTableHead sortKey="date" currentSort={sort} onSort={toggleSort}>Datum</SortableTableHead>
+              <SortableTableHead sortKey="confirmed" currentSort={sort} onSort={toggleSort} className="text-right">Bevestigd</SortableTableHead>
+              <SortableTableHead sortKey="responses" currentSort={sort} onSort={toggleSort} className="text-right">Responses</SortableTableHead>
+              <SortableTableHead sortKey="responseRate" currentSort={sort} onSort={toggleSort} className="text-right">Rate</SortableTableHead>
+              <SortableTableHead sortKey="overall" currentSort={sort} onSort={toggleSort}>Overall</SortableTableHead>
+              <SortableTableHead sortKey="organization" currentSort={sort} onSort={toggleSort}>Organisatie</SortableTableHead>
+              <SortableTableHead sortKey="relevance" currentSort={sort} onSort={toggleSort}>Relevantie</SortableTableHead>
+              <SortableTableHead sortKey="stand" currentSort={sort} onSort={toggleSort}>Stand</SortableTableHead>
+              <SortableTableHead sortKey="recommend" currentSort={sort} onSort={toggleSort} className="text-right">Aanraden</SortableTableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
