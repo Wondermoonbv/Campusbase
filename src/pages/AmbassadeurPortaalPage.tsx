@@ -39,6 +39,16 @@ interface PortalEvent {
   description: string | null;
 }
 
+interface PastEvent {
+  id: string;
+  name: string;
+  date: string;
+  location: string;
+  my_status: string | null;
+  feedback_form_id: string | null;
+  feedback_given: boolean;
+}
+
 const STORAGE_KEY = "ambassadeur_portal_token";
 
 export default function AmbassadeurPortaalPage() {
@@ -47,6 +57,7 @@ export default function AmbassadeurPortaalPage() {
   const [ambassadeur, setAmbassadeur] = useState<Ambassadeur | null>(null);
   const [regForm, setRegForm] = useState({ full_name: "", email: "", department: "" });
   const [events, setEvents] = useState<PortalEvent[]>([]);
+  const [pastEvents, setPastEvents] = useState<PastEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [actionLoadingMap, setActionLoadingMap] = useState<Record<string, boolean>>({});
@@ -55,7 +66,7 @@ export default function AmbassadeurPortaalPage() {
     setActionLoadingMap(prev => ({ ...prev, [key]: value }));
   };
 
-  const loadEvents = useCallback(async (ambId: string) => {
+  const loadEvents = useCallback(async (ambId: string, ambEmail: string) => {
     setEventsLoading(true);
     try {
       const today = new Date().toISOString().split("T")[0];
@@ -116,6 +127,50 @@ export default function AmbassadeurPortaalPage() {
       });
 
       setEvents(portalEvents);
+
+      // Load past events (last 5 where ambassador was confirmed)
+      const { data: pastEvts } = await supabase
+        .from("evenementen")
+        .select("id, name, date, location")
+        .lt("date", today)
+        .neq("status", "geannuleerd")
+        .order("date", { ascending: false })
+        .limit(20);
+
+      if (pastEvts && pastEvts.length > 0) {
+        const pastIds = pastEvts.map(e => e.id);
+        const [{ data: pastSignups }, { data: feedbackForms }, { data: feedbackResponses }] = await Promise.all([
+          supabase.from("event_inschrijvingen").select("evenement_id, status").eq("ambassadeur_id", ambId).in("evenement_id", pastIds),
+          supabase.from("feedback_forms").select("id, evenement_id, is_active").in("evenement_id", pastIds),
+          supabase.from("feedback_responses").select("form_id, respondent_email").eq("respondent_email", ambEmail),
+        ]);
+
+        const confirmedPastEvents: PastEvent[] = pastEvts
+          .filter(e => {
+            const signup = (pastSignups || []).find(s => s.evenement_id === e.id);
+            return signup?.status === "bevestigd";
+          })
+          .slice(0, 5)
+          .map(e => {
+            const form = (feedbackForms || []).find(f => f.evenement_id === e.id && f.is_active);
+            const hasGivenFeedback = form
+              ? (feedbackResponses || []).some(r => r.form_id === form.id)
+              : false;
+            return {
+              id: e.id,
+              name: e.name,
+              date: e.date,
+              location: e.location || "",
+              my_status: "bevestigd",
+              feedback_form_id: form?.id || null,
+              feedback_given: hasGivenFeedback,
+            };
+          });
+
+        setPastEvents(confirmedPastEvents);
+      } else {
+        setPastEvents([]);
+      }
     } catch {
       toast.error("Kon events niet laden.");
     } finally {
@@ -137,7 +192,7 @@ export default function AmbassadeurPortaalPage() {
     // Update URL to include token
     window.history.replaceState(null, "", `${window.location.pathname}?token=${token}`);
     setStep("overview");
-    await loadEvents(data.id);
+    await loadEvents(data.id, data.email);
     return true;
   }, [loadEvents]);
 
@@ -186,7 +241,7 @@ export default function AmbassadeurPortaalPage() {
       localStorage.setItem(STORAGE_KEY, amb.access_token);
       window.history.replaceState(null, "", `${window.location.pathname}?token=${amb.access_token}`);
       setStep("overview");
-      await loadEvents(amb.id);
+      await loadEvents(amb.id, amb.email);
       toast.success("Welkom! Bewaar deze link om in de toekomst direct toegang te krijgen tot je portaal.", { duration: 8000 });
     } catch {
       toast.error("Registratie mislukt. Probeer opnieuw.");
@@ -223,7 +278,7 @@ export default function AmbassadeurPortaalPage() {
 
       if (error) throw error;
       toast.success("Je bent ingeschreven!");
-      await loadEvents(ambassadeur.id);
+      await loadEvents(ambassadeur.id, ambassadeur.email);
     } catch {
       toast.error("Inschrijving mislukt.");
     } finally {
@@ -242,7 +297,7 @@ export default function AmbassadeurPortaalPage() {
 
       if (error) throw error;
       toast.success("Je bent afgemeld.");
-      await loadEvents(ambassadeur.id);
+      await loadEvents(ambassadeur.id, ambassadeur.email);
     } catch {
       toast.error("Afmelden mislukt.");
     } finally {
@@ -267,7 +322,7 @@ export default function AmbassadeurPortaalPage() {
 
       if (error) throw error;
       toast.success("Je bent opnieuw ingeschreven!");
-      await loadEvents(ambassadeur.id);
+      await loadEvents(ambassadeur.id, ambassadeur.email);
     } catch {
       toast.error("Herinschrijving mislukt.");
     } finally {
@@ -575,6 +630,50 @@ export default function AmbassadeurPortaalPage() {
                     </Card>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Afgelopen events */}
+            {pastEvents.length > 0 && (
+              <div className="space-y-3 mt-8">
+                <h3 className="text-lg font-medium text-muted-foreground">Afgelopen events</h3>
+                {pastEvents.map(ev => (
+                  <Card key={ev.id} className="shadow-sm opacity-75">
+                    <CardContent className="p-4 sm:p-5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="space-y-1">
+                          <h4 className="font-medium text-muted-foreground">{ev.name}</h4>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <CalendarDays className="h-3 w-3" />
+                              {new Date(ev.date).toLocaleDateString("nl-BE", { day: "numeric", month: "long", year: "numeric" })}
+                            </span>
+                            {ev.location && (
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />{ev.location}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="shrink-0">
+                          {ev.feedback_given ? (
+                            <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-600">
+                              <CheckCircle2 className="h-4 w-4" /> Feedback gegeven ✓
+                            </span>
+                          ) : ev.feedback_form_id ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open(`/feedback/${ev.feedback_form_id}`, "_blank")}
+                            >
+                              <FileText className="h-3.5 w-3.5 mr-1" /> Geef feedback
+                            </Button>
+                          ) : null}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             )}
           </div>
