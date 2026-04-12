@@ -39,6 +39,16 @@ interface PortalEvent {
   description: string | null;
 }
 
+interface PastEvent {
+  id: string;
+  name: string;
+  date: string;
+  location: string;
+  my_status: string | null;
+  feedback_form_id: string | null;
+  feedback_given: boolean;
+}
+
 const STORAGE_KEY = "ambassadeur_portal_token";
 
 export default function AmbassadeurPortaalPage() {
