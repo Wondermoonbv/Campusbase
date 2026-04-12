@@ -4,8 +4,6 @@ import { AmbassadeurPrestaties } from "@/components/rapportage/AmbassadeurPresta
 import { EventFeedbackOverzicht } from "@/components/rapportage/EventFeedbackOverzicht";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { useContracten } from "@/hooks/useContracten";
-import { useAllFeedbackData } from "@/hooks/useFeedback";
-import { useAmbassadeurs, useAllInschrijvingen } from "@/hooks/useAmbassadeurs";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -13,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Download, GraduationCap, CalendarDays, Wallet, Users, Star, UserCheck } from "lucide-react";
+import { CalendarIcon, Download, GraduationCap, CalendarDays, Wallet, Users } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, isWithinInterval, getWeek } from "date-fns";
 import { nl } from "date-fns/locale";
 import { cn } from "@/lib/utils";
