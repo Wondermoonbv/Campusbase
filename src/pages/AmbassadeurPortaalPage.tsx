@@ -66,7 +66,7 @@ export default function AmbassadeurPortaalPage() {
     setActionLoadingMap(prev => ({ ...prev, [key]: value }));
   };
 
-  const loadEvents = useCallback(async (ambId: string) => {
+  const loadEvents = useCallback(async (ambId: string, ambEmail: string) => {
     setEventsLoading(true);
     try {
       const today = new Date().toISOString().split("T")[0];
@@ -127,6 +127,50 @@ export default function AmbassadeurPortaalPage() {
       });
 
       setEvents(portalEvents);
+
+      // Load past events (last 5 where ambassador was confirmed)
+      const { data: pastEvts } = await supabase
+        .from("evenementen")
+        .select("id, name, date, location")
+        .lt("date", today)
+        .neq("status", "geannuleerd")
+        .order("date", { ascending: false })
+        .limit(20);
+
+      if (pastEvts && pastEvts.length > 0) {
+        const pastIds = pastEvts.map(e => e.id);
+        const [{ data: pastSignups }, { data: feedbackForms }, { data: feedbackResponses }] = await Promise.all([
+          supabase.from("event_inschrijvingen").select("evenement_id, status").eq("ambassadeur_id", ambId).in("evenement_id", pastIds),
+          supabase.from("feedback_forms").select("id, evenement_id, is_active").in("evenement_id", pastIds),
+          supabase.from("feedback_responses").select("form_id, respondent_email").eq("respondent_email", ambEmail),
+        ]);
+
+        const confirmedPastEvents: PastEvent[] = pastEvts
+          .filter(e => {
+            const signup = (pastSignups || []).find(s => s.evenement_id === e.id);
+            return signup?.status === "bevestigd";
+          })
+          .slice(0, 5)
+          .map(e => {
+            const form = (feedbackForms || []).find(f => f.evenement_id === e.id && f.is_active);
+            const hasGivenFeedback = form
+              ? (feedbackResponses || []).some(r => r.form_id === form.id)
+              : false;
+            return {
+              id: e.id,
+              name: e.name,
+              date: e.date,
+              location: e.location || "",
+              my_status: "bevestigd",
+              feedback_form_id: form?.id || null,
+              feedback_given: hasGivenFeedback,
+            };
+          });
+
+        setPastEvents(confirmedPastEvents);
+      } else {
+        setPastEvents([]);
+      }
     } catch {
       toast.error("Kon events niet laden.");
     } finally {
