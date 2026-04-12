@@ -192,7 +192,7 @@ export default function AmbassadeurPortaalPage() {
     // Update URL to include token
     window.history.replaceState(null, "", `${window.location.pathname}?token=${token}`);
     setStep("overview");
-    await loadEvents(data.id);
+    await loadEvents(data.id, data.email);
     return true;
   }, [loadEvents]);
 
@@ -241,7 +241,7 @@ export default function AmbassadeurPortaalPage() {
       localStorage.setItem(STORAGE_KEY, amb.access_token);
       window.history.replaceState(null, "", `${window.location.pathname}?token=${amb.access_token}`);
       setStep("overview");
-      await loadEvents(amb.id);
+      await loadEvents(amb.id, amb.email);
       toast.success("Welkom! Bewaar deze link om in de toekomst direct toegang te krijgen tot je portaal.", { duration: 8000 });
     } catch {
       toast.error("Registratie mislukt. Probeer opnieuw.");
@@ -278,7 +278,7 @@ export default function AmbassadeurPortaalPage() {
 
       if (error) throw error;
       toast.success("Je bent ingeschreven!");
-      await loadEvents(ambassadeur.id);
+      await loadEvents(ambassadeur.id, ambassadeur.email);
     } catch {
       toast.error("Inschrijving mislukt.");
     } finally {
@@ -297,7 +297,7 @@ export default function AmbassadeurPortaalPage() {
 
       if (error) throw error;
       toast.success("Je bent afgemeld.");
-      await loadEvents(ambassadeur.id);
+      await loadEvents(ambassadeur.id, ambassadeur.email);
     } catch {
       toast.error("Afmelden mislukt.");
     } finally {
@@ -322,7 +322,7 @@ export default function AmbassadeurPortaalPage() {
 
       if (error) throw error;
       toast.success("Je bent opnieuw ingeschreven!");
-      await loadEvents(ambassadeur.id);
+      await loadEvents(ambassadeur.id, ambassadeur.email);
     } catch {
       toast.error("Herinschrijving mislukt.");
     } finally {
