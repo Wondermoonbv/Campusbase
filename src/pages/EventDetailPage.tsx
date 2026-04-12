@@ -18,6 +18,7 @@ import type { Event, StandType, StandSize, EventType, EventStatus } from "@/type
 import { toast } from "sonner";
 import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 import { EventFeedbackTab } from "@/components/events/EventFeedbackTab";
+import { EventFeedbackBanner } from "@/components/events/EventFeedbackBanner";
 import { EventAmbassadeursTab } from "@/components/events/EventAmbassadeursTab";
 
 export default function EventDetailPage() {
@@ -85,6 +86,8 @@ export default function EventDetailPage() {
           </div>
         ))}
       </div>
+
+      <EventFeedbackBanner eventId={event.id} eventName={event.name} eventDate={event.date} />
 
       <Tabs defaultValue="details" className="space-y-4">
         <TabsList>
