@@ -112,7 +112,7 @@ export function useAllFeedbackData() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("feedback_responses")
-        .select("id, form_id, overall_rating, organization_rating, relevance_rating, stand_rating, would_recommend, comments, respondent_name, submitted_at")
+        .select("id, form_id, overall_rating, organization_rating, relevance_rating, stand_rating, would_recommend, comments, respondent_name, respondent_email, submitted_at")
         .order("submitted_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as FeedbackResponse[];
