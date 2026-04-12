@@ -664,7 +664,7 @@ export default function AmbassadeurPortaalPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => window.open(`/feedback/${ev.feedback_form_id}`, "_blank")}
+                              onClick={() => window.open(`/feedback/${ev.feedback_form_id}?name=${encodeURIComponent(ambassadeur!.full_name)}&email=${encodeURIComponent(ambassadeur!.email)}`, "_blank")}
                             >
                               <FileText className="h-3.5 w-3.5 mr-1" /> Geef feedback
                             </Button>

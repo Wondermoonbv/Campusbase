@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,11 @@ function RatingField({ label, value, onChange }: { label: string; value: number;
 
 export default function PublicFeedbackPage() {
   const { formId } = useParams();
+  const [searchParams] = useSearchParams();
+
+  const prefillName = searchParams.get("name") || "";
+  const prefillEmail = searchParams.get("email") || "";
+  const isPrefilled = !!(prefillName || prefillEmail);
 
   const { data: formData, isLoading } = useQuery({
     queryKey: ["public_feedback_form", formId],
@@ -58,8 +63,8 @@ export default function PublicFeedbackPage() {
 
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState(prefillName);
+  const [email, setEmail] = useState(prefillEmail);
   const [overall, setOverall] = useState(0);
   const [organization, setOrganization] = useState(0);
   const [relevance, setRelevance] = useState(0);
@@ -154,6 +159,11 @@ export default function PublicFeedbackPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-7 space-y-6">
+          {isPrefilled && (
+            <p className="text-xs italic text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+              Je gegevens zijn automatisch ingevuld.
+            </p>
+          )}
           <div className="space-y-1.5">
             <Label htmlFor="name">Naam *</Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Jouw naam" className="h-11" maxLength={MAX_LENGTHS.name} />
