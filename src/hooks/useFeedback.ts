@@ -36,7 +36,7 @@ export function useEventFeedbackForm(eventId: string | undefined) {
       if (!eventId) return null;
       const { data, error } = await supabase
         .from("feedback_forms")
-        .select("id, evenement_id, title, description, is_active, created_at, created_by")
+        .select("id, evenement_id, title, description, is_active, created_at, created_by, feedback_mail_sent, feedback_mail_sent_at")
         .eq("evenement_id", eventId)
         .maybeSingle();
       if (error) throw error;

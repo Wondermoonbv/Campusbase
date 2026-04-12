@@ -57,11 +57,23 @@ export function useEvenementen() {
         const { id, created_at, ...insert } = payload;
         const { data, error } = await supabase.from("evenementen").insert(insert).select().single();
         if (error) throw error;
-        return { data: mapEvent(data), action: "create" as const, updates: insert };
+        const mapped = mapEvent(data);
+        // Auto-create feedback form for new event
+        try {
+          const user = (await supabase.auth.getUser()).data.user;
+          await supabase.from("feedback_forms").insert({
+            evenement_id: mapped.id,
+            title: `Feedback — ${mapped.name}`,
+            is_active: false,
+            created_by: user?.id ?? null,
+          });
+        } catch { /* non-critical */ }
+        return { data: mapped, action: "create" as const, updates: insert };
       }
     },
     onSuccess: ({ data, action, updates }) => {
       qc.invalidateQueries({ queryKey: ["evenementen"] });
+      if (action === "create") qc.invalidateQueries({ queryKey: ["feedback_forms"] });
       writeAuditLog({ action, entity_type: "evenement", entity_id: data.id, entity_name: data.name, changes: updates });
     },
   });

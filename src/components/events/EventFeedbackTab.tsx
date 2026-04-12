@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEventFeedbackForm, useFeedbackResponses } from "@/hooks/useFeedback";
@@ -135,23 +135,23 @@ export function EventFeedbackTab({ eventId, eventName }: { eventId: string; even
   const { user } = useAuth();
   const { form, isLoading, createForm, toggleActive } = useEventFeedbackForm(eventId);
   const { data: responses = [] } = useFeedbackResponses(form?.id);
-  const [creating, setCreating] = useState(false);
+  const autoCreating = useRef(false);
 
-  const handleCreate = async () => {
-    setCreating(true);
-    try {
-      await createForm.mutateAsync({
+  // Auto-create feedback form if none exists
+  useEffect(() => {
+    if (!isLoading && !form && !autoCreating.current && eventId && user) {
+      autoCreating.current = true;
+      createForm.mutateAsync({
         evenement_id: eventId,
         title: `Feedback — ${eventName}`,
-        created_by: user?.id,
+        created_by: user.id,
+      }).catch(() => {
+        // non-critical
+      }).finally(() => {
+        autoCreating.current = false;
       });
-      toast.success("Feedback formulier aangemaakt!");
-    } catch {
-      toast.error("Fout bij aanmaken.");
-    } finally {
-      setCreating(false);
     }
-  };
+  }, [isLoading, form, eventId, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleToggle = async (active: boolean) => {
     if (!form) return;
@@ -169,7 +169,7 @@ export function EventFeedbackTab({ eventId, eventName }: { eventId: string; even
     toast.success("Link gekopieerd!");
   };
 
-  if (isLoading) return (
+  if (isLoading || !form) return (
     <div className="space-y-4 py-6">
       <Skeleton className="h-16 w-full rounded-lg" />
       <div className="grid grid-cols-3 gap-3">
@@ -179,18 +179,6 @@ export function EventFeedbackTab({ eventId, eventName }: { eventId: string; even
       </div>
     </div>
   );
-
-  if (!form) {
-    return (
-      <div className="py-12 text-center space-y-4">
-        <MessageSquare className="h-10 w-10 text-muted-foreground/40 mx-auto" />
-        <p className="text-sm text-muted-foreground">Nog geen feedback formulier voor dit evenement.</p>
-        <Button onClick={handleCreate} disabled={creating}>
-          {creating ? "Aanmaken..." : "Feedback formulier aanmaken"}
-        </Button>
-      </div>
-    );
-  }
 
   const avgOverall = avg(responses.map((r) => r.overall_rating));
   const avgOrg = avg(responses.map((r) => r.organization_rating));
