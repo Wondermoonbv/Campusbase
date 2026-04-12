@@ -90,9 +90,20 @@ export function buildConfirmationEmail(
 export function buildFeedbackEmail(
   ambassadeurName: string,
   eventName: string,
-  feedbackUrl: string
+  feedbackUrl: string,
+  ambassadeurEmail?: string
 ): string {
-  return `${WRAPPER_START}${getHeader()}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Feedback gevraagd</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${ambassadeurName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Bedankt voor je deelname aan <strong>${eventName}</strong>. We horen graag je feedback over het event.</p>`)}${row(`<div style="text-align:center;margin:24px 0;"><a href="${feedbackUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Geef je feedback</a></div>`)}${WRAPPER_END}`;
+  // Append prefill params to feedback URL
+  const url = new URL(feedbackUrl);
+  if (ambassadeurName && ambassadeurName !== "Ambassadeur") {
+    url.searchParams.set("name", ambassadeurName);
+  }
+  if (ambassadeurEmail) {
+    url.searchParams.set("email", ambassadeurEmail);
+  }
+  const finalUrl = url.toString();
+
+  return `${WRAPPER_START}${getHeader()}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Feedback gevraagd</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${ambassadeurName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Bedankt voor je deelname aan <strong>${eventName}</strong>. We horen graag je feedback over het event.</p>`)}${row(`<div style="text-align:center;margin:24px 0;"><a href="${finalUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Geef je feedback</a></div>`)}${WRAPPER_END}`;
 }
 
 export function buildPortalLinkEmail(
