@@ -632,6 +632,50 @@ export default function AmbassadeurPortaalPage() {
                 })}
               </div>
             )}
+
+            {/* Afgelopen events */}
+            {pastEvents.length > 0 && (
+              <div className="space-y-3 mt-8">
+                <h3 className="text-lg font-medium text-muted-foreground">Afgelopen events</h3>
+                {pastEvents.map(ev => (
+                  <Card key={ev.id} className="shadow-sm opacity-75">
+                    <CardContent className="p-4 sm:p-5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="space-y-1">
+                          <h4 className="font-medium text-muted-foreground">{ev.name}</h4>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <CalendarDays className="h-3 w-3" />
+                              {new Date(ev.date).toLocaleDateString("nl-BE", { day: "numeric", month: "long", year: "numeric" })}
+                            </span>
+                            {ev.location && (
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />{ev.location}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="shrink-0">
+                          {ev.feedback_given ? (
+                            <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-600">
+                              <CheckCircle2 className="h-4 w-4" /> Feedback gegeven ✓
+                            </span>
+                          ) : ev.feedback_form_id ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open(`/feedback/${ev.feedback_form_id}`, "_blank")}
+                            >
+                              <FileText className="h-3.5 w-3.5 mr-1" /> Geef feedback
+                            </Button>
+                          ) : null}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </main>
