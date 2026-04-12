@@ -89,27 +89,6 @@ export default function RapportagePage() {
   const contractsByType = useMemo(() => { const s: Record<string, number> = {}; filteredContracts.forEach((c) => { s[c.contract_type] = (s[c.contract_type] || 0) + (c.value ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredContracts]);
   const totalContractValue = filteredContracts.filter((c) => c.status === "actief").reduce((s, c) => s + (c.value ?? 0), 0);
 
-  const feedbackByEvent = useMemo(() => {
-    return feedbackForms
-      .map((f) => {
-        const event = evenementen.find((e) => e.id === f.evenement_id);
-        if (!event) return null;
-        const resps = feedbackResponses.filter((r) => r.form_id === f.id);
-        if (resps.length === 0) return null;
-        const avgOverall = resps.reduce((s, r) => s + (r.overall_rating ?? 0), 0) / resps.length;
-        return { event, responseCount: resps.length, avgOverall };
-      })
-      .filter(Boolean)
-      .sort((a, b) => new Date(b!.event.date).getTime() - new Date(a!.event.date).getTime()) as {
-      event: typeof evenementen[0];
-      responseCount: number;
-      avgOverall: number;
-    }[];
-  }, [feedbackForms, feedbackResponses, evenementen]);
-
-  const totalFeedbackAvg = feedbackByEvent.length
-    ? feedbackByEvent.reduce((s, f) => s + f.avgOverall, 0) / feedbackByEvent.length
-    : 0;
 
   return (
     <div className="page-container animate-fade-in-up">
