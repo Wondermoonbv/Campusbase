@@ -39,7 +39,7 @@ export function EventFeedbackBanner({ eventId, eventName, eventDate }: Props) {
           return {
             to: amb?.email ?? "",
             subject: `Feedback gevraagd: ${eventName}`,
-            html: buildFeedbackEmail(amb?.full_name ?? "Ambassadeur", eventName, feedbackUrl),
+            html: buildFeedbackEmail(amb?.full_name ?? "Ambassadeur", eventName, feedbackUrl, amb?.email),
           };
         })
         .filter((e) => e.to);
