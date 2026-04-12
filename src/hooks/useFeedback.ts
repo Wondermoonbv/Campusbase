@@ -9,6 +9,8 @@ export interface FeedbackForm {
   is_active: boolean;
   created_at: string | null;
   created_by: string | null;
+  feedback_mail_sent: boolean | null;
+  feedback_mail_sent_at: string | null;
 }
 
 export interface FeedbackResponse {
