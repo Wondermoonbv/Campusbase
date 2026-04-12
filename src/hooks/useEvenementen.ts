@@ -73,6 +73,7 @@ export function useEvenementen() {
     },
     onSuccess: ({ data, action, updates }) => {
       qc.invalidateQueries({ queryKey: ["evenementen"] });
+      if (action === "create") qc.invalidateQueries({ queryKey: ["feedback_forms"] });
       writeAuditLog({ action, entity_type: "evenement", entity_id: data.id, entity_name: data.name, changes: updates });
     },
   });
