@@ -60,7 +60,6 @@ export default function AmbassadeurPortaalPage() {
   const [pastEvents, setPastEvents] = useState<PastEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [eventsLoading, setEventsLoading] = useState(false);
-  const [eventsLoading, setEventsLoading] = useState(false);
   const [actionLoadingMap, setActionLoadingMap] = useState<Record<string, boolean>>({});
 
   const setActionLoading = (key: string, value: boolean) => {
