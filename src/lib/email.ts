@@ -10,9 +10,7 @@ interface SendEmailParams {
   replyTo?: string;
 }
 
-// NOTE: The Edge Function send-email uses from name "CampusBase" (noreply@send.wondermoon.be).
-// This should be changed to "Elia Campus Recruitment" in the Edge Function configuration.
-const REPLY_TO = "campusbase@wondermoon.be";
+const REPLY_TO = "campusbase@campusbase.be";
 
 export async function sendEmail(params: SendEmailParams): Promise<{ success: boolean; error?: string }> {
   const { data, error } = await supabase.functions.invoke("send-email", {
@@ -52,7 +50,7 @@ export async function sendBulkEmails(
 // restricts schemes to http/https.
 
 const WRAPPER_START = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;"><tr><td align="center" style="padding:32px 16px;"><table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;">`;
-const WRAPPER_END = `<tr><td style="padding:24px 32px;background:#f4f4f5;text-align:center;font-size:12px;color:#71717a;line-height:1.6;">Dit is een automatisch bericht van Elia Campus Recruitment.<br/>Vragen? Antwoord op deze email of contacteer <a href="mailto:campusbase@wondermoon.be" style="color:#0E6575;text-decoration:underline;">campusbase@wondermoon.be</a>.<br/><br/>© ${new Date().getFullYear()} Elia Group — Campus Recruitment</td></tr></table></td></tr></table></body></html>`;
+const WRAPPER_END = `<tr><td style="padding:24px 32px;background:#f4f4f5;text-align:center;font-size:12px;color:#71717a;line-height:1.6;">Dit is een automatisch bericht van Elia Campus Recruitment.<br/>Vragen? Antwoord op deze email of contacteer <a href="mailto:campusbase@campusbase.be" style="color:#0E6575;text-decoration:underline;">campusbase@campusbase.be</a>.<br/><br/>© ${new Date().getFullYear()} Elia Group — Campus Recruitment</td></tr></table></td></tr></table></body></html>`;
 function getHeader() {
   const logoHtml = buildEmailLogoHtml();
   return `<tr><td style="background:#0E6575;padding:24px 32px;">${logoHtml}<br/><span style="color:#ffffff;font-size:11px;letter-spacing:1px;text-transform:uppercase;">Elia Campus Recruitment</span></td></tr>`;
