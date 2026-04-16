@@ -171,7 +171,7 @@ We may amend this privacy policy to reflect new functionality or changes in legi
 - We inform clients by email at least 30 days in advance
 - We request renewed consent where necessary
 
-The most recent version is always available at https://campusbase-red.vercel.app/privacy.
+The most recent version is always available at https://app.campusbase.be/privacy.
 
 ## 11. Contact
 
