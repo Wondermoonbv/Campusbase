@@ -15,6 +15,7 @@ import { CalendarIcon, Download, GraduationCap, CalendarDays, Wallet, Users } fr
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, isWithinInterval, getWeek } from "date-fns";
 import { nl } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { writeAuditLog } from "@/lib/audit";
 
 const CHART_COLORS = ["#0E6575", "#ef7c14", "#007BAF", "#0C8129", "#CD2E15", "#434f54", "#6366f1", "#ec4899"];
 type PeriodPreset = "week" | "month" | "quarter" | "year" | "custom";
@@ -37,13 +38,14 @@ function exportChartPNG(chartRef: React.RefObject<HTMLDivElement>, filename: str
   canvas.width = svgRect.width * 2; canvas.height = svgRect.height * 2;
   const ctx = canvas.getContext("2d")!; ctx.scale(2, 2);
   const img = new Image();
-  img.onload = () => { ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); const a = document.createElement("a"); a.download = `${filename}.png`; a.href = canvas.toDataURL("image/png"); a.click(); };
+  img.onload = () => { ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); const a = document.createElement("a"); a.download = `${filename}.png`; a.href = canvas.toDataURL("image/png"); a.click(); writeAuditLog({ action: "export", entity_type: "export", entity_id: filename, entity_name: `Rapportage: ${filename}`, changes: { format: "png" } }); };
   img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
 }
 
 function exportCSV(data: { name: string; value: number }[], filename: string) {
   const csv = "Label;Waarde\n" + data.map((d) => `${d.name};${d.value}`).join("\n");
   const blob = new Blob([csv], { type: "text/csv" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${filename}.csv`; a.click();
+  writeAuditLog({ action: "export", entity_type: "export", entity_id: filename, entity_name: `Rapportage: ${filename}`, changes: { row_count: data.length, format: "csv" } });
 }
 
 function ChartCard({ title, children, data, chartId }: { title: string; children: React.ReactNode; data: { name: string; value: number }[]; chartId: string; }) {

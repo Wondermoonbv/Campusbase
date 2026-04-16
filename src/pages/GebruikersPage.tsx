@@ -20,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { toast } from "sonner";
 import type { AppUser, UserRole } from "@/contexts/AuthContext";
+import { writeAuditLog } from "@/lib/audit";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -264,9 +265,17 @@ export default function GebruikersPage() {
       toast.error("Je kan je eigen rol niet wijzigen.");
       return;
     }
+    const targetUser = users.find(u => u.id === userId);
     await updateUser(userId, { role: newRole });
+    writeAuditLog({
+      action: "update",
+      entity_type: "user_role",
+      entity_id: userId,
+      entity_name: targetUser?.name ?? userId,
+      changes: { new_role: newRole, old_role: targetUser?.role },
+    });
     toast.success("Rol bijgewerkt.");
-  }, [currentUser, updateUser]);
+  }, [currentUser, updateUser, users]);
 
   // Toggle active status
   const handleToggleActive = useCallback(async (userId: string, currentActive: boolean) => {

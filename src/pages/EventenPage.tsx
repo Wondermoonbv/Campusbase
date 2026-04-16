@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { useOpleidingen, useEventOpleidingen } from "@/hooks/useOpleidingen";
+import { writeAuditLog } from "@/lib/audit";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -108,6 +109,7 @@ export default function EventenPage() {
     const rows = sorted.map((e) => [e.name, e.type, e.date, e.location, e.status, e.responsible, e.budget ?? ""]);
     const csv = [headers, ...rows].map((r) => r.join(";")).join("\n"); const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "evenementen_export.csv"; a.click();
+    writeAuditLog({ action: "export", entity_type: "export", entity_id: "evenementen-csv", entity_name: "Evenementen export", changes: { row_count: rows.length, format: "csv" } });
   }, [sorted]);
 
   return (

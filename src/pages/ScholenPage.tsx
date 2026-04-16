@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useScholen, useContacten } from "@/hooks/useScholen";
 import { School, PROVINCES } from "@/types/crm";
+import { writeAuditLog } from "@/lib/audit";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -113,6 +114,7 @@ export default function ScholenPage() {
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "scholen_export.csv"; a.click();
+    writeAuditLog({ action: "export", entity_type: "export", entity_id: "scholen-csv", entity_name: "Scholen export", changes: { row_count: rows.length, format: "csv" } });
   }, [sorted, contactMap]);
 
   return (
