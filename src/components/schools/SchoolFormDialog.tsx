@@ -10,10 +10,18 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PROVINCES } from "@/types/crm";
-import type { School } from "@/types/crm";
+import type { School, OrganisatieType } from "@/types/crm";
 import { toast } from "sonner";
 import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
+
+const ORGANISATIE_TYPE_OPTIONS: { value: OrganisatieType; label: string }[] = [
+  { value: "school", label: "School" },
+  { value: "studentenvereniging", label: "Studentenvereniging" },
+  { value: "werkgeversorganisatie", label: "Werkgeversorganisatie" },
+  { value: "overheid", label: "Overheid" },
+  { value: "andere", label: "Andere" },
+];
 
 interface SchoolFormDialogProps {
   open: boolean;
@@ -25,42 +33,49 @@ interface SchoolFormDialogProps {
 export function SchoolFormDialog({ open, onOpenChange, school, onSave }: SchoolFormDialogProps) {
   const isEdit = !!school;
   const [form, setForm] = useState({
-    name: "", school_type: "universiteit" as string, province: "", city: "",
+    name: "", type: "school" as OrganisatieType, school_type: "universiteit" as string, province: "", city: "",
     website: "", language: "NL" as string, notes: "", status: "prospect" as string,
   });
 
   useEffect(() => {
     if (open) {
       if (school) {
-        setForm({ name: school.name, school_type: school.school_type, province: school.province, city: school.city, website: school.website || "", language: school.language, notes: school.notes || "", status: school.status });
+        setForm({ name: school.name, type: school.type || "school", school_type: school.school_type, province: school.province, city: school.city, website: school.website || "", language: school.language, notes: school.notes || "", status: school.status });
       } else {
-        setForm({ name: "", school_type: "universiteit", province: "", city: "", website: "", language: "NL", notes: "", status: "prospect" });
+        setForm({ name: "", type: "school", school_type: "universiteit", province: "", city: "", website: "", language: "NL", notes: "", status: "prospect" });
       }
     }
   }, [open, school]);
 
   const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
 
+  const isSchoolType = form.type === "school";
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.city || !form.province) {
+    if (!form.name) {
       toast.error("Vul alle verplichte velden in.");
+      return;
+    }
+    if (isSchoolType && (!form.city || !form.province)) {
+      toast.error("Vul stad en provincie in voor scholen.");
       return;
     }
     const sanitized = sanitizeFormData(form);
     const saved: Partial<School> & { name: string } = {
       ...(school?.id ? { id: school.id } : {}),
       name: sanitized.name,
-      school_type: sanitized.school_type as School["school_type"],
+      type: sanitized.type as School["type"],
+      school_type: isSchoolType ? sanitized.school_type as School["school_type"] : "universiteit",
       province: sanitized.province,
       city: sanitized.city,
       website: sanitized.website,
-      language: sanitized.language as School["language"],
+      language: isSchoolType ? sanitized.language as School["language"] : "NL",
       notes: sanitized.notes,
       status: sanitized.status as School["status"],
     };
     onSave?.(saved as School);
-    toast.success(isEdit ? "School bijgewerkt." : "School toegevoegd.");
+    toast.success(isEdit ? "Organisatie bijgewerkt." : "Organisatie toegevoegd.");
     onOpenChange(false);
   };
 
@@ -68,17 +83,27 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave }: SchoolF
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "School bewerken" : "Nieuwe school"}</DialogTitle>
+          <DialogTitle>{isEdit ? "Organisatie bewerken" : "Nieuwe organisatie"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div><Label>Naam *</Label><Input value={form.name} onChange={(e) => update("name", e.target.value)} maxLength={MAX_LENGTHS.name} /></div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><Label>Type</Label><Select value={form.school_type} onValueChange={(v) => update("school_type", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="universiteit">Universiteit</SelectItem><SelectItem value="hogeschool">Hogeschool</SelectItem><SelectItem value="secundair">Secundair</SelectItem></SelectContent></Select></div>
-            <div><Label>Taal</Label><Select value={form.language} onValueChange={(v) => update("language", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="NL">NL</SelectItem><SelectItem value="FR">FR</SelectItem><SelectItem value="EN">EN</SelectItem></SelectContent></Select></div>
+          <div><Label>Type organisatie *</Label>
+            <Select value={form.type} onValueChange={(v) => update("type", v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {ORGANISATIE_TYPE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
+          {isSchoolType && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div><Label>School-type</Label><Select value={form.school_type} onValueChange={(v) => update("school_type", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="universiteit">Universiteit</SelectItem><SelectItem value="hogeschool">Hogeschool</SelectItem><SelectItem value="secundair">Secundair</SelectItem></SelectContent></Select></div>
+              <div><Label>Taal</Label><Select value={form.language} onValueChange={(v) => update("language", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="NL">NL</SelectItem><SelectItem value="FR">FR</SelectItem><SelectItem value="EN">EN</SelectItem></SelectContent></Select></div>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><Label>Stad *</Label><Input value={form.city} onChange={(e) => update("city", e.target.value)} maxLength={MAX_LENGTHS.shortText} /></div>
-            <div><Label>Provincie *</Label><Select value={form.province} onValueChange={(v) => update("province", v)}><SelectTrigger><SelectValue placeholder="Kies..." /></SelectTrigger><SelectContent>{PROVINCES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label>Stad{isSchoolType ? " *" : ""}</Label><Input value={form.city} onChange={(e) => update("city", e.target.value)} maxLength={MAX_LENGTHS.shortText} /></div>
+            <div><Label>Provincie{isSchoolType ? " *" : ""}</Label><Select value={form.province} onValueChange={(v) => update("province", v)}><SelectTrigger><SelectValue placeholder="Kies..." /></SelectTrigger><SelectContent>{PROVINCES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select></div>
           </div>
           <div><Label>Website</Label><Input value={form.website} onChange={(e) => update("website", e.target.value)} placeholder="https://" maxLength={MAX_LENGTHS.url} /></div>
           <div><Label>Status</Label><Select value={form.status} onValueChange={(v) => update("status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="actief">Actief</SelectItem><SelectItem value="inactief">Inactief</SelectItem><SelectItem value="prospect">Prospect</SelectItem></SelectContent></Select></div>

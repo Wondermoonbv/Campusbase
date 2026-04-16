@@ -90,7 +90,7 @@ export default function ContractenPage() {
   }), [baseList, sort, schoolMap]);
 
   const exportCSV = useCallback(() => {
-    const headers = ["School", "Type", "Start", "Einde", "Vernieuwing", "Status", "Waarde", "Beschrijving"];
+    const headers = ["Organisatie", "Type", "Start", "Einde", "Vernieuwing", "Status", "Waarde", "Beschrijving"];
     const rows = sorted.map((c) => { const school = schoolMap.get(c.organisatie_id); return [school?.name ?? "", c.contract_type, c.start_date, c.end_date, c.renewal_date, c.status, c.value ?? "", c.description ?? ""]; });
     const csv = [headers, ...rows].map((r) => r.join(";")).join("\n"); const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "contracten_export.csv"; a.click();
@@ -145,7 +145,7 @@ export default function ContractenPage() {
           <div className="surface-card overflow-hidden hidden md:block">
             <Table><TableHeader><TableRow>
               <TableHead className="w-8" />
-              <SortableTableHead sortKey="school" currentSort={sort} onSort={toggleSort}>School</SortableTableHead>
+              <SortableTableHead sortKey="school" currentSort={sort} onSort={toggleSort}>Organisatie</SortableTableHead>
               <SortableTableHead sortKey="type" currentSort={sort} onSort={toggleSort}>Type</SortableTableHead>
               <SortableTableHead sortKey="start" currentSort={sort} onSort={toggleSort}>Start</SortableTableHead>
               <SortableTableHead sortKey="end" currentSort={sort} onSort={toggleSort}>Einde</SortableTableHead>

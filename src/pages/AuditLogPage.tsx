@@ -35,7 +35,7 @@ const ACTION_CONFIG: Record<string, { label: string; icon: typeof Plus; color: s
 };
 
 const ENTITY_LABELS: Record<string, string> = {
-  school: "School",
+  school: "Organisatie",
   contact: "Contact",
   opleiding: "Opleiding",
   evenement: "Evenement",

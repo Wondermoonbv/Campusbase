@@ -15,9 +15,9 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 // Lazy-loaded page components
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
-const ScholenPage = lazy(() => import("./pages/ScholenPage"));
+const OrganisatiesPage = lazy(() => import("./pages/OrganisatiesPage"));
 const ContactenPage = lazy(() => import("./pages/ContactenPage"));
-const SchoolDetailPage = lazy(() => import("./pages/SchoolDetailPage"));
+const OrganisatieDetailPage = lazy(() => import("./pages/OrganisatieDetailPage"));
 const OpleidingenPage = lazy(() => import("./pages/OpleidingenPage"));
 const ContractenPage = lazy(() => import("./pages/ContractenPage"));
 const EventenPage = lazy(() => import("./pages/EventenPage"));
@@ -162,8 +162,10 @@ function AppRoutes() {
         <Routes>
           <Route path="/ambassadeurs" element={<AmbassadeursPage />} />
           <Route path="/" element={<DashboardPage />} />
-          <Route path="/scholen" element={<ScholenPage />} />
-          <Route path="/scholen/:id" element={<SchoolDetailPage />} />
+          <Route path="/organisaties" element={<OrganisatiesPage />} />
+          <Route path="/organisaties/:id" element={<OrganisatieDetailPage />} />
+          <Route path="/scholen" element={<Navigate to="/organisaties" replace />} />
+          <Route path="/scholen/:id" element={<Navigate to="/organisaties" replace />} />
           <Route path="/contacten" element={<ContactenPage />} />
           <Route path="/opleidingen" element={<OpleidingenPage />} />
           <Route path="/contracten" element={<ContractenPage />} />
