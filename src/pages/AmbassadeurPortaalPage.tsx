@@ -35,7 +35,7 @@ interface PortalEvent {
   start_time: string | null;
   end_time: string | null;
   opbouw_tijd: string | null;
-  contactpersoon_stand: string | null;
+  contactpersoon: string | null;
   description: string | null;
 }
 
@@ -73,7 +73,7 @@ export default function AmbassadeurPortaalPage() {
 
       const { data: evts, error: evtErr } = await supabase
         .from("evenementen")
-        .select("id, name, date, location, organisator_id, max_ambassadeurs, start_time, end_time, opbouw_tijd, contactpersoon_stand, description")
+        .select("id, name, date, location, organisator_id, max_ambassadeurs, start_time, end_time, opbouw_tijd, description")
         .gte("date", today)
         .neq("status", "geannuleerd")
         .order("date", { ascending: true });
@@ -121,7 +121,7 @@ export default function AmbassadeurPortaalPage() {
           start_time: e.start_time || null,
           end_time: e.end_time || null,
           opbouw_tijd: e.opbouw_tijd || null,
-          contactpersoon_stand: e.contactpersoon_stand || null,
+          contactpersoon: null,
           description: e.description || null,
         };
       });

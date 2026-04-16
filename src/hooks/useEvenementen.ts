@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Event, Contact } from "@/types/crm";
+import type { Event } from "@/types/crm";
 import { writeAuditLog } from "@/lib/audit";
 
 function mapTime(t: string | null | undefined): string {
@@ -8,19 +8,16 @@ function mapTime(t: string | null | undefined): string {
   return t.length > 5 ? t.slice(0, 5) : t;
 }
 
-function mapEvent(row: any): Event & { contactpersoon?: Contact | null } {
-  const { contactpersoon, ...rest } = row;
+function mapEvent(row: any): Event {
   return {
-    ...rest,
-    start_time: mapTime(rest.start_time),
-    end_time: mapTime(rest.end_time),
-    setup_time: mapTime(rest.setup_time),
-    setup_date: rest.setup_date ?? "",
-    budget: rest.budget != null ? Number(rest.budget) : null,
-    team_members: rest.team_members ?? [],
-    organisator_id: rest.organisator_id ?? null,
-    contactpersoon_id: rest.contactpersoon_id ?? null,
-    contactpersoon: contactpersoon ?? null,
+    ...row,
+    start_time: mapTime(row.start_time),
+    end_time: mapTime(row.end_time),
+    setup_time: mapTime(row.setup_time),
+    setup_date: row.setup_date ?? "",
+    budget: row.budget != null ? Number(row.budget) : null,
+    team_members: row.team_members ?? [],
+    organisator_id: row.organisator_id ?? null,
   };
 }
 
@@ -32,7 +29,7 @@ export function useEvenementen() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("evenementen")
-        .select("id, name, type, date, start_time, end_time, setup_date, setup_time, location, organisator_id, responsible, team_members, elia_contact, budget, status, description, stand_type, stand_size, notes, opbouw_tijd, afbraak_tijd, stand_grootte, contactpersoon_stand, stand_notities, standenbouwer_nodig, max_ambassadeurs, regio, taal, doelgroep_niveau, contactpersoon_id, registratie_type, follow_up_status, contactpersoon:contacten(id, name, email, phone, role, department)")
+        .select("id, name, type, date, start_time, end_time, setup_date, setup_time, location, organisator_id, responsible, team_members, elia_contact, budget, status, description, stand_type, stand_size, notes, opbouw_tijd, afbraak_tijd, stand_grootte, stand_notities, standenbouwer_nodig, max_ambassadeurs, regio, taal, doelgroep_niveau, registratie_type, follow_up_status")
         .order("date", { ascending: true });
       if (error) { console.error("Error fetching evenementen:", error); return []; }
       return (data as any[]).map(mapEvent);
@@ -54,16 +51,15 @@ export function useEvenementen() {
       if (payload.taal === "" || payload.taal === "none") payload.taal = null;
       if (payload.doelgroep_niveau === "" || payload.doelgroep_niveau === "none") payload.doelgroep_niveau = null;
       if (payload.registratie_type === "" || payload.registratie_type === "none") payload.registratie_type = null;
-      if (payload.contactpersoon_id === "" || payload.contactpersoon_id === "none") payload.contactpersoon_id = null;
 
       if (event.id) {
         const { id, created_at, ...updates } = payload;
-        const { data, error } = await supabase.from("evenementen").update(updates).eq("id", id).select("*, contactpersoon:contacten(id, name, email, phone, role, department)").single();
+        const { data, error } = await supabase.from("evenementen").update(updates).eq("id", id).select().single();
         if (error) throw error;
         return { data: mapEvent(data), action: "update" as const, updates };
       } else {
         const { id, created_at, ...insert } = payload;
-        const { data, error } = await supabase.from("evenementen").insert(insert).select("*, contactpersoon:contacten(id, name, email, phone, role, department)").single();
+        const { data, error } = await supabase.from("evenementen").insert(insert).select().single();
         if (error) throw error;
         const mapped = mapEvent(data);
         try {
