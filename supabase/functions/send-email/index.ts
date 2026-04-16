@@ -22,6 +22,11 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // DEBUG: Verifiëer RESEND_API_KEY beschikbaarheid
+  console.log("DEBUG: RESEND_API_KEY aanwezig:", !!Deno.env.get("RESEND_API_KEY"));
+  console.log("DEBUG: RESEND_API_KEY lengte:", (Deno.env.get("RESEND_API_KEY") ?? "").length);
+  console.log("DEBUG: RESEND_API_KEY prefix:", (Deno.env.get("RESEND_API_KEY") ?? "geen").substring(0, 6));
+
   try {
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
