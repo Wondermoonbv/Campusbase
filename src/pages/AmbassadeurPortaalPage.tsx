@@ -262,21 +262,19 @@ export default function AmbassadeurPortaalPage() {
     if (!ambassadeur) return;
     setActionLoading(eventId, true);
     try {
-      const ev = events.find(e => e.id === eventId);
-      if (ev?.max_ambassadeurs && ev.signup_count >= ev.max_ambassadeurs) {
-        toast.error("Maximum aantal inschrijvingen bereikt voor dit event.");
+      const { data, error } = await supabase.functions.invoke("public-event-rsvp", {
+        body: {
+          accessToken: ambassadeur.access_token,
+          evenementId: eventId,
+          action: "signup",
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.alreadyEnrolled) {
+        toast.info("Je was al ingeschreven voor dit event.");
         return;
       }
-
-      const { error } = await supabase
-        .from("event_inschrijvingen")
-        .insert({
-          evenement_id: eventId,
-          ambassadeur_id: ambassadeur.id,
-          status: "ingeschreven",
-        });
-
-      if (error) throw error;
       toast.success("Je bent ingeschreven!");
       await loadEvents(ambassadeur.id, ambassadeur.email);
     } catch {
@@ -290,12 +288,16 @@ export default function AmbassadeurPortaalPage() {
     if (!ambassadeur) return;
     setActionLoading(eventId, true);
     try {
-      const { error } = await supabase
-        .from("event_inschrijvingen")
-        .update({ status: "afgemeld" })
-        .eq("id", inschrijvingId);
-
+      const { data, error } = await supabase.functions.invoke("public-event-rsvp", {
+        body: {
+          accessToken: ambassadeur.access_token,
+          evenementId: eventId,
+          inschrijvingId: inschrijvingId,
+          action: "cancel",
+        },
+      });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       toast.success("Je bent afgemeld.");
       await loadEvents(ambassadeur.id, ambassadeur.email);
     } catch {
@@ -309,18 +311,16 @@ export default function AmbassadeurPortaalPage() {
     if (!ambassadeur) return;
     setActionLoading(eventId, true);
     try {
-      const ev = events.find(e => e.id === eventId);
-      if (ev?.max_ambassadeurs && ev.signup_count >= ev.max_ambassadeurs) {
-        toast.error("Maximum aantal inschrijvingen bereikt voor dit event.");
-        return;
-      }
-
-      const { error } = await supabase
-        .from("event_inschrijvingen")
-        .update({ status: "ingeschreven" })
-        .eq("id", inschrijvingId);
-
+      const { data, error } = await supabase.functions.invoke("public-event-rsvp", {
+        body: {
+          accessToken: ambassadeur.access_token,
+          evenementId: eventId,
+          inschrijvingId: inschrijvingId,
+          action: "resignup",
+        },
+      });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       toast.success("Je bent opnieuw ingeschreven!");
       await loadEvents(ambassadeur.id, ambassadeur.email);
     } catch {
