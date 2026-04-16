@@ -1,6 +1,9 @@
+import { Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AppFooter } from "@/components/layout/AppFooter";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 const PRIVACY_MD = `# CampusBase Privacy Policy
 
@@ -232,8 +235,30 @@ The controller has the right to conduct or commission an audit once per year, at
 `;
 
 export default function PrivacyPolicyPage() {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2 text-foreground hover:text-foreground/80 transition-colors">
+            <span className="font-semibold text-lg">CampusBase</span>
+          </Link>
+          <div>
+            {user ? (
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/">Terug naar platform</Link>
+              </Button>
+            ) : (
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/login">Inloggen</Link>
+              </Button>
+            )}
+          </div>
+        </div>
+      </header>
+
       <div className="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
         <article className="privacy-prose">
           <ReactMarkdown
