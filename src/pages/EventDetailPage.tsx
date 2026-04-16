@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEvenementen } from "@/hooks/useEvenementen";
-import { useScholen } from "@/hooks/useScholen";
+import { useScholen, useContacten } from "@/hooks/useScholen";
 import { useOpleidingen, useEventOpleidingen } from "@/hooks/useOpleidingen";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,12 @@ export default function EventDetailPage() {
   }
 
   const organisator = event.organisator_id ? scholen.find((s) => s.id === event.organisator_id) : null;
+  const contactpersoon = (event as any).contactpersoon as Contact | null;
+  const orgContacten = useMemo(() => {
+    const orgId = form?.organisator_id;
+    if (!orgId) return [];
+    return allContacten.filter((c) => c.organisatie_id === orgId).sort((a, b) => a.name.localeCompare(b.name));
+  }, [allContacten, form?.organisator_id]);
   const linkedPrograms = opleidingen.filter((p) => selectedProgramIds.includes(p.id)).map((p) => ({ ...p, school: scholen.find((s) => s.id === p.organisatie_id) }));
   const toggleProgram = (programId: string) => setSelectedProgramIds((prev) => prev.includes(programId) ? prev.filter((id) => id !== programId) : [...prev, programId]);
   const sortedOrgs = [...scholen].sort((a, b) => a.name.localeCompare(b.name));
