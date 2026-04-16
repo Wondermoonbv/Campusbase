@@ -8,6 +8,7 @@ import { useAllFeedbackData } from "@/hooks/useFeedback";
 import { useAuth } from "@/contexts/AuthContext";
 import { useViewAs } from "@/contexts/ViewAsContext";
 import { useRecentActivity, type ActivityItem } from "@/hooks/useRecentActivity";
+import { FOLLOW_UP_LABELS, followUpVariant } from "@/lib/event-labels";
 
 const BelgiumMap = lazy(() => import("@/components/dashboard/BelgiumMap"));
 import {
@@ -235,6 +236,11 @@ export default function DashboardPage() {
                           {ev.avgRating !== null && (
                             <span className="text-xs text-muted-foreground flex items-center gap-1">
                               <Star className="h-3 w-3" /> {ev.avgRating.toFixed(1)}
+                            </span>
+                          )}
+                          {ev.follow_up_status && (
+                            <span className={`inline-flex items-center rounded-full border px-1.5 py-0 text-[10px] font-medium ${followUpVariant(ev.follow_up_status)}`}>
+                              {FOLLOW_UP_LABELS[ev.follow_up_status] || ev.follow_up_status}
                             </span>
                           )}
                         </div>

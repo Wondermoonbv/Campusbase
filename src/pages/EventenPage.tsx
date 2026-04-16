@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Download, CalendarDays, List, Pencil, Upload, Trash2, Calendar, Link2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Search, Download, CalendarDays, List, Pencil, Upload, Trash2, Calendar, Link2, Filter } from "lucide-react";
 import { EventFormDialog } from "@/components/events/EventFormDialog";
 import { EventCalendar } from "@/components/events/EventCalendar";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
@@ -21,6 +22,7 @@ import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableT
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
+import { REGIO_LABELS, TAAL_LABELS, DOELGROEP_LABELS, REGISTRATIE_TYPE_LABELS, FOLLOW_UP_LABELS, followUpVariant } from "@/lib/event-labels";
 
 const EVENT_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "name", label: "Naam", required: true },
@@ -58,6 +60,12 @@ export default function EventenPage() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterFieldOfStudy, setFilterFieldOfStudy] = useState("all");
   const [filterPeriod] = useState(initialPeriod);
+  const [filterRegio, setFilterRegio] = useState("all");
+  const [filterTaal, setFilterTaal] = useState("all");
+  const [filterDoelgroep, setFilterDoelgroep] = useState("all");
+  const [filterRegistratie, setFilterRegistratie] = useState("all");
+  const [filterFollowUp, setFilterFollowUp] = useState("all");
+  const [showExtraFilters, setShowExtraFilters] = useState(false);
   const [view, setView] = useState<"list" | "calendar">("calendar");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editEvent, setEditEvent] = useState<Event | undefined>();
@@ -87,6 +95,11 @@ export default function EventenPage() {
       const matchSearch = e.name.toLowerCase().includes(search.toLowerCase()) || e.location.toLowerCase().includes(search.toLowerCase());
       const matchType = filterType === "all" || e.type === filterType;
       const matchStatus = filterStatus === "all" || e.status === filterStatus;
+      const matchRegio = filterRegio === "all" || e.regio === filterRegio;
+      const matchTaal = filterTaal === "all" || e.taal === filterTaal;
+      const matchDoelgroep = filterDoelgroep === "all" || e.doelgroep_niveau === filterDoelgroep;
+      const matchRegistratie = filterRegistratie === "all" || e.registratie_type === filterRegistratie;
+      const matchFollowUp = filterFollowUp === "all" || e.follow_up_status === filterFollowUp;
       let matchPeriod = true;
       if (filterPeriod === "thisYear") matchPeriod = new Date(e.date).getFullYear() === now.getFullYear();
       else if (filterPeriod === "next30") { const d = new Date(e.date); matchPeriod = d >= now && d <= in30Days; }
@@ -96,21 +109,23 @@ export default function EventenPage() {
         const linkedPrograms = opleidingen.filter((p) => linkedProgramIds.includes(p.id));
         matchField = linkedPrograms.some((p) => p.field_of_study === filterFieldOfStudy);
       }
-      return matchSearch && matchType && matchStatus && matchField && matchPeriod;
+      return matchSearch && matchType && matchStatus && matchField && matchPeriod && matchRegio && matchTaal && matchDoelgroep && matchRegistratie && matchFollowUp;
     });
-  }, [evenementen, opleidingen, eventOpleidingen, search, filterType, filterStatus, filterFieldOfStudy, filterPeriod]);
+  }, [evenementen, opleidingen, eventOpleidingen, search, filterType, filterStatus, filterFieldOfStudy, filterPeriod, filterRegio, filterTaal, filterDoelgroep, filterRegistratie, filterFollowUp]);
 
   const sorted = useMemo(() => sortItems(filtered, sort, (e, key) => {
-    switch (key) { case "name": return e.name; case "date": return new Date(e.date).getTime(); case "location": return e.location; case "status": return e.status; default: return e.name; }
+    switch (key) { case "name": return e.name; case "date": return new Date(e.date).getTime(); case "location": return e.location; case "status": return e.status; case "follow_up": return e.follow_up_status || ""; default: return e.name; }
   }), [filtered, sort]);
 
   const exportCSV = useCallback(() => {
-    const headers = ["Naam", "Type", "Datum", "Locatie", "Status", "Verantwoordelijke", "Budget"];
-    const rows = sorted.map((e) => [e.name, e.type, e.date, e.location, e.status, e.responsible, e.budget ?? ""]);
+    const headers = ["Naam", "Type", "Datum", "Locatie", "Status", "Verantwoordelijke", "Budget", "Follow-up"];
+    const rows = sorted.map((e) => [e.name, e.type, e.date, e.location, e.status, e.responsible, e.budget ?? "", FOLLOW_UP_LABELS[e.follow_up_status || ""] || ""]);
     const csv = [headers, ...rows].map((r) => r.join(";")).join("\n"); const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "evenementen_export.csv"; a.click();
     writeAuditLog({ action: "export", entity_type: "export", entity_id: "evenementen-csv", entity_name: "Evenementen export", changes: { row_count: rows.length, format: "csv" } });
   }, [sorted]);
+
+  const hasExtraFilters = filterRegio !== "all" || filterTaal !== "all" || filterDoelgroep !== "all" || filterRegistratie !== "all" || filterFollowUp !== "all";
 
   return (
     <div className="page-container animate-fade-in-up">
@@ -142,8 +157,20 @@ export default function EventenPage() {
             <Select value={filterType} onValueChange={setFilterType}><SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9"><SelectValue placeholder="Type" /></SelectTrigger><SelectContent><SelectItem value="all">Alle types</SelectItem><SelectItem value="jobbeurs">Jobbeurs</SelectItem><SelectItem value="campus presentatie">Campus presentatie</SelectItem><SelectItem value="workshop">Workshop</SelectItem><SelectItem value="hackathon">Hackathon</SelectItem></SelectContent></Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}><SelectTrigger className="w-full sm:w-[150px] h-10 sm:h-9"><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">Alle statussen</SelectItem><SelectItem value="gepland">Gepland</SelectItem><SelectItem value="bevestigd">Bevestigd</SelectItem><SelectItem value="afgelopen">Afgelopen</SelectItem><SelectItem value="geannuleerd">Geannuleerd</SelectItem></SelectContent></Select>
             <Select value={filterFieldOfStudy} onValueChange={setFilterFieldOfStudy}><SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9 col-span-2 sm:col-span-1"><SelectValue placeholder="Studiedomein" /></SelectTrigger><SelectContent><SelectItem value="all">Alle domeinen</SelectItem>{FIELDS_OF_STUDY.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent></Select>
+            <Button variant={showExtraFilters || hasExtraFilters ? "default" : "outline"} size="sm" className="h-10 sm:h-9" onClick={() => setShowExtraFilters(!showExtraFilters)}>
+              <Filter className="h-4 w-4 mr-1" /> Meer{hasExtraFilters ? ` (${[filterRegio, filterTaal, filterDoelgroep, filterRegistratie, filterFollowUp].filter(f => f !== "all").length})` : ""}
+            </Button>
           </div>
         </div>
+        {showExtraFilters && (
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 mt-3 pt-3 border-t border-border">
+            <Select value={filterRegio} onValueChange={setFilterRegio}><SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Regio" /></SelectTrigger><SelectContent><SelectItem value="all">Alle regio's</SelectItem>{Object.entries(REGIO_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
+            <Select value={filterTaal} onValueChange={setFilterTaal}><SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Taal" /></SelectTrigger><SelectContent><SelectItem value="all">Alle talen</SelectItem>{Object.entries(TAAL_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
+            <Select value={filterDoelgroep} onValueChange={setFilterDoelgroep}><SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Doelgroep" /></SelectTrigger><SelectContent><SelectItem value="all">Alle niveaus</SelectItem>{Object.entries(DOELGROEP_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
+            <Select value={filterRegistratie} onValueChange={setFilterRegistratie}><SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Registratie" /></SelectTrigger><SelectContent><SelectItem value="all">Alle types</SelectItem>{Object.entries(REGISTRATIE_TYPE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
+            <Select value={filterFollowUp} onValueChange={setFilterFollowUp}><SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Follow-up" /></SelectTrigger><SelectContent><SelectItem value="all">Alle statussen</SelectItem>{Object.entries(FOLLOW_UP_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
+          </div>
+        )}
       </div>
 
       {isLoading ? <ListSkeleton /> : evenementen.length === 0 ? (
@@ -154,11 +181,19 @@ export default function EventenPage() {
             {sorted.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen evenementen gevonden.</div> : sorted.map((ev) => (
               <div key={ev.id} className="surface-card p-4 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate(`/evenementen/${ev.id}`)}>
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1"><p className="font-medium text-sm truncate">{ev.name}</p><p className="text-xs text-muted-foreground mt-0.5">{new Date(ev.date).toLocaleDateString("nl-BE")} · {ev.location}</p></div>
-                  <div className="flex items-center gap-1">
-                    <StatusBadge status={ev.status} />
-                    {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`${ev.name} verwijderen`} onClick={(e) => { e.stopPropagation(); setDeleteTarget(ev); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm truncate">{ev.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{new Date(ev.date).toLocaleDateString("nl-BE")} · {ev.location || "—"}</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <StatusBadge status={ev.status} />
+                      {ev.follow_up_status && (
+                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${followUpVariant(ev.follow_up_status)}`}>
+                          {FOLLOW_UP_LABELS[ev.follow_up_status] || ev.follow_up_status}
+                        </span>
+                      )}
+                    </div>
                   </div>
+                  {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`${ev.name} verwijderen`} onClick={(e) => { e.stopPropagation(); setDeleteTarget(ev); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
                 </div>
               </div>
             ))}
@@ -170,14 +205,22 @@ export default function EventenPage() {
               <SortableTableHead sortKey="date" currentSort={sort} onSort={toggleSort}>Datum</SortableTableHead>
               <SortableTableHead sortKey="location" currentSort={sort} onSort={toggleSort}>Locatie</SortableTableHead>
               <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
+              <SortableTableHead sortKey="follow_up" currentSort={sort} onSort={toggleSort}>Follow-up</SortableTableHead>
               <TableHead className="w-20" />
             </TableRow></TableHeader>
               <TableBody>{sorted.map((ev) => (
                 <TableRow key={ev.id} className="hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/evenementen/${ev.id}`)}>
                   <TableCell className="font-medium">{ev.name}</TableCell>
                   <TableCell className="tabular-nums">{new Date(ev.date).toLocaleDateString("nl-BE")}</TableCell>
-                  <TableCell>{ev.location}</TableCell>
+                  <TableCell>{ev.location || "—"}</TableCell>
                   <TableCell><StatusBadge status={ev.status} /></TableCell>
+                  <TableCell>
+                    {ev.follow_up_status && (
+                      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${followUpVariant(ev.follow_up_status)}`}>
+                        {FOLLOW_UP_LABELS[ev.follow_up_status] || ev.follow_up_status}
+                      </span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex gap-0.5">
                       {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${ev.name} bewerken`} onClick={(e) => { e.stopPropagation(); navigate(`/evenementen/${ev.id}`); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}

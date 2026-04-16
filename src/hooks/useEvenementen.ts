@@ -29,7 +29,7 @@ export function useEvenementen() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("evenementen")
-        .select("id, name, type, date, start_time, end_time, setup_date, setup_time, location, organisator_id, responsible, team_members, elia_contact, budget, status, description, stand_type, stand_size, notes, opbouw_tijd, afbraak_tijd, stand_grootte, contactpersoon_stand, stand_notities, standenbouwer_nodig, max_ambassadeurs")
+        .select("id, name, type, date, start_time, end_time, setup_date, setup_time, location, organisator_id, responsible, team_members, elia_contact, budget, status, description, stand_type, stand_size, notes, opbouw_tijd, afbraak_tijd, stand_grootte, contactpersoon_stand, stand_notities, standenbouwer_nodig, max_ambassadeurs, regio, taal, doelgroep_niveau, contactpersoon_naam, contactpersoon_telefoon, contactpersoon_email, registratie_type, follow_up_status")
         .order("date", { ascending: true });
       if (error) { console.error("Error fetching evenementen:", error); return []; }
       return (data as any[]).map(mapEvent);
@@ -47,6 +47,10 @@ export function useEvenementen() {
       if (payload.end_time === "") payload.end_time = null;
       if (payload.setup_date === "") payload.setup_date = null;
       if (payload.setup_time === "") payload.setup_time = null;
+      if (payload.regio === "" || payload.regio === "none") payload.regio = null;
+      if (payload.taal === "" || payload.taal === "none") payload.taal = null;
+      if (payload.doelgroep_niveau === "" || payload.doelgroep_niveau === "none") payload.doelgroep_niveau = null;
+      if (payload.registratie_type === "" || payload.registratie_type === "none") payload.registratie_type = null;
 
       if (event.id) {
         const { id, created_at, ...updates } = payload;

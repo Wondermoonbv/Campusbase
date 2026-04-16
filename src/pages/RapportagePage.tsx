@@ -16,6 +16,7 @@ import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarte
 import { nl } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { writeAuditLog } from "@/lib/audit";
+import { REGIO_LABELS, DOELGROEP_LABELS, REGISTRATIE_TYPE_LABELS } from "@/lib/event-labels";
 
 const CHART_COLORS = ["#0E6575", "#ef7c14", "#007BAF", "#0C8129", "#CD2E15", "#434f54", "#6366f1", "#ec4899"];
 type PeriodPreset = "week" | "month" | "quarter" | "year" | "custom";
@@ -91,6 +92,10 @@ export default function RapportagePage() {
   const contractsByType = useMemo(() => { const s: Record<string, number> = {}; filteredContracts.forEach((c) => { s[c.contract_type] = (s[c.contract_type] || 0) + (c.value ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredContracts]);
   const totalContractValue = filteredContracts.filter((c) => c.status === "actief").reduce((s, c) => s + (c.value ?? 0), 0);
 
+  const eventsByRegio = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { const key = e.regio ? (REGIO_LABELS[e.regio] || e.regio) : "Onbekend"; c[key] = (c[key] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents]);
+  const eventsByDoelgroep = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { const key = e.doelgroep_niveau ? (DOELGROEP_LABELS[e.doelgroep_niveau] || e.doelgroep_niveau) : "Onbekend"; c[key] = (c[key] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents]);
+  const eventsByRegistratie = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { const key = e.registratie_type ? (REGISTRATIE_TYPE_LABELS[e.registratie_type] || e.registratie_type) : "Onbekend"; c[key] = (c[key] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents]);
+
 
   return (
     <div className="page-container animate-fade-in-up">
@@ -143,6 +148,15 @@ export default function RapportagePage() {
             <div className="divide-y divide-border">{expiringContracts.map((c) => { const school = scholen.find((s) => s.id === c.organisatie_id); return (<div key={c.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1"><div><p className="text-sm font-medium">{school?.name} — <span className="capitalize">{c.contract_type}</span></p><p className="text-xs text-muted-foreground">Vervalt: {new Date(c.end_date).toLocaleDateString("nl-BE")} · Waarde: {c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</p></div></div>); })}</div>
           )}
         </div>
+        <ChartCard title="Evenementen per regio" data={eventsByRegio} chartId="events-regio">
+          <ResponsiveContainer width="100%" height={250}><BarChart data={eventsByRegio} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} /><YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 9 }} /><Tooltip /><Bar dataKey="value" fill="#0C8129" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
+        </ChartCard>
+        <ChartCard title="Evenementen per doelgroepniveau" data={eventsByDoelgroep} chartId="events-doelgroep">
+          <ResponsiveContainer width="100%" height={250}><PieChart><Pie data={eventsByDoelgroep} cx="50%" cy="50%" innerRadius={40} outerRadius={75} dataKey="value" nameKey="name" label>{eventsByDoelgroep.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip /><Legend wrapperStyle={{ fontSize: 12 }} /></PieChart></ResponsiveContainer>
+        </ChartCard>
+        <ChartCard title="Evenementen per registratietype" data={eventsByRegistratie} chartId="events-registratie">
+          <ResponsiveContainer width="100%" height={250}><PieChart><Pie data={eventsByRegistratie} cx="50%" cy="50%" innerRadius={40} outerRadius={75} dataKey="value" nameKey="name" label>{eventsByRegistratie.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip /><Legend wrapperStyle={{ fontSize: 12 }} /></PieChart></ResponsiveContainer>
+        </ChartCard>
       </div>
 
 
