@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { buildEmailLogoHtml } from "@/lib/logo";
+import { escapeHtml, escapeUrl } from "@/lib/sanitize";
 
 interface SendEmailParams {
   to: string;
@@ -46,6 +47,9 @@ export async function sendBulkEmails(
 }
 
 // ── HTML email templates ──
+// IMPORTANT: all user-supplied content must be passed through escapeHtml()
+// before interpolation into template strings. URLs use escapeUrl() which also
+// restricts schemes to http/https.
 
 const WRAPPER_START = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;"><tr><td align="center" style="padding:32px 16px;"><table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;">`;
 const WRAPPER_END = `<tr><td style="padding:24px 32px;background:#f4f4f5;text-align:center;font-size:12px;color:#71717a;line-height:1.6;">Dit is een automatisch bericht van Elia Campus Recruitment.<br/>Vragen? Antwoord op deze email of contacteer <a href="mailto:campusbase@wondermoon.be" style="color:#0E6575;text-decoration:underline;">campusbase@wondermoon.be</a>.<br/><br/>© ${new Date().getFullYear()} Elia Group — Campus Recruitment</td></tr></table></td></tr></table></body></html>`;
@@ -60,7 +64,7 @@ function row(content: string) {
 
 function infoRow(label: string, value: string | null | undefined) {
   if (!value) return "";
-  return `<tr><td style="padding:4px 0;font-size:14px;color:#71717a;width:140px;">${label}</td><td style="padding:4px 0;font-size:14px;color:#18181b;">${value}</td></tr>`;
+  return `<tr><td style="padding:4px 0;font-size:14px;color:#71717a;width:140px;">${escapeHtml(label)}</td><td style="padding:4px 0;font-size:14px;color:#18181b;">${escapeHtml(value)}</td></tr>`;
 }
 
 function formatDate(dateStr: string) {
@@ -84,7 +88,10 @@ export function buildConfirmationEmail(
   event: EventEmailData,
   portalUrl: string
 ): string {
-  return `${WRAPPER_START}${getHeader()}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Bevestiging als ambassadeur</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${ambassadeurName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Je bent bevestigd als ambassadeur voor <strong>${event.eventName}</strong>. Hieronder vind je de praktische details.</p>`)}${row(`<table cellpadding="0" cellspacing="0" style="width:100%;margin:16px 0;">${infoRow("📅 Datum", formatDate(event.date))}${infoRow("📍 Locatie", event.location)}${infoRow("🏫 School", event.schoolName)}${infoRow("🕐 Startuur", event.startTime)}${infoRow("🕐 Einduur", event.endTime)}${infoRow("🔧 Opbouw", event.opbouwTijd)}${infoRow("🔧 Afbraak", event.afbraakTijd)}${infoRow("👤 Contact", event.contactpersoon)}</table>`)}${row(`<div style="text-align:center;margin:24px 0;"><a href="${portalUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Bekijk je portaal</a></div>`)}${WRAPPER_END}`;
+  const safeName = escapeHtml(ambassadeurName);
+  const safeEventName = escapeHtml(event.eventName);
+  const safeUrl = escapeUrl(portalUrl);
+  return `${WRAPPER_START}${getHeader()}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Bevestiging als ambassadeur</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${safeName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Je bent bevestigd als ambassadeur voor <strong>${safeEventName}</strong>. Hieronder vind je de praktische details.</p>`)}${row(`<table cellpadding="0" cellspacing="0" style="width:100%;margin:16px 0;">${infoRow("📅 Datum", formatDate(event.date))}${infoRow("📍 Locatie", event.location)}${infoRow("🏫 School", event.schoolName)}${infoRow("🕐 Startuur", event.startTime)}${infoRow("🕐 Einduur", event.endTime)}${infoRow("🔧 Opbouw", event.opbouwTijd)}${infoRow("🔧 Afbraak", event.afbraakTijd)}${infoRow("👤 Contact", event.contactpersoon)}</table>`)}${row(`<div style="text-align:center;margin:24px 0;"><a href="${safeUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Bekijk je portaal</a></div>`)}${WRAPPER_END}`;
 }
 
 export function buildFeedbackEmail(
@@ -94,23 +101,34 @@ export function buildFeedbackEmail(
   ambassadeurEmail?: string
 ): string {
   // Append prefill params to feedback URL
-  const url = new URL(feedbackUrl);
-  if (ambassadeurName && ambassadeurName !== "Ambassadeur") {
-    url.searchParams.set("name", ambassadeurName);
+  let finalUrl = feedbackUrl;
+  try {
+    const url = new URL(feedbackUrl);
+    if (ambassadeurName && ambassadeurName !== "Ambassadeur") {
+      url.searchParams.set("name", ambassadeurName);
+    }
+    if (ambassadeurEmail) {
+      url.searchParams.set("email", ambassadeurEmail);
+    }
+    finalUrl = url.toString();
+  } catch {
+    // If URL parsing fails, fall back to original
   }
-  if (ambassadeurEmail) {
-    url.searchParams.set("email", ambassadeurEmail);
-  }
-  const finalUrl = url.toString();
 
-  return `${WRAPPER_START}${getHeader()}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Feedback gevraagd</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${ambassadeurName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Bedankt voor je deelname aan <strong>${eventName}</strong>. We horen graag je feedback over het event.</p>`)}${row(`<div style="text-align:center;margin:24px 0;"><a href="${finalUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Geef je feedback</a></div>`)}${WRAPPER_END}`;
+  const safeName = escapeHtml(ambassadeurName);
+  const safeEventName = escapeHtml(eventName);
+  const safeUrl = escapeUrl(finalUrl);
+
+  return `${WRAPPER_START}${getHeader()}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Feedback gevraagd</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${safeName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Bedankt voor je deelname aan <strong>${safeEventName}</strong>. We horen graag je feedback over het event.</p>`)}${row(`<div style="text-align:center;margin:24px 0;"><a href="${safeUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Geef je feedback</a></div>`)}${WRAPPER_END}`;
 }
 
 export function buildPortalLinkEmail(
   ambassadeurName: string,
   portalUrl: string
 ): string {
-  return `${WRAPPER_START}${getHeader()}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Jouw Elia Campus Portaal</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${ambassadeurName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Via onderstaande link kan je je inschrijven voor aankomende Elia campus events en je beschikbaarheid beheren.</p>`)}${row(`<div style="text-align:center;margin:24px 0;"><a href="${portalUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Open mijn portaal</a></div><p style="font-size:12px;color:#71717a;text-align:center;">Bewaar deze link — het is je persoonlijke toegang.</p>`)}${WRAPPER_END}`;
+  const safeName = escapeHtml(ambassadeurName);
+  const safeUrl = escapeUrl(portalUrl);
+  return `${WRAPPER_START}${getHeader()}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Jouw Elia Campus Portaal</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${safeName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Via onderstaande link kan je je inschrijven voor aankomende Elia campus events en je beschikbaarheid beheren.</p>`)}${row(`<div style="text-align:center;margin:24px 0;"><a href="${safeUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Open mijn portaal</a></div><p style="font-size:12px;color:#71717a;text-align:center;">Bewaar deze link — het is je persoonlijke toegang.</p>`)}${WRAPPER_END}`;
 }
 
 export function buildInvitationEmail(
@@ -118,5 +136,8 @@ export function buildInvitationEmail(
   event: EventEmailData,
   portalUrl: string
 ): string {
-  return `${WRAPPER_START}${getHeader()}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Uitnodiging als ambassadeur</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${ambassadeurName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Je bent uitgenodigd als ambassadeur voor <strong>${event.eventName}</strong>. Bekijk de details en schrijf je in via je persoonlijk portaal.</p>`)}${row(`<table cellpadding="0" cellspacing="0" style="width:100%;margin:16px 0;">${infoRow("📅 Datum", formatDate(event.date))}${infoRow("📍 Locatie", event.location)}${infoRow("🏫 School", event.schoolName)}</table>`)}${row(`<div style="text-align:center;margin:24px 0;"><a href="${portalUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Bekijk en schrijf je in</a></div>`)}${WRAPPER_END}`;
+  const safeName = escapeHtml(ambassadeurName);
+  const safeEventName = escapeHtml(event.eventName);
+  const safeUrl = escapeUrl(portalUrl);
+  return `${WRAPPER_START}${getHeader()}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Uitnodiging als ambassadeur</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${safeName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Je bent uitgenodigd als ambassadeur voor <strong>${safeEventName}</strong>. Bekijk de details en schrijf je in via je persoonlijk portaal.</p>`)}${row(`<table cellpadding="0" cellspacing="0" style="width:100%;margin:16px 0;">${infoRow("📅 Datum", formatDate(event.date))}${infoRow("📍 Locatie", event.location)}${infoRow("🏫 School", event.schoolName)}</table>`)}${row(`<div style="text-align:center;margin:24px 0;"><a href="${safeUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Bekijk en schrijf je in</a></div>`)}${WRAPPER_END}`;
 }
