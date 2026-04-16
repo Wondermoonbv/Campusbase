@@ -66,6 +66,12 @@ export interface Contract {
   linked_event_ids?: string[];
 }
 
+export type Regio = 'brussel' | 'antwerpen' | 'vlaams_brabant' | 'west_vlaanderen' | 'limburg' | 'oost_vlaanderen' | 'waals_brabant' | 'henegouwen';
+export type Taal = 'nl' | 'fr' | 'en' | 'meertalig';
+export type DoelgroepNiveau = 'bachelor' | 'master' | 'beide' | 'graduaat';
+export type RegistratieType = 'partnership' | 'ad_hoc';
+export type FollowUpStatus = 'to_do' | 'in_orde' | 'nvt';
+
 export interface Event {
   id: string;
   name: string;
@@ -88,6 +94,14 @@ export interface Event {
   notes: string;
   school?: School;
   target_program_ids?: string[];
+  regio?: Regio | null;
+  taal?: Taal | null;
+  doelgroep_niveau?: DoelgroepNiveau | null;
+  contactpersoon_naam?: string;
+  contactpersoon_telefoon?: string;
+  contactpersoon_email?: string;
+  registratie_type?: RegistratieType | null;
+  follow_up_status?: FollowUpStatus;
 }
 
 export interface EventProgram {
