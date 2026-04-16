@@ -51,6 +51,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Ongeldige token." }, 401);
     }
     const callerId = userData.user.id;
+    const callerEmail = userData.user.email ?? null;
 
     const { data: callerRoles } = await admin
       .from("user_roles")
@@ -130,6 +131,17 @@ Deno.serve(async (req) => {
       console.error("role assignment failed", roleErr);
       return jsonResponse({ error: "Gebruiker aangemaakt maar rol niet toegewezen." }, 500);
     }
+
+    // Audit log entry
+    await admin.from("audit_log").insert({
+      user_id: callerId,
+      user_email: callerEmail,
+      action: "create",
+      entity_type: "user",
+      entity_id: newUserId,
+      entity_name: fullName,
+      changes: { email, role },
+    });
 
     return jsonResponse({
       success: true,
