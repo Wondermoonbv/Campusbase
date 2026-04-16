@@ -140,6 +140,33 @@ export default function GebruikersPage() {
     toast.success("Wachtwoord gekopieerd naar klembord.");
   };
 
+  // Delete user
+  const [deleteUser, setDeleteUser] = useState<AppUser | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const handleDeleteUser = useCallback(async () => {
+    if (!deleteUser) return;
+    setDeleteLoading(true);
+    try {
+      const { error } = await supabase.rpc("soft_delete_user", { target_user_id: deleteUser.id });
+      if (error) throw error;
+      toast.success("Gebruiker verwijderd.");
+      refreshUsers?.();
+      setDeleteOpen(false);
+      setDeleteUser(null);
+    } catch (err: any) {
+      toast.error(err?.message ?? "Fout bij verwijderen.");
+    } finally {
+      setDeleteLoading(false);
+    }
+  }, [deleteUser, refreshUsers]);
+
+  const openDeleteDialog = (u: AppUser) => {
+    setDeleteUser(u);
+    setDeleteOpen(true);
+  };
+
   const { sort, toggleSort } = useSort("lastName");
 
   const [actSearch, setActSearch] = useState("");
