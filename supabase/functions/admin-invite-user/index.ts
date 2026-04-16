@@ -16,6 +16,19 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
   });
 }
 
+function decodeJwtPayload(token: string): { sub?: string; email?: string } | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const payload = parts[1];
+    const padded = payload + "=".repeat((4 - payload.length % 4) % 4);
+    const decoded = atob(padded.replace(/-/g, "+").replace(/_/g, "/"));
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
 type AppRole = "admin" | "editor" | "viewer" | "standenbouwer";
 
 Deno.serve(async (req) => {
@@ -30,27 +43,21 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
 
-    if (!supabaseUrl || !serviceRoleKey || !anonKey) {
+    if (!supabaseUrl || !serviceRoleKey) {
       return jsonResponse({ error: "Serverconfiguratie ontbreekt." }, 500);
     }
 
-    // 1. Verify the calling user is authenticated and is an admin
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return jsonResponse({ error: "Niet geautoriseerd." }, 401);
     }
-
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-
-    const { data: { user }, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !user) {
-      return jsonResponse({ error: "Niet geautoriseerd." }, 401);
+    const token = authHeader.slice("Bearer ".length);
+    const payload = decodeJwtPayload(token);
+    if (!payload?.sub) {
+      return jsonResponse({ error: "Ongeldige token." }, 401);
     }
+    const callerId = payload.sub;
 
     const admin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
@@ -59,14 +66,13 @@ Deno.serve(async (req) => {
     const { data: callerRoles } = await admin
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id);
+      .eq("user_id", callerId);
 
     const isAdmin = (callerRoles ?? []).some((r: { role: string }) => r.role === "admin");
     if (!isAdmin) {
       return jsonResponse({ error: "Alleen admins kunnen gebruikers aanmaken." }, 403);
     }
 
-    // 2. Parse and validate input
     const body = await req.json();
     const email = String(body.email ?? "").trim().toLowerCase();
     const password = String(body.password ?? "");
@@ -83,16 +89,14 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Ongeldige rol." }, 400);
     }
 
-    // 3. Split full name
     const nameParts = fullName.split(" ");
     const firstName = nameParts[0] ?? "";
     const lastName = nameParts.slice(1).join(" ") || "";
 
-    // 4. Create user via Auth Admin API (handles bcrypt + identities correctly)
     const { data: createData, error: createErr } = await admin.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Skip email verification for admin-created users
+      email_confirm: true,
       user_metadata: {
         full_name: fullName,
         first_name: firstName,
@@ -102,7 +106,6 @@ Deno.serve(async (req) => {
 
     if (createErr) {
       console.error("createUser failed", createErr);
-      // Common case: user already exists
       if (createErr.message?.toLowerCase().includes("already")) {
         return jsonResponse({ error: "Gebruiker met dit e-mailadres bestaat al." }, 409);
       }
@@ -114,7 +117,6 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Gebruiker kon niet worden aangemaakt." }, 500);
     }
 
-    // 5. Ensure profile row (handle_new_user trigger should do this, but be safe)
     const { error: profileErr } = await admin
       .from("profiles")
       .upsert({
@@ -126,10 +128,8 @@ Deno.serve(async (req) => {
 
     if (profileErr) {
       console.error("profile upsert failed", profileErr);
-      // Don't fail the whole operation — user is created, profile can be fixed later
     }
 
-    // 6. Assign role
     const { error: roleErr } = await admin
       .from("user_roles")
       .upsert({
