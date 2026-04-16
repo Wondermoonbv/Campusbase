@@ -34,7 +34,7 @@ interface PortalEvent {
   my_inschrijving_id: string | null;
   start_time: string | null;
   end_time: string | null;
-  opbouw_tijd: string | null;
+  setup_time: string | null;
   contactpersoon: string | null;
   description: string | null;
 }
@@ -73,7 +73,7 @@ export default function AmbassadeurPortaalPage() {
 
       const { data: evts, error: evtErr } = await supabase
         .from("evenementen")
-        .select("id, name, date, location, organisator_id, max_ambassadeurs, start_time, end_time, opbouw_tijd, description")
+        .select("id, name, date, location, organisator_id, max_ambassadeurs, start_time, end_time, setup_time, description")
         .gte("date", today)
         .neq("status", "geannuleerd")
         .order("date", { ascending: true });
@@ -120,7 +120,7 @@ export default function AmbassadeurPortaalPage() {
           my_inschrijving_id: mySignup?.id || null,
           start_time: e.start_time || null,
           end_time: e.end_time || null,
-          opbouw_tijd: e.opbouw_tijd || null,
+          setup_time: e.setup_time || null,
           contactpersoon: null,
           description: e.description || null,
         };
