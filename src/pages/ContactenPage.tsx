@@ -105,9 +105,9 @@ export default function ContactenPage() {
   const schoolMap = useMemo(() => Object.fromEntries(scholen.map((s) => [s.id, s])), [scholen]);
 
   const filtered = useMemo(() => contacten.filter((c) => {
-    const schoolName = c.school_id ? schoolMap[c.school_id]?.name ?? "" : "";
+    const schoolName = c.organisatie_id ? schoolMap[c.organisatie_id]?.name ?? "" : "";
     const matchesSearch = !search || [c.name, c.email, schoolName].some((f) => f?.toLowerCase().includes(search.toLowerCase()));
-    const matchesSchool = schoolFilter === "all" || (schoolFilter === "__none__" ? !c.school_id : c.school_id === schoolFilter);
+    const matchesSchool = schoolFilter === "all" || (schoolFilter === "__none__" ? !c.organisatie_id : c.organisatie_id === schoolFilter);
     return matchesSearch && matchesSchool;
   }), [contacten, schoolMap, search, schoolFilter]);
 
@@ -167,7 +167,7 @@ export default function ContactenPage() {
               <ContactMobileCard
                 key={c.id}
                 contact={c}
-                school={c.school_id ? schoolMap[c.school_id] ?? null : null}
+                school={c.organisatie_id ? schoolMap[c.organisatie_id] ?? null : null}
                 canEdit={canEdit}
                 onEdit={handleEdit}
                 onDelete={handleDeleteClick}
@@ -195,7 +195,7 @@ export default function ContactenPage() {
                   <ContactTableRow
                     key={c.id}
                     contact={c}
-                    school={c.school_id ? schoolMap[c.school_id] ?? null : null}
+                    school={c.organisatie_id ? schoolMap[c.organisatie_id] ?? null : null}
                     canEdit={canEdit}
                     onEdit={handleEdit}
                     onDelete={handleDeleteClick}

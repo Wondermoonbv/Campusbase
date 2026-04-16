@@ -115,7 +115,7 @@ export default function DashboardPage() {
       const avgRating = eventResponses.length > 0
         ? eventResponses.reduce((sum, r) => sum + (r.overall_rating ?? 0), 0) / eventResponses.length
         : null;
-      const schoolName = ev.school_id ? scholen.find((s) => s.id === ev.school_id)?.name : null;
+      const schoolName = ev.organisator_id ? scholen.find((s) => s.id === ev.organisator_id)?.name : null;
       return { ...ev, confirmedCount, avgRating, schoolName };
     });
   }, [upcomingEvents, inschrijvingen, forms, responses, scholen]);

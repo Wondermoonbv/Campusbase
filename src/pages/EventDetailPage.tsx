@@ -40,7 +40,7 @@ export default function EventDetailPage() {
 
   const programsBySchool = useMemo(() => {
     const groups: Record<string, { school: typeof scholen[0]; programs: typeof opleidingen }> = {};
-    opleidingen.forEach((p) => { const s = scholen.find((sc) => sc.id === p.school_id); if (!s) return; if (!groups[s.id]) groups[s.id] = { school: s, programs: [] }; groups[s.id].programs.push(p); });
+    opleidingen.forEach((p) => { const s = scholen.find((sc) => sc.id === p.organisatie_id); if (!s) return; if (!groups[s.id]) groups[s.id] = { school: s, programs: [] }; groups[s.id].programs.push(p); });
     return Object.values(groups);
   }, [scholen, opleidingen]);
 
@@ -51,8 +51,8 @@ export default function EventDetailPage() {
     return (<div className="page-container animate-fade-in-up"><Button variant="ghost" size="sm" onClick={() => navigate("/evenementen")}><ArrowLeft className="h-4 w-4 mr-1" /> Terug</Button><p className="mt-6 text-muted-foreground">Evenement niet gevonden.</p></div>);
   }
 
-  const school = event.school_id ? scholen.find((s) => s.id === event.school_id) : null;
-  const linkedPrograms = opleidingen.filter((p) => selectedProgramIds.includes(p.id)).map((p) => ({ ...p, school: scholen.find((s) => s.id === p.school_id) }));
+  const school = event.organisator_id ? scholen.find((s) => s.id === event.organisator_id) : null;
+  const linkedPrograms = opleidingen.filter((p) => selectedProgramIds.includes(p.id)).map((p) => ({ ...p, school: scholen.find((s) => s.id === p.organisatie_id) }));
   const toggleProgram = (programId: string) => setSelectedProgramIds((prev) => prev.includes(programId) ? prev.filter((id) => id !== programId) : [...prev, programId]);
 
   const handleSave = async () => {
@@ -108,7 +108,7 @@ export default function EventDetailPage() {
             <Field label="Naam" value={form.name} editing={editing} onChange={(v) => update({ name: v })} />
             <div><Label className="text-xs text-muted-foreground">Type</Label>{editing ? <Select value={form.type} onValueChange={(v) => update({ type: v as EventType })}><SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="jobbeurs">Jobbeurs</SelectItem><SelectItem value="campus presentatie">Campus presentatie</SelectItem><SelectItem value="workshop">Workshop</SelectItem><SelectItem value="hackathon">Hackathon</SelectItem><SelectItem value="andere">Andere</SelectItem></SelectContent></Select> : <p className="text-sm capitalize">{form.type}</p>}</div>
             <div><Label className="text-xs text-muted-foreground">Status</Label>{editing ? <Select value={form.status} onValueChange={(v) => update({ status: v as EventStatus })}><SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="gepland">Gepland</SelectItem><SelectItem value="bevestigd">Bevestigd</SelectItem><SelectItem value="afgelopen">Afgelopen</SelectItem><SelectItem value="geannuleerd">Geannuleerd</SelectItem></SelectContent></Select> : <StatusBadge status={form.status} />}</div>
-            <div><Label className="text-xs text-muted-foreground">School</Label>{editing ? <Select value={form.school_id ?? ""} onValueChange={(v) => update({ school_id: v || null })}><SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent>{scholen.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select> : <p className="text-sm">{school?.name ?? "Multi-school"}</p>}</div>
+            <div><Label className="text-xs text-muted-foreground">School</Label>{editing ? <Select value={form.organisator_id ?? ""} onValueChange={(v) => update({ organisator_id: v || null })}><SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent>{scholen.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select> : <p className="text-sm">{school?.name ?? "Multi-school"}</p>}</div>
             <Field label="Locatie" value={form.location} editing={editing} onChange={(v) => update({ location: v })} icon={<MapPin className="h-3.5 w-3.5" />} />
             <Field label="Budget (€)" value={form.budget?.toString() ?? ""} editing={editing} onChange={(v) => update({ budget: v ? Number(v) : null })} type="number" />
           </div>
@@ -205,7 +205,7 @@ export default function EventDetailPage() {
         </TabsContent>
       </Tabs>
 
-      <TaskFormDialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen} defaultEventId={event.id} defaultSchoolId={event.school_id} />
+      <TaskFormDialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen} defaultEventId={event.id} defaultSchoolId={event.organisator_id} />
     </div>
   );
 }

@@ -78,7 +78,7 @@ export default function ScholenPage() {
 
   const filtered = useMemo(() => {
     return scholen.filter((s) => {
-      const schoolContacts = contacten.filter(c => c.school_id === s.id);
+      const schoolContacts = contacten.filter(c => c.organisatie_id === s.id);
       const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) ||
         s.city.toLowerCase().includes(search.toLowerCase()) ||
         schoolContacts.some(c => c.name.toLowerCase().includes(search.toLowerCase()));
@@ -100,7 +100,7 @@ export default function ScholenPage() {
 
   const contactMap = useMemo(() => {
     const map = new Map<string, typeof contacten[0]>();
-    contacten.forEach((c) => { if (c.school_id && !map.has(c.school_id)) map.set(c.school_id, c); });
+    contacten.forEach((c) => { if (c.organisatie_id && !map.has(c.organisatie_id)) map.set(c.organisatie_id, c); });
     return map;
   }, [contacten]);
 

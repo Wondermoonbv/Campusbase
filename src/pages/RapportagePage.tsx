@@ -76,7 +76,7 @@ export default function RapportagePage() {
 
   const totalEvents = filteredEvents.length;
   const totalBudget = filteredEvents.reduce((s, e) => s + (e.budget ?? 0), 0);
-  const activeSchoolIds = new Set(filteredEvents.map((e) => e.school_id).filter(Boolean));
+  const activeSchoolIds = new Set(filteredEvents.map((e) => e.organisator_id).filter(Boolean));
 
   const eventsTimeline = useMemo(() => {
     const groups: Record<string, number> = {};
@@ -85,9 +85,9 @@ export default function RapportagePage() {
   }, [filteredEvents, eventGrouping]);
 
   const eventsByType = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { c[e.type] = (c[e.type] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })); }, [filteredEvents]);
-  const eventsBySchool = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { const name = e.school_id ? (scholen.find((s) => s.id === e.school_id)?.name ?? "Onbekend") : "Multi-school"; c[name] = (c[name] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents, scholen]);
+  const eventsBySchool = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { const name = e.organisator_id ? (scholen.find((s) => s.id === e.organisator_id)?.name ?? "Onbekend") : "Multi-school"; c[name] = (c[name] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents, scholen]);
   const budgetByType = useMemo(() => { const s: Record<string, number> = {}; filteredEvents.forEach((e) => { s[e.type] = (s[e.type] || 0) + (e.budget ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredEvents]);
-  const budgetBySchool = useMemo(() => { const s: Record<string, number> = {}; filteredEvents.forEach((e) => { const name = e.school_id ? (scholen.find((sc) => sc.id === e.school_id)?.name ?? "Onbekend") : "Multi-school"; s[name] = (s[name] || 0) + (e.budget ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents, scholen]);
+  const budgetBySchool = useMemo(() => { const s: Record<string, number> = {}; filteredEvents.forEach((e) => { const name = e.organisator_id ? (scholen.find((sc) => sc.id === e.organisator_id)?.name ?? "Onbekend") : "Multi-school"; s[name] = (s[name] || 0) + (e.budget ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents, scholen]);
   const contractsByType = useMemo(() => { const s: Record<string, number> = {}; filteredContracts.forEach((c) => { s[c.contract_type] = (s[c.contract_type] || 0) + (c.value ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredContracts]);
   const totalContractValue = filteredContracts.filter((c) => c.status === "actief").reduce((s, c) => s + (c.value ?? 0), 0);
 
@@ -140,7 +140,7 @@ export default function RapportagePage() {
         <div className="surface-card p-4 sm:p-5 lg:col-span-2">
           <h2 className="text-sm sm:text-base font-semibold mb-4">Contracten die vervallen in deze periode ({expiringContracts.length})</h2>
           {expiringContracts.length === 0 ? <p className="text-sm text-muted-foreground">Geen contracten vervallen in de geselecteerde periode.</p> : (
-            <div className="divide-y divide-border">{expiringContracts.map((c) => { const school = scholen.find((s) => s.id === c.school_id); return (<div key={c.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1"><div><p className="text-sm font-medium">{school?.name} — <span className="capitalize">{c.contract_type}</span></p><p className="text-xs text-muted-foreground">Vervalt: {new Date(c.end_date).toLocaleDateString("nl-BE")} · Waarde: {c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</p></div></div>); })}</div>
+            <div className="divide-y divide-border">{expiringContracts.map((c) => { const school = scholen.find((s) => s.id === c.organisatie_id); return (<div key={c.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1"><div><p className="text-sm font-medium">{school?.name} — <span className="capitalize">{c.contract_type}</span></p><p className="text-xs text-muted-foreground">Vervalt: {new Date(c.end_date).toLocaleDateString("nl-BE")} · Waarde: {c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</p></div></div>); })}</div>
           )}
         </div>
       </div>

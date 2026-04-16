@@ -73,18 +73,18 @@ export default function AmbassadeurPortaalPage() {
 
       const { data: evts, error: evtErr } = await supabase
         .from("evenementen")
-        .select("id, name, date, location, school_id, max_ambassadeurs, start_time, end_time, opbouw_tijd, contactpersoon_stand, description")
+        .select("id, name, date, location, organisator_id, max_ambassadeurs, start_time, end_time, opbouw_tijd, contactpersoon_stand, description")
         .gte("date", today)
         .neq("status", "geannuleerd")
         .order("date", { ascending: true });
 
       if (evtErr) throw evtErr;
 
-      const schoolIds = [...new Set((evts || []).map(e => e.school_id).filter(Boolean))] as string[];
+      const schoolIds = [...new Set((evts || []).map(e => e.organisator_id).filter(Boolean))] as string[];
       let schoolMap: Record<string, string> = {};
       if (schoolIds.length > 0) {
         const { data: schools } = await supabase
-          .from("scholen")
+          .from("organisaties")
           .select("id, name")
           .in("id", schoolIds);
         schoolMap = Object.fromEntries((schools || []).map(s => [s.id, s.name]));
@@ -113,7 +113,7 @@ export default function AmbassadeurPortaalPage() {
           name: e.name,
           date: e.date,
           location: e.location || "",
-          school_name: e.school_id ? schoolMap[e.school_id] || null : null,
+          school_name: e.organisator_id ? schoolMap[e.organisator_id] || null : null,
           max_ambassadeurs: e.max_ambassadeurs,
           signup_count: signupCount,
           my_status: mySignup?.status || null,

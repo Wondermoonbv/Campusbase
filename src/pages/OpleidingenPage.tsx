@@ -88,7 +88,7 @@ export default function OpleidingenPage() {
   const enriched = useMemo(() => {
     return opleidingen.map((p) => ({
       ...p,
-      school: scholen.find((s) => s.id === p.school_id),
+      school: scholen.find((s) => s.id === p.organisatie_id),
       linkedEvents: eventOpleidingen
         .filter((ep) => ep.program_id === p.id)
         .map((ep) => evenementen.find((e) => e.id === ep.event_id))
@@ -99,7 +99,7 @@ export default function OpleidingenPage() {
   const filtered = useMemo(() => {
     return enriched.filter((p) => {
       const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || (p.school?.name ?? "").toLowerCase().includes(search.toLowerCase());
-      return matchSearch && (filterLevel === "all" || p.study_level === filterLevel) && (filterField === "all" || p.field_of_study === filterField) && (filterSchool === "all" || p.school_id === filterSchool);
+      return matchSearch && (filterLevel === "all" || p.study_level === filterLevel) && (filterField === "all" || p.field_of_study === filterField) && (filterSchool === "all" || p.organisatie_id === filterSchool);
     });
   }, [enriched, search, filterLevel, filterField, filterSchool]);
 
@@ -147,7 +147,7 @@ export default function OpleidingenPage() {
               <div key={p.id} className="surface-card overflow-hidden">
                 <div className="p-4 cursor-pointer active:scale-[0.99] transition-transform" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1"><p className="font-medium text-sm">{p.name}</p><Link to={`/scholen/${p.school_id}`} className="text-xs text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}</Link><p className="text-xs text-muted-foreground mt-0.5 capitalize">{p.study_level} · {p.field_of_study}</p></div>
+                    <div className="min-w-0 flex-1"><p className="font-medium text-sm">{p.name}</p><Link to={`/scholen/${p.organisatie_id}`} className="text-xs text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}</Link><p className="text-xs text-muted-foreground mt-0.5 capitalize">{p.study_level} · {p.field_of_study}</p></div>
                     <div className="flex items-center gap-1">
                       <span className="text-sm font-medium tabular-nums">{p.student_count ?? "—"}</span>
                       {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(p); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
@@ -178,7 +178,7 @@ export default function OpleidingenPage() {
                   <TableRow className="hover:bg-muted/30 cursor-pointer" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
                     <TableCell className="px-2">{p.linkedEvents.length > 0 && (expandedId === p.id ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />)}</TableCell>
                     <TableCell className="font-medium">{p.name}</TableCell>
-                    <TableCell><Link to={`/scholen/${p.school_id}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}</Link></TableCell>
+                    <TableCell><Link to={`/scholen/${p.organisatie_id}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}</Link></TableCell>
                     <TableCell className="hidden lg:table-cell">{p.faculty}</TableCell>
                     <TableCell className="capitalize">{p.study_level}</TableCell>
                     <TableCell className="hidden lg:table-cell">{p.field_of_study}</TableCell>
@@ -208,14 +208,14 @@ export default function OpleidingenPage() {
         title="Opleidingen importeren"
         columns={OPLEIDING_IMPORT_COLUMNS}
         templateFilename="opleidingen_template.xlsx"
-        duplicateCheck={{ keys: ["name", "school_name"], existingData: opleidingen.map((o) => ({ name: o.name, school_name: scholen.find((s) => s.id === o.school_id)?.name ?? "" })) }}
+        duplicateCheck={{ keys: ["name", "school_name"], existingData: opleidingen.map((o) => ({ name: o.name, school_name: scholen.find((s) => s.id === o.organisatie_id)?.name ?? "" })) }}
         onImport={async (rows) => {
           for (const row of rows) {
             const school = scholen.find((s) => s.name.toLowerCase() === row.school_name?.toLowerCase().trim());
             if (!school) continue;
             await upsertOpleiding.mutateAsync({
               name: row.name,
-              school_id: school.id,
+              organisatie_id: school.id,
               faculty: row.faculty || "",
               study_level: (row.study_level?.toLowerCase() || "bachelor") as any,
               field_of_study: row.field_of_study || "",
