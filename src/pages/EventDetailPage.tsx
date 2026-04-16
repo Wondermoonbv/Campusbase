@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { useScholen, useContacten } from "@/hooks/useScholen";
 import { useOpleidingen, useEventOpleidingen } from "@/hooks/useOpleidingen";
+import { useEventContactpersonen } from "@/hooks/useEventContactpersonen";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,14 +14,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap, CheckSquare, MessageSquare, UserCheck, Phone, Mail } from "lucide-react";
-import type { Event, Contact, StandType, StandSize, EventType, EventStatus } from "@/types/crm";
+import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap, CheckSquare, MessageSquare, UserCheck, Phone, Mail, AlertTriangle } from "lucide-react";
+import type { Event, Contact, StandType, StandSize, EventType, EventStatus, ContactpersoonRol } from "@/types/crm";
 import { toast } from "sonner";
 import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 import { EventFeedbackTab } from "@/components/events/EventFeedbackTab";
 import { EventFeedbackBanner } from "@/components/events/EventFeedbackBanner";
 import { EventAmbassadeursTab } from "@/components/events/EventAmbassadeursTab";
-import { REGIO_LABELS, TAAL_LABELS, DOELGROEP_LABELS, REGISTRATIE_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, followUpVariant } from "@/lib/event-labels";
+import { EventFormDialog } from "@/components/events/EventFormDialog";
+import { REGIO_LABELS, TAAL_LABELS, DOELGROEP_LABELS, REGISTRATIE_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, CONTACTPERSOON_ROL_LABELS, contactpersoonRolVariant, followUpVariant } from "@/lib/event-labels";
 
 export default function EventDetailPage() {
   const { id } = useParams();
@@ -31,10 +33,12 @@ export default function EventDetailPage() {
   const { contacten: allContacten } = useContacten();
   const { opleidingen } = useOpleidingen();
   const { eventOpleidingen, setEventPrograms } = useEventOpleidingen();
+  const { contactpersonen: eventContactpersonen, syncContactpersonen } = useEventContactpersonen(id);
 
   const event = evenementen.find((e) => e.id === id);
   const [editing, setEditing] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [eventFormOpen, setEventFormOpen] = useState(false);
   const [form, setForm] = useState<Event | null>(event ?? null);
 
   const initialProgramIds = useMemo(() => eventOpleidingen.filter((ep) => ep.event_id === id).map((ep) => ep.program_id), [id, eventOpleidingen]);
@@ -46,12 +50,6 @@ export default function EventDetailPage() {
     return Object.values(groups);
   }, [scholen, opleidingen]);
 
-  const orgContacten = useMemo(() => {
-    const orgId = form?.organisator_id;
-    if (!orgId) return [];
-    return allContacten.filter((c) => c.organisatie_id === orgId).sort((a, b) => a.name.localeCompare(b.name));
-  }, [allContacten, form?.organisator_id]);
-
   useMemo(() => { if (event && !form) setForm(event); }, [event]);
 
   if (!event || !form) {
@@ -59,10 +57,15 @@ export default function EventDetailPage() {
   }
 
   const organisator = event.organisator_id ? scholen.find((s) => s.id === event.organisator_id) : null;
-  const contactpersoon = (event as any).contactpersoon as Contact | null;
   const linkedPrograms = opleidingen.filter((p) => selectedProgramIds.includes(p.id)).map((p) => ({ ...p, school: scholen.find((s) => s.id === p.organisatie_id) }));
   const toggleProgram = (programId: string) => setSelectedProgramIds((prev) => prev.includes(programId) ? prev.filter((id) => id !== programId) : [...prev, programId]);
   const sortedOrgs = [...scholen].sort((a, b) => a.name.localeCompare(b.name));
+
+  const sortedContactpersonen = [...eventContactpersonen].sort((a, b) => {
+    if (a.rol === "event_ter_plaatse" && b.rol !== "event_ter_plaatse") return -1;
+    if (a.rol !== "event_ter_plaatse" && b.rol === "event_ter_plaatse") return 1;
+    return (a.contact?.name || "").localeCompare(b.contact?.name || "");
+  });
 
   const handleSave = async () => {
     try {
@@ -73,9 +76,17 @@ export default function EventDetailPage() {
     } catch { toast.error("Fout bij opslaan."); }
   };
 
-  const update = (patch: Partial<Event>) => setForm((prev) => prev ? { ...prev, ...patch } : prev);
+  const handleFormSave = async (saved: Event, cpEntries: { contact_id: string; rol: ContactpersoonRol }[]) => {
+    try {
+      const result = await upsertEvent.mutateAsync(saved);
+      const eventId = (result as any)?.data?.id || saved.id || id;
+      if (eventId && cpEntries.length > 0) {
+        await syncContactpersonen.mutateAsync({ eventId, items: cpEntries });
+      }
+    } catch { toast.error("Fout bij opslaan."); }
+  };
 
-  const hasContact = !!contactpersoon;
+  const update = (patch: Partial<Event>) => setForm((prev) => prev ? { ...prev, ...patch } : prev);
 
   return (
     <div className="page-container animate-fade-in-up max-w-4xl">
@@ -204,51 +215,52 @@ export default function EventDetailPage() {
           </div>
         </section>
 
-        {/* Contactpersoon event */}
-        {(editing || hasContact || (event.contactpersoon_id && !contactpersoon)) && (
-          <section className="surface-card p-4 sm:p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><Phone className="h-4 w-4" /> Contactpersoon event</h2>
-            {editing ? (
+        {/* Contactpersonen event */}
+        <section className="surface-card p-4 sm:p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><Phone className="h-4 w-4" /> Contactpersonen</h2>
+          {sortedContactpersonen.length === 0 ? (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
               <div>
-                <Select value={form.contactpersoon_id || ""} onValueChange={(v) => update({ contactpersoon_id: v === "none" ? null : (v || null) } as any)}>
-                  <SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Selecteer contactpersoon" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Geen contactpersoon</SelectItem>
-                    {orgContacten.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}{c.role ? ` — ${c.role}` : ""}{c.department ? ` (${c.department})` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <p className="text-sm text-amber-800">Dit event heeft nog geen contactpersonen. Voeg minstens een contact ter plaatse toe.</p>
+                {canEdit && (
+                  <Button variant="outline" size="sm" className="mt-2 h-8" onClick={() => setEventFormOpen(true)}>
+                    <Pencil className="h-3.5 w-3.5 mr-1" /> Event bewerken
+                  </Button>
+                )}
               </div>
-            ) : event.contactpersoon_id && !contactpersoon ? (
-              <p className="text-sm text-muted-foreground italic">Deze contactpersoon bestaat niet meer.</p>
-            ) : contactpersoon ? (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <Label className="text-xs text-muted-foreground">Naam</Label>
-                  <p className="text-sm mt-1">
-                    <Link to={`/contacten`} className="text-primary hover:underline">{contactpersoon.name}</Link>
-                    {contactpersoon.role && <span className="ml-1.5 text-xs text-muted-foreground">— {contactpersoon.role}</span>}
-                  </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {sortedContactpersonen.map((cp) => (
+                <div key={cp.id} className="flex items-start gap-3 p-3 rounded-lg border border-border">
+                  <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium shrink-0 mt-0.5 ${contactpersoonRolVariant(cp.rol)}`}>
+                    {CONTACTPERSOON_ROL_LABELS[cp.rol] || cp.rol}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">
+                      <Link to="/contacten" className="text-primary hover:underline">{cp.contact?.name || "Onbekend contact"}</Link>
+                      {cp.contact?.role && <span className="ml-1.5 text-xs text-muted-foreground">— {cp.contact.role}</span>}
+                      {cp.contact?.department && <span className="text-xs text-muted-foreground"> ({cp.contact.department})</span>}
+                    </p>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-muted-foreground">
+                      {cp.contact?.email && (
+                        <a href={`mailto:${cp.contact.email}`} className="text-primary hover:underline flex items-center gap-1">
+                          <Mail className="h-3 w-3" />{cp.contact.email}
+                        </a>
+                      )}
+                      {cp.contact?.phone && (
+                        <a href={`tel:${cp.contact.phone}`} className="text-primary hover:underline flex items-center gap-1">
+                          <Phone className="h-3 w-3" />{cp.contact.phone}
+                        </a>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                {contactpersoon.phone && (
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Telefoon</Label>
-                    <p className="text-sm mt-1"><a href={`tel:${contactpersoon.phone}`} className="text-primary hover:underline">{contactpersoon.phone}</a></p>
-                  </div>
-                )}
-                {contactpersoon.email && (
-                  <div>
-                    <Label className="text-xs text-muted-foreground">E-mail</Label>
-                    <p className="text-sm mt-1 flex items-center gap-1"><Mail className="h-3.5 w-3.5" /><a href={`mailto:${contactpersoon.email}`} className="text-primary hover:underline">{contactpersoon.email}</a></p>
-                  </div>
-                )}
-              </div>
-            ) : null}
-          </section>
-        )}
+              ))}
+            </div>
+          )}
+        </section>
 
         <section className="surface-card p-4 sm:p-5 space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><Clock className="h-4 w-4" /> Datum & Tijd</h2>
@@ -315,7 +327,6 @@ export default function EventDetailPage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Standgrootte" value={(form as any).stand_grootte || ""} editing={editing} onChange={(v) => update({ stand_grootte: v } as any)} />
-                <Field label="Contactpersoon stand" value={(form as any).contactpersoon_stand || ""} editing={editing} onChange={(v) => update({ contactpersoon_stand: v } as any)} />
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Stand notities</Label>
@@ -342,6 +353,7 @@ export default function EventDetailPage() {
       </Tabs>
 
       <TaskFormDialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen} defaultEventId={event.id} defaultSchoolId={event.organisator_id} />
+      <EventFormDialog open={eventFormOpen} onOpenChange={setEventFormOpen} event={event} onSave={handleFormSave} />
     </div>
   );
 }
