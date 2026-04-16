@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -81,7 +81,8 @@ function AppRoutes() {
   const { user, isAdmin, isStandenbouwer, loading } = useAuth();
   const { effectiveIsAdmin, effectiveIsStandenbouwer, effectiveCanEdit, isSimulating } = useViewAs();
   const [timedOut, setTimedOut] = useState(false);
-  const pathname = window.location.pathname;
+  const location = useLocation();
+  const pathname = location.pathname;
   const isPublicRoute = pathname.startsWith("/feedback/") || pathname.startsWith("/inschrijven/") || pathname.startsWith("/ambassadeur-portaal") || pathname === "/privacy";
 
   useEffect(() => {
