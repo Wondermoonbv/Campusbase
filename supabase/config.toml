@@ -1,1 +1,4 @@
 project_id = "ikurrflncrgwntpkmblg"
+
+[functions.public-event-rsvp]
+verify_jwt = false
