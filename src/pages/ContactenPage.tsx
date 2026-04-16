@@ -148,8 +148,8 @@ export default function ContactenPage() {
         <Select value={schoolFilter} onValueChange={setSchoolFilter}>
           <SelectTrigger className="w-full sm:w-[220px]"><SelectValue placeholder="Alle scholen" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Alle scholen</SelectItem>
-            <SelectItem value="__none__">Geen school</SelectItem>
+            <SelectItem value="all">Alle organisaties</SelectItem>
+            <SelectItem value="__none__">Geen organisatie</SelectItem>
             {scholen.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
           </SelectContent>
         </Select>
