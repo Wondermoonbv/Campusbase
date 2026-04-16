@@ -681,6 +681,27 @@ export default function GebruikersPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteOpen} onOpenChange={(v) => { if (!v) { setDeleteOpen(false); setDeleteUser(null); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Gebruiker verwijderen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Weet je zeker dat je <span className="font-medium text-foreground">{deleteUser?.name}</span> wil verwijderen? Deze actie deactiveert de gebruiker permanent. Hun activiteit in audit logs blijft bewaard.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteLoading}>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              disabled={deleteLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteLoading ? "Verwijderen..." : "Verwijderen"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
