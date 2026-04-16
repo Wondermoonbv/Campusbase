@@ -446,6 +446,16 @@ export default function GebruikersPage() {
                               </TooltipTrigger>
                               <TooltipContent>Wachtwoord resetten</TooltipContent>
                             </Tooltip>
+                            {u.id !== currentUser?.id && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openDeleteDialog(u)}>
+                                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Verwijderen</TooltipContent>
+                              </Tooltip>
+                            )}
                           </div>
                         </TableCell>
                       )}
