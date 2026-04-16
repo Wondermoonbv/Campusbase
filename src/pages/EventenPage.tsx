@@ -3,6 +3,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEvenementen } from "@/hooks/useEvenementen";
+import { useEventContactpersonen } from "@/hooks/useEventContactpersonen";
 import { useOpleidingen, useEventOpleidingen } from "@/hooks/useOpleidingen";
 import { writeAuditLog } from "@/lib/audit";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -17,7 +18,7 @@ import { EventFormDialog } from "@/components/events/EventFormDialog";
 import { EventCalendar } from "@/components/events/EventCalendar";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
 import { FIELDS_OF_STUDY } from "@/types/crm";
-import type { Event } from "@/types/crm";
+import type { Event, ContactpersoonRol } from "@/types/crm";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
@@ -53,6 +54,7 @@ export default function EventenPage() {
   const [searchParams] = useSearchParams();
   const initialPeriod = searchParams.get("period") ?? "all";
   const { evenementen, isLoading, upsertEvent, deleteEvent } = useEvenementen();
+  const { syncContactpersonen } = useEventContactpersonen();
   const { opleidingen } = useOpleidingen();
   const { eventOpleidingen } = useEventOpleidingen();
   const [search, setSearch] = useState("");
@@ -74,9 +76,15 @@ export default function EventenPage() {
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
 
-  const handleSave = useCallback(async (saved: Event) => {
-    try { await upsertEvent.mutateAsync(saved); } catch { toast.error("Fout bij opslaan."); }
-  }, [upsertEvent]);
+  const handleSave = useCallback(async (saved: Event, cpEntries?: { contact_id: string; rol: ContactpersoonRol }[]) => {
+    try {
+      const result = await upsertEvent.mutateAsync(saved);
+      const eventId = (result as any)?.data?.id || saved.id;
+      if (eventId && cpEntries && cpEntries.length > 0) {
+        await syncContactpersonen.mutateAsync({ eventId, items: cpEntries });
+      }
+    } catch { toast.error("Fout bij opslaan."); }
+  }, [upsertEvent, syncContactpersonen]);
 
   const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useScholen, useContacten } from "@/hooks/useScholen";
+import { useEventContactpersonen } from "@/hooks/useEventContactpersonen";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,29 +8,40 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
-import { REGIO_LABELS, TAAL_LABELS, DOELGROEP_LABELS, REGISTRATIE_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS } from "@/lib/event-labels";
-import type { Event } from "@/types/crm";
+import { REGIO_LABELS, TAAL_LABELS, DOELGROEP_LABELS, REGISTRATIE_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, CONTACTPERSOON_ROL_LABELS } from "@/lib/event-labels";
+import type { Event, ContactpersoonRol } from "@/types/crm";
+import { Trash2, Plus, AlertTriangle } from "lucide-react";
 
-interface EventFormDialogProps { open: boolean; onOpenChange: (v: boolean) => void; event?: Event; onSave?: (event: Event) => void; }
+interface ContactpersoonEntry {
+  contact_id: string;
+  rol: ContactpersoonRol;
+}
+
+interface EventFormDialogProps { open: boolean; onOpenChange: (v: boolean) => void; event?: Event; onSave?: (event: Event, contactpersonen: ContactpersoonEntry[]) => void; }
 
 export function EventFormDialog({ open, onOpenChange, event, onSave }: EventFormDialogProps) {
   const isEdit = !!event;
   const { scholen } = useScholen();
   const { contacten: allContacten } = useContacten();
+  const { contactpersonen: existingCP } = useEventContactpersonen(event?.id);
+  const [confirmOrgChange, setConfirmOrgChange] = useState<string | null>(null);
+
   const [form, setForm] = useState({
     name: "", type: "jobbeurs" as string, date: "", start_time: "", end_time: "",
     location: "", organisator_id: "", responsible: "", elia_contact: "", team_members: "",
     description: "", stand_type: "jobbeurs stand" as string, stand_size: "medium 4m²" as string,
     budget: "", status: "gepland" as string, setup_date: "", setup_time: "", notes: "",
     standenbouwer_nodig: false, opbouw_tijd: "", afbraak_tijd: "", stand_grootte: "",
-    contactpersoon_stand: "", stand_notities: "", max_ambassadeurs: "",
+    stand_notities: "", max_ambassadeurs: "",
     regio: "" as string, taal: "" as string, doelgroep_niveau: "" as string,
     registratie_type: "" as string, follow_up_status: "to_do" as string,
-    contactpersoon_id: "" as string,
   });
+
+  const [cpEntries, setCpEntries] = useState<ContactpersoonEntry[]>([]);
 
   useEffect(() => {
     if (open) {
@@ -50,15 +62,15 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           opbouw_tijd: (event as any).opbouw_tijd || "",
           afbraak_tijd: (event as any).afbraak_tijd || "",
           stand_grootte: (event as any).stand_grootte || "",
-          contactpersoon_stand: (event as any).contactpersoon_stand || "",
           stand_notities: (event as any).stand_notities || "",
           max_ambassadeurs: (event as any).max_ambassadeurs?.toString() || "",
           regio: event.regio || "", taal: event.taal || "",
           doelgroep_niveau: event.doelgroep_niveau || "",
           registratie_type: event.registratie_type || "",
           follow_up_status: event.follow_up_status || "to_do",
-          contactpersoon_id: event.contactpersoon_id || "",
         });
+        // Load existing contactpersonen
+        setCpEntries(existingCP.map((cp) => ({ contact_id: cp.contact_id, rol: cp.rol })));
       } else {
         setForm({
           name: "", type: "jobbeurs", date: "", start_time: "", end_time: "",
@@ -66,28 +78,35 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           team_members: "", description: "", stand_type: "jobbeurs stand",
           stand_size: "medium 4m²", budget: "", status: "gepland", setup_date: "",
           setup_time: "", notes: "", standenbouwer_nodig: false, opbouw_tijd: "",
-          afbraak_tijd: "", stand_grootte: "", contactpersoon_stand: "",
+          afbraak_tijd: "", stand_grootte: "",
           stand_notities: "", max_ambassadeurs: "",
           regio: "", taal: "", doelgroep_niveau: "", registratie_type: "",
-          follow_up_status: "to_do", contactpersoon_id: "",
+          follow_up_status: "to_do",
         });
+        setCpEntries([]);
       }
     }
-  }, [open, event]);
+  }, [open, event, existingCP]);
 
-  // Reset contactpersoon when organisator changes
   const handleOrganisatorChange = (v: string) => {
     const oldOrg = form.organisator_id;
     const newOrg = v;
-    if (oldOrg && oldOrg !== newOrg && form.contactpersoon_id) {
-      toast.info("Contactpersoon gereset omdat organisator gewijzigd is.");
-      setForm({ ...form, organisator_id: newOrg, contactpersoon_id: "" });
+    if (oldOrg && oldOrg !== newOrg && cpEntries.length > 0) {
+      setConfirmOrgChange(newOrg);
     } else {
       setForm({ ...form, organisator_id: newOrg });
     }
   };
 
-  // Filter contacts for current organisator
+  const confirmOrgSwitch = () => {
+    if (confirmOrgChange) {
+      setForm({ ...form, organisator_id: confirmOrgChange });
+      setCpEntries([]);
+      toast.info("Contactpersonen gereset omdat organisator gewijzigd is.");
+      setConfirmOrgChange(null);
+    }
+  };
+
   const orgContacten = useMemo(() => {
     const orgId = form.organisator_id && form.organisator_id !== "none" ? form.organisator_id : null;
     if (!orgId) return [];
@@ -98,8 +117,26 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
 
   const hasOrganisator = !!form.organisator_id && form.organisator_id !== "none";
 
+  const hasEventTerPlaatse = cpEntries.some((e) => e.rol === "event_ter_plaatse");
+
+  const hasDuplicates = cpEntries.some((e, i) =>
+    cpEntries.findIndex((o) => o.contact_id === e.contact_id && o.rol === e.rol) !== i
+  );
+
+  const cpValid = hasEventTerPlaatse && !hasDuplicates && cpEntries.every((e) => e.contact_id);
+
+  const addCpEntry = () => setCpEntries([...cpEntries, { contact_id: "", rol: "event_ter_plaatse" }]);
+  const removeCpEntry = (idx: number) => setCpEntries(cpEntries.filter((_, i) => i !== idx));
+  const updateCpEntry = (idx: number, patch: Partial<ContactpersoonEntry>) => {
+    setCpEntries(cpEntries.map((e, i) => i === idx ? { ...e, ...patch } : e));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!cpValid) {
+      toast.error("Voeg minstens één contact ter plaatse toe.");
+      return;
+    }
     const sanitized = sanitizeFormData(form);
     const saved: Event = {
       ...(event?.id ? { id: event.id } : {}),
@@ -119,7 +156,6 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       standenbouwer_nodig: sanitized.standenbouwer_nodig,
       opbouw_tijd: sanitized.opbouw_tijd, afbraak_tijd: sanitized.afbraak_tijd,
       stand_grootte: sanitized.stand_grootte,
-      contactpersoon_stand: sanitized.contactpersoon_stand,
       stand_notities: sanitized.stand_notities,
       max_ambassadeurs: sanitized.max_ambassadeurs ? Number(sanitized.max_ambassadeurs) : null,
       regio: sanitized.regio || null,
@@ -127,9 +163,8 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       doelgroep_niveau: sanitized.doelgroep_niveau || null,
       registratie_type: sanitized.registratie_type || null,
       follow_up_status: sanitized.follow_up_status || "to_do",
-      contactpersoon_id: sanitized.contactpersoon_id || null,
     } as Event;
-    onSave?.(saved);
+    onSave?.(saved, cpEntries.filter((e) => e.contact_id));
     toast.success(isEdit ? "Evenement bijgewerkt." : "Evenement toegevoegd.");
     onOpenChange(false);
   };
@@ -137,6 +172,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
   const sortedOrgs = [...scholen].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{isEdit ? "Evenement bewerken" : "Nieuw evenement"}</DialogTitle></DialogHeader>
@@ -207,37 +243,71 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
             </div>
           </div>
 
-          {/* Contactpersoon event */}
+          {/* Contactpersonen */}
           <div className="border-t border-border pt-4 space-y-3">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contactpersoon bij organisator</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contactpersonen</h3>
             <p className="text-xs text-muted-foreground -mt-1">
               {hasOrganisator
-                ? "Kies een bestaande contactpersoon van deze organisator (optioneel)"
+                ? "Voeg minstens één contact ter plaatse toe"
                 : "Kies eerst een organisator"}
             </p>
-            <Select
-              value={form.contactpersoon_id}
-              onValueChange={(v) => setForm({ ...form, contactpersoon_id: v })}
-              disabled={!hasOrganisator}
-            >
-              <SelectTrigger className={!hasOrganisator ? "opacity-50" : ""}>
-                <SelectValue placeholder={hasOrganisator ? "Selecteer contactpersoon" : "Kies eerst een organisator"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Geen contactpersoon</SelectItem>
-                {orgContacten.length === 0 && hasOrganisator ? (
-                  <div className="px-3 py-2 text-xs text-muted-foreground">
-                    Geen contactpersonen bekend voor deze organisator. Voeg eerst een contact toe via de organisatie-detailpagina.
+
+            {hasOrganisator && (
+              <>
+                {cpEntries.map((entry, idx) => (
+                  <div key={idx} className="flex gap-2 items-start">
+                    <div className="flex-1">
+                      <Select value={entry.contact_id} onValueChange={(v) => updateCpEntry(idx, { contact_id: v })}>
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Selecteer contact" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {orgContacten.length === 0 ? (
+                            <div className="px-3 py-2 text-xs text-muted-foreground">
+                              Geen contactpersonen bekend. Voeg eerst een contact toe via de organisatie-detailpagina.
+                            </div>
+                          ) : (
+                            orgContacten.map((c) => (
+                              <SelectItem key={c.id} value={c.id}>
+                                {c.name}{c.role ? ` — ${c.role}` : ""}{c.department ? ` (${c.department})` : ""}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="w-[160px]">
+                      <Select value={entry.rol} onValueChange={(v) => updateCpEntry(idx, { rol: v as ContactpersoonRol })}>
+                        <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(CONTACTPERSOON_ROL_LABELS).map(([k, v]) => (
+                            <SelectItem key={k} value={k}>{v}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button type="button" variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => removeCpEntry(idx)}>
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    </Button>
                   </div>
-                ) : (
-                  orgContacten.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}{c.role ? ` — ${c.role}` : ""}{c.department ? ` (${c.department})` : ""}
-                    </SelectItem>
-                  ))
+                ))}
+
+                <Button type="button" variant="outline" size="sm" onClick={addCpEntry} disabled={orgContacten.length === 0}>
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Contactpersoon toevoegen
+                </Button>
+
+                {hasDuplicates && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertTriangle className="h-3.5 w-3.5" /> Dezelfde contactpersoon met dezelfde rol kan niet twee keer worden toegevoegd.
+                  </p>
                 )}
-              </SelectContent>
-            </Select>
+                {!hasEventTerPlaatse && cpEntries.length > 0 && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertTriangle className="h-3.5 w-3.5" /> Minstens één contact ter plaatse is vereist.
+                  </p>
+                )}
+              </>
+            )}
           </div>
 
           {/* Stand info */}
@@ -271,9 +341,8 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
                   <div><Label>Opbouwtijd</Label><Input placeholder="bijv. 08:00" value={form.opbouw_tijd} onChange={(e) => setForm({ ...form, opbouw_tijd: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
                   <div><Label>Afbraaktijd</Label><Input placeholder="bijv. 18:00" value={form.afbraak_tijd} onChange={(e) => setForm({ ...form, afbraak_tijd: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
                   <div><Label>Standgrootte</Label><Input placeholder="bijv. 3x3m" value={form.stand_grootte} onChange={(e) => setForm({ ...form, stand_grootte: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
-                  <div><Label>Contactpersoon stand</Label><Input value={form.contactpersoon_stand} onChange={(e) => setForm({ ...form, contactpersoon_stand: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
                 </div>
                 <div>
                   <div className="flex items-center justify-between"><Label>Stand notities</Label><CharacterCounter current={form.stand_notities.length} max={MAX_LENGTHS.notes} /></div>
@@ -283,9 +352,30 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
             )}
           </div>
 
-          <Button type="submit" className="w-full">{isEdit ? "Opslaan" : "Toevoegen"}</Button>
+          <Button type="submit" className="w-full" disabled={!cpValid && cpEntries.length > 0}>
+            {isEdit ? "Opslaan" : "Toevoegen"}
+          </Button>
+          {!cpValid && cpEntries.length > 0 && (
+            <p className="text-xs text-destructive text-center">Minstens één contact ter plaatse is vereist om op te slaan.</p>
+          )}
         </form>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={!!confirmOrgChange} onOpenChange={(v) => { if (!v) setConfirmOrgChange(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Organisator wijzigen?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Organisator wijzigen verwijdert de gekoppelde contactpersonen (die horen bij de vorige organisator). Doorgaan?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Annuleren</AlertDialogCancel>
+          <AlertDialogAction onClick={confirmOrgSwitch}>Doorgaan</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

@@ -71,6 +71,7 @@ export type Taal = 'nl' | 'fr' | 'en' | 'meertalig';
 export type DoelgroepNiveau = 'bachelor' | 'master' | 'beide' | 'graduaat';
 export type RegistratieType = 'partnership' | 'ad_hoc';
 export type FollowUpStatus = 'to_do' | 'in_orde' | 'nvt';
+export type ContactpersoonRol = 'event_ter_plaatse' | 'administratief' | 'anders';
 
 export interface Event {
   id: string;
@@ -97,14 +98,22 @@ export interface Event {
    regio?: Regio | null;
    taal?: Taal | null;
    doelgroep_niveau?: DoelgroepNiveau | null;
-   contactpersoon_id?: string | null;
    registratie_type?: RegistratieType | null;
    follow_up_status?: FollowUpStatus;
  }
 
- export interface EventWithContactpersoon extends Event {
-   contactpersoon?: Contact | null;
- }
+export interface EventContactpersoon {
+  id: string;
+  event_id: string;
+  contact_id: string;
+  rol: ContactpersoonRol;
+  notities: string;
+  created_at: string;
+}
+
+export interface EventContactpersoonMetContact extends EventContactpersoon {
+  contact: Contact;
+}
 
 export interface EventProgram {
   event_id: string;

@@ -44,6 +44,21 @@ export const ORGANISATIE_TYPE_LABELS: Record<string, string> = {
   andere: "Andere",
 };
 
+export const CONTACTPERSOON_ROL_LABELS: Record<string, string> = {
+  event_ter_plaatse: "Contact ter plaatse",
+  administratief: "Administratief",
+  anders: "Anders",
+};
+
+export function contactpersoonRolVariant(rol: string): string {
+  switch (rol) {
+    case "event_ter_plaatse": return "bg-primary/10 text-primary border-primary/20";
+    case "administratief": return "bg-blue-100 text-blue-800 border-blue-200";
+    case "anders": return "bg-gray-100 text-gray-600 border-gray-200";
+    default: return "bg-gray-100 text-gray-500 border-gray-200";
+  }
+}
+
 export function followUpColor(status: string | null | undefined): "default" | "secondary" | "destructive" | "outline" {
   switch (status) {
     case "to_do": return "destructive";

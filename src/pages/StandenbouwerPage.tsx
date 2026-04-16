@@ -10,7 +10,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  LogOut, MapPin, Clock, Ruler, User, StickyNote, CalendarDays,
+  LogOut, MapPin, Clock, Ruler, StickyNote, CalendarDays,
   ListTodo, ArrowUp, Minus, AlertTriangle,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -26,7 +26,6 @@ interface StandEvent {
   opbouw_tijd: string | null;
   afbraak_tijd: string | null;
   stand_grootte: string | null;
-  contactpersoon_stand: string | null;
   stand_notities: string | null;
 }
 
@@ -64,7 +63,7 @@ export default function StandenbouwerPage() {
     async function load() {
       const { data, error } = await supabase
         .from("evenementen")
-        .select("id, name, date, location, opbouw_tijd, afbraak_tijd, stand_grootte, contactpersoon_stand, stand_notities")
+        .select("id, name, date, location, opbouw_tijd, afbraak_tijd, stand_grootte, stand_notities")
         .eq("standenbouwer_nodig", true)
         .order("date", { ascending: true });
       if (!error && data) setEvents(data as StandEvent[]);
@@ -162,7 +161,6 @@ export default function StandenbouwerPage() {
                           <Detail icon={Clock} label="Opbouwtijd" value={ev.opbouw_tijd} />
                           <Detail icon={Clock} label="Afbraaktijd" value={ev.afbraak_tijd} />
                           <Detail icon={Ruler} label="Standgrootte" value={ev.stand_grootte} />
-                          <Detail icon={User} label="Contactpersoon" value={ev.contactpersoon_stand} />
                         </div>
                         {ev.stand_notities && (
                           <div className="flex gap-2 mt-1 pt-2 border-t border-border">
