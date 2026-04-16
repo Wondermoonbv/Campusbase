@@ -261,7 +261,6 @@ export default function EventenPage() {
               start_time: row.start_time || "",
               end_time: row.end_time || "",
               location: row.location || "",
-              responsible: row.responsible || "",
               budget: row.budget ? Number(row.budget) : null,
               status: (row.status?.toLowerCase() || "gepland") as any,
               description: row.description || "",

@@ -343,7 +343,7 @@ export default function AmbassadeurPortaalPage() {
   const downloadIcs = (ev: PortalEvent) => {
     const descParts: string[] = [];
     if (ev.school_name) descParts.push(`School: ${ev.school_name}`);
-    if (ev.opbouw_tijd) descParts.push(`Opbouwtijd: ${ev.opbouw_tijd}`);
+    if (ev.setup_time) descParts.push(`Opbouwtijd: ${ev.setup_time}`);
     if (ev.contactpersoon) descParts.push(`Contactpersoon: ${ev.contactpersoon}`);
     if (ev.description) descParts.push(ev.description);
 
@@ -521,9 +521,9 @@ export default function AmbassadeurPortaalPage() {
                               <School className="h-3.5 w-3.5 shrink-0" />{ev.school_name}
                             </span>
                           )}
-                          {ev.opbouw_tijd && (
+                          {ev.setup_time && (
                             <span className="flex items-center gap-1.5">
-                              <Clock className="h-3.5 w-3.5 shrink-0" />Opbouw: {ev.opbouw_tijd}
+                              <Clock className="h-3.5 w-3.5 shrink-0" />Opbouw: {ev.setup_time}
                             </span>
                           )}
                           {ev.contactpersoon && (

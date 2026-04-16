@@ -22,8 +22,8 @@ export const mockContracts: Contract[] = [
 ];
 
 export const mockEvents: Event[] = [
-  { id: "1", name: "Career Day KU Leuven", type: "jobbeurs", date: "2026-04-10", start_time: "09:00", end_time: "16:00", setup_date: "2026-04-09", setup_time: "14:00", location: "Aula KU Leuven", organisator_id: "1", responsible: "Ellen Geerts", team_members: ["Naomi Geyskens", "Matthias Peeters"], elia_contact: "Ellen Geerts", budget: 3500, status: "bevestigd", description: "Jaarlijkse jobbeurs met focus op engineering en IT studenten.", stand_type: "jobbeurs stand", stand_size: "groot 6m²+", notes: "" },
-  { id: "2", name: "Campus Presentatie HOGENT", type: "campus presentatie", date: "2026-05-05", start_time: "11:00", end_time: "13:00", setup_date: "2026-05-05", setup_time: "09:30", location: "HOGENT Campus Schoonmeersen", organisator_id: "2", responsible: "Naomi Geyskens", team_members: ["Eline ten Cate"], elia_contact: "Naomi Geyskens", budget: 800, status: "gepland", description: "Presentatie over carrièremogelijkheden bij Elia.", stand_type: "presentatie", stand_size: "klein 2m²", notes: "" },
+  { id: "1", name: "Career Day KU Leuven", type: "jobbeurs", date: "2026-04-10", start_time: "09:00", end_time: "16:00", setup_date: "2026-04-09", setup_time: "14:00", location: "Aula KU Leuven", organisator_id: "1", team_members: ["Naomi Geyskens", "Matthias Peeters"], elia_contact: "Ellen Geerts", budget: 3500, status: "bevestigd", description: "Jaarlijkse jobbeurs met focus op engineering en IT studenten.", stand_type: "jobbeurs stand", booth_size: "groot 6m²+", notes: "" },
+  { id: "2", name: "Campus Presentatie HOGENT", type: "campus presentatie", date: "2026-05-05", start_time: "11:00", end_time: "13:00", setup_date: "2026-05-05", setup_time: "09:30", location: "HOGENT Campus Schoonmeersen", organisator_id: "2", team_members: ["Eline ten Cate"], elia_contact: "Naomi Geyskens", budget: 800, status: "gepland", description: "Presentatie over carrièremogelijkheden bij Elia.", stand_type: "presentatie", booth_size: "klein 2m²", notes: "" },
 ];
 
 export const mockEventPrograms: EventProgram[] = [
