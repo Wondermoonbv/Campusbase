@@ -54,6 +54,7 @@ export default function EventenPage() {
   const [searchParams] = useSearchParams();
   const initialPeriod = searchParams.get("period") ?? "all";
   const { evenementen, isLoading, upsertEvent, deleteEvent } = useEvenementen();
+  const { syncContactpersonen } = useEventContactpersonen();
   const { opleidingen } = useOpleidingen();
   const { eventOpleidingen } = useEventOpleidingen();
   const [search, setSearch] = useState("");
@@ -75,9 +76,15 @@ export default function EventenPage() {
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
 
-  const handleSave = useCallback(async (saved: Event) => {
-    try { await upsertEvent.mutateAsync(saved); } catch { toast.error("Fout bij opslaan."); }
-  }, [upsertEvent]);
+  const handleSave = useCallback(async (saved: Event, cpEntries?: { contact_id: string; rol: ContactpersoonRol }[]) => {
+    try {
+      const result = await upsertEvent.mutateAsync(saved);
+      const eventId = (result as any)?.data?.id || saved.id;
+      if (eventId && cpEntries && cpEntries.length > 0) {
+        await syncContactpersonen.mutateAsync({ eventId, items: cpEntries });
+      }
+    } catch { toast.error("Fout bij opslaan."); }
+  }, [upsertEvent, syncContactpersonen]);
 
   const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;
