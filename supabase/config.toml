@@ -2,3 +2,9 @@ project_id = "ikurrflncrgwntpkmblg"
 
 [functions.public-event-rsvp]
 verify_jwt = false
+
+[functions.admin-invite-user]
+verify_jwt = true
+
+[functions.admin-reset-password]
+verify_jwt = true
