@@ -344,7 +344,7 @@ export default function AmbassadeurPortaalPage() {
     const descParts: string[] = [];
     if (ev.school_name) descParts.push(`School: ${ev.school_name}`);
     if (ev.opbouw_tijd) descParts.push(`Opbouwtijd: ${ev.opbouw_tijd}`);
-    if (ev.contactpersoon_stand) descParts.push(`Contactpersoon: ${ev.contactpersoon_stand}`);
+    if (ev.contactpersoon) descParts.push(`Contactpersoon: ${ev.contactpersoon}`);
     if (ev.description) descParts.push(ev.description);
 
     const ics = generateICS({
@@ -526,9 +526,9 @@ export default function AmbassadeurPortaalPage() {
                               <Clock className="h-3.5 w-3.5 shrink-0" />Opbouw: {ev.opbouw_tijd}
                             </span>
                           )}
-                          {ev.contactpersoon_stand && (
+                          {ev.contactpersoon && (
                             <span className="flex items-center gap-1.5">
-                              <User className="h-3.5 w-3.5 shrink-0" />{ev.contactpersoon_stand}
+                              <User className="h-3.5 w-3.5 shrink-0" />{ev.contactpersoon}
                             </span>
                           )}
                           {ev.max_ambassadeurs !== null && (
