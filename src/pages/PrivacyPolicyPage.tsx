@@ -1,4 +1,5 @@
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { AppFooter } from "@/components/layout/AppFooter";
 
 const PRIVACY_MD = `# CampusBase Privacy Policy
@@ -236,6 +237,7 @@ export default function PrivacyPolicyPage() {
       <div className="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
         <article className="privacy-prose">
           <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
             components={{
               h1: ({ children }) => (
                 <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2 tracking-tight">{children}</h1>
