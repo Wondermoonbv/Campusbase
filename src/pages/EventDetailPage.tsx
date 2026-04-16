@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEvenementen } from "@/hooks/useEvenementen";
-import { useScholen } from "@/hooks/useScholen";
+import { useScholen, useContacten } from "@/hooks/useScholen";
 import { useOpleidingen, useEventOpleidingen } from "@/hooks/useOpleidingen";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap, CheckSquare, MessageSquare, UserCheck, Phone, Mail } from "lucide-react";
-import type { Event, StandType, StandSize, EventType, EventStatus } from "@/types/crm";
+import type { Event, Contact, StandType, StandSize, EventType, EventStatus } from "@/types/crm";
 import { toast } from "sonner";
 import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 import { EventFeedbackTab } from "@/components/events/EventFeedbackTab";
@@ -28,6 +28,7 @@ export default function EventDetailPage() {
   const { canEdit } = useAuth();
   const { evenementen, upsertEvent } = useEvenementen();
   const { scholen } = useScholen();
+  const { contacten: allContacten } = useContacten();
   const { opleidingen } = useOpleidingen();
   const { eventOpleidingen, setEventPrograms } = useEventOpleidingen();
 
@@ -45,6 +46,12 @@ export default function EventDetailPage() {
     return Object.values(groups);
   }, [scholen, opleidingen]);
 
+  const orgContacten = useMemo(() => {
+    const orgId = form?.organisator_id;
+    if (!orgId) return [];
+    return allContacten.filter((c) => c.organisatie_id === orgId).sort((a, b) => a.name.localeCompare(b.name));
+  }, [allContacten, form?.organisator_id]);
+
   useMemo(() => { if (event && !form) setForm(event); }, [event]);
 
   if (!event || !form) {
@@ -52,6 +59,7 @@ export default function EventDetailPage() {
   }
 
   const organisator = event.organisator_id ? scholen.find((s) => s.id === event.organisator_id) : null;
+  const contactpersoon = (event as any).contactpersoon as Contact | null;
   const linkedPrograms = opleidingen.filter((p) => selectedProgramIds.includes(p.id)).map((p) => ({ ...p, school: scholen.find((s) => s.id === p.organisatie_id) }));
   const toggleProgram = (programId: string) => setSelectedProgramIds((prev) => prev.includes(programId) ? prev.filter((id) => id !== programId) : [...prev, programId]);
   const sortedOrgs = [...scholen].sort((a, b) => a.name.localeCompare(b.name));
@@ -67,7 +75,7 @@ export default function EventDetailPage() {
 
   const update = (patch: Partial<Event>) => setForm((prev) => prev ? { ...prev, ...patch } : prev);
 
-  const hasContact = !!(event.contactpersoon_naam || event.contactpersoon_telefoon || event.contactpersoon_email);
+  const hasContact = !!contactpersoon;
 
   return (
     <div className="page-container animate-fade-in-up max-w-4xl">
@@ -197,22 +205,48 @@ export default function EventDetailPage() {
         </section>
 
         {/* Contactpersoon event */}
-        {(editing || hasContact) && (
+        {(editing || hasContact || (event.contactpersoon_id && !contactpersoon)) && (
           <section className="surface-card p-4 sm:p-5 space-y-4">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><Phone className="h-4 w-4" /> Contactpersoon event</h2>
             {editing ? (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Field label="Naam" value={form.contactpersoon_naam || ""} editing={editing} onChange={(v) => update({ contactpersoon_naam: v } as any)} />
-                <Field label="Telefoon" value={form.contactpersoon_telefoon || ""} editing={editing} onChange={(v) => update({ contactpersoon_telefoon: v } as any)} />
-                <Field label="E-mail" value={form.contactpersoon_email || ""} editing={editing} onChange={(v) => update({ contactpersoon_email: v } as any)} type="email" />
+              <div>
+                <Select value={form.contactpersoon_id || ""} onValueChange={(v) => update({ contactpersoon_id: v === "none" ? null : (v || null) } as any)}>
+                  <SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Selecteer contactpersoon" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Geen contactpersoon</SelectItem>
+                    {orgContacten.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}{c.role ? ` — ${c.role}` : ""}{c.department ? ` (${c.department})` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            ) : (
+            ) : event.contactpersoon_id && !contactpersoon ? (
+              <p className="text-sm text-muted-foreground italic">Deze contactpersoon bestaat niet meer.</p>
+            ) : contactpersoon ? (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {event.contactpersoon_naam && <div><Label className="text-xs text-muted-foreground">Naam</Label><p className="text-sm mt-1">{event.contactpersoon_naam}</p></div>}
-                {event.contactpersoon_telefoon && <div><Label className="text-xs text-muted-foreground">Telefoon</Label><p className="text-sm mt-1">{event.contactpersoon_telefoon}</p></div>}
-                {event.contactpersoon_email && <div><Label className="text-xs text-muted-foreground">E-mail</Label><p className="text-sm mt-1 flex items-center gap-1"><Mail className="h-3.5 w-3.5" />{event.contactpersoon_email}</p></div>}
+                <div>
+                  <Label className="text-xs text-muted-foreground">Naam</Label>
+                  <p className="text-sm mt-1">
+                    <Link to={`/contacten`} className="text-primary hover:underline">{contactpersoon.name}</Link>
+                    {contactpersoon.role && <span className="ml-1.5 text-xs text-muted-foreground">— {contactpersoon.role}</span>}
+                  </p>
+                </div>
+                {contactpersoon.phone && (
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Telefoon</Label>
+                    <p className="text-sm mt-1"><a href={`tel:${contactpersoon.phone}`} className="text-primary hover:underline">{contactpersoon.phone}</a></p>
+                  </div>
+                )}
+                {contactpersoon.email && (
+                  <div>
+                    <Label className="text-xs text-muted-foreground">E-mail</Label>
+                    <p className="text-sm mt-1 flex items-center gap-1"><Mail className="h-3.5 w-3.5" /><a href={`mailto:${contactpersoon.email}`} className="text-primary hover:underline">{contactpersoon.email}</a></p>
+                  </div>
+                )}
               </div>
-            )}
+            ) : null}
           </section>
         )}
 

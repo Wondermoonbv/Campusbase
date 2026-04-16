@@ -214,10 +214,8 @@ export type Database = {
         Row: {
           afbraak_tijd: string | null
           budget: number | null
-          contactpersoon_email: string | null
-          contactpersoon_naam: string | null
+          contactpersoon_id: string | null
           contactpersoon_stand: string | null
-          contactpersoon_telefoon: string | null
           date: string
           description: string | null
           doelgroep_niveau:
@@ -256,10 +254,8 @@ export type Database = {
         Insert: {
           afbraak_tijd?: string | null
           budget?: number | null
-          contactpersoon_email?: string | null
-          contactpersoon_naam?: string | null
+          contactpersoon_id?: string | null
           contactpersoon_stand?: string | null
-          contactpersoon_telefoon?: string | null
           date: string
           description?: string | null
           doelgroep_niveau?:
@@ -298,10 +294,8 @@ export type Database = {
         Update: {
           afbraak_tijd?: string | null
           budget?: number | null
-          contactpersoon_email?: string | null
-          contactpersoon_naam?: string | null
+          contactpersoon_id?: string | null
           contactpersoon_stand?: string | null
-          contactpersoon_telefoon?: string | null
           date?: string
           description?: string | null
           doelgroep_niveau?:
@@ -338,6 +332,13 @@ export type Database = {
           type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "evenementen_contactpersoon_id_fkey"
+            columns: ["contactpersoon_id"]
+            isOneToOne: false
+            referencedRelation: "contacten"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "evenementen_school_id_fkey"
             columns: ["organisator_id"]
