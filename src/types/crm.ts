@@ -94,15 +94,17 @@ export interface Event {
   notes: string;
   school?: School;
   target_program_ids?: string[];
-  regio?: Regio | null;
-  taal?: Taal | null;
-  doelgroep_niveau?: DoelgroepNiveau | null;
-  contactpersoon_naam?: string;
-  contactpersoon_telefoon?: string;
-  contactpersoon_email?: string;
-  registratie_type?: RegistratieType | null;
-  follow_up_status?: FollowUpStatus;
-}
+   regio?: Regio | null;
+   taal?: Taal | null;
+   doelgroep_niveau?: DoelgroepNiveau | null;
+   contactpersoon_id?: string | null;
+   registratie_type?: RegistratieType | null;
+   follow_up_status?: FollowUpStatus;
+ }
+
+ export interface EventWithContactpersoon extends Event {
+   contactpersoon?: Contact | null;
+ }
 
 export interface EventProgram {
   event_id: string;
