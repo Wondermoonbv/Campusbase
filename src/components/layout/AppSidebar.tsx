@@ -379,6 +379,15 @@ export function AppSidebar() {
                   Instellingen
                 </button>
               )}
+              <a
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors"
+              >
+                <Shield className="h-4 w-4" />
+                Privacy Policy
+              </a>
               <button
                 onClick={logout}
                 aria-label="Uitloggen"
