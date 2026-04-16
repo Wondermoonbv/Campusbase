@@ -178,7 +178,7 @@ export default function OpleidingenPage() {
                   <TableRow className="hover:bg-muted/30 cursor-pointer" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
                     <TableCell className="px-2">{p.linkedEvents.length > 0 && (expandedId === p.id ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />)}</TableCell>
                     <TableCell className="font-medium">{p.name}</TableCell>
-                    <TableCell><Link to={`/scholen/${p.organisatie_id}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}</Link></TableCell>
+                    <TableCell><Link to={`/organisaties/${p.organisatie_id}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}</Link></TableCell>
                     <TableCell className="hidden lg:table-cell">{p.faculty}</TableCell>
                     <TableCell className="capitalize">{p.study_level}</TableCell>
                     <TableCell className="hidden lg:table-cell">{p.field_of_study}</TableCell>
