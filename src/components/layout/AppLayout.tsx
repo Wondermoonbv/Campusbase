@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { ViewAsBanner } from "./ViewAsBanner";
+import { AppFooter } from "./AppFooter";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -20,6 +21,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <main id="main-content" className="flex-1 overflow-auto" role="main">
             {children}
           </main>
+          <AppFooter />
         </div>
       </div>
     </SidebarProvider>

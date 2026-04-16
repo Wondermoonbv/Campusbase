@@ -73,6 +73,13 @@ export default function LoginPage() {
             <p className="font-medium">Accounts aanmaken via Supabase dashboard</p>
             <p className="opacity-60">Authentication → Users → Add user</p>
           </div>
+          <p className="text-xs text-muted-foreground/60 text-center">
+            Door in te loggen ga je akkoord met onze{" "}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-muted-foreground transition-colors">
+              Privacy Policy
+            </a>
+            .
+          </p>
         </div>
       </div>
     </div>
