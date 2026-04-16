@@ -10,13 +10,13 @@ export function useScholen() {
     queryKey: ["scholen"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("scholen")
-        .select("id, name, type, province, city, website, language, notes, status, created_at")
+        .from("organisaties")
+        .select("id, name, type, school_type, province, city, website, language, notes, status, created_at")
         .order("name", { ascending: true });
-      if (error) { console.error("Error fetching scholen:", error); return []; }
-      return data as School[];
+      if (error) { console.error("Error fetching organisaties:", error); return []; }
+      return data as unknown as School[];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes — reference data
+    staleTime: 5 * 60 * 1000,
   });
 
   const upsertSchool = useMutation({
@@ -24,14 +24,14 @@ export function useScholen() {
       const { contacts, ...rest } = school as any;
       if (school.id) {
         const { id, created_at, ...updates } = rest;
-        const { data, error } = await supabase.from("scholen").update(updates).eq("id", id).select().single();
+        const { data, error } = await supabase.from("organisaties").update(updates).eq("id", id).select().single();
         if (error) throw error;
-        return { data: data as School, action: "update" as const, updates };
+        return { data: data as unknown as School, action: "update" as const, updates };
       } else {
         const { id, created_at, ...insert } = rest;
-        const { data, error } = await supabase.from("scholen").insert(insert).select().single();
+        const { data, error } = await supabase.from("organisaties").insert(insert).select().single();
         if (error) throw error;
-        return { data: data as School, action: "create" as const, updates: insert };
+        return { data: data as unknown as School, action: "create" as const, updates: insert };
       }
     },
     onSuccess: ({ data, action, updates }) => {
@@ -42,7 +42,7 @@ export function useScholen() {
 
   const deleteSchool = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      const { error } = await supabase.from("scholen").delete().eq("id", id);
+      const { error } = await supabase.from("organisaties").delete().eq("id", id);
       if (error) throw error;
       return { id, name };
     },
@@ -61,11 +61,11 @@ export function useContacten(schoolId?: string) {
   const { data: contacten = [], isLoading } = useQuery({
     queryKey: ["contacten", schoolId],
     queryFn: async () => {
-      let query = supabase.from("contacten").select("id, name, email, phone, role, department, school_id, linkedin_url, notes");
-      if (schoolId) query = query.eq("school_id", schoolId);
+      let query = supabase.from("contacten").select("id, name, email, phone, role, department, organisatie_id, linkedin_url, notes");
+      if (schoolId) query = query.eq("organisatie_id", schoolId);
       const { data, error } = await query.order("name", { ascending: true });
       if (error) { console.error("Error fetching contacten:", error); return []; }
-      return data as Contact[];
+      return data as unknown as Contact[];
     },
   });
 
@@ -75,12 +75,12 @@ export function useContacten(schoolId?: string) {
         const { id, ...updates } = contact;
         const { data, error } = await supabase.from("contacten").update(updates).eq("id", id).select().single();
         if (error) throw error;
-        return { data: data as Contact, action: "update" as const, updates };
+        return { data: data as unknown as Contact, action: "update" as const, updates };
       } else {
         const { id, ...insert } = contact;
         const { data, error } = await supabase.from("contacten").insert(insert).select().single();
         if (error) throw error;
-        return { data: data as Contact, action: "create" as const, updates: insert };
+        return { data: data as unknown as Contact, action: "create" as const, updates: insert };
       }
     },
     onSuccess: ({ data, action, updates }) => {

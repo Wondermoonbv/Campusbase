@@ -23,14 +23,14 @@ interface ContactFormDialogProps {
 export function ContactFormDialog({ open, onOpenChange, schoolId, contact, onSave, showSchoolSelect = false }: ContactFormDialogProps) {
   const isEdit = !!contact;
   const { scholen } = useScholen();
-  const [form, setForm] = useState({ name: "", email: "", phone: "", role: "", department: "", notes: "", linkedin_url: "", school_id: schoolId ?? "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", role: "", department: "", notes: "", linkedin_url: "", organisatie_id: schoolId ?? "" });
 
   useEffect(() => {
     if (open) {
       if (contact) {
-        setForm({ name: contact.name, email: contact.email, phone: contact.phone, role: contact.role, department: contact.department, notes: contact.notes, linkedin_url: contact.linkedin_url, school_id: contact.school_id ?? "" });
+        setForm({ name: contact.name, email: contact.email, phone: contact.phone, role: contact.role, department: contact.department, notes: contact.notes, linkedin_url: contact.linkedin_url, organisatie_id: contact.organisatie_id ?? "" });
       } else {
-        setForm({ name: "", email: "", phone: "", role: "", department: "", notes: "", linkedin_url: "", school_id: schoolId ?? "" });
+        setForm({ name: "", email: "", phone: "", role: "", department: "", notes: "", linkedin_url: "", organisatie_id: schoolId ?? "" });
       }
     }
   }, [open, contact, schoolId]);
@@ -43,7 +43,7 @@ export function ContactFormDialog({ open, onOpenChange, schoolId, contact, onSav
     const sanitized = sanitizeFormData(form);
     const saved: Contact = {
       ...(contact?.id ? { id: contact.id } : {}),
-      school_id: sanitized.school_id || null,
+      organisatie_id: sanitized.organisatie_id || null,
       name: sanitized.name,
       email: sanitized.email,
       phone: sanitized.phone,
@@ -66,7 +66,7 @@ export function ContactFormDialog({ open, onOpenChange, schoolId, contact, onSav
           {showSchoolSelect && (
             <div>
               <Label>School</Label>
-              <Select value={form.school_id} onValueChange={(v) => update("school_id", v === "__none__" ? "" : v)}>
+              <Select value={form.organisatie_id} onValueChange={(v) => update("organisatie_id", v === "__none__" ? "" : v)}>
                 <SelectTrigger><SelectValue placeholder="Geen school" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">Geen school</SelectItem>

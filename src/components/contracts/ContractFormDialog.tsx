@@ -21,14 +21,14 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
   const { scholen } = useScholen();
   const { evenementen } = useEvenementen();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [form, setForm] = useState({ school_id: "", contract_type: "partnership" as string, start_date: "", end_date: "", renewal_date: "", status: "in onderhandeling" as string, value: "", description: "", document_url: "", notes: "", linked_event_ids: [] as string[], file: null as File | null });
+  const [form, setForm] = useState({ organisatie_id: "", contract_type: "partnership" as string, start_date: "", end_date: "", renewal_date: "", status: "in onderhandeling" as string, value: "", description: "", document_url: "", notes: "", linked_event_ids: [] as string[], file: null as File | null });
 
   useEffect(() => {
     if (open) {
       if (contract) {
-        setForm({ school_id: contract.school_id, contract_type: contract.contract_type, start_date: contract.start_date, end_date: contract.end_date, renewal_date: contract.renewal_date, status: contract.status, value: contract.value?.toString() || "", description: contract.description || "", document_url: contract.document_url || "", notes: contract.notes || "", linked_event_ids: contract.linked_event_ids || [], file: null });
+        setForm({ organisatie_id: contract.organisatie_id, contract_type: contract.contract_type, start_date: contract.start_date, end_date: contract.end_date, renewal_date: contract.renewal_date, status: contract.status, value: contract.value?.toString() || "", description: contract.description || "", document_url: contract.document_url || "", notes: contract.notes || "", linked_event_ids: contract.linked_event_ids || [], file: null });
       } else {
-        setForm({ school_id: "", contract_type: "partnership", start_date: "", end_date: "", renewal_date: "", status: "in onderhandeling", value: "", description: "", document_url: "", notes: "", linked_event_ids: [], file: null });
+        setForm({ organisatie_id: "", contract_type: "partnership", start_date: "", end_date: "", renewal_date: "", status: "in onderhandeling", value: "", description: "", document_url: "", notes: "", linked_event_ids: [], file: null });
       }
     }
   }, [open, contract]);
@@ -38,22 +38,22 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.school_id || !form.start_date || !form.end_date) { toast.error("Vul school, startdatum en einddatum in."); return; }
+    if (!form.organisatie_id || !form.start_date || !form.end_date) { toast.error("Vul school, startdatum en einddatum in."); return; }
     const sanitized = sanitizeFormData(form);
-    const saved: Contract = { ...(contract?.id ? { id: contract.id } : {}), school_id: sanitized.school_id, contract_type: sanitized.contract_type as Contract["contract_type"], start_date: sanitized.start_date, end_date: sanitized.end_date, renewal_date: sanitized.renewal_date, status: sanitized.status as Contract["status"], value: sanitized.value ? Number(sanitized.value) : null, description: sanitized.description, document_url: sanitized.document_url, notes: sanitized.notes, linked_event_ids: form.linked_event_ids } as Contract;
+    const saved: Contract = { ...(contract?.id ? { id: contract.id } : {}), organisatie_id: sanitized.organisatie_id, contract_type: sanitized.contract_type as Contract["contract_type"], start_date: sanitized.start_date, end_date: sanitized.end_date, renewal_date: sanitized.renewal_date, status: sanitized.status as Contract["status"], value: sanitized.value ? Number(sanitized.value) : null, description: sanitized.description, document_url: sanitized.document_url, notes: sanitized.notes, linked_event_ids: form.linked_event_ids } as Contract;
     onSave?.(saved);
     toast.success(isEdit ? "Contract bijgewerkt." : "Contract toegevoegd.");
     onOpenChange(false);
   };
 
-  const relevantEvents = form.school_id ? evenementen.filter((e) => e.school_id === form.school_id || !e.school_id) : evenementen;
+  const relevantEvents = form.organisatie_id ? evenementen.filter((e) => e.organisator_id === form.organisatie_id || !e.organisator_id) : evenementen;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{isEdit ? "Contract bewerken" : "Nieuw contract"}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div><Label>School *</Label><Select value={form.school_id} onValueChange={(v) => update("school_id", v)}><SelectTrigger><SelectValue placeholder="Kies een school..." /></SelectTrigger><SelectContent>{scholen.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
+          <div><Label>School *</Label><Select value={form.organisatie_id} onValueChange={(v) => update("organisatie_id", v)}><SelectTrigger><SelectValue placeholder="Kies een school..." /></SelectTrigger><SelectContent>{scholen.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Type</Label><Select value={form.contract_type} onValueChange={(v) => update("contract_type", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="partnership">Partnership</SelectItem><SelectItem value="sponsoring">Sponsoring</SelectItem><SelectItem value="stage-overeenkomst">Stage-overeenkomst</SelectItem><SelectItem value="andere">Andere</SelectItem></SelectContent></Select></div>
             <div><Label>Status</Label><Select value={form.status} onValueChange={(v) => update("status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="actief">Actief</SelectItem><SelectItem value="verlopen">Verlopen</SelectItem><SelectItem value="in onderhandeling">In onderhandeling</SelectItem></SelectContent></Select></div>

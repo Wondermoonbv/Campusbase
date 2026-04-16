@@ -10,10 +10,9 @@ export function useContracten() {
     queryKey: ["contracten"],
     staleTime: 30_000,
     queryFn: async () => {
-      // Use join to fetch linked events in a single query (fixes N+1)
       const { data, error } = await supabase
         .from("contracten")
-        .select("id, contract_type, school_id, start_date, end_date, renewal_date, value, status, description, notes, document_url, contract_evenementen(event_id)")
+        .select("id, contract_type, organisatie_id, start_date, end_date, renewal_date, value, status, description, notes, document_url, contract_evenementen(event_id)")
         .order("end_date", { ascending: true });
       if (error) { console.error("Error fetching contracten:", error); return []; }
       return (data as any[]).map((c) => ({
@@ -26,7 +25,7 @@ export function useContracten() {
   });
 
   const upsertContract = useMutation({
-    mutationFn: async (contract: Partial<Contract> & { school_id: string }) => {
+    mutationFn: async (contract: Partial<Contract> & { organisatie_id: string }) => {
       const { school, linked_event_ids, ...rest } = contract as any;
       const payload: any = { ...rest };
       if (payload.value === "" || payload.value === undefined) payload.value = null;

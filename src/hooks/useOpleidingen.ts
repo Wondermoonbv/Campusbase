@@ -11,27 +11,27 @@ export function useOpleidingen() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("opleidingen")
-        .select("id, name, school_id, faculty, field_of_study, study_level, student_count")
+        .select("id, name, organisatie_id, faculty, field_of_study, study_level, student_count")
         .order("name", { ascending: true });
       if (error) { console.error("Error fetching opleidingen:", error); return []; }
-      return data as Program[];
+      return data as unknown as Program[];
     },
     staleTime: 30_000,
   });
 
   const upsertOpleiding = useMutation({
-    mutationFn: async (program: Partial<Program> & { name: string; school_id: string }) => {
+    mutationFn: async (program: Partial<Program> & { name: string; organisatie_id: string }) => {
       const { school, ...rest } = program as any;
       if (program.id) {
         const { id, ...updates } = rest;
         const { data, error } = await supabase.from("opleidingen").update(updates).eq("id", id).select().single();
         if (error) throw error;
-        return { data: data as Program, action: "update" as const, updates };
+        return { data: data as unknown as Program, action: "update" as const, updates };
       } else {
         const { id, ...insert } = rest;
         const { data, error } = await supabase.from("opleidingen").insert(insert).select().single();
         if (error) throw error;
-        return { data: data as Program, action: "create" as const, updates: insert };
+        return { data: data as unknown as Program, action: "create" as const, updates: insert };
       }
     },
     onSuccess: ({ data, action, updates }) => {

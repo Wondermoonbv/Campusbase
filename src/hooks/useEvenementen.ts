@@ -17,7 +17,7 @@ function mapEvent(row: any): Event {
     setup_date: row.setup_date ?? "",
     budget: row.budget != null ? Number(row.budget) : null,
     team_members: row.team_members ?? [],
-    school_id: row.school_id ?? null,
+    organisator_id: row.organisator_id ?? null,
   };
 }
 
@@ -29,7 +29,7 @@ export function useEvenementen() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("evenementen")
-        .select("id, name, type, date, start_time, end_time, setup_date, setup_time, location, school_id, responsible, team_members, elia_contact, budget, status, description, stand_type, stand_size, notes, opbouw_tijd, afbraak_tijd, stand_grootte, contactpersoon_stand, stand_notities, standenbouwer_nodig, max_ambassadeurs")
+        .select("id, name, type, date, start_time, end_time, setup_date, setup_time, location, organisator_id, responsible, team_members, elia_contact, budget, status, description, stand_type, stand_size, notes, opbouw_tijd, afbraak_tijd, stand_grootte, contactpersoon_stand, stand_notities, standenbouwer_nodig, max_ambassadeurs")
         .order("date", { ascending: true });
       if (error) { console.error("Error fetching evenementen:", error); return []; }
       return (data as any[]).map(mapEvent);
@@ -42,7 +42,7 @@ export function useEvenementen() {
       const { school, target_program_ids, ...rest } = event as any;
       const payload: any = { ...rest };
       if (payload.budget === "" || payload.budget === undefined) payload.budget = null;
-      if (payload.school_id === "" || payload.school_id === "none") payload.school_id = null;
+      if (payload.organisator_id === "" || payload.organisator_id === "none") payload.organisator_id = null;
       if (payload.start_time === "") payload.start_time = null;
       if (payload.end_time === "") payload.end_time = null;
       if (payload.setup_date === "") payload.setup_date = null;
@@ -58,7 +58,6 @@ export function useEvenementen() {
         const { data, error } = await supabase.from("evenementen").insert(insert).select().single();
         if (error) throw error;
         const mapped = mapEvent(data);
-        // Auto-create feedback form for new event
         try {
           const user = (await supabase.auth.getUser()).data.user;
           await supabase.from("feedback_forms").insert({

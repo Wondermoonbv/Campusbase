@@ -13,13 +13,13 @@ export function useTaken() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("taken")
-        .select("id, title, description, school_id, event_id, assigned_to, due_date, priority, status, created_at")
+        .select("id, title, description, organisatie_id, event_id, assigned_to, due_date, priority, status, created_at")
         .order("due_date", { ascending: true });
       if (error) { console.error("Error fetching taken:", error); return []; }
       lastSyncRef.current = new Date();
       return (data as any[]).map((t) => ({
         ...t,
-        school_id: t.school_id ?? null,
+        organisatie_id: t.organisatie_id ?? null,
         event_id: t.event_id ?? null,
         description: t.description ?? "",
       })) as Task[];
@@ -48,7 +48,7 @@ export function useTaken() {
   const upsertTask = useMutation({
     mutationFn: async (task: Partial<Task> & { title: string }) => {
       const payload: any = { ...task };
-      if (payload.school_id === "" || payload.school_id === "none") payload.school_id = null;
+      if (payload.organisatie_id === "" || payload.organisatie_id === "none") payload.organisatie_id = null;
       if (payload.event_id === "" || payload.event_id === "none") payload.event_id = null;
       if (payload.due_date === "") payload.due_date = null;
 

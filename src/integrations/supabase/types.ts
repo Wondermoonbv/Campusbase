@@ -94,9 +94,9 @@ export type Database = {
           linkedin_url: string | null
           name: string
           notes: string | null
+          organisatie_id: string | null
           phone: string | null
           role: string | null
-          school_id: string | null
         }
         Insert: {
           department?: string | null
@@ -105,9 +105,9 @@ export type Database = {
           linkedin_url?: string | null
           name: string
           notes?: string | null
+          organisatie_id?: string | null
           phone?: string | null
           role?: string | null
-          school_id?: string | null
         }
         Update: {
           department?: string | null
@@ -116,16 +116,16 @@ export type Database = {
           linkedin_url?: string | null
           name?: string
           notes?: string | null
+          organisatie_id?: string | null
           phone?: string | null
           role?: string | null
-          school_id?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "contacten_school_id_fkey"
-            columns: ["school_id"]
+            columns: ["organisatie_id"]
             isOneToOne: false
-            referencedRelation: "scholen"
+            referencedRelation: "organisaties"
             referencedColumns: ["id"]
           },
         ]
@@ -168,8 +168,8 @@ export type Database = {
           end_date: string
           id: string
           notes: string | null
+          organisatie_id: string
           renewal_date: string | null
-          school_id: string
           start_date: string
           status: string
           value: number | null
@@ -181,8 +181,8 @@ export type Database = {
           end_date: string
           id?: string
           notes?: string | null
+          organisatie_id: string
           renewal_date?: string | null
-          school_id: string
           start_date: string
           status?: string
           value?: number | null
@@ -194,8 +194,8 @@ export type Database = {
           end_date?: string
           id?: string
           notes?: string | null
+          organisatie_id?: string
           renewal_date?: string | null
-          school_id?: string
           start_date?: string
           status?: string
           value?: number | null
@@ -203,9 +203,9 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "contracten_school_id_fkey"
-            columns: ["school_id"]
+            columns: ["organisatie_id"]
             isOneToOne: false
-            referencedRelation: "scholen"
+            referencedRelation: "organisaties"
             referencedColumns: ["id"]
           },
         ]
@@ -214,19 +214,32 @@ export type Database = {
         Row: {
           afbraak_tijd: string | null
           budget: number | null
+          contactpersoon_email: string | null
+          contactpersoon_naam: string | null
           contactpersoon_stand: string | null
+          contactpersoon_telefoon: string | null
           date: string
           description: string | null
+          doelgroep_niveau:
+            | Database["public"]["Enums"]["doelgroep_niveau_enum"]
+            | null
           elia_contact: string | null
           end_time: string | null
+          follow_up_status:
+            | Database["public"]["Enums"]["follow_up_status_enum"]
+            | null
           id: string
           location: string | null
           max_ambassadeurs: number | null
           name: string
           notes: string | null
           opbouw_tijd: string | null
+          organisator_id: string | null
+          regio: Database["public"]["Enums"]["regio_enum"] | null
+          registratie_type:
+            | Database["public"]["Enums"]["registratie_type_enum"]
+            | null
           responsible: string | null
-          school_id: string | null
           setup_date: string | null
           setup_time: string | null
           stand_grootte: string | null
@@ -236,25 +249,39 @@ export type Database = {
           standenbouwer_nodig: boolean | null
           start_time: string | null
           status: string
+          taal: Database["public"]["Enums"]["taal_enum"] | null
           team_members: string[] | null
           type: string
         }
         Insert: {
           afbraak_tijd?: string | null
           budget?: number | null
+          contactpersoon_email?: string | null
+          contactpersoon_naam?: string | null
           contactpersoon_stand?: string | null
+          contactpersoon_telefoon?: string | null
           date: string
           description?: string | null
+          doelgroep_niveau?:
+            | Database["public"]["Enums"]["doelgroep_niveau_enum"]
+            | null
           elia_contact?: string | null
           end_time?: string | null
+          follow_up_status?:
+            | Database["public"]["Enums"]["follow_up_status_enum"]
+            | null
           id?: string
           location?: string | null
           max_ambassadeurs?: number | null
           name: string
           notes?: string | null
           opbouw_tijd?: string | null
+          organisator_id?: string | null
+          regio?: Database["public"]["Enums"]["regio_enum"] | null
+          registratie_type?:
+            | Database["public"]["Enums"]["registratie_type_enum"]
+            | null
           responsible?: string | null
-          school_id?: string | null
           setup_date?: string | null
           setup_time?: string | null
           stand_grootte?: string | null
@@ -264,25 +291,39 @@ export type Database = {
           standenbouwer_nodig?: boolean | null
           start_time?: string | null
           status?: string
+          taal?: Database["public"]["Enums"]["taal_enum"] | null
           team_members?: string[] | null
           type?: string
         }
         Update: {
           afbraak_tijd?: string | null
           budget?: number | null
+          contactpersoon_email?: string | null
+          contactpersoon_naam?: string | null
           contactpersoon_stand?: string | null
+          contactpersoon_telefoon?: string | null
           date?: string
           description?: string | null
+          doelgroep_niveau?:
+            | Database["public"]["Enums"]["doelgroep_niveau_enum"]
+            | null
           elia_contact?: string | null
           end_time?: string | null
+          follow_up_status?:
+            | Database["public"]["Enums"]["follow_up_status_enum"]
+            | null
           id?: string
           location?: string | null
           max_ambassadeurs?: number | null
           name?: string
           notes?: string | null
           opbouw_tijd?: string | null
+          organisator_id?: string | null
+          regio?: Database["public"]["Enums"]["regio_enum"] | null
+          registratie_type?:
+            | Database["public"]["Enums"]["registratie_type_enum"]
+            | null
           responsible?: string | null
-          school_id?: string | null
           setup_date?: string | null
           setup_time?: string | null
           stand_grootte?: string | null
@@ -292,15 +333,16 @@ export type Database = {
           standenbouwer_nodig?: boolean | null
           start_time?: string | null
           status?: string
+          taal?: Database["public"]["Enums"]["taal_enum"] | null
           team_members?: string[] | null
           type?: string
         }
         Relationships: [
           {
             foreignKeyName: "evenementen_school_id_fkey"
-            columns: ["school_id"]
+            columns: ["organisator_id"]
             isOneToOne: false
-            referencedRelation: "scholen"
+            referencedRelation: "organisaties"
             referencedColumns: ["id"]
           },
         ]
@@ -480,7 +522,7 @@ export type Database = {
           field_of_study: string | null
           id: string
           name: string
-          school_id: string
+          organisatie_id: string
           student_count: number | null
           study_level: string
         }
@@ -489,7 +531,7 @@ export type Database = {
           field_of_study?: string | null
           id?: string
           name: string
-          school_id: string
+          organisatie_id: string
           student_count?: number | null
           study_level?: string
         }
@@ -498,19 +540,61 @@ export type Database = {
           field_of_study?: string | null
           id?: string
           name?: string
-          school_id?: string
+          organisatie_id?: string
           student_count?: number | null
           study_level?: string
         }
         Relationships: [
           {
             foreignKeyName: "opleidingen_school_id_fkey"
-            columns: ["school_id"]
+            columns: ["organisatie_id"]
             isOneToOne: false
-            referencedRelation: "scholen"
+            referencedRelation: "organisaties"
             referencedColumns: ["id"]
           },
         ]
+      }
+      organisaties: {
+        Row: {
+          city: string
+          created_at: string | null
+          id: string
+          language: string
+          name: string
+          notes: string | null
+          province: string
+          school_type: string
+          status: string
+          type: Database["public"]["Enums"]["organisatie_type"]
+          website: string | null
+        }
+        Insert: {
+          city: string
+          created_at?: string | null
+          id?: string
+          language?: string
+          name: string
+          notes?: string | null
+          province: string
+          school_type?: string
+          status?: string
+          type?: Database["public"]["Enums"]["organisatie_type"]
+          website?: string | null
+        }
+        Update: {
+          city?: string
+          created_at?: string | null
+          id?: string
+          language?: string
+          name?: string
+          notes?: string | null
+          province?: string
+          school_type?: string
+          status?: string
+          type?: Database["public"]["Enums"]["organisatie_type"]
+          website?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -539,45 +623,6 @@ export type Database = {
         }
         Relationships: []
       }
-      scholen: {
-        Row: {
-          city: string
-          created_at: string | null
-          id: string
-          language: string
-          name: string
-          notes: string | null
-          province: string
-          status: string
-          type: string
-          website: string | null
-        }
-        Insert: {
-          city: string
-          created_at?: string | null
-          id?: string
-          language?: string
-          name: string
-          notes?: string | null
-          province: string
-          status?: string
-          type?: string
-          website?: string | null
-        }
-        Update: {
-          city?: string
-          created_at?: string | null
-          id?: string
-          language?: string
-          name?: string
-          notes?: string | null
-          province?: string
-          status?: string
-          type?: string
-          website?: string | null
-        }
-        Relationships: []
-      }
       taken: {
         Row: {
           assigned_to: string | null
@@ -586,8 +631,8 @@ export type Database = {
           due_date: string | null
           event_id: string | null
           id: string
+          organisatie_id: string | null
           priority: string
-          school_id: string | null
           status: string
           title: string
         }
@@ -598,8 +643,8 @@ export type Database = {
           due_date?: string | null
           event_id?: string | null
           id?: string
+          organisatie_id?: string | null
           priority?: string
-          school_id?: string | null
           status?: string
           title: string
         }
@@ -610,8 +655,8 @@ export type Database = {
           due_date?: string | null
           event_id?: string | null
           id?: string
+          organisatie_id?: string | null
           priority?: string
-          school_id?: string | null
           status?: string
           title?: string
         }
@@ -625,9 +670,9 @@ export type Database = {
           },
           {
             foreignKeyName: "taken_school_id_fkey"
-            columns: ["school_id"]
+            columns: ["organisatie_id"]
             isOneToOne: false
-            referencedRelation: "scholen"
+            referencedRelation: "organisaties"
             referencedColumns: ["id"]
           },
         ]
@@ -686,6 +731,25 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "editor" | "viewer" | "standenbouwer"
+      doelgroep_niveau_enum: "bachelor" | "master" | "beide" | "graduaat"
+      follow_up_status_enum: "to_do" | "in_orde" | "nvt"
+      organisatie_type:
+        | "school"
+        | "studentenvereniging"
+        | "werkgeversorganisatie"
+        | "overheid"
+        | "andere"
+      regio_enum:
+        | "brussel"
+        | "antwerpen"
+        | "vlaams_brabant"
+        | "west_vlaanderen"
+        | "limburg"
+        | "oost_vlaanderen"
+        | "waals_brabant"
+        | "henegouwen"
+      registratie_type_enum: "partnership" | "ad_hoc"
+      taal_enum: "nl" | "fr" | "en" | "meertalig"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -814,6 +878,27 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "editor", "viewer", "standenbouwer"],
+      doelgroep_niveau_enum: ["bachelor", "master", "beide", "graduaat"],
+      follow_up_status_enum: ["to_do", "in_orde", "nvt"],
+      organisatie_type: [
+        "school",
+        "studentenvereniging",
+        "werkgeversorganisatie",
+        "overheid",
+        "andere",
+      ],
+      regio_enum: [
+        "brussel",
+        "antwerpen",
+        "vlaams_brabant",
+        "west_vlaanderen",
+        "limburg",
+        "oost_vlaanderen",
+        "waals_brabant",
+        "henegouwen",
+      ],
+      registratie_type_enum: ["partnership", "ad_hoc"],
+      taal_enum: ["nl", "fr", "en", "meertalig"],
     },
   },
 } as const
