@@ -21,7 +21,7 @@ export function TaskFormDialog({ open, onOpenChange, defaultSchoolId, defaultEve
   const { profiles, isLoading: profilesLoading } = useProfiles();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [schoolId, setSchoolId] = useState("");
+  const [organisatieId, setOrganisatieId] = useState("");
   const [eventId, setEventId] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -31,15 +31,15 @@ export function TaskFormDialog({ open, onOpenChange, defaultSchoolId, defaultEve
 
   useEffect(() => {
     if (open) {
-      if (task) { setTitle(task.title); setDescription(task.description ?? ""); setSchoolId(task.school_id ?? ""); setEventId(task.event_id ?? ""); setAssignedTo(task.assigned_to); setDueDate(task.due_date); setPriority(task.priority); setStatus(task.status); }
-      else { setTitle(""); setDescription(""); setSchoolId(defaultSchoolId ?? ""); setEventId(defaultEventId ?? ""); setAssignedTo(""); setDueDate(""); setPriority("normaal"); setStatus("open"); }
+      if (task) { setTitle(task.title); setDescription(task.description ?? ""); setOrganisatieId(task.organisatie_id ?? ""); setEventId(task.event_id ?? ""); setAssignedTo(task.assigned_to); setDueDate(task.due_date); setPriority(task.priority); setStatus(task.status); }
+      else { setTitle(""); setDescription(""); setOrganisatieId(defaultSchoolId ?? ""); setEventId(defaultEventId ?? ""); setAssignedTo(""); setDueDate(""); setPriority("normaal"); setStatus("open"); }
     }
   }, [open, task, defaultSchoolId, defaultEventId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const sanitized = sanitizeFormData({ title, description, schoolId, eventId, assignedTo, dueDate });
-    const saved: Task = { ...(task?.id ? { id: task.id } : {}), title: sanitized.title, description: sanitized.description || "", school_id: sanitized.schoolId || null, event_id: sanitized.eventId || null, assigned_to: sanitized.assignedTo, due_date: sanitized.dueDate, priority, status } as Task;
+    const sanitized = sanitizeFormData({ title, description, organisatieId, eventId, assignedTo, dueDate });
+    const saved: Task = { ...(task?.id ? { id: task.id } : {}), title: sanitized.title, description: sanitized.description || "", organisatie_id: sanitized.organisatieId || null, event_id: sanitized.eventId || null, assigned_to: sanitized.assignedTo, due_date: sanitized.dueDate, priority, status } as Task;
     onSave?.(saved);
     toast.success(isEditing ? "Taak bijgewerkt" : "Taak aangemaakt");
     onOpenChange(false);
@@ -79,7 +79,7 @@ export function TaskFormDialog({ open, onOpenChange, defaultSchoolId, defaultEve
             <div><Label>Status</Label><Select value={status} onValueChange={(v) => setStatus(v as TaskStatus)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="open">Open</SelectItem><SelectItem value="in behandeling">In behandeling</SelectItem><SelectItem value="afgerond">Afgerond</SelectItem></SelectContent></Select></div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div><Label>School</Label><Select value={schoolId} onValueChange={setSchoolId}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{scholen.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label>School</Label><Select value={organisatieId} onValueChange={setOrganisatieId}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{scholen.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
             <div><Label>Evenement</Label><Select value={eventId} onValueChange={setEventId}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{evenementen.map((ev) => <SelectItem key={ev.id} value={ev.id}>{ev.name}</SelectItem>)}</SelectContent></Select></div>
           </div>
           <DialogFooter><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuleren</Button><Button type="submit" disabled={!title || !assignedTo || !dueDate}>{isEditing ? "Opslaan" : "Aanmaken"}</Button></DialogFooter>

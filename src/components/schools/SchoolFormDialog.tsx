@@ -25,16 +25,16 @@ interface SchoolFormDialogProps {
 export function SchoolFormDialog({ open, onOpenChange, school, onSave }: SchoolFormDialogProps) {
   const isEdit = !!school;
   const [form, setForm] = useState({
-    name: "", type: "universiteit" as string, province: "", city: "",
+    name: "", school_type: "universiteit" as string, province: "", city: "",
     website: "", language: "NL" as string, notes: "", status: "prospect" as string,
   });
 
   useEffect(() => {
     if (open) {
       if (school) {
-        setForm({ name: school.name, type: school.type, province: school.province, city: school.city, website: school.website || "", language: school.language, notes: school.notes || "", status: school.status });
+        setForm({ name: school.name, school_type: school.school_type, province: school.province, city: school.city, website: school.website || "", language: school.language, notes: school.notes || "", status: school.status });
       } else {
-        setForm({ name: "", type: "universiteit", province: "", city: "", website: "", language: "NL", notes: "", status: "prospect" });
+        setForm({ name: "", school_type: "universiteit", province: "", city: "", website: "", language: "NL", notes: "", status: "prospect" });
       }
     }
   }, [open, school]);
@@ -51,7 +51,7 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave }: SchoolF
     const saved: Partial<School> & { name: string } = {
       ...(school?.id ? { id: school.id } : {}),
       name: sanitized.name,
-      type: sanitized.type as School["type"],
+      school_type: sanitized.school_type as School["school_type"],
       province: sanitized.province,
       city: sanitized.city,
       website: sanitized.website,
@@ -73,7 +73,7 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave }: SchoolF
         <form onSubmit={handleSubmit} className="space-y-4">
           <div><Label>Naam *</Label><Input value={form.name} onChange={(e) => update("name", e.target.value)} maxLength={MAX_LENGTHS.name} /></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><Label>Type</Label><Select value={form.type} onValueChange={(v) => update("type", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="universiteit">Universiteit</SelectItem><SelectItem value="hogeschool">Hogeschool</SelectItem><SelectItem value="secundair">Secundair</SelectItem></SelectContent></Select></div>
+            <div><Label>Type</Label><Select value={form.school_type} onValueChange={(v) => update("school_type", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="universiteit">Universiteit</SelectItem><SelectItem value="hogeschool">Hogeschool</SelectItem><SelectItem value="secundair">Secundair</SelectItem></SelectContent></Select></div>
             <div><Label>Taal</Label><Select value={form.language} onValueChange={(v) => update("language", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="NL">NL</SelectItem><SelectItem value="FR">FR</SelectItem><SelectItem value="EN">EN</SelectItem></SelectContent></Select></div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
