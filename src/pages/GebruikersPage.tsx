@@ -314,7 +314,7 @@ export default function GebruikersPage() {
                   <div className="flex items-center gap-3">
                     <UserAvatar name={u.name} avatarUrl={u.avatarUrl} />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{u.name} {!isActive && <span className="text-xs text-muted-foreground">(inactief)</span>}</p>
+                      <p className="font-medium text-sm flex items-center gap-1.5">{u.name} {!isActive && <Badge variant="outline" className="text-xs text-muted-foreground">Inactief</Badge>}</p>
                       <p className="text-xs text-muted-foreground truncate">{u.email}</p>
                       {isAdmin ? (
                         <Select value={u.role} onValueChange={(v) => handleRoleChange(u.id, v as UserRole)}>
