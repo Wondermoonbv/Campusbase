@@ -395,7 +395,7 @@ export default function GebruikersPage() {
                         <div className="flex items-center gap-2.5">
                           <UserAvatar name={u.name} avatarUrl={u.avatarUrl} />
                           <span className="font-medium">{u.name}</span>
-                          {!isActive && <span className="text-xs text-muted-foreground">(inactief)</span>}
+                          {!isActive && <Badge variant="outline" className="text-xs text-muted-foreground">Inactief</Badge>}
                         </div>
                       </TableCell>
                       <TableCell>{u.email}</TableCell>
