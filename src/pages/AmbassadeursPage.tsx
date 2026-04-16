@@ -20,7 +20,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Checkbox } from "@/components/ui/checkbox";
-import { sendBulkEmails, buildPortalLinkEmail } from "@/lib/email";
+import { sendEmail, sendBulkEmails, buildPortalLinkEmail } from "@/lib/email";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const AMB_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "full_name", label: "Naam", required: true },
@@ -436,6 +437,39 @@ export default function AmbassadeursPage() {
                           <td className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                               <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Portaallink ${a.full_name} kopiëren`} onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/ambassadeur-portaal?token=${(a as any).access_token}`); toast.success("Persoonlijke portaallink gekopieerd"); }}><Link2 className="h-3.5 w-3.5" /></Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    aria-label={`Portaallink naar ${a.full_name} sturen`}
+                                    onClick={async () => {
+                                      if (!(a as any).access_token) {
+                                        toast.error("Geen portaaltoken beschikbaar");
+                                        return;
+                                      }
+                                      try {
+                                        const result = await sendEmail({
+                                          to: a.email,
+                                          subject: "Elia Campus Events — Ambassadeur Portaal",
+                                          html: buildPortalLinkEmail(a.full_name, `${window.location.origin}/ambassadeur-portaal?token=${(a as any).access_token}`),
+                                        });
+                                        if (result.success) {
+                                          toast.success(`Portaallink verzonden naar ${a.full_name}`);
+                                        } else {
+                                          toast.error(result.error ?? "Fout bij versturen");
+                                        }
+                                      } catch {
+                                        toast.error("Fout bij versturen");
+                                      }
+                                    }}
+                                  >
+                                    <Send className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Portaallink naar {a.full_name} sturen</TooltipContent>
+                              </Tooltip>
                               <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${a.full_name} bewerken`} onClick={() => handleEdit(a)}><Pencil className="h-3.5 w-3.5" /></Button>
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" aria-label={`${a.full_name} verwijderen`} onClick={() => handleDeleteClick(a)}><Trash2 className="h-3.5 w-3.5" /></Button>
                             </div>
