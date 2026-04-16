@@ -62,9 +62,9 @@ const navGroups: NavGroup[] = [
     label: "CAMPUS",
     items: [
       {
-        title: "Scholen",
-        url: "/scholen",
-        icon: GraduationCap,
+        title: "Organisaties",
+        url: "/organisaties",
+        icon: Building2,
         roles: ["admin", "editor", "viewer"],
         children: [
           { title: "Contacten", url: "/contacten", icon: Contact, roles: ["admin", "editor", "viewer"] },
