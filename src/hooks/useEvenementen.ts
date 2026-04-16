@@ -47,6 +47,10 @@ export function useEvenementen() {
       if (payload.end_time === "") payload.end_time = null;
       if (payload.setup_date === "") payload.setup_date = null;
       if (payload.setup_time === "") payload.setup_time = null;
+      if (payload.regio === "" || payload.regio === "none") payload.regio = null;
+      if (payload.taal === "" || payload.taal === "none") payload.taal = null;
+      if (payload.doelgroep_niveau === "" || payload.doelgroep_niveau === "none") payload.doelgroep_niveau = null;
+      if (payload.registratie_type === "" || payload.registratie_type === "none") payload.registratie_type = null;
 
       if (event.id) {
         const { id, created_at, ...updates } = payload;
