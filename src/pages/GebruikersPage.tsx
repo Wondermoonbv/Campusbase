@@ -121,11 +121,14 @@ export default function GebruikersPage() {
     }
     setResetLoading(true);
     try {
-      const { error } = await supabase.rpc("reset_user_password", {
-        target_email: resetUser.email,
-        new_password: resetPassword,
+      const { data, error } = await supabase.functions.invoke("admin-reset-password", {
+        body: {
+          targetEmail: resetUser.email,
+          newPassword: resetPassword,
+        },
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       toast.success(`Wachtwoord gereset voor ${resetUser.name}. Deel het tijdelijke wachtwoord via een veilig kanaal (bijv. Teams).`);
       setResetSuccess(true);
     } catch (err: any) {
@@ -219,13 +222,16 @@ export default function GebruikersPage() {
     }
     setInviteLoading(true);
     try {
-      const { data, error } = await supabase.rpc("invite_user", {
-        user_email: inviteForm.email.trim().toLowerCase(),
-        user_password: inviteForm.password,
-        user_full_name: inviteForm.fullName.trim(),
-        user_role: inviteForm.role,
+      const { data, error } = await supabase.functions.invoke("admin-invite-user", {
+        body: {
+          email: inviteForm.email.trim().toLowerCase(),
+          password: inviteForm.password,
+          fullName: inviteForm.fullName.trim(),
+          role: inviteForm.role,
+        },
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       toast.success("Gebruiker aangemaakt.");
       setInviteOpen(false);
       setInviteForm({ fullName: "", email: "", password: "", role: "editor" });
