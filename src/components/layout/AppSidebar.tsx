@@ -19,7 +19,7 @@ import {
   Shield,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useViewAs } from "@/contexts/ViewAsContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
