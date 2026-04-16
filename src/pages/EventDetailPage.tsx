@@ -28,6 +28,7 @@ export default function EventDetailPage() {
   const { canEdit } = useAuth();
   const { evenementen, upsertEvent } = useEvenementen();
   const { scholen } = useScholen();
+  const { contacten: allContacten } = useContacten();
   const { opleidingen } = useOpleidingen();
   const { eventOpleidingen, setEventPrograms } = useEventOpleidingen();
 
@@ -45,6 +46,12 @@ export default function EventDetailPage() {
     return Object.values(groups);
   }, [scholen, opleidingen]);
 
+  const orgContacten = useMemo(() => {
+    const orgId = form?.organisator_id;
+    if (!orgId) return [];
+    return allContacten.filter((c) => c.organisatie_id === orgId).sort((a, b) => a.name.localeCompare(b.name));
+  }, [allContacten, form?.organisator_id]);
+
   useMemo(() => { if (event && !form) setForm(event); }, [event]);
 
   if (!event || !form) {
@@ -53,11 +60,6 @@ export default function EventDetailPage() {
 
   const organisator = event.organisator_id ? scholen.find((s) => s.id === event.organisator_id) : null;
   const contactpersoon = (event as any).contactpersoon as Contact | null;
-  const orgContacten = useMemo(() => {
-    const orgId = form?.organisator_id;
-    if (!orgId) return [];
-    return allContacten.filter((c) => c.organisatie_id === orgId).sort((a, b) => a.name.localeCompare(b.name));
-  }, [allContacten, form?.organisator_id]);
   const linkedPrograms = opleidingen.filter((p) => selectedProgramIds.includes(p.id)).map((p) => ({ ...p, school: scholen.find((s) => s.id === p.organisatie_id) }));
   const toggleProgram = (programId: string) => setSelectedProgramIds((prev) => prev.includes(programId) ? prev.filter((id) => id !== programId) : [...prev, programId]);
   const sortedOrgs = [...scholen].sort((a, b) => a.name.localeCompare(b.name));
