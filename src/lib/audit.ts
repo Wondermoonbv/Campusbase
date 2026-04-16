@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type AuditAction = "create" | "update" | "delete";
+export type AuditAction = "create" | "update" | "delete" | "export";
 export type AuditEntityType =
   | "school"
   | "contact"
@@ -9,7 +9,11 @@ export type AuditEntityType =
   | "contract"
   | "taak"
   | "ambassadeur"
-  | "inschrijving";
+  | "inschrijving"
+  | "user"
+  | "user_role"
+  | "user_password"
+  | "export";
 
 interface AuditEntry {
   action: AuditAction;

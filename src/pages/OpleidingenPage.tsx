@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOpleidingen, useEventOpleidingen } from "@/hooks/useOpleidingen";
 import { useScholen } from "@/hooks/useScholen";
+import { writeAuditLog } from "@/lib/audit";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -112,6 +113,7 @@ export default function OpleidingenPage() {
     const csv = [headers, ...rows].map((r) => r.join(";")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" }); const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "opleidingen_export.csv"; a.click();
+    writeAuditLog({ action: "export", entity_type: "export", entity_id: "opleidingen-csv", entity_name: "Opleidingen export", changes: { row_count: rows.length, format: "csv" } });
   }, [sorted]);
 
   return (

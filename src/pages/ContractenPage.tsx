@@ -16,6 +16,7 @@ import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import type { Contract } from "@/types/crm";
 import { toast } from "sonner";
+import { writeAuditLog } from "@/lib/audit";
 
 function getExpiryColor(endDate: string) {
   const now = new Date(); const end = new Date(endDate);
@@ -93,6 +94,7 @@ export default function ContractenPage() {
     const rows = sorted.map((c) => { const school = schoolMap.get(c.school_id); return [school?.name ?? "", c.contract_type, c.start_date, c.end_date, c.renewal_date, c.status, c.value ?? "", c.description ?? ""]; });
     const csv = [headers, ...rows].map((r) => r.join(";")).join("\n"); const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "contracten_export.csv"; a.click();
+    writeAuditLog({ action: "export", entity_type: "export", entity_id: "contracten-csv", entity_name: "Contracten export", changes: { row_count: rows.length, format: "csv" } });
   }, [sorted, schoolMap]);
 
   return (
