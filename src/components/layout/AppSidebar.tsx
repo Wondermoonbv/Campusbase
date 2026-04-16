@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { usePendingInschrijvingenCount } from "@/hooks/usePendingInschrijvingen";
 import {
   LayoutDashboard,
-  GraduationCap,
+  Building2,
   BookOpen,
   FileText,
   CalendarDays,
