@@ -214,8 +214,6 @@ export type Database = {
         Row: {
           afbraak_tijd: string | null
           budget: number | null
-          contactpersoon_id: string | null
-          contactpersoon_stand: string | null
           date: string
           description: string | null
           doelgroep_niveau:
@@ -254,8 +252,6 @@ export type Database = {
         Insert: {
           afbraak_tijd?: string | null
           budget?: number | null
-          contactpersoon_id?: string | null
-          contactpersoon_stand?: string | null
           date: string
           description?: string | null
           doelgroep_niveau?:
@@ -294,8 +290,6 @@ export type Database = {
         Update: {
           afbraak_tijd?: string | null
           budget?: number | null
-          contactpersoon_id?: string | null
-          contactpersoon_stand?: string | null
           date?: string
           description?: string | null
           doelgroep_niveau?:
@@ -333,17 +327,52 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "evenementen_contactpersoon_id_fkey"
-            columns: ["contactpersoon_id"]
+            foreignKeyName: "evenementen_school_id_fkey"
+            columns: ["organisator_id"]
+            isOneToOne: false
+            referencedRelation: "organisaties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_contactpersonen: {
+        Row: {
+          contact_id: string
+          created_at: string | null
+          event_id: string
+          id: string
+          notities: string | null
+          rol: Database["public"]["Enums"]["contactpersoon_rol"]
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string | null
+          event_id: string
+          id?: string
+          notities?: string | null
+          rol: Database["public"]["Enums"]["contactpersoon_rol"]
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          notities?: string | null
+          rol?: Database["public"]["Enums"]["contactpersoon_rol"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_contactpersonen_contact_id_fkey"
+            columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "contacten"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "evenementen_school_id_fkey"
-            columns: ["organisator_id"]
+            foreignKeyName: "event_contactpersonen_event_id_fkey"
+            columns: ["event_id"]
             isOneToOne: false
-            referencedRelation: "organisaties"
+            referencedRelation: "evenementen"
             referencedColumns: ["id"]
           },
         ]
@@ -732,6 +761,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "editor" | "viewer" | "standenbouwer"
+      contactpersoon_rol: "event_ter_plaatse" | "administratief" | "anders"
       doelgroep_niveau_enum: "bachelor" | "master" | "beide" | "graduaat"
       follow_up_status_enum: "to_do" | "in_orde" | "nvt"
       organisatie_type:
@@ -879,6 +909,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "editor", "viewer", "standenbouwer"],
+      contactpersoon_rol: ["event_ter_plaatse", "administratief", "anders"],
       doelgroep_niveau_enum: ["bachelor", "master", "beide", "graduaat"],
       follow_up_status_enum: ["to_do", "in_orde", "nvt"],
       organisatie_type: [
