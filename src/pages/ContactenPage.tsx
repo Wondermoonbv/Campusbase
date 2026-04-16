@@ -182,7 +182,7 @@ export default function ContactenPage() {
                 <TableRow>
                   <TableHead>Naam</TableHead>
                   <TableHead>Rol / Functie</TableHead>
-                  <TableHead>School</TableHead>
+                  <TableHead>Organisatie</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Telefoon</TableHead>
                   {canEdit && <TableHead className="w-[100px]">Acties</TableHead>}
