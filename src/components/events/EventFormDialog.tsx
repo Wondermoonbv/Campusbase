@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useScholen } from "@/hooks/useScholen";
+import { useState, useEffect, useMemo } from "react";
+import { useScholen, useContacten } from "@/hooks/useScholen";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,7 @@ interface EventFormDialogProps { open: boolean; onOpenChange: (v: boolean) => vo
 export function EventFormDialog({ open, onOpenChange, event, onSave }: EventFormDialogProps) {
   const isEdit = !!event;
   const { scholen } = useScholen();
+  const { contacten: allContacten } = useContacten();
   const [form, setForm] = useState({
     name: "", type: "jobbeurs" as string, date: "", start_time: "", end_time: "",
     location: "", organisator_id: "", responsible: "", elia_contact: "", team_members: "",
@@ -25,10 +26,9 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
     budget: "", status: "gepland" as string, setup_date: "", setup_time: "", notes: "",
     standenbouwer_nodig: false, opbouw_tijd: "", afbraak_tijd: "", stand_grootte: "",
     contactpersoon_stand: "", stand_notities: "", max_ambassadeurs: "",
-    // New fields
     regio: "" as string, taal: "" as string, doelgroep_niveau: "" as string,
     registratie_type: "" as string, follow_up_status: "to_do" as string,
-    contactpersoon_naam: "", contactpersoon_telefoon: "", contactpersoon_email: "",
+    contactpersoon_id: "" as string,
   });
 
   useEffect(() => {
@@ -57,9 +57,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           doelgroep_niveau: event.doelgroep_niveau || "",
           registratie_type: event.registratie_type || "",
           follow_up_status: event.follow_up_status || "to_do",
-          contactpersoon_naam: event.contactpersoon_naam || "",
-          contactpersoon_telefoon: event.contactpersoon_telefoon || "",
-          contactpersoon_email: event.contactpersoon_email || "",
+          contactpersoon_id: event.contactpersoon_id || "",
         });
       } else {
         setForm({
@@ -71,19 +69,37 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           afbraak_tijd: "", stand_grootte: "", contactpersoon_stand: "",
           stand_notities: "", max_ambassadeurs: "",
           regio: "", taal: "", doelgroep_niveau: "", registratie_type: "",
-          follow_up_status: "to_do", contactpersoon_naam: "",
-          contactpersoon_telefoon: "", contactpersoon_email: "",
+          follow_up_status: "to_do", contactpersoon_id: "",
         });
       }
     }
   }, [open, event]);
 
+  // Reset contactpersoon when organisator changes
+  const handleOrganisatorChange = (v: string) => {
+    const oldOrg = form.organisator_id;
+    const newOrg = v;
+    if (oldOrg && oldOrg !== newOrg && form.contactpersoon_id) {
+      toast.info("Contactpersoon gereset omdat organisator gewijzigd is.");
+      setForm({ ...form, organisator_id: newOrg, contactpersoon_id: "" });
+    } else {
+      setForm({ ...form, organisator_id: newOrg });
+    }
+  };
+
+  // Filter contacts for current organisator
+  const orgContacten = useMemo(() => {
+    const orgId = form.organisator_id && form.organisator_id !== "none" ? form.organisator_id : null;
+    if (!orgId) return [];
+    return allContacten
+      .filter((c) => c.organisatie_id === orgId)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [allContacten, form.organisator_id]);
+
+  const hasOrganisator = !!form.organisator_id && form.organisator_id !== "none";
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.contactpersoon_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.contactpersoon_email)) {
-      toast.error("Ongeldig e-mailadres voor contactpersoon event.");
-      return;
-    }
     const sanitized = sanitizeFormData(form);
     const saved: Event = {
       ...(event?.id ? { id: event.id } : {}),
@@ -111,9 +127,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       doelgroep_niveau: sanitized.doelgroep_niveau || null,
       registratie_type: sanitized.registratie_type || null,
       follow_up_status: sanitized.follow_up_status || "to_do",
-      contactpersoon_naam: sanitized.contactpersoon_naam || "",
-      contactpersoon_telefoon: sanitized.contactpersoon_telefoon || "",
-      contactpersoon_email: sanitized.contactpersoon_email || "",
+      contactpersoon_id: sanitized.contactpersoon_id || null,
     } as Event;
     onSave?.(saved);
     toast.success(isEdit ? "Evenement bijgewerkt." : "Evenement toegevoegd.");
@@ -147,7 +161,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           {/* Organisator */}
           <div>
             <Label>Organisator *</Label>
-            <Select value={form.organisator_id} onValueChange={(v) => setForm({ ...form, organisator_id: v })}>
+            <Select value={form.organisator_id} onValueChange={handleOrganisatorChange}>
               <SelectTrigger><SelectValue placeholder="Selecteer organisator" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Geen</SelectItem>
@@ -195,13 +209,35 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
 
           {/* Contactpersoon event */}
           <div className="border-t border-border pt-4 space-y-3">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contactpersoon event</h3>
-            <p className="text-xs text-muted-foreground -mt-1">Contactpersoon bij de organisator voor dit specifieke event (optioneel)</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div><Label>Naam</Label><Input value={form.contactpersoon_naam} onChange={(e) => setForm({ ...form, contactpersoon_naam: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
-              <div><Label>Telefoon</Label><Input value={form.contactpersoon_telefoon} onChange={(e) => setForm({ ...form, contactpersoon_telefoon: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
-              <div><Label>E-mail</Label><Input type="email" value={form.contactpersoon_email} onChange={(e) => setForm({ ...form, contactpersoon_email: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
-            </div>
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contactpersoon bij organisator</h3>
+            <p className="text-xs text-muted-foreground -mt-1">
+              {hasOrganisator
+                ? "Kies een bestaande contactpersoon van deze organisator (optioneel)"
+                : "Kies eerst een organisator"}
+            </p>
+            <Select
+              value={form.contactpersoon_id}
+              onValueChange={(v) => setForm({ ...form, contactpersoon_id: v })}
+              disabled={!hasOrganisator}
+            >
+              <SelectTrigger className={!hasOrganisator ? "opacity-50" : ""}>
+                <SelectValue placeholder={hasOrganisator ? "Selecteer contactpersoon" : "Kies eerst een organisator"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Geen contactpersoon</SelectItem>
+                {orgContacten.length === 0 && hasOrganisator ? (
+                  <div className="px-3 py-2 text-xs text-muted-foreground">
+                    Geen contactpersonen bekend voor deze organisator. Voeg eerst een contact toe via de organisatie-detailpagina.
+                  </div>
+                ) : (
+                  orgContacten.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}{c.role ? ` — ${c.role}` : ""}{c.department ? ` (${c.department})` : ""}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Stand info */}
@@ -247,7 +283,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
             )}
           </div>
 
-          <div className="flex justify-end gap-2 pt-2"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuleren</Button><Button type="submit">{isEdit ? "Opslaan" : "Toevoegen"}</Button></div>
+          <Button type="submit" className="w-full">{isEdit ? "Opslaan" : "Toevoegen"}</Button>
         </form>
       </DialogContent>
     </Dialog>
