@@ -190,7 +190,7 @@ export default function DashboardPage() {
       {/* KPI cards */}
       {showKpis && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <KpiCard icon={GraduationCap} label="Actieve scholen" value={activeSchools} to="/scholen?status=actief" />
+          <KpiCard icon={GraduationCap} label="Actieve organisaties" value={activeSchools} to="/organisaties?status=actief" />
           <KpiCard icon={CalendarDays} label="Events deze maand" value={eventsThisMonth} to="/evenementen" />
           <KpiCard icon={ListTodo} label="Openstaande taken" value={openTasks} to="/taken" />
           <KpiCard icon={Users} label="Actieve ambassadeurs" value={activeAmbassadeurs} to="/ambassadeurs" />

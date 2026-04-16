@@ -147,7 +147,7 @@ export default function OpleidingenPage() {
               <div key={p.id} className="surface-card overflow-hidden">
                 <div className="p-4 cursor-pointer active:scale-[0.99] transition-transform" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1"><p className="font-medium text-sm">{p.name}</p><Link to={`/scholen/${p.organisatie_id}`} className="text-xs text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}</Link><p className="text-xs text-muted-foreground mt-0.5 capitalize">{p.study_level} · {p.field_of_study}</p></div>
+                    <div className="min-w-0 flex-1"><p className="font-medium text-sm">{p.name}</p><Link to={`/organisaties/${p.organisatie_id}`} className="text-xs text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}</Link><p className="text-xs text-muted-foreground mt-0.5 capitalize">{p.study_level} · {p.field_of_study}</p></div>
                     <div className="flex items-center gap-1">
                       <span className="text-sm font-medium tabular-nums">{p.student_count ?? "—"}</span>
                       {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(p); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}

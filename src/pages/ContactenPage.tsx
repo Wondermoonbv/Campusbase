@@ -34,9 +34,9 @@ const ContactMobileCard = memo(function ContactMobileCard({
       </div>
       {c.role && <p className="text-xs text-muted-foreground">{c.role}</p>}
       {school ? (
-        <Link to={`/scholen/${school.id}`} className="text-xs text-primary hover:underline">{school.name}</Link>
+        <Link to={`/organisaties/${school.id}`} className="text-xs text-primary hover:underline">{school.name}</Link>
       ) : (
-        <span className="text-xs text-muted-foreground italic">Geen school</span>
+        <span className="text-xs text-muted-foreground italic">Geen organisatie</span>
       )}
       <div className="flex flex-wrap gap-3 text-xs">
         {c.email && <a href={`mailto:${c.email}`} className="text-primary hover:underline inline-flex items-center gap-1"><Mail className="h-3 w-3" /> {c.email}</a>}
@@ -58,9 +58,9 @@ const ContactTableRow = memo(function ContactTableRow({
       <TableCell>{c.role || "—"}</TableCell>
       <TableCell>
         {school ? (
-          <Link to={`/scholen/${school.id}`} className="text-primary hover:underline">{school.name}</Link>
+          <Link to={`/organisaties/${school.id}`} className="text-primary hover:underline">{school.name}</Link>
         ) : (
-          <span className="text-muted-foreground italic text-xs">Geen school</span>
+          <span className="text-muted-foreground italic text-xs">Geen organisatie</span>
         )}
       </TableCell>
       <TableCell>{c.email ? <a href={`mailto:${c.email}`} className="text-primary hover:underline">{c.email}</a> : "—"}</TableCell>
