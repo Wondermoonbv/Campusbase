@@ -4,7 +4,12 @@ import { AppFooter } from "@/components/layout/AppFooter";
 const PRIVACY_MD = `# CampusBase Privacy Policy
 
 **Version:** 1.0
-**Last updated:** April 2026
+**Last updated:** 16 April 2026
+**Effective date:** 16 April 2026
+
+---
+
+> **Note:** This privacy policy applies to the current CampusBase setup, operated by Wondermoon BV. For white-label deployments to external clients, the **Data Processing Agreement** in Appendix A applies — the client becomes the data controller and Wondermoon BV becomes the processor.
 
 ---
 
@@ -18,9 +23,11 @@ We take your privacy seriously and comply with the General Data Protection Regul
 
 **Data controller:**
 Wondermoon BV
+Belgiëlei 24 bus 903, 2018 Antwerpen, Belgium
 Company registration number (KBO/BCE): BE0455280584
+Email: campusbase@wondermoon.be
 
-For any questions about this privacy policy or to exercise your rights, please contact us at privacy@wondermoon.be.
+For any questions about this privacy policy or to exercise your rights, please contact us at campusbase@wondermoon.be.
 
 ## 3. What data we collect
 
@@ -129,7 +136,7 @@ Under the GDPR you have the following rights:
 | **Objection** | Object to processing based on legitimate interests |
 | **Withdraw consent** | Where processing is based on consent |
 
-To exercise any of these rights, send an email to privacy@wondermoon.be. We will respond within 30 days.
+To exercise any of these rights, send an email to campusbase@wondermoon.be. We will respond within 30 days.
 
 ### Filing a complaint
 
@@ -160,23 +167,30 @@ We may amend this privacy policy to reflect new functionality or changes in legi
 - We inform clients by email at least 30 days in advance
 - We request renewed consent where necessary
 
+The most recent version is always available at https://campusbase-red.vercel.app/privacy.
+
 ## 11. Contact
 
 Questions about this privacy policy or how we handle your data?
 
-**General inquiries:** privacy@wondermoon.be
-**Postal address:** Wondermoon BV
+**General inquiries:** campusbase@wondermoon.be
+**Postal address:** Wondermoon BV, Belgiëlei 24 bus 903, 2018 Antwerpen, Belgium
 
 ---
 
 ## Appendix A: Data Processing Agreement (DPA) — template
 
-> When a client uses CampusBase, this DPA applies automatically as the data processing agreement.
+> This DPA applies to the use of CampusBase by Elia Transmission Belgium NV. For future white-label deployments to other clients, this template is adapted per client.
 
 ### Parties
 
 - **Processor:** Wondermoon BV (CampusBase)
-- **Controller:** The client
+  Belgiëlei 24 bus 903, 2018 Antwerpen, Belgium
+  Company number: BE0455280584
+
+- **Controller:** Elia Transmission Belgium NV
+  Keizerslaan 20, 1000 Brussels, Belgium
+  Company number: BE0731.852.231
 
 ### Subject matter
 
