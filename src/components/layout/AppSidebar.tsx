@@ -19,7 +19,7 @@ import {
   Shield,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useViewAs } from "@/contexts/ViewAsContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -380,15 +380,13 @@ export function AppSidebar() {
                   Instellingen
                 </button>
               )}
-              <a
-                href="/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                to="/privacy"
                 className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors"
               >
                 <Shield className="h-4 w-4" />
                 Privacy Policy
-              </a>
+              </Link>
               <button
                 onClick={logout}
                 aria-label="Uitloggen"
