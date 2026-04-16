@@ -14,6 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Pencil, Trash2, Search, GraduationCap, CalendarDays, FileText, BookOpen, CheckSquare, UserPlus, Eye, KeyRound, Copy, RefreshCw } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { toast } from "sonner";
@@ -136,6 +138,33 @@ export default function GebruikersPage() {
   const copyPassword = () => {
     navigator.clipboard.writeText(resetPassword);
     toast.success("Wachtwoord gekopieerd naar klembord.");
+  };
+
+  // Delete user
+  const [deleteUser, setDeleteUser] = useState<AppUser | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const handleDeleteUser = useCallback(async () => {
+    if (!deleteUser) return;
+    setDeleteLoading(true);
+    try {
+      const { error } = await supabase.rpc("soft_delete_user", { target_user_id: deleteUser.id });
+      if (error) throw error;
+      toast.success("Gebruiker verwijderd.");
+      refreshUsers?.();
+      setDeleteOpen(false);
+      setDeleteUser(null);
+    } catch (err: any) {
+      toast.error(err?.message ?? "Fout bij verwijderen.");
+    } finally {
+      setDeleteLoading(false);
+    }
+  }, [deleteUser, refreshUsers]);
+
+  const openDeleteDialog = (u: AppUser) => {
+    setDeleteUser(u);
+    setDeleteOpen(true);
   };
 
   const { sort, toggleSort } = useSort("lastName");
@@ -285,7 +314,7 @@ export default function GebruikersPage() {
                   <div className="flex items-center gap-3">
                     <UserAvatar name={u.name} avatarUrl={u.avatarUrl} />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{u.name} {!isActive && <span className="text-xs text-muted-foreground">(inactief)</span>}</p>
+                      <p className="font-medium text-sm flex items-center gap-1.5">{u.name} {!isActive && <Badge variant="outline" className="text-xs text-muted-foreground">Inactief</Badge>}</p>
                       <p className="text-xs text-muted-foreground truncate">{u.email}</p>
                       {isAdmin ? (
                         <Select value={u.role} onValueChange={(v) => handleRoleChange(u.id, v as UserRole)}>
@@ -320,6 +349,16 @@ export default function GebruikersPage() {
                             </TooltipTrigger>
                             <TooltipContent>Wachtwoord resetten</TooltipContent>
                           </Tooltip>
+                          {u.id !== currentUser?.id && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => openDeleteDialog(u)}>
+                                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Verwijderen</TooltipContent>
+                            </Tooltip>
+                          )}
                           <Switch
                             checked={isActive}
                             onCheckedChange={() => handleToggleActive(u.id, isActive)}
@@ -356,7 +395,7 @@ export default function GebruikersPage() {
                         <div className="flex items-center gap-2.5">
                           <UserAvatar name={u.name} avatarUrl={u.avatarUrl} />
                           <span className="font-medium">{u.name}</span>
-                          {!isActive && <span className="text-xs text-muted-foreground">(inactief)</span>}
+                          {!isActive && <Badge variant="outline" className="text-xs text-muted-foreground">Inactief</Badge>}
                         </div>
                       </TableCell>
                       <TableCell>{u.email}</TableCell>
@@ -407,6 +446,16 @@ export default function GebruikersPage() {
                               </TooltipTrigger>
                               <TooltipContent>Wachtwoord resetten</TooltipContent>
                             </Tooltip>
+                            {u.id !== currentUser?.id && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openDeleteDialog(u)}>
+                                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Verwijderen</TooltipContent>
+                              </Tooltip>
+                            )}
                           </div>
                         </TableCell>
                       )}
@@ -632,6 +681,27 @@ export default function GebruikersPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteOpen} onOpenChange={(v) => { if (!v) { setDeleteOpen(false); setDeleteUser(null); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Gebruiker verwijderen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Weet je zeker dat je <span className="font-medium text-foreground">{deleteUser?.name}</span> wil verwijderen? Deze actie deactiveert de gebruiker permanent. Hun activiteit in audit logs blijft bewaard.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteLoading}>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              disabled={deleteLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteLoading ? "Verwijderen..." : "Verwijderen"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
