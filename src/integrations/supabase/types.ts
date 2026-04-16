@@ -212,15 +212,15 @@ export type Database = {
       }
       evenementen: {
         Row: {
-          afbraak_tijd: string | null
+          booth_size: string | null
           budget: number | null
           date: string
           description: string | null
-          doelgroep_niveau:
-            | Database["public"]["Enums"]["doelgroep_niveau_enum"]
-            | null
           elia_contact: string | null
           end_time: string | null
+          event_language:
+            | Database["public"]["Enums"]["event_language_enum"]
+            | null
           follow_up_status:
             | Database["public"]["Enums"]["follow_up_status_enum"]
             | null
@@ -229,36 +229,32 @@ export type Database = {
           max_ambassadeurs: number | null
           name: string
           notes: string | null
-          opbouw_tijd: string | null
           organisator_id: string | null
-          regio: Database["public"]["Enums"]["regio_enum"] | null
-          registratie_type:
-            | Database["public"]["Enums"]["registratie_type_enum"]
+          region: Database["public"]["Enums"]["region_enum"] | null
+          registration_type:
+            | Database["public"]["Enums"]["registration_type_enum"]
             | null
-          responsible: string | null
+          requires_booth_builder: boolean | null
           setup_date: string | null
           setup_time: string | null
-          stand_grootte: string | null
-          stand_notities: string | null
-          stand_size: string | null
           stand_type: string | null
-          standenbouwer_nodig: boolean | null
           start_time: string | null
           status: string
-          taal: Database["public"]["Enums"]["taal_enum"] | null
+          target_level: Database["public"]["Enums"]["target_level_enum"] | null
           team_members: string[] | null
+          teardown_time: string | null
           type: string
         }
         Insert: {
-          afbraak_tijd?: string | null
+          booth_size?: string | null
           budget?: number | null
           date: string
           description?: string | null
-          doelgroep_niveau?:
-            | Database["public"]["Enums"]["doelgroep_niveau_enum"]
-            | null
           elia_contact?: string | null
           end_time?: string | null
+          event_language?:
+            | Database["public"]["Enums"]["event_language_enum"]
+            | null
           follow_up_status?:
             | Database["public"]["Enums"]["follow_up_status_enum"]
             | null
@@ -267,36 +263,32 @@ export type Database = {
           max_ambassadeurs?: number | null
           name: string
           notes?: string | null
-          opbouw_tijd?: string | null
           organisator_id?: string | null
-          regio?: Database["public"]["Enums"]["regio_enum"] | null
-          registratie_type?:
-            | Database["public"]["Enums"]["registratie_type_enum"]
+          region?: Database["public"]["Enums"]["region_enum"] | null
+          registration_type?:
+            | Database["public"]["Enums"]["registration_type_enum"]
             | null
-          responsible?: string | null
+          requires_booth_builder?: boolean | null
           setup_date?: string | null
           setup_time?: string | null
-          stand_grootte?: string | null
-          stand_notities?: string | null
-          stand_size?: string | null
           stand_type?: string | null
-          standenbouwer_nodig?: boolean | null
           start_time?: string | null
           status?: string
-          taal?: Database["public"]["Enums"]["taal_enum"] | null
+          target_level?: Database["public"]["Enums"]["target_level_enum"] | null
           team_members?: string[] | null
+          teardown_time?: string | null
           type?: string
         }
         Update: {
-          afbraak_tijd?: string | null
+          booth_size?: string | null
           budget?: number | null
           date?: string
           description?: string | null
-          doelgroep_niveau?:
-            | Database["public"]["Enums"]["doelgroep_niveau_enum"]
-            | null
           elia_contact?: string | null
           end_time?: string | null
+          event_language?:
+            | Database["public"]["Enums"]["event_language_enum"]
+            | null
           follow_up_status?:
             | Database["public"]["Enums"]["follow_up_status_enum"]
             | null
@@ -305,24 +297,20 @@ export type Database = {
           max_ambassadeurs?: number | null
           name?: string
           notes?: string | null
-          opbouw_tijd?: string | null
           organisator_id?: string | null
-          regio?: Database["public"]["Enums"]["regio_enum"] | null
-          registratie_type?:
-            | Database["public"]["Enums"]["registratie_type_enum"]
+          region?: Database["public"]["Enums"]["region_enum"] | null
+          registration_type?:
+            | Database["public"]["Enums"]["registration_type_enum"]
             | null
-          responsible?: string | null
+          requires_booth_builder?: boolean | null
           setup_date?: string | null
           setup_time?: string | null
-          stand_grootte?: string | null
-          stand_notities?: string | null
-          stand_size?: string | null
           stand_type?: string | null
-          standenbouwer_nodig?: boolean | null
           start_time?: string | null
           status?: string
-          taal?: Database["public"]["Enums"]["taal_enum"] | null
+          target_level?: Database["public"]["Enums"]["target_level_enum"] | null
           team_members?: string[] | null
+          teardown_time?: string | null
           type?: string
         }
         Relationships: [
@@ -762,7 +750,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "editor" | "viewer" | "standenbouwer"
       contactpersoon_rol: "event_ter_plaatse" | "administratief" | "anders"
-      doelgroep_niveau_enum: "bachelor" | "master" | "beide" | "graduaat"
+      event_language_enum: "nl" | "fr" | "en" | "meertalig"
       follow_up_status_enum: "to_do" | "in_orde" | "nvt"
       organisatie_type:
         | "school"
@@ -770,7 +758,7 @@ export type Database = {
         | "werkgeversorganisatie"
         | "overheid"
         | "andere"
-      regio_enum:
+      region_enum:
         | "brussel"
         | "antwerpen"
         | "vlaams_brabant"
@@ -779,8 +767,8 @@ export type Database = {
         | "oost_vlaanderen"
         | "waals_brabant"
         | "henegouwen"
-      registratie_type_enum: "partnership" | "ad_hoc"
-      taal_enum: "nl" | "fr" | "en" | "meertalig"
+      registration_type_enum: "partnership" | "ad_hoc"
+      target_level_enum: "bachelor" | "master" | "beide" | "graduaat"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -910,7 +898,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "editor", "viewer", "standenbouwer"],
       contactpersoon_rol: ["event_ter_plaatse", "administratief", "anders"],
-      doelgroep_niveau_enum: ["bachelor", "master", "beide", "graduaat"],
+      event_language_enum: ["nl", "fr", "en", "meertalig"],
       follow_up_status_enum: ["to_do", "in_orde", "nvt"],
       organisatie_type: [
         "school",
@@ -919,7 +907,7 @@ export const Constants = {
         "overheid",
         "andere",
       ],
-      regio_enum: [
+      region_enum: [
         "brussel",
         "antwerpen",
         "vlaams_brabant",
@@ -929,8 +917,8 @@ export const Constants = {
         "waals_brabant",
         "henegouwen",
       ],
-      registratie_type_enum: ["partnership", "ad_hoc"],
-      taal_enum: ["nl", "fr", "en", "meertalig"],
+      registration_type_enum: ["partnership", "ad_hoc"],
+      target_level_enum: ["bachelor", "master", "beide", "graduaat"],
     },
   },
 } as const
