@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -75,9 +75,9 @@ export default function LoginPage() {
           </div>
           <p className="text-xs text-muted-foreground/60 text-center">
             Door in te loggen ga je akkoord met onze{" "}
-            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-muted-foreground transition-colors">
+            <Link to="/privacy" className="underline underline-offset-2 hover:text-muted-foreground transition-colors">
               Privacy Policy
-            </a>
+            </Link>
             .
           </p>
         </div>
