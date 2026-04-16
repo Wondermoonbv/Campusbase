@@ -1,6 +1,7 @@
 // Types for the Campus Recruitment CRM
 
 export type SchoolType = "universiteit" | "hogeschool" | "secundair";
+export type OrganisatieType = "school" | "studentenvereniging" | "werkgeversorganisatie" | "overheid" | "andere";
 export type Language = "NL" | "FR" | "EN";
 export type SchoolStatus = "actief" | "inactief" | "prospect";
 export type StudyLevel = "bachelor" | "master" | "graduaat";
@@ -14,7 +15,8 @@ export type EventStatus = "gepland" | "bevestigd" | "afgelopen" | "geannuleerd";
 export interface School {
   id: string;
   name: string;
-  type: SchoolType;
+  type: OrganisatieType;
+  school_type: SchoolType;
   province: string;
   city: string;
   website: string;
@@ -27,7 +29,7 @@ export interface School {
 
 export interface Contact {
   id: string;
-  school_id: string | null;
+  organisatie_id: string | null;
   name: string;
   email: string;
   phone: string;
@@ -39,7 +41,7 @@ export interface Contact {
 
 export interface Program {
   id: string;
-  school_id: string;
+  organisatie_id: string;
   name: string;
   faculty: string;
   study_level: StudyLevel;
@@ -50,7 +52,7 @@ export interface Program {
 
 export interface Contract {
   id: string;
-  school_id: string;
+  organisatie_id: string;
   contract_type: ContractType;
   start_date: string;
   end_date: string;
@@ -74,7 +76,7 @@ export interface Event {
   setup_date: string;
   setup_time: string;
   location: string;
-  school_id: string | null;
+  organisator_id: string | null;
   responsible: string;
   team_members: string[];
   elia_contact: string;
@@ -138,7 +140,7 @@ export interface Task {
   id: string;
   title: string;
   description: string;
-  school_id: string | null;
+  organisatie_id: string | null;
   event_id: string | null;
   assigned_to: string;
   due_date: string;
