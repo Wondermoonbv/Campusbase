@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import {
-  Plus, Pencil, Trash2, Search, Filter, Eye, Calendar,
+  Plus, Pencil, Trash2, Search, Filter, Eye, Calendar, Download,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ const ACTION_CONFIG: Record<string, { label: string; icon: typeof Plus; color: s
   create: { label: "Aangemaakt", icon: Plus, color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
   update: { label: "Gewijzigd", icon: Pencil, color: "bg-blue-100 text-blue-700 border-blue-200" },
   delete: { label: "Verwijderd", icon: Trash2, color: "bg-red-100 text-red-700 border-red-200" },
+  export: { label: "Geëxporteerd", icon: Download, color: "bg-purple-100 text-purple-700 border-purple-200" },
 };
 
 const ENTITY_LABELS: Record<string, string> = {
@@ -42,6 +43,10 @@ const ENTITY_LABELS: Record<string, string> = {
   taak: "Taak",
   ambassadeur: "Ambassadeur",
   inschrijving: "Inschrijving",
+  user: "Gebruiker",
+  user_role: "Rol",
+  user_password: "Wachtwoord",
+  export: "Export",
 };
 
 export default function AuditLogPage() {
@@ -126,6 +131,7 @@ export default function AuditLogPage() {
             <SelectItem value="create">Aangemaakt</SelectItem>
             <SelectItem value="update">Gewijzigd</SelectItem>
             <SelectItem value="delete">Verwijderd</SelectItem>
+            <SelectItem value="export">Geëxporteerd</SelectItem>
           </SelectContent>
         </Select>
         <Select value={entityFilter} onValueChange={setEntityFilter}>
