@@ -16,19 +16,6 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
   });
 }
 
-function decodeJwtPayload(token: string): { sub?: string; email?: string } | null {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    const payload = parts[1];
-    const padded = payload + "=".repeat((4 - payload.length % 4) % 4);
-    const decoded = atob(padded.replace(/-/g, "+").replace(/_/g, "/"));
-    return JSON.parse(decoded);
-  } catch {
-    return null;
-  }
-}
-
 type AppRole = "admin" | "editor" | "viewer" | "standenbouwer";
 
 Deno.serve(async (req) => {
@@ -53,15 +40,17 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Niet geautoriseerd." }, 401);
     }
     const token = authHeader.slice("Bearer ".length);
-    const payload = decodeJwtPayload(token);
-    if (!payload?.sub) {
-      return jsonResponse({ error: "Ongeldige token." }, 401);
-    }
-    const callerId = payload.sub;
 
     const admin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
+
+    const { data: userData, error: userErr } = await admin.auth.getUser(token);
+    if (userErr || !userData?.user) {
+      console.error("Token verification failed:", userErr);
+      return jsonResponse({ error: "Ongeldige token." }, 401);
+    }
+    const callerId = userData.user.id;
 
     const { data: callerRoles } = await admin
       .from("user_roles")

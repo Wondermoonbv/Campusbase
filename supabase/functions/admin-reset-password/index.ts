@@ -16,22 +16,6 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
   });
 }
 
-// Decode JWT payload without verification.
-// Safe here because verify_jwt=true in config.toml means Supabase
-// has already cryptographically verified the token before this function runs.
-function decodeJwtPayload(token: string): { sub?: string; email?: string } | null {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    const payload = parts[1];
-    const padded = payload + "=".repeat((4 - payload.length % 4) % 4);
-    const decoded = atob(padded.replace(/-/g, "+").replace(/_/g, "/"));
-    return JSON.parse(decoded);
-  } catch {
-    return null;
-  }
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -49,21 +33,27 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Serverconfiguratie ontbreekt." }, 500);
     }
 
+    // 1. Extract and verify JWT via Supabase Auth Admin API
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return jsonResponse({ error: "Niet geautoriseerd." }, 401);
     }
     const token = authHeader.slice("Bearer ".length);
-    const payload = decodeJwtPayload(token);
-    if (!payload?.sub) {
-      return jsonResponse({ error: "Ongeldige token." }, 401);
-    }
-    const callerId = payload.sub;
 
     const admin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
+    // admin.auth.getUser(token) verifies the token server-side via Supabase Auth
+    // and works with ES256 tokens (unlike local JWT verification)
+    const { data: userData, error: userErr } = await admin.auth.getUser(token);
+    if (userErr || !userData?.user) {
+      console.error("Token verification failed:", userErr);
+      return jsonResponse({ error: "Ongeldige token." }, 401);
+    }
+    const callerId = userData.user.id;
+
+    // 2. Check caller has admin role
     const { data: callerRoles } = await admin
       .from("user_roles")
       .select("role")
@@ -74,6 +64,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Alleen admins kunnen wachtwoorden resetten." }, 403);
     }
 
+    // 3. Parse and validate input
     const body = await req.json();
     const targetEmail = String(body.targetEmail ?? "").trim().toLowerCase();
     const newPassword = String(body.newPassword ?? "");
@@ -85,6 +76,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Wachtwoord moet minimaal 8 tekens zijn." }, 400);
     }
 
+    // 4. Find target user by email
     const { data: targetProfile, error: profileErr } = await admin
       .from("profiles")
       .select("id, email")
@@ -96,6 +88,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Gebruiker niet gevonden." }, 404);
     }
 
+    // 5. Update password via Auth Admin API
     const { error: updateErr } = await admin.auth.admin.updateUserById(
       targetProfile.id,
       { password: newPassword }
