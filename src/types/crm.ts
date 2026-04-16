@@ -7,7 +7,6 @@ export type SchoolStatus = "actief" | "inactief" | "prospect";
 export type StudyLevel = "bachelor" | "master" | "graduaat";
 export type ContractType = "partnership" | "sponsoring" | "stage-overeenkomst" | "andere";
 export type StandType = "jobbeurs stand" | "infotafel" | "presentatie" | "workshop" | "anders";
-export type StandSize = "klein 2m²" | "medium 4m²" | "groot 6m²+" | "anders";
 export type ContractStatus = "actief" | "verlopen" | "in onderhandeling";
 export type EventType = "jobbeurs" | "campus presentatie" | "workshop" | "hackathon" | "andere";
 export type EventStatus = "gepland" | "bevestigd" | "afgelopen" | "geannuleerd";
@@ -84,23 +83,25 @@ export interface Event {
   setup_time: string;
   location: string;
   organisator_id: string | null;
-  responsible: string;
-  team_members: string[];
   elia_contact: string;
+  team_members: string[];
   budget: number | null;
   status: EventStatus;
   description: string;
   stand_type: StandType;
-  stand_size: StandSize;
   notes: string;
   school?: School;
   target_program_ids?: string[];
-   regio?: Regio | null;
-   taal?: Taal | null;
-   doelgroep_niveau?: DoelgroepNiveau | null;
-   registratie_type?: RegistratieType | null;
-   follow_up_status?: FollowUpStatus;
- }
+  region?: Regio | null;
+  event_language?: Taal | null;
+  target_level?: DoelgroepNiveau | null;
+  registration_type?: RegistratieType | null;
+  follow_up_status?: FollowUpStatus;
+  booth_size?: string | null;
+  requires_booth_builder?: boolean | null;
+  teardown_time?: string | null;
+  max_ambassadeurs?: number | null;
+}
 
 export interface EventContactpersoon {
   id: string;

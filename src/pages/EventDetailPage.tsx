@@ -15,14 +15,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap, CheckSquare, MessageSquare, UserCheck, Phone, Mail, AlertTriangle } from "lucide-react";
-import type { Event, Contact, StandType, StandSize, EventType, EventStatus, ContactpersoonRol } from "@/types/crm";
+import type { Event, Contact, StandType, EventType, EventStatus, ContactpersoonRol } from "@/types/crm";
 import { toast } from "sonner";
 import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 import { EventFeedbackTab } from "@/components/events/EventFeedbackTab";
 import { EventFeedbackBanner } from "@/components/events/EventFeedbackBanner";
 import { EventAmbassadeursTab } from "@/components/events/EventAmbassadeursTab";
 import { EventFormDialog } from "@/components/events/EventFormDialog";
-import { REGIO_LABELS, TAAL_LABELS, DOELGROEP_LABELS, REGISTRATIE_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, CONTACTPERSOON_ROL_LABELS, contactpersoonRolVariant, followUpVariant } from "@/lib/event-labels";
+import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, CONTACTPERSOON_ROL_LABELS, contactpersoonRolVariant, followUpVariant } from "@/lib/event-labels";
 
 export default function EventDetailPage() {
   const { id } = useParams();
@@ -164,38 +164,38 @@ export default function EventDetailPage() {
             <div>
               <Label className="text-xs text-muted-foreground">Regio</Label>
               {editing ? (
-                <Select value={form.regio || ""} onValueChange={(v) => update({ regio: v === "none" ? null : (v || null) } as any)}>
+                <Select value={form.region || ""} onValueChange={(v) => update({ region: v === "none" ? null : (v || null) } as any)}>
                   <SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Optioneel" /></SelectTrigger>
-                  <SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(REGIO_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                  <SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(REGION_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                 </Select>
-              ) : <p className="text-sm mt-1">{REGIO_LABELS[form.regio || ""] || "—"}</p>}
+              ) : <p className="text-sm mt-1">{REGION_LABELS[form.region || ""] || "—"}</p>}
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Taal</Label>
               {editing ? (
-                <Select value={form.taal || ""} onValueChange={(v) => update({ taal: v === "none" ? null : (v || null) } as any)}>
+                <Select value={form.event_language || ""} onValueChange={(v) => update({ event_language: v === "none" ? null : (v || null) } as any)}>
                   <SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Optioneel" /></SelectTrigger>
-                  <SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(TAAL_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                  <SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(EVENT_LANGUAGE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                 </Select>
-              ) : <p className="text-sm mt-1">{TAAL_LABELS[form.taal || ""] || "—"}</p>}
+              ) : <p className="text-sm mt-1">{EVENT_LANGUAGE_LABELS[form.event_language || ""] || "—"}</p>}
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Doelgroepniveau</Label>
               {editing ? (
-                <Select value={form.doelgroep_niveau || ""} onValueChange={(v) => update({ doelgroep_niveau: v === "none" ? null : (v || null) } as any)}>
+                <Select value={form.target_level || ""} onValueChange={(v) => update({ target_level: v === "none" ? null : (v || null) } as any)}>
                   <SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Optioneel" /></SelectTrigger>
-                  <SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(DOELGROEP_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                  <SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(TARGET_LEVEL_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                 </Select>
-              ) : <p className="text-sm mt-1">{DOELGROEP_LABELS[form.doelgroep_niveau || ""] || "—"}</p>}
+              ) : <p className="text-sm mt-1">{TARGET_LEVEL_LABELS[form.target_level || ""] || "—"}</p>}
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Registratietype</Label>
               {editing ? (
-                <Select value={form.registratie_type || ""} onValueChange={(v) => update({ registratie_type: v === "none" ? null : (v || null) } as any)}>
+                <Select value={form.registration_type || ""} onValueChange={(v) => update({ registration_type: v === "none" ? null : (v || null) } as any)}>
                   <SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Optioneel" /></SelectTrigger>
-                  <SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(REGISTRATIE_TYPE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                  <SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(REGISTRATION_TYPE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                 </Select>
-              ) : <p className="text-sm mt-1">{REGISTRATIE_TYPE_LABELS[form.registratie_type || ""] || "—"}</p>}
+              ) : <p className="text-sm mt-1">{REGISTRATION_TYPE_LABELS[form.registration_type || ""] || "—"}</p>}
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Follow-up status</Label>
@@ -280,7 +280,6 @@ export default function EventDetailPage() {
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><Users className="h-4 w-4" /> Contactinfo & Team</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Elia contactpersoon" value={form.elia_contact} editing={editing} onChange={(v) => update({ elia_contact: v })} />
-            <Field label="Verantwoordelijke" value={form.responsible} editing={editing} onChange={(v) => update({ responsible: v })} />
           </div>
           <div><Label className="text-xs text-muted-foreground">Teamleden aanwezig</Label>{editing ? <Input value={form.team_members.join(", ")} onChange={(e) => update({ team_members: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })} placeholder="Naam 1, Naam 2, ..." className="h-10 sm:h-9" /> : <div className="flex flex-wrap gap-1.5 mt-1">{form.team_members.length > 0 ? form.team_members.map((m) => <span key={m} className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground">{m}</span>) : <span className="text-sm text-muted-foreground">—</span>}</div>}</div>
         </section>
@@ -303,7 +302,6 @@ export default function EventDetailPage() {
           <div><Label className="text-xs text-muted-foreground">Beschrijving</Label>{editing ? <Textarea value={form.description} onChange={(e) => update({ description: e.target.value })} rows={3} /> : <p className="text-sm mt-1">{form.description || "—"}</p>}</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><Label className="text-xs text-muted-foreground">Type stand</Label>{editing ? <Select value={form.stand_type} onValueChange={(v) => update({ stand_type: v as StandType })}><SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="jobbeurs stand">Jobbeurs stand</SelectItem><SelectItem value="infotafel">Infotafel</SelectItem><SelectItem value="presentatie">Presentatie</SelectItem><SelectItem value="workshop">Workshop</SelectItem><SelectItem value="anders">Anders</SelectItem></SelectContent></Select> : <p className="text-sm capitalize mt-1">{form.stand_type}</p>}</div>
-            <div><Label className="text-xs text-muted-foreground">Standformaat</Label>{editing ? <Select value={form.stand_size} onValueChange={(v) => update({ stand_size: v as StandSize })}><SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="klein 2m²">Klein 2m²</SelectItem><SelectItem value="medium 4m²">Medium 4m²</SelectItem><SelectItem value="groot 6m²+">Groot 6m²+</SelectItem><SelectItem value="anders">Anders</SelectItem></SelectContent></Select> : <p className="text-sm capitalize mt-1">{form.stand_size}</p>}</div>
           </div>
         </section>
 
@@ -312,25 +310,18 @@ export default function EventDetailPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label className="text-xs text-muted-foreground">Max. ambassadeurs (optioneel)</Label>
-              {editing ? <Input type="number" min={0} placeholder="Geen limiet" value={(form as any).max_ambassadeurs ?? ""} onChange={(e) => update({ max_ambassadeurs: e.target.value ? Number(e.target.value) : null } as any)} className="h-10 sm:h-9" /> : <p className="text-sm mt-1">{(form as any).max_ambassadeurs ?? "Geen limiet"}</p>}
+              {editing ? <Input type="number" min={0} placeholder="Geen limiet" value={form.max_ambassadeurs ?? ""} onChange={(e) => update({ max_ambassadeurs: e.target.value ? Number(e.target.value) : null })} className="h-10 sm:h-9" /> : <p className="text-sm mt-1">{form.max_ambassadeurs ?? "Geen limiet"}</p>}
             </div>
           </div>
           <div className="flex items-center justify-between pt-2 border-t border-border/40">
             <Label className="text-xs text-muted-foreground">Standenbouwer nodig</Label>
-            {editing ? <Switch checked={(form as any).standenbouwer_nodig ?? false} onCheckedChange={(v) => update({ standenbouwer_nodig: v } as any)} /> : <p className="text-sm">{(form as any).standenbouwer_nodig ? "Ja" : "Nee"}</p>}
+            {editing ? <Switch checked={form.requires_booth_builder ?? false} onCheckedChange={(v) => update({ requires_booth_builder: v })} /> : <p className="text-sm">{form.requires_booth_builder ? "Ja" : "Nee"}</p>}
           </div>
-          {(form as any).standenbouwer_nodig && (
+          {form.requires_booth_builder && (
             <div className="space-y-4 pl-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Opbouwtijd" value={(form as any).opbouw_tijd || ""} editing={editing} onChange={(v) => update({ opbouw_tijd: v } as any)} />
-                <Field label="Afbraaktijd" value={(form as any).afbraak_tijd || ""} editing={editing} onChange={(v) => update({ afbraak_tijd: v } as any)} />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Standgrootte" value={(form as any).stand_grootte || ""} editing={editing} onChange={(v) => update({ stand_grootte: v } as any)} />
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Stand notities</Label>
-                {editing ? <Textarea value={(form as any).stand_notities || ""} onChange={(e) => update({ stand_notities: e.target.value } as any)} rows={2} /> : <p className="text-sm mt-1">{(form as any).stand_notities || "—"}</p>}
+                <Field label="Afbraaktijd" value={form.teardown_time || ""} editing={editing} onChange={(v) => update({ teardown_time: v || null })} type="time" />
+                <Field label="Standgrootte" value={form.booth_size || ""} editing={editing} onChange={(v) => update({ booth_size: v || null })} />
               </div>
             </div>
           )}

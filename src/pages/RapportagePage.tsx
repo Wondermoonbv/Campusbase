@@ -16,7 +16,7 @@ import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarte
 import { nl } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { writeAuditLog } from "@/lib/audit";
-import { REGIO_LABELS, DOELGROEP_LABELS, REGISTRATIE_TYPE_LABELS } from "@/lib/event-labels";
+import { REGION_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS } from "@/lib/event-labels";
 
 const CHART_COLORS = ["#0E6575", "#ef7c14", "#007BAF", "#0C8129", "#CD2E15", "#434f54", "#6366f1", "#ec4899"];
 type PeriodPreset = "week" | "month" | "quarter" | "year" | "custom";
@@ -92,9 +92,9 @@ export default function RapportagePage() {
   const contractsByType = useMemo(() => { const s: Record<string, number> = {}; filteredContracts.forEach((c) => { s[c.contract_type] = (s[c.contract_type] || 0) + (c.value ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredContracts]);
   const totalContractValue = filteredContracts.filter((c) => c.status === "actief").reduce((s, c) => s + (c.value ?? 0), 0);
 
-  const eventsByRegio = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { const key = e.regio ? (REGIO_LABELS[e.regio] || e.regio) : "Onbekend"; c[key] = (c[key] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents]);
-  const eventsByDoelgroep = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { const key = e.doelgroep_niveau ? (DOELGROEP_LABELS[e.doelgroep_niveau] || e.doelgroep_niveau) : "Onbekend"; c[key] = (c[key] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents]);
-  const eventsByRegistratie = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { const key = e.registratie_type ? (REGISTRATIE_TYPE_LABELS[e.registratie_type] || e.registratie_type) : "Onbekend"; c[key] = (c[key] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents]);
+  const eventsByRegio = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { const key = e.region ? (REGION_LABELS[e.region] || e.region) : "Onbekend"; c[key] = (c[key] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents]);
+  const eventsByDoelgroep = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { const key = e.target_level ? (TARGET_LEVEL_LABELS[e.target_level] || e.target_level) : "Onbekend"; c[key] = (c[key] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents]);
+  const eventsByRegistratie = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { const key = e.registration_type ? (REGISTRATION_TYPE_LABELS[e.registration_type] || e.registration_type) : "Onbekend"; c[key] = (c[key] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents]);
 
 
   return (

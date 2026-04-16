@@ -23,7 +23,7 @@ import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableT
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
-import { REGIO_LABELS, TAAL_LABELS, DOELGROEP_LABELS, REGISTRATIE_TYPE_LABELS, FOLLOW_UP_LABELS, followUpVariant } from "@/lib/event-labels";
+import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, followUpVariant } from "@/lib/event-labels";
 
 const EVENT_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "name", label: "Naam", required: true },
@@ -103,10 +103,10 @@ export default function EventenPage() {
       const matchSearch = e.name.toLowerCase().includes(search.toLowerCase()) || e.location.toLowerCase().includes(search.toLowerCase());
       const matchType = filterType === "all" || e.type === filterType;
       const matchStatus = filterStatus === "all" || e.status === filterStatus;
-      const matchRegio = filterRegio === "all" || e.regio === filterRegio;
-      const matchTaal = filterTaal === "all" || e.taal === filterTaal;
-      const matchDoelgroep = filterDoelgroep === "all" || e.doelgroep_niveau === filterDoelgroep;
-      const matchRegistratie = filterRegistratie === "all" || e.registratie_type === filterRegistratie;
+      const matchRegio = filterRegio === "all" || e.region === filterRegio;
+      const matchTaal = filterTaal === "all" || e.event_language === filterTaal;
+      const matchDoelgroep = filterDoelgroep === "all" || e.target_level === filterDoelgroep;
+      const matchRegistratie = filterRegistratie === "all" || e.registration_type === filterRegistratie;
       const matchFollowUp = filterFollowUp === "all" || e.follow_up_status === filterFollowUp;
       let matchPeriod = true;
       if (filterPeriod === "thisYear") matchPeriod = new Date(e.date).getFullYear() === now.getFullYear();
@@ -126,8 +126,8 @@ export default function EventenPage() {
   }), [filtered, sort]);
 
   const exportCSV = useCallback(() => {
-    const headers = ["Naam", "Type", "Datum", "Locatie", "Status", "Verantwoordelijke", "Budget", "Follow-up"];
-    const rows = sorted.map((e) => [e.name, e.type, e.date, e.location, e.status, e.responsible, e.budget ?? "", FOLLOW_UP_LABELS[e.follow_up_status || ""] || ""]);
+    const headers = ["Naam", "Type", "Datum", "Locatie", "Status", "Budget", "Follow-up"];
+    const rows = sorted.map((e) => [e.name, e.type, e.date, e.location, e.status, e.budget ?? "", FOLLOW_UP_LABELS[e.follow_up_status || ""] || ""]);
     const csv = [headers, ...rows].map((r) => r.join(";")).join("\n"); const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "evenementen_export.csv"; a.click();
     writeAuditLog({ action: "export", entity_type: "export", entity_id: "evenementen-csv", entity_name: "Evenementen export", changes: { row_count: rows.length, format: "csv" } });
@@ -172,10 +172,10 @@ export default function EventenPage() {
         </div>
         {showExtraFilters && (
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 mt-3 pt-3 border-t border-border">
-            <Select value={filterRegio} onValueChange={setFilterRegio}><SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Regio" /></SelectTrigger><SelectContent><SelectItem value="all">Alle regio's</SelectItem>{Object.entries(REGIO_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
-            <Select value={filterTaal} onValueChange={setFilterTaal}><SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Taal" /></SelectTrigger><SelectContent><SelectItem value="all">Alle talen</SelectItem>{Object.entries(TAAL_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
-            <Select value={filterDoelgroep} onValueChange={setFilterDoelgroep}><SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Doelgroep" /></SelectTrigger><SelectContent><SelectItem value="all">Alle niveaus</SelectItem>{Object.entries(DOELGROEP_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
-            <Select value={filterRegistratie} onValueChange={setFilterRegistratie}><SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Registratie" /></SelectTrigger><SelectContent><SelectItem value="all">Alle types</SelectItem>{Object.entries(REGISTRATIE_TYPE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
+            <Select value={filterRegio} onValueChange={setFilterRegio}><SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Regio" /></SelectTrigger><SelectContent><SelectItem value="all">Alle regio's</SelectItem>{Object.entries(REGION_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
+            <Select value={filterTaal} onValueChange={setFilterTaal}><SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Taal" /></SelectTrigger><SelectContent><SelectItem value="all">Alle talen</SelectItem>{Object.entries(EVENT_LANGUAGE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
+            <Select value={filterDoelgroep} onValueChange={setFilterDoelgroep}><SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Doelgroep" /></SelectTrigger><SelectContent><SelectItem value="all">Alle niveaus</SelectItem>{Object.entries(TARGET_LEVEL_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
+            <Select value={filterRegistratie} onValueChange={setFilterRegistratie}><SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Registratie" /></SelectTrigger><SelectContent><SelectItem value="all">Alle types</SelectItem>{Object.entries(REGISTRATION_TYPE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
             <Select value={filterFollowUp} onValueChange={setFilterFollowUp}><SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Follow-up" /></SelectTrigger><SelectContent><SelectItem value="all">Alle statussen</SelectItem>{Object.entries(FOLLOW_UP_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
           </div>
         )}

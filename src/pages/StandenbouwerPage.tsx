@@ -23,10 +23,9 @@ interface StandEvent {
   name: string;
   date: string;
   location: string | null;
-  opbouw_tijd: string | null;
-  afbraak_tijd: string | null;
-  stand_grootte: string | null;
-  stand_notities: string | null;
+  setup_time: string | null;
+  teardown_time: string | null;
+  booth_size: string | null;
 }
 
 const priorityIcon: Record<string, React.ReactNode> = {
@@ -63,10 +62,10 @@ export default function StandenbouwerPage() {
     async function load() {
       const { data, error } = await supabase
         .from("evenementen")
-        .select("id, name, date, location, opbouw_tijd, afbraak_tijd, stand_grootte, stand_notities")
-        .eq("standenbouwer_nodig", true)
+        .select("id, name, date, location, setup_time, teardown_time, booth_size")
+        .eq("requires_booth_builder", true)
         .order("date", { ascending: true });
-      if (!error && data) setEvents(data as StandEvent[]);
+      if (!error && data) setEvents(data as unknown as StandEvent[]);
       setLoading(false);
     }
     load();
@@ -158,16 +157,10 @@ export default function StandenbouwerPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <Detail icon={CalendarDays} label="Datum" value={format(parseISO(ev.date), "d MMMM yyyy", { locale: nl })} />
                           <Detail icon={MapPin} label="Locatie" value={ev.location} />
-                          <Detail icon={Clock} label="Opbouwtijd" value={ev.opbouw_tijd} />
-                          <Detail icon={Clock} label="Afbraaktijd" value={ev.afbraak_tijd} />
-                          <Detail icon={Ruler} label="Standgrootte" value={ev.stand_grootte} />
+                          <Detail icon={Clock} label="Opbouwuur" value={ev.setup_time} />
+                          <Detail icon={Clock} label="Afbraaktijd" value={ev.teardown_time} />
+                          <Detail icon={Ruler} label="Standgrootte" value={ev.booth_size} />
                         </div>
-                        {ev.stand_notities && (
-                          <div className="flex gap-2 mt-1 pt-2 border-t border-border">
-                            <StickyNote className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                            <p className="text-muted-foreground text-xs leading-relaxed">{ev.stand_notities}</p>
-                          </div>
-                        )}
                       </CardContent>
                     </Card>
                   );
