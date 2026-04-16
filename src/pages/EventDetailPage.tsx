@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEvenementen } from "@/hooks/useEvenementen";
@@ -13,13 +13,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap, CheckSquare, MessageSquare, UserCheck } from "lucide-react";
+import { ArrowLeft, Pencil, Save, X, Users, Clock, MapPin, CalendarDays, GraduationCap, CheckSquare, MessageSquare, UserCheck, Phone, Mail } from "lucide-react";
 import type { Event, StandType, StandSize, EventType, EventStatus } from "@/types/crm";
 import { toast } from "sonner";
 import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 import { EventFeedbackTab } from "@/components/events/EventFeedbackTab";
 import { EventFeedbackBanner } from "@/components/events/EventFeedbackBanner";
 import { EventAmbassadeursTab } from "@/components/events/EventAmbassadeursTab";
+import { REGIO_LABELS, TAAL_LABELS, DOELGROEP_LABELS, REGISTRATIE_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, followUpVariant } from "@/lib/event-labels";
 
 export default function EventDetailPage() {
   const { id } = useParams();
@@ -44,16 +45,16 @@ export default function EventDetailPage() {
     return Object.values(groups);
   }, [scholen, opleidingen]);
 
-  // Sync form when event data loads
   useMemo(() => { if (event && !form) setForm(event); }, [event]);
 
   if (!event || !form) {
     return (<div className="page-container animate-fade-in-up"><Button variant="ghost" size="sm" onClick={() => navigate("/evenementen")}><ArrowLeft className="h-4 w-4 mr-1" /> Terug</Button><p className="mt-6 text-muted-foreground">Evenement niet gevonden.</p></div>);
   }
 
-  const school = event.organisator_id ? scholen.find((s) => s.id === event.organisator_id) : null;
+  const organisator = event.organisator_id ? scholen.find((s) => s.id === event.organisator_id) : null;
   const linkedPrograms = opleidingen.filter((p) => selectedProgramIds.includes(p.id)).map((p) => ({ ...p, school: scholen.find((s) => s.id === p.organisatie_id) }));
   const toggleProgram = (programId: string) => setSelectedProgramIds((prev) => prev.includes(programId) ? prev.filter((id) => id !== programId) : [...prev, programId]);
+  const sortedOrgs = [...scholen].sort((a, b) => a.name.localeCompare(b.name));
 
   const handleSave = async () => {
     try {
@@ -66,13 +67,20 @@ export default function EventDetailPage() {
 
   const update = (patch: Partial<Event>) => setForm((prev) => prev ? { ...prev, ...patch } : prev);
 
+  const hasContact = !!(event.contactpersoon_naam || event.contactpersoon_telefoon || event.contactpersoon_email);
+
   return (
     <div className="page-container animate-fade-in-up max-w-4xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Button variant="ghost" size="sm" className="shrink-0" aria-label="Terug naar evenementen" onClick={() => navigate("/evenementen")}><ArrowLeft className="h-4 w-4" /></Button>
-          <div className="min-w-0"><h1 className="text-lg sm:text-xl font-semibold truncate">{event.name}</h1><p className="text-xs sm:text-sm text-muted-foreground">{event.location}</p></div>
+          <div className="min-w-0"><h1 className="text-lg sm:text-xl font-semibold truncate">{event.name}</h1><p className="text-xs sm:text-sm text-muted-foreground">{event.location || "—"}</p></div>
           <StatusBadge status={event.status} />
+          {event.follow_up_status && (
+            <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${followUpVariant(event.follow_up_status)}`}>
+              {FOLLOW_UP_LABELS[event.follow_up_status] || event.follow_up_status}
+            </span>
+          )}
         </div>
         {canEdit && (editing ? (
           <div className="flex gap-2">
@@ -92,12 +100,8 @@ export default function EventDetailPage() {
       <Tabs defaultValue="details" className="space-y-4">
         <TabsList>
           <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="ambassadeurs" className="flex items-center gap-1.5">
-            <UserCheck className="h-3.5 w-3.5" /> Ambassadeurs
-          </TabsTrigger>
-          <TabsTrigger value="feedback" className="flex items-center gap-1.5">
-            <MessageSquare className="h-3.5 w-3.5" /> Feedback
-          </TabsTrigger>
+          <TabsTrigger value="ambassadeurs" className="flex items-center gap-1.5"><UserCheck className="h-3.5 w-3.5" /> Ambassadeurs</TabsTrigger>
+          <TabsTrigger value="feedback" className="flex items-center gap-1.5"><MessageSquare className="h-3.5 w-3.5" /> Feedback</TabsTrigger>
         </TabsList>
 
         <TabsContent value="details" className="space-y-4 sm:space-y-6">
@@ -108,11 +112,109 @@ export default function EventDetailPage() {
             <Field label="Naam" value={form.name} editing={editing} onChange={(v) => update({ name: v })} />
             <div><Label className="text-xs text-muted-foreground">Type</Label>{editing ? <Select value={form.type} onValueChange={(v) => update({ type: v as EventType })}><SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="jobbeurs">Jobbeurs</SelectItem><SelectItem value="campus presentatie">Campus presentatie</SelectItem><SelectItem value="workshop">Workshop</SelectItem><SelectItem value="hackathon">Hackathon</SelectItem><SelectItem value="andere">Andere</SelectItem></SelectContent></Select> : <p className="text-sm capitalize">{form.type}</p>}</div>
             <div><Label className="text-xs text-muted-foreground">Status</Label>{editing ? <Select value={form.status} onValueChange={(v) => update({ status: v as EventStatus })}><SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="gepland">Gepland</SelectItem><SelectItem value="bevestigd">Bevestigd</SelectItem><SelectItem value="afgelopen">Afgelopen</SelectItem><SelectItem value="geannuleerd">Geannuleerd</SelectItem></SelectContent></Select> : <StatusBadge status={form.status} />}</div>
-            <div><Label className="text-xs text-muted-foreground">School</Label>{editing ? <Select value={form.organisator_id ?? ""} onValueChange={(v) => update({ organisator_id: v || null })}><SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent>{scholen.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select> : <p className="text-sm">{school?.name ?? "Multi-school"}</p>}</div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Organisator</Label>
+              {editing ? (
+                <Select value={form.organisator_id ?? ""} onValueChange={(v) => update({ organisator_id: v === "none" ? null : v || null })}>
+                  <SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Selecteer organisator" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Geen</SelectItem>
+                    {sortedOrgs.map((s) => <SelectItem key={s.id} value={s.id}>{s.name} ({ORGANISATIE_TYPE_LABELS[s.type] || s.type})</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-sm">
+                  {organisator ? (
+                    <Link to={`/organisaties/${organisator.id}`} className="text-primary hover:underline">
+                      {organisator.name}
+                      <span className="ml-1.5 inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{ORGANISATIE_TYPE_LABELS[organisator.type] || organisator.type}</span>
+                    </Link>
+                  ) : "—"}
+                </p>
+              )}
+            </div>
             <Field label="Locatie" value={form.location} editing={editing} onChange={(v) => update({ location: v })} icon={<MapPin className="h-3.5 w-3.5" />} />
             <Field label="Budget (€)" value={form.budget?.toString() ?? ""} editing={editing} onChange={(v) => update({ budget: v ? Number(v) : null })} type="number" />
           </div>
         </section>
+
+        {/* Details & follow-up */}
+        <section className="surface-card p-4 sm:p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Details & follow-up</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <Label className="text-xs text-muted-foreground">Regio</Label>
+              {editing ? (
+                <Select value={form.regio || ""} onValueChange={(v) => update({ regio: v === "none" ? null : (v || null) } as any)}>
+                  <SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Optioneel" /></SelectTrigger>
+                  <SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(REGIO_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                </Select>
+              ) : <p className="text-sm mt-1">{REGIO_LABELS[form.regio || ""] || "—"}</p>}
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Taal</Label>
+              {editing ? (
+                <Select value={form.taal || ""} onValueChange={(v) => update({ taal: v === "none" ? null : (v || null) } as any)}>
+                  <SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Optioneel" /></SelectTrigger>
+                  <SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(TAAL_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                </Select>
+              ) : <p className="text-sm mt-1">{TAAL_LABELS[form.taal || ""] || "—"}</p>}
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Doelgroepniveau</Label>
+              {editing ? (
+                <Select value={form.doelgroep_niveau || ""} onValueChange={(v) => update({ doelgroep_niveau: v === "none" ? null : (v || null) } as any)}>
+                  <SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Optioneel" /></SelectTrigger>
+                  <SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(DOELGROEP_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                </Select>
+              ) : <p className="text-sm mt-1">{DOELGROEP_LABELS[form.doelgroep_niveau || ""] || "—"}</p>}
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Registratietype</Label>
+              {editing ? (
+                <Select value={form.registratie_type || ""} onValueChange={(v) => update({ registratie_type: v === "none" ? null : (v || null) } as any)}>
+                  <SelectTrigger className="h-10 sm:h-9"><SelectValue placeholder="Optioneel" /></SelectTrigger>
+                  <SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(REGISTRATIE_TYPE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                </Select>
+              ) : <p className="text-sm mt-1">{REGISTRATIE_TYPE_LABELS[form.registratie_type || ""] || "—"}</p>}
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Follow-up status</Label>
+              {editing ? (
+                <Select value={form.follow_up_status || "to_do"} onValueChange={(v) => update({ follow_up_status: v } as any)}>
+                  <SelectTrigger className="h-10 sm:h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>{Object.entries(FOLLOW_UP_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                </Select>
+              ) : (
+                <div className="mt-1">
+                  <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${followUpVariant(form.follow_up_status)}`}>
+                    {FOLLOW_UP_LABELS[form.follow_up_status || ""] || "—"}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Contactpersoon event */}
+        {(editing || hasContact) && (
+          <section className="surface-card p-4 sm:p-5 space-y-4">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><Phone className="h-4 w-4" /> Contactpersoon event</h2>
+            {editing ? (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Field label="Naam" value={form.contactpersoon_naam || ""} editing={editing} onChange={(v) => update({ contactpersoon_naam: v } as any)} />
+                <Field label="Telefoon" value={form.contactpersoon_telefoon || ""} editing={editing} onChange={(v) => update({ contactpersoon_telefoon: v } as any)} />
+                <Field label="E-mail" value={form.contactpersoon_email || ""} editing={editing} onChange={(v) => update({ contactpersoon_email: v } as any)} type="email" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {event.contactpersoon_naam && <div><Label className="text-xs text-muted-foreground">Naam</Label><p className="text-sm mt-1">{event.contactpersoon_naam}</p></div>}
+                {event.contactpersoon_telefoon && <div><Label className="text-xs text-muted-foreground">Telefoon</Label><p className="text-sm mt-1">{event.contactpersoon_telefoon}</p></div>}
+                {event.contactpersoon_email && <div><Label className="text-xs text-muted-foreground">E-mail</Label><p className="text-sm mt-1 flex items-center gap-1"><Mail className="h-3.5 w-3.5" />{event.contactpersoon_email}</p></div>}
+              </div>
+            )}
+          </section>
+        )}
 
         <section className="surface-card p-4 sm:p-5 space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><Clock className="h-4 w-4" /> Datum & Tijd</h2>
