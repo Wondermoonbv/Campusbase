@@ -682,6 +682,7 @@ export type Database = {
         Args: { new_password: string; target_email: string }
         Returns: Json
       }
+      soft_delete_user: { Args: { target_user_id: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "editor" | "viewer" | "standenbouwer"
