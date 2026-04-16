@@ -1,9 +1,38 @@
 /**
- * Strip HTML tags from a string to prevent XSS.
- * Preserves plain text content.
+ * Strip HTML tags from a string.
+ * NOTE: This is a simple denylist-based strip. Use escapeHtml() instead
+ * when interpolating user input into HTML contexts like emails.
  */
 export function stripHtml(input: string): string {
   return input.replace(/<[^>]*>/g, "");
+}
+
+/**
+ * Escape HTML special characters so user input is safe to interpolate
+ * into an HTML string (e.g. email templates).
+ * This is the standard allowlist approach: only these specific characters
+ * are transformed, so no HTML/JS can be injected regardless of input.
+ */
+export function escapeHtml(input: string): string {
+  if (input == null) return "";
+  return String(input)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * Escape a URL for safe use in href attributes.
+ * Only allows http:// and https:// schemes to prevent javascript: URIs.
+ */
+export function escapeUrl(url: string): string {
+  if (!url) return "";
+  const trimmed = String(url).trim();
+  // Only allow http and https schemes
+  if (!/^https?:\/\//i.test(trimmed)) return "";
+  return escapeHtml(trimmed);
 }
 
 /**
