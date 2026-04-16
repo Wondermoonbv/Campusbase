@@ -10,7 +10,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  LogOut, MapPin, Clock, Ruler, User, StickyNote, CalendarDays,
+  LogOut, MapPin, Clock, Ruler, StickyNote, CalendarDays,
   ListTodo, ArrowUp, Minus, AlertTriangle,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
