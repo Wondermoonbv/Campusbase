@@ -9,10 +9,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
 import {
   LogOut, MapPin, Clock, Ruler, User, StickyNote, CalendarDays,
-  ListTodo, Plus, ArrowUp, Minus, AlertTriangle,
+  ListTodo, ArrowUp, Minus, AlertTriangle,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -60,8 +59,6 @@ export default function StandenbouwerPage() {
   const { resolveAssignee } = useProfiles();
   const [events, setEvents] = useState<StandEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
-  const [taskDefaultEventId, setTaskDefaultEventId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -99,14 +96,6 @@ export default function StandenbouwerPage() {
       toast.error("Fout bij bijwerken taak.");
     }
   }, [taken, upsertTask]);
-
-  const handleSaveTask = useCallback(async (saved: Task) => {
-    try {
-      await upsertTask.mutateAsync(saved);
-    } catch {
-      toast.error("Fout bij opslaan.");
-    }
-  }, [upsertTask]);
 
   const eventMap = useMemo(() => new Map(events.map((e) => [e.id, e.name])), [events]);
 
@@ -192,14 +181,6 @@ export default function StandenbouwerPage() {
           <TabsContent value="taken" className="mt-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Mijn taken</h2>
-              <Button
-                size="sm"
-                className="h-8 gap-1.5"
-                onClick={() => { setTaskDefaultEventId(null); setTaskDialogOpen(true); }}
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Nieuwe taak
-              </Button>
             </div>
 
             {myTasks.length === 0 ? (
@@ -241,13 +222,6 @@ export default function StandenbouwerPage() {
             )}
           </TabsContent>
         </Tabs>
-
-        <TaskFormDialog
-          open={taskDialogOpen}
-          onOpenChange={setTaskDialogOpen}
-          defaultEventId={taskDefaultEventId}
-          onSave={handleSaveTask}
-        />
       </main>
     </div>
   );
