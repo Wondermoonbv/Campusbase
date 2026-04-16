@@ -163,7 +163,7 @@ const TaskTable = memo(function TaskTable({ tasks, scholen, evenementen, resolve
     <>
       <div className="block md:hidden space-y-2">
         {sorted.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen taken gevonden.</div> : sorted.map((task) => {
-          const school = task.school_id ? scholen.find((s) => s.id === task.school_id) : null;
+          const school = task.organisatie_id ? scholen.find((s) => s.id === task.organisatie_id) : null;
           const event = task.event_id ? evenementen.find((e) => e.id === task.event_id) : null;
           const overdue = !done && new Date(task.due_date) < now;
           return (
@@ -199,7 +199,7 @@ const TaskTable = memo(function TaskTable({ tasks, scholen, evenementen, resolve
           <TableHead className="w-20" />
         </TableRow></TableHeader>
           <TableBody>{sorted.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen taken gevonden.</TableCell></TableRow> : sorted.map((task) => {
-            const school = task.school_id ? scholen.find((s) => s.id === task.school_id) : null;
+            const school = task.organisatie_id ? scholen.find((s) => s.id === task.organisatie_id) : null;
             const event = task.event_id ? evenementen.find((e) => e.id === task.event_id) : null;
             const overdue = !done && new Date(task.due_date) < now;
             return (

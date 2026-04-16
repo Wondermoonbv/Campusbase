@@ -45,9 +45,9 @@ export default function SchoolDetailPage() {
     );
   }
 
-  const programs = opleidingen.filter((p) => p.school_id === school.id);
-  const contracts = contracten.filter((c) => c.school_id === school.id);
-  const schoolEvents = evenementen.filter((e) => e.school_id === school.id);
+  const programs = opleidingen.filter((p) => p.organisatie_id === school.id);
+  const contracts = contracten.filter((c) => c.organisatie_id === school.id);
+  const schoolEvents = evenementen.filter((e) => e.organisator_id === school.id);
 
   const handleSaveSchool = async (saved: School) => {
     try { await upsertSchool.mutateAsync(saved); } catch { toast.error("Fout bij opslaan."); }

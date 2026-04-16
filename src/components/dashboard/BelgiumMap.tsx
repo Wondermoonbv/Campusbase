@@ -48,7 +48,7 @@ export default function BelgiumMap() {
 
     if (showEvents) {
       evenementen.forEach((e) => {
-        const school = e.school_id ? scholen.find((s) => s.id === e.school_id) : null;
+        const school = e.organisator_id ? scholen.find((s) => s.id === e.organisator_id) : null;
         const city = school?.city || e.location.split(",").pop()?.trim() || "";
         const coords = CITY_COORDS[city];
         if (!coords) return;

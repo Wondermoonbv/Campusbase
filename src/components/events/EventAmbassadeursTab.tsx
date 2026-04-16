@@ -42,7 +42,7 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const event = useMemo(() => evenementen.find((e) => e.id === eventId), [evenementen, eventId]);
-  const school = useMemo(() => event?.school_id ? scholen.find((s) => s.id === event.school_id) : null, [event, scholen]);
+  const school = useMemo(() => event?.organisator_id ? scholen.find((s) => s.id === event.organisator_id) : null, [event, scholen]);
 
   const enrolledIds = useMemo(() => new Set(inschrijvingen.map((i) => i.ambassadeur_id)), [inschrijvingen]);
 

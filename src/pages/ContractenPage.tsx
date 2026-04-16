@@ -81,17 +81,17 @@ export default function ContractenPage() {
 
   const sorted = useMemo(() => sortItems(baseList, sort, (c, key) => {
     switch (key) {
-      case "school": return schoolMap.get(c.school_id)?.name ?? "";
+      case "school": return schoolMap.get(c.organisatie_id)?.name ?? "";
       case "type": return c.contract_type; case "start": return new Date(c.start_date).getTime();
       case "end": return new Date(c.end_date).getTime(); case "renewal": return new Date(c.renewal_date).getTime();
       case "status": return c.status; case "value": return c.value ?? 0;
-      default: return schoolMap.get(c.school_id)?.name ?? "";
+      default: return schoolMap.get(c.organisatie_id)?.name ?? "";
     }
   }), [baseList, sort, schoolMap]);
 
   const exportCSV = useCallback(() => {
     const headers = ["School", "Type", "Start", "Einde", "Vernieuwing", "Status", "Waarde", "Beschrijving"];
-    const rows = sorted.map((c) => { const school = schoolMap.get(c.school_id); return [school?.name ?? "", c.contract_type, c.start_date, c.end_date, c.renewal_date, c.status, c.value ?? "", c.description ?? ""]; });
+    const rows = sorted.map((c) => { const school = schoolMap.get(c.organisatie_id); return [school?.name ?? "", c.contract_type, c.start_date, c.end_date, c.renewal_date, c.status, c.value ?? "", c.description ?? ""]; });
     const csv = [headers, ...rows].map((r) => r.join(";")).join("\n"); const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "contracten_export.csv"; a.click();
     writeAuditLog({ action: "export", entity_type: "export", entity_id: "contracten-csv", entity_name: "Contracten export", changes: { row_count: rows.length, format: "csv" } });
@@ -113,7 +113,7 @@ export default function ContractenPage() {
         <>
           <div className="block md:hidden space-y-2">
             {sorted.map((c) => {
-              const school = schoolMap.get(c.school_id);
+              const school = schoolMap.get(c.organisatie_id);
               const isExpanded = expandedId === c.id;
               const linkedEvents = (c.linked_event_ids || []).map((eid) => evenementen.find((e) => e.id === eid)).filter(Boolean);
               return (
@@ -155,7 +155,7 @@ export default function ContractenPage() {
               <TableHead className="w-20" />
             </TableRow></TableHeader>
               <TableBody>{sorted.map((c) => {
-                const school = schoolMap.get(c.school_id);
+                const school = schoolMap.get(c.organisatie_id);
                 const isExpanded = expandedId === c.id;
                 const linkedEvents = (c.linked_event_ids || []).map((eid) => evenementen.find((e) => e.id === eid)).filter(Boolean);
                 return (
@@ -197,7 +197,7 @@ export default function ContractenPage() {
       )}
 
       <ContractFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditContract(undefined); }} contract={editContract} onSave={handleSave} />
-      <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget ? (schoolMap.get(deleteTarget.school_id)?.name ?? "contract") : ""} isLoading={deleteContract.isPending} />
+      <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget ? (schoolMap.get(deleteTarget.organisatie_id)?.name ?? "contract") : ""} isLoading={deleteContract.isPending} />
     </div>
   );
 }
