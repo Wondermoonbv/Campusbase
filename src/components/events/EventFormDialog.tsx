@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
-import { REGIO_LABELS, TAAL_LABELS, DOELGROEP_LABELS, REGISTRATIE_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, CONTACTPERSOON_ROL_LABELS } from "@/lib/event-labels";
+import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, CONTACTPERSOON_ROL_LABELS } from "@/lib/event-labels";
 import type { Event, ContactpersoonRol } from "@/types/crm";
 import { Trash2, Plus, AlertTriangle } from "lucide-react";
 
@@ -32,13 +32,13 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
 
   const [form, setForm] = useState({
     name: "", type: "jobbeurs" as string, date: "", start_time: "", end_time: "",
-    location: "", organisator_id: "", responsible: "", elia_contact: "", team_members: "",
-    description: "", stand_type: "jobbeurs stand" as string, stand_size: "medium 4m²" as string,
+    location: "", organisator_id: "", elia_contact: "", team_members: "",
+    description: "", stand_type: "jobbeurs stand" as string,
     budget: "", status: "gepland" as string, setup_date: "", setup_time: "", notes: "",
-    standenbouwer_nodig: false, opbouw_tijd: "", afbraak_tijd: "", stand_grootte: "",
-    stand_notities: "", max_ambassadeurs: "",
-    regio: "" as string, taal: "" as string, doelgroep_niveau: "" as string,
-    registratie_type: "" as string, follow_up_status: "to_do" as string,
+    requires_booth_builder: false, teardown_time: "", booth_size: "",
+    max_ambassadeurs: "",
+    region: "" as string, event_language: "" as string, target_level: "" as string,
+    registration_type: "" as string, follow_up_status: "to_do" as string,
   });
 
   const [cpEntries, setCpEntries] = useState<ContactpersoonEntry[]>([]);
@@ -50,37 +50,33 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           name: event.name, type: event.type, date: event.date,
           start_time: event.start_time || "", end_time: event.end_time || "",
           location: event.location, organisator_id: event.organisator_id || "",
-          responsible: event.responsible, elia_contact: event.elia_contact || "",
+          elia_contact: event.elia_contact || "",
           team_members: (event.team_members || []).join(", "),
           description: event.description || "",
           stand_type: event.stand_type || "jobbeurs stand",
-          stand_size: event.stand_size || "medium 4m²",
           budget: event.budget?.toString() || "", status: event.status,
           setup_date: event.setup_date || "", setup_time: event.setup_time || "",
           notes: event.notes || "",
-          standenbouwer_nodig: (event as any).standenbouwer_nodig ?? false,
-          opbouw_tijd: (event as any).opbouw_tijd || "",
-          afbraak_tijd: (event as any).afbraak_tijd || "",
-          stand_grootte: (event as any).stand_grootte || "",
-          stand_notities: (event as any).stand_notities || "",
-          max_ambassadeurs: (event as any).max_ambassadeurs?.toString() || "",
-          regio: event.regio || "", taal: event.taal || "",
-          doelgroep_niveau: event.doelgroep_niveau || "",
-          registratie_type: event.registratie_type || "",
+          requires_booth_builder: event.requires_booth_builder ?? false,
+          teardown_time: event.teardown_time || "",
+          booth_size: event.booth_size || "",
+          max_ambassadeurs: event.max_ambassadeurs?.toString() || "",
+          region: event.region || "", event_language: event.event_language || "",
+          target_level: event.target_level || "",
+          registration_type: event.registration_type || "",
           follow_up_status: event.follow_up_status || "to_do",
         });
-        // Load existing contactpersonen
         setCpEntries(existingCP.map((cp) => ({ contact_id: cp.contact_id, rol: cp.rol })));
       } else {
         setForm({
           name: "", type: "jobbeurs", date: "", start_time: "", end_time: "",
-          location: "", organisator_id: "", responsible: "", elia_contact: "",
+          location: "", organisator_id: "", elia_contact: "",
           team_members: "", description: "", stand_type: "jobbeurs stand",
-          stand_size: "medium 4m²", budget: "", status: "gepland", setup_date: "",
-          setup_time: "", notes: "", standenbouwer_nodig: false, opbouw_tijd: "",
-          afbraak_tijd: "", stand_grootte: "",
-          stand_notities: "", max_ambassadeurs: "",
-          regio: "", taal: "", doelgroep_niveau: "", registratie_type: "",
+          budget: "", status: "gepland", setup_date: "",
+          setup_time: "", notes: "", requires_booth_builder: false, teardown_time: "",
+          booth_size: "",
+          max_ambassadeurs: "",
+          region: "", event_language: "", target_level: "", registration_type: "",
           follow_up_status: "to_do",
         });
         setCpEntries([]);
@@ -144,24 +140,22 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       date: sanitized.date, start_time: sanitized.start_time,
       end_time: sanitized.end_time, location: sanitized.location,
       organisator_id: sanitized.organisator_id || null,
-      responsible: sanitized.responsible, elia_contact: sanitized.elia_contact,
+      elia_contact: sanitized.elia_contact,
       team_members: sanitized.team_members ? sanitized.team_members.split(",").map((s) => s.trim()).filter(Boolean) : [],
       description: sanitized.description,
       stand_type: sanitized.stand_type as Event["stand_type"],
-      stand_size: sanitized.stand_size as Event["stand_size"],
       budget: sanitized.budget ? Number(sanitized.budget) : null,
       status: sanitized.status as Event["status"],
       setup_date: sanitized.setup_date, setup_time: sanitized.setup_time,
       notes: sanitized.notes,
-      standenbouwer_nodig: sanitized.standenbouwer_nodig,
-      opbouw_tijd: sanitized.opbouw_tijd, afbraak_tijd: sanitized.afbraak_tijd,
-      stand_grootte: sanitized.stand_grootte,
-      stand_notities: sanitized.stand_notities,
+      requires_booth_builder: sanitized.requires_booth_builder,
+      teardown_time: sanitized.teardown_time || null,
+      booth_size: sanitized.booth_size || null,
       max_ambassadeurs: sanitized.max_ambassadeurs ? Number(sanitized.max_ambassadeurs) : null,
-      regio: sanitized.regio || null,
-      taal: sanitized.taal || null,
-      doelgroep_niveau: sanitized.doelgroep_niveau || null,
-      registratie_type: sanitized.registratie_type || null,
+      region: sanitized.region || null,
+      event_language: sanitized.event_language || null,
+      target_level: sanitized.target_level || null,
+      registration_type: sanitized.registration_type || null,
       follow_up_status: sanitized.follow_up_status || "to_do",
     } as Event;
     onSave?.(saved, cpEntries.filter((e) => e.contact_id));
@@ -210,9 +204,9 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
             </Select>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><Label>Verantwoordelijke</Label><Input value={form.responsible} onChange={(e) => setForm({ ...form, responsible: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
-            <div><Label>Elia contactpersoon</Label><Input value={form.elia_contact} onChange={(e) => setForm({ ...form, elia_contact: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
+          <div>
+            <Label>Elia contactpersoon</Label>
+            <Input value={form.elia_contact} onChange={(e) => setForm({ ...form, elia_contact: e.target.value })} maxLength={MAX_LENGTHS.shortText} />
           </div>
           <div><Label>Teamleden</Label><Input placeholder="Naam 1, Naam 2, ..." value={form.team_members} onChange={(e) => setForm({ ...form, team_members: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
 
@@ -226,16 +220,16 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Details & follow-up</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><Label>Regio</Label>
-                <Select value={form.regio} onValueChange={(v) => setForm({ ...form, regio: v })}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(REGIO_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
+                <Select value={form.region} onValueChange={(v) => setForm({ ...form, region: v })}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(REGION_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
               </div>
               <div><Label>Taal</Label>
-                <Select value={form.taal} onValueChange={(v) => setForm({ ...form, taal: v })}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(TAAL_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
+                <Select value={form.event_language} onValueChange={(v) => setForm({ ...form, event_language: v })}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(EVENT_LANGUAGE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
               </div>
               <div><Label>Doelgroepniveau</Label>
-                <Select value={form.doelgroep_niveau} onValueChange={(v) => setForm({ ...form, doelgroep_niveau: v })}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(DOELGROEP_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
+                <Select value={form.target_level} onValueChange={(v) => setForm({ ...form, target_level: v })}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(TARGET_LEVEL_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
               </div>
               <div><Label>Registratietype</Label>
-                <Select value={form.registratie_type} onValueChange={(v) => setForm({ ...form, registratie_type: v })}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(REGISTRATIE_TYPE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
+                <Select value={form.registration_type} onValueChange={(v) => setForm({ ...form, registration_type: v })}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(REGISTRATION_TYPE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
               </div>
               <div><Label>Follow-up status</Label>
                 <Select value={form.follow_up_status} onValueChange={(v) => setForm({ ...form, follow_up_status: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(FOLLOW_UP_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
@@ -313,7 +307,6 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           {/* Stand info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Type stand</Label><Select value={form.stand_type} onValueChange={(v) => setForm({ ...form, stand_type: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="jobbeurs stand">Jobbeurs stand</SelectItem><SelectItem value="infotafel">Infotafel</SelectItem><SelectItem value="presentatie">Presentatie</SelectItem><SelectItem value="workshop">Workshop</SelectItem><SelectItem value="anders">Anders</SelectItem></SelectContent></Select></div>
-            <div><Label>Standformaat</Label><Select value={form.stand_size} onValueChange={(v) => setForm({ ...form, stand_size: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="klein 2m²">Klein 2m²</SelectItem><SelectItem value="medium 4m²">Medium 4m²</SelectItem><SelectItem value="groot 6m²+">Groot 6m²+</SelectItem><SelectItem value="anders">Anders</SelectItem></SelectContent></Select></div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Budget (€)</Label><Input type="number" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} /></div>
@@ -333,20 +326,13 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           <div className="border-t border-border pt-4 space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-medium">Standenbouwer nodig</Label>
-              <Switch checked={form.standenbouwer_nodig} onCheckedChange={(v) => setForm({ ...form, standenbouwer_nodig: v })} />
+              <Switch checked={form.requires_booth_builder} onCheckedChange={(v) => setForm({ ...form, requires_booth_builder: v })} />
             </div>
-            {form.standenbouwer_nodig && (
+            {form.requires_booth_builder && (
               <div className="space-y-3 pl-1">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div><Label>Opbouwtijd</Label><Input placeholder="bijv. 08:00" value={form.opbouw_tijd} onChange={(e) => setForm({ ...form, opbouw_tijd: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
-                  <div><Label>Afbraaktijd</Label><Input placeholder="bijv. 18:00" value={form.afbraak_tijd} onChange={(e) => setForm({ ...form, afbraak_tijd: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
-                </div>
-                <div>
-                  <div><Label>Standgrootte</Label><Input placeholder="bijv. 3x3m" value={form.stand_grootte} onChange={(e) => setForm({ ...form, stand_grootte: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between"><Label>Stand notities</Label><CharacterCounter current={form.stand_notities.length} max={MAX_LENGTHS.notes} /></div>
-                  <Textarea rows={2} placeholder="Extra info voor de standenbouwer..." value={form.stand_notities} onChange={(e) => setForm({ ...form, stand_notities: e.target.value })} maxLength={MAX_LENGTHS.notes} />
+                  <div><Label>Afbraaktijd</Label><Input type="time" value={form.teardown_time} onChange={(e) => setForm({ ...form, teardown_time: e.target.value })} /></div>
+                  <div><Label>Standgrootte</Label><Input placeholder="bijv. 3x3m" value={form.booth_size} onChange={(e) => setForm({ ...form, booth_size: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
                 </div>
               </div>
             )}

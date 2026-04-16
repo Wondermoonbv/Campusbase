@@ -14,10 +14,19 @@ function mapEvent(row: any): Event {
     start_time: mapTime(row.start_time),
     end_time: mapTime(row.end_time),
     setup_time: mapTime(row.setup_time),
+    teardown_time: mapTime(row.teardown_time),
     setup_date: row.setup_date ?? "",
     budget: row.budget != null ? Number(row.budget) : null,
     team_members: row.team_members ?? [],
     organisator_id: row.organisator_id ?? null,
+    region: row.region ?? null,
+    event_language: row.event_language ?? null,
+    target_level: row.target_level ?? null,
+    registration_type: row.registration_type ?? null,
+    follow_up_status: row.follow_up_status ?? undefined,
+    booth_size: row.booth_size ?? null,
+    requires_booth_builder: row.requires_booth_builder ?? false,
+    max_ambassadeurs: row.max_ambassadeurs ?? null,
   };
 }
 
@@ -29,7 +38,7 @@ export function useEvenementen() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("evenementen")
-        .select("id, name, type, date, start_time, end_time, setup_date, setup_time, location, organisator_id, responsible, team_members, elia_contact, budget, status, description, stand_type, stand_size, notes, opbouw_tijd, afbraak_tijd, stand_grootte, stand_notities, standenbouwer_nodig, max_ambassadeurs, regio, taal, doelgroep_niveau, registratie_type, follow_up_status")
+        .select("id, name, type, date, start_time, end_time, setup_date, setup_time, teardown_time, location, organisator_id, team_members, elia_contact, budget, status, description, stand_type, booth_size, notes, requires_booth_builder, max_ambassadeurs, region, event_language, target_level, registration_type, follow_up_status")
         .order("date", { ascending: true });
       if (error) { console.error("Error fetching evenementen:", error); return []; }
       return (data as any[]).map(mapEvent);
@@ -47,10 +56,11 @@ export function useEvenementen() {
       if (payload.end_time === "") payload.end_time = null;
       if (payload.setup_date === "") payload.setup_date = null;
       if (payload.setup_time === "") payload.setup_time = null;
-      if (payload.regio === "" || payload.regio === "none") payload.regio = null;
-      if (payload.taal === "" || payload.taal === "none") payload.taal = null;
-      if (payload.doelgroep_niveau === "" || payload.doelgroep_niveau === "none") payload.doelgroep_niveau = null;
-      if (payload.registratie_type === "" || payload.registratie_type === "none") payload.registratie_type = null;
+      if (payload.teardown_time === "") payload.teardown_time = null;
+      if (payload.region === "" || payload.region === "none") payload.region = null;
+      if (payload.event_language === "" || payload.event_language === "none") payload.event_language = null;
+      if (payload.target_level === "" || payload.target_level === "none") payload.target_level = null;
+      if (payload.registration_type === "" || payload.registration_type === "none") payload.registration_type = null;
 
       if (event.id) {
         const { id, created_at, ...updates } = payload;

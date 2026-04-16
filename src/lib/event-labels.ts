@@ -1,6 +1,6 @@
 // Centralized Dutch labels for event enum values
 
-export const REGIO_LABELS: Record<string, string> = {
+export const REGION_LABELS: Record<string, string> = {
   brussel: "Brussel",
   antwerpen: "Antwerpen",
   vlaams_brabant: "Vlaams-Brabant",
@@ -11,21 +11,21 @@ export const REGIO_LABELS: Record<string, string> = {
   henegouwen: "Henegouwen",
 };
 
-export const TAAL_LABELS: Record<string, string> = {
+export const EVENT_LANGUAGE_LABELS: Record<string, string> = {
   nl: "Nederlands",
   fr: "Frans",
   en: "Engels",
   meertalig: "Meertalig",
 };
 
-export const DOELGROEP_LABELS: Record<string, string> = {
+export const TARGET_LEVEL_LABELS: Record<string, string> = {
   bachelor: "Bachelor",
   master: "Master",
   beide: "Beide",
   graduaat: "Graduaat",
 };
 
-export const REGISTRATIE_TYPE_LABELS: Record<string, string> = {
+export const REGISTRATION_TYPE_LABELS: Record<string, string> = {
   partnership: "Via partnership",
   ad_hoc: "Ad hoc",
 };
@@ -76,3 +76,9 @@ export function followUpVariant(status: string | null | undefined): string {
     default: return "bg-gray-100 text-gray-500 border-gray-200";
   }
 }
+
+// Backward-compatible aliases (deprecated, use new names)
+export const REGIO_LABELS = REGION_LABELS;
+export const TAAL_LABELS = EVENT_LANGUAGE_LABELS;
+export const DOELGROEP_LABELS = TARGET_LEVEL_LABELS;
+export const REGISTRATIE_TYPE_LABELS = REGISTRATION_TYPE_LABELS;
