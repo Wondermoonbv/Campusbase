@@ -91,7 +91,6 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           registration_type: event.registration_type || "",
           follow_up_status: event.follow_up_status || "to_do",
         });
-        setCpEntries(existingCP.map((cp) => ({ contact_id: cp.contact_id, rol: cp.rol })));
       } else {
         setForm({
           name: "", type: "jobbeurs", date: "", start_time: "", end_time: "",
@@ -107,7 +106,14 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
         setCpEntries([]);
       }
     }
-  }, [open, event, existingCP]);
+  }, [open, event]);
+
+  // Sync contactpersonen separately when they load (only for edit mode)
+  useEffect(() => {
+    if (open && event) {
+      setCpEntries(existingCP.map((cp) => ({ contact_id: cp.contact_id, rol: cp.rol })));
+    }
+  }, [open, event?.id, existingCP]);
 
   const handleOrganisatorChange = (v: string) => {
     const oldOrg = form.organisator_id;
