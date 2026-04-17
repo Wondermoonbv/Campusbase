@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, type ChangeEvent, type FocusEvent } from "react";
 import { useScholen, useContacten } from "@/hooks/useScholen";
 import { useEventContactpersonen } from "@/hooks/useEventContactpersonen";
 import { Button } from "@/components/ui/button";
@@ -21,22 +21,17 @@ interface ContactpersoonEntry {
   rol: ContactpersoonRol;
 }
 
+type TimeField = "start_time" | "end_time" | "setup_time" | "teardown_time";
+
 interface EventFormDialogProps { open: boolean; onOpenChange: (v: boolean) => void; event?: Event; onSave?: (event: Event, contactpersonen: ContactpersoonEntry[]) => void; }
 
 export function EventFormDialog({ open, onOpenChange, event, onSave }: EventFormDialogProps) {
-  // Helper: only update time state when browser reports a valid HH:MM value or empty (clear)
-  const timeChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    // Accept valid time values (HH:MM) or empty string (user cleared the field)
-    if (v === "" || /^\d{2}:\d{2}$/.test(v)) {
-      setForm(prev => ({ ...prev, [field]: v }));
-    }
-  };
   const isEdit = !!event;
   const { scholen } = useScholen();
   const { contacten: allContacten } = useContacten();
   const { contactpersonen: existingCP } = useEventContactpersonen(event?.id);
   const [confirmOrgChange, setConfirmOrgChange] = useState<string | null>(null);
+  const [timeInputVersion, setTimeInputVersion] = useState(0);
 
   const [form, setForm] = useState({
     name: "", type: "jobbeurs" as string, date: "", start_time: "", end_time: "",
@@ -50,6 +45,28 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
   });
 
   const [cpEntries, setCpEntries] = useState<ContactpersoonEntry[]>([]);
+
+  const updateTimeField = (field: TimeField, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleTimeChange = (field: TimeField) => (e: ChangeEvent<HTMLInputElement>) => {
+    const { value, validity } = e.currentTarget;
+    if (value && validity.valid) {
+      updateTimeField(field, value);
+    }
+  };
+
+  const handleTimeBlur = (field: TimeField) => (e: FocusEvent<HTMLInputElement>) => {
+    const { value, validity } = e.currentTarget;
+    updateTimeField(field, value && validity.valid ? value : "");
+  };
+
+  useEffect(() => {
+    if (open) {
+      setTimeInputVersion((prev) => prev + 1);
+    }
+  }, [open, event?.id]);
 
   useEffect(() => {
     if (open) {
@@ -188,8 +205,8 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
             <div><Label>Datum *</Label><Input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><Label>Startuur</Label><Input type="time" value={form.start_time} onChange={timeChange("start_time")} /></div>
-            <div><Label>Einduur</Label><Input type="time" value={form.end_time} onChange={timeChange("end_time")} /></div>
+            <div><Label>Startuur</Label><Input key={`${timeInputVersion}-start_time`} type="time" defaultValue={form.start_time} onChange={handleTimeChange("start_time")} onBlur={handleTimeBlur("start_time")} /></div>
+            <div><Label>Einduur</Label><Input key={`${timeInputVersion}-end_time`} type="time" defaultValue={form.end_time} onChange={handleTimeChange("end_time")} onBlur={handleTimeBlur("end_time")} /></div>
           </div>
           <div>
             <Label>Locatie / adres</Label>
@@ -323,7 +340,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           <div><Label>Max. ambassadeurs (optioneel)</Label><Input type="number" min={0} placeholder="Geen limiet" value={form.max_ambassadeurs} onChange={(e) => setForm({ ...form, max_ambassadeurs: e.target.value })} /></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Opbouwdatum</Label><Input type="date" value={form.setup_date} onChange={(e) => setForm({ ...form, setup_date: e.target.value })} /></div>
-            <div><Label>Opbouwuur</Label><Input type="time" value={form.setup_time} onChange={timeChange("setup_time")} /></div>
+            <div><Label>Opbouwuur</Label><Input key={`${timeInputVersion}-setup_time`} type="time" defaultValue={form.setup_time} onChange={handleTimeChange("setup_time")} onBlur={handleTimeBlur("setup_time")} /></div>
           </div>
           <div>
             <div className="flex items-center justify-between"><Label>Notities</Label><CharacterCounter current={form.notes.length} max={MAX_LENGTHS.notes} /></div>
@@ -339,7 +356,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
             {form.requires_booth_builder && (
               <div className="space-y-3 pl-1">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div><Label>Afbraaktijd</Label><Input type="time" value={form.teardown_time} onChange={timeChange("teardown_time")} /></div>
+                  <div><Label>Afbraaktijd</Label><Input key={`${timeInputVersion}-teardown_time`} type="time" defaultValue={form.teardown_time} onChange={handleTimeChange("teardown_time")} onBlur={handleTimeBlur("teardown_time")} /></div>
                   <div><Label>Standgrootte</Label><Input placeholder="bijv. 3x3m" value={form.booth_size} onChange={(e) => setForm({ ...form, booth_size: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
                 </div>
               </div>
