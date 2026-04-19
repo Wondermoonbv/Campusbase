@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
+import { FormSection } from "@/components/events/FormSection";
 import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, CONTACTPERSOON_ROL_LABELS } from "@/lib/event-labels";
 import type { Event, ContactpersoonRol } from "@/types/crm";
 import { Trash2, Plus, AlertTriangle } from "lucide-react";
@@ -143,13 +144,10 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
   }, [allContacten, form.organisator_id]);
 
   const hasOrganisator = !!form.organisator_id && form.organisator_id !== "none";
-
   const hasEventTerPlaatse = cpEntries.some((e) => e.rol === "event_ter_plaatse");
-
   const hasDuplicates = cpEntries.some((e, i) =>
     cpEntries.findIndex((o) => o.contact_id === e.contact_id && o.rol === e.rol) !== i
   );
-
   const cpValid = hasEventTerPlaatse && !hasDuplicates && cpEntries.every((e) => e.contact_id);
 
   const addCpEntry = () => setCpEntries([...cpEntries, { contact_id: "", rol: "event_ter_plaatse" }]);
@@ -199,56 +197,53 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{isEdit ? "Evenement bewerken" : "Nieuw evenement"}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <div className="flex items-center justify-between"><Label>Naam *</Label><CharacterCounter current={form.name.length} max={MAX_LENGTHS.title} /></div>
-            <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={MAX_LENGTHS.title} />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><Label>Type</Label><Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="jobbeurs">Jobbeurs</SelectItem><SelectItem value="campus presentatie">Campus presentatie</SelectItem><SelectItem value="workshop">Workshop</SelectItem><SelectItem value="hackathon">Hackathon</SelectItem><SelectItem value="andere">Andere</SelectItem></SelectContent></Select></div>
-            <div><Label>Datum *</Label><Input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><Label>Startuur</Label><Input key={`${timeInputVersion}-start_time`} type="time" defaultValue={form.start_time} onChange={handleTimeChange("start_time")} onBlur={handleTimeBlur("start_time")} /></div>
-            <div><Label>Einduur</Label><Input key={`${timeInputVersion}-end_time`} type="time" defaultValue={form.end_time} onChange={handleTimeChange("end_time")} onBlur={handleTimeBlur("end_time")} /></div>
-          </div>
-          <div>
-            <Label>Locatie / adres</Label>
-            <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} maxLength={MAX_LENGTHS.shortText} placeholder="bv. 'Brussels Expo' of 'KU Leuven campus Leuven' of 'Online'" />
-          </div>
 
-          {/* Organisator */}
-          <div>
-            <Label>Organisator *</Label>
-            <Select value={form.organisator_id} onValueChange={handleOrganisatorChange}>
-              <SelectTrigger><SelectValue placeholder="Selecteer organisator" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Geen</SelectItem>
-                {sortedOrgs.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name} ({ORGANISATIE_TYPE_LABELS[s.type] || s.type})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* SECTIE 1 — Basis (niet inklapbaar) */}
+          <FormSection title="Basis" collapsible={false}>
+            <div>
+              <div className="flex items-center justify-between"><Label>Naam *</Label><CharacterCounter current={form.name.length} max={MAX_LENGTHS.title} /></div>
+              <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={MAX_LENGTHS.title} />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div><Label>Type *</Label><Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="jobbeurs">Jobbeurs</SelectItem><SelectItem value="campus presentatie">Campus presentatie</SelectItem><SelectItem value="workshop">Workshop</SelectItem><SelectItem value="hackathon">Hackathon</SelectItem><SelectItem value="andere">Andere</SelectItem></SelectContent></Select></div>
+              <div><Label>Status *</Label><Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="gepland">Gepland</SelectItem><SelectItem value="bevestigd">Bevestigd</SelectItem><SelectItem value="afgelopen">Afgelopen</SelectItem><SelectItem value="geannuleerd">Geannuleerd</SelectItem></SelectContent></Select></div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div><Label>Datum *</Label><Input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
+              <div><Label>Startuur</Label><Input key={`${timeInputVersion}-start_time`} type="time" defaultValue={form.start_time} onChange={handleTimeChange("start_time")} onBlur={handleTimeBlur("start_time")} /></div>
+              <div><Label>Einduur</Label><Input key={`${timeInputVersion}-end_time`} type="time" defaultValue={form.end_time} onChange={handleTimeChange("end_time")} onBlur={handleTimeBlur("end_time")} /></div>
+            </div>
+            <div>
+              <Label>Locatie</Label>
+              <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} maxLength={MAX_LENGTHS.shortText} placeholder="bv. Brussels Expo, KU Leuven campus, of Online" />
+              <p className="text-xs text-muted-foreground mt-1">bv. Brussels Expo, KU Leuven campus, of Online</p>
+            </div>
+            <div>
+              <Label>Organisator *</Label>
+              <Select value={form.organisator_id} onValueChange={handleOrganisatorChange}>
+                <SelectTrigger><SelectValue placeholder="Selecteer organisator" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Geen</SelectItem>
+                  {sortedOrgs.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name} ({ORGANISATIE_TYPE_LABELS[s.type] || s.type})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <div className="flex items-center justify-between"><Label>Beschrijving</Label><CharacterCounter current={form.description.length} max={MAX_LENGTHS.description} /></div>
+              <Textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} maxLength={MAX_LENGTHS.description} />
+              <p className="text-xs text-muted-foreground mt-1">Info over het event, zichtbaar voor ambassadeurs</p>
+            </div>
+          </FormSection>
 
-          <div>
-            <Label>Elia contactpersoon</Label>
-            <Input value={form.elia_contact} onChange={(e) => setForm({ ...form, elia_contact: e.target.value })} maxLength={MAX_LENGTHS.shortText} />
-          </div>
-          <div><Label>Teamleden</Label><Input placeholder="Naam 1, Naam 2, ..." value={form.team_members} onChange={(e) => setForm({ ...form, team_members: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
-
-          <div>
-            <div className="flex items-center justify-between"><Label>Beschrijving</Label><CharacterCounter current={form.description.length} max={MAX_LENGTHS.description} /></div>
-            <Textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} maxLength={MAX_LENGTHS.description} />
-          </div>
-
-          {/* Details & follow-up */}
-          <div className="border-t border-border pt-4 space-y-3">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Details & follow-up</h3>
+          {/* SECTIE 2 — Doelgroep & bereik */}
+          <FormSection title="Doelgroep & bereik" defaultOpen>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><Label>Regio</Label>
                 <Select value={form.region} onValueChange={(v) => setForm({ ...form, region: v })}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(REGION_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
@@ -259,25 +254,37 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
               <div><Label>Doelgroepniveau</Label>
                 <Select value={form.target_level} onValueChange={(v) => setForm({ ...form, target_level: v })}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(TARGET_LEVEL_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
               </div>
+              <div><Label>Max. ambassadeurs</Label><Input type="number" min={0} placeholder="Geen limiet" value={form.max_ambassadeurs} onChange={(e) => setForm({ ...form, max_ambassadeurs: e.target.value })} /></div>
+            </div>
+          </FormSection>
+
+          {/* SECTIE 3 — Registratie & opvolging */}
+          <FormSection title="Registratie & opvolging" defaultOpen>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><Label>Registratietype</Label>
                 <Select value={form.registration_type} onValueChange={(v) => setForm({ ...form, registration_type: v })}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(REGISTRATION_TYPE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
               </div>
               <div><Label>Follow-up status</Label>
                 <Select value={form.follow_up_status} onValueChange={(v) => setForm({ ...form, follow_up_status: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(FOLLOW_UP_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
               </div>
+              <div className="sm:col-span-2"><Label>Budget (€)</Label><Input type="number" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} /></div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* Contactpersonen */}
-          <div className="border-t border-border pt-4 space-y-3">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contactpersonen</h3>
-            <p className="text-xs text-muted-foreground -mt-1">
-              {hasOrganisator
-                ? "Voeg minstens één contact ter plaatse toe"
-                : "Kies eerst een organisator"}
-            </p>
+          {/* SECTIE 4 — Elia team */}
+          <FormSection title="Elia team" defaultOpen>
+            <div>
+              <Label>Elia contactpersoon</Label>
+              <Input value={form.elia_contact} onChange={(e) => setForm({ ...form, elia_contact: e.target.value })} maxLength={MAX_LENGTHS.shortText} />
+            </div>
+            <div><Label>Teamleden aanwezig</Label><Input placeholder="Naam 1, Naam 2, ..." value={form.team_members} onChange={(e) => setForm({ ...form, team_members: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
+          </FormSection>
 
-            {hasOrganisator && (
+          {/* SECTIE 5 — Contactpersonen bij organisator */}
+          <FormSection title="Contactpersonen bij organisator" description="Voeg minstens één contact ter plaatse toe" defaultOpen>
+            {!hasOrganisator ? (
+              <p className="text-sm text-muted-foreground italic">Kies eerst een organisator in de sectie Basis.</p>
+            ) : (
               <>
                 {cpEntries.map((entry, idx) => (
                   <div key={idx} className="flex gap-2 items-start">
@@ -333,41 +340,37 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
                 )}
               </>
             )}
-          </div>
+          </FormSection>
 
-          {/* Stand info */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><Label>Type stand</Label><Select value={form.stand_type} onValueChange={(v) => setForm({ ...form, stand_type: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="jobbeurs stand">Jobbeurs stand</SelectItem><SelectItem value="infotafel">Infotafel</SelectItem><SelectItem value="presentatie">Presentatie</SelectItem><SelectItem value="workshop">Workshop</SelectItem><SelectItem value="anders">Anders</SelectItem></SelectContent></Select></div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><Label>Budget (€)</Label><Input type="number" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} /></div>
-            <div><Label>Status</Label><Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="gepland">Gepland</SelectItem><SelectItem value="bevestigd">Bevestigd</SelectItem><SelectItem value="afgelopen">Afgelopen</SelectItem><SelectItem value="geannuleerd">Geannuleerd</SelectItem></SelectContent></Select></div>
-          </div>
-          <div><Label>Max. ambassadeurs (optioneel)</Label><Input type="number" min={0} placeholder="Geen limiet" value={form.max_ambassadeurs} onChange={(e) => setForm({ ...form, max_ambassadeurs: e.target.value })} /></div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><Label>Opbouwdatum</Label><Input type="date" value={form.setup_date} onChange={(e) => setForm({ ...form, setup_date: e.target.value })} /></div>
-            <div><Label>Opbouwuur</Label><Input key={`${timeInputVersion}-setup_time`} type="time" defaultValue={form.setup_time} onChange={handleTimeChange("setup_time")} onBlur={handleTimeBlur("setup_time")} /></div>
-          </div>
-          <div>
-            <div className="flex items-center justify-between"><Label>Notities</Label><CharacterCounter current={form.notes.length} max={MAX_LENGTHS.notes} /></div>
-            <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} maxLength={MAX_LENGTHS.notes} />
-          </div>
-
-          {/* Standenbouwer sectie */}
-          <div className="border-t border-border pt-4 space-y-3">
+          {/* SECTIE 6 — Stand & opbouw (standaard dicht) */}
+          <FormSection title="Stand & opbouw" defaultOpen={false}>
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Standenbouwer nodig</Label>
+              <Label className="text-sm font-medium">Standenbouwer nodig?</Label>
               <Switch checked={form.requires_booth_builder} onCheckedChange={(v) => setForm({ ...form, requires_booth_builder: v })} />
             </div>
             {form.requires_booth_builder && (
-              <div className="space-y-3 pl-1">
+              <div className="space-y-3 pt-2 border-t border-border/60">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div><Label>Stand type</Label><Select value={form.stand_type} onValueChange={(v) => setForm({ ...form, stand_type: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="jobbeurs stand">Jobbeurs stand</SelectItem><SelectItem value="infotafel">Infotafel</SelectItem><SelectItem value="presentatie">Presentatie</SelectItem><SelectItem value="workshop">Workshop</SelectItem><SelectItem value="anders">Anders</SelectItem></SelectContent></Select></div>
+                  <div><Label>Stand grootte</Label><Input placeholder="bv. 3x3m" value={form.booth_size} onChange={(e) => setForm({ ...form, booth_size: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div><Label>Opbouwdatum</Label><Input type="date" value={form.setup_date} onChange={(e) => setForm({ ...form, setup_date: e.target.value })} /></div>
+                  <div><Label>Opbouwtijd</Label><Input key={`${timeInputVersion}-setup_time`} type="time" defaultValue={form.setup_time} onChange={handleTimeChange("setup_time")} onBlur={handleTimeBlur("setup_time")} /></div>
                   <div><Label>Afbraaktijd</Label><Input key={`${timeInputVersion}-teardown_time`} type="time" defaultValue={form.teardown_time} onChange={handleTimeChange("teardown_time")} onBlur={handleTimeBlur("teardown_time")} /></div>
-                  <div><Label>Standgrootte</Label><Input placeholder="bijv. 3x3m" value={form.booth_size} onChange={(e) => setForm({ ...form, booth_size: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
                 </div>
               </div>
             )}
-          </div>
+          </FormSection>
+
+          {/* SECTIE 7 — Notities (standaard dicht) */}
+          <FormSection title="Notities" defaultOpen={false}>
+            <div>
+              <div className="flex items-center justify-between"><Label>Interne notities</Label><CharacterCounter current={form.notes.length} max={MAX_LENGTHS.notes} /></div>
+              <Textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} maxLength={MAX_LENGTHS.notes} />
+              <p className="text-xs text-muted-foreground mt-1">Alleen zichtbaar voor het interne team, niet voor ambassadeurs of standenbouwer</p>
+            </div>
+          </FormSection>
 
           <Button type="submit" className="w-full" disabled={!cpValid && cpEntries.length > 0}>
             {isEdit ? "Opslaan" : "Toevoegen"}
