@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback, memo, Fragment } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useContracten } from "@/hooks/useContracten";
 import { useScholen } from "@/hooks/useScholen";
@@ -100,7 +100,7 @@ export default function ContractenPage() {
   return (
     <div className="page-container animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
-        <h1>Contracten</h1>
+        <h1>Contracten & Partnerships</h1>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={exportCSV}><Download className="h-4 w-4 mr-1" /> Export</Button>
           {canEdit && <Button size="sm" className="h-10 sm:h-8" onClick={() => { setEditContract(undefined); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-1" /> Contract toevoegen</Button>}
