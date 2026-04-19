@@ -78,7 +78,7 @@ const navGroups: NavGroup[] = [
   {
     label: "BEHEER",
     items: [
-      { title: "Contracten", url: "/contracten", icon: FileText, roles: ["admin", "editor"] },
+      { title: "Contracten & Partnerships", url: "/contracten", icon: FileText, roles: ["admin", "editor"] },
       { title: "Taken", url: "/taken", icon: CheckSquare, roles: ["admin", "editor"] },
     ],
   },

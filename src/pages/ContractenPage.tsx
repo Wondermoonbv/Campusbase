@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback, memo, Fragment } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useContracten } from "@/hooks/useContracten";
 import { useScholen } from "@/hooks/useScholen";
@@ -100,7 +100,7 @@ export default function ContractenPage() {
   return (
     <div className="page-container animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
-        <h1>Contracten</h1>
+        <h1>Contracten & Partnerships</h1>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={exportCSV}><Download className="h-4 w-4 mr-1" /> Export</Button>
           {canEdit && <Button size="sm" className="h-10 sm:h-8" onClick={() => { setEditContract(undefined); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-1" /> Contract toevoegen</Button>}
@@ -128,7 +128,25 @@ export default function ContractenPage() {
                     <div className="px-4 pb-4 pt-0 space-y-2 border-t border-border mt-0 pt-3">
                       {c.description && <p className="text-sm">{c.description}</p>}
                       {c.notes && <p className="text-sm text-muted-foreground">{c.notes}</p>}
-                      {linkedEvents.length > 0 && <div className="flex flex-wrap gap-1.5">{linkedEvents.map((event) => <span key={event!.id} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">{event!.name}</span>)}</div>}
+                      <p className="text-xs text-muted-foreground">
+                        Document:{" "}
+                        {c.document_url ? (
+                          <a href={c.document_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                            <ExternalLink className="h-3 w-3" /> Bekijken
+                          </a>
+                        ) : (
+                          <span className="italic">Geen document</span>
+                        )}
+                      </p>
+                      {linkedEvents.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {linkedEvents.map((event) => (
+                            <Link key={event!.id} to={`/evenementen/${event!.id}`} onClick={(e) => e.stopPropagation()} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded hover:bg-primary/20 transition-colors">
+                              {event!.name}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
                       {canEdit && (
                         <div className="flex gap-2">
                           <Button size="sm" variant="outline" className="h-9" onClick={(e) => { e.stopPropagation(); setEditContract(c); setDialogOpen(true); }}>Bewerken</Button>
@@ -166,7 +184,7 @@ export default function ContractenPage() {
                       <TableCell className="capitalize">{c.contract_type}</TableCell>
                       <TableCell>{new Date(c.start_date).toLocaleDateString("nl-BE")}</TableCell>
                       <TableCell>{new Date(c.end_date).toLocaleDateString("nl-BE")}</TableCell>
-                      <TableCell className="hidden lg:table-cell">{c.renewal_date ? new Date(c.renewal_date).toLocaleDateString("nl-BE") : "—"}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{c.renewal_date ? (<span className={new Date(c.renewal_date) < new Date() ? "text-amber-700 dark:text-amber-300 font-medium" : ""}>{new Date(c.renewal_date).toLocaleDateString("nl-BE")}{new Date(c.renewal_date) < new Date() && " ⚠"}</span>) : "—"}</TableCell>
                       <TableCell><StatusBadge status={c.status} /></TableCell>
                       <TableCell className="text-right tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
                       <TableCell>
@@ -180,8 +198,28 @@ export default function ContractenPage() {
                       <TableRow className="bg-muted/10 hover:bg-muted/10"><TableCell colSpan={9} className="p-4"><div className="space-y-3">
                         {c.description && <div><p className="text-xs font-medium text-muted-foreground mb-1">Beschrijving</p><p className="text-sm">{c.description}</p></div>}
                         {c.notes && <div><p className="text-xs font-medium text-muted-foreground mb-1">Notities</p><p className="text-sm">{c.notes}</p></div>}
-                        {c.document_url && <a href={c.document_url} target="_blank" rel="noopener" className="text-sm text-primary hover:underline inline-flex items-center gap-1"><ExternalLink className="h-3 w-3" /> Document bekijken</a>}
-                        {linkedEvents.length > 0 && <div><p className="text-xs font-medium text-muted-foreground mb-1.5">Gekoppelde evenementen</p><div className="flex flex-wrap gap-2">{linkedEvents.map((event) => <span key={event!.id} className="inline-flex items-center gap-1.5 text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-md"><Calendar className="h-3 w-3" />{event!.name} — {new Date(event!.date).toLocaleDateString("nl-BE")}</span>)}</div></div>}
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground mb-1">Document</p>
+                          {c.document_url ? (
+                            <a href={c.document_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline inline-flex items-center gap-1">
+                              <ExternalLink className="h-3 w-3" /> Document bekijken
+                            </a>
+                          ) : (
+                            <p className="text-sm italic text-muted-foreground">Geen document</p>
+                          )}
+                        </div>
+                        {linkedEvents.length > 0 && (
+                          <div>
+                            <p className="text-xs font-medium text-muted-foreground mb-1.5">Gekoppelde evenementen</p>
+                            <div className="flex flex-wrap gap-2">
+                              {linkedEvents.map((event) => (
+                                <Link key={event!.id} to={`/evenementen/${event!.id}`} onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1.5 text-xs bg-primary/10 text-primary hover:bg-primary/20 px-2.5 py-1 rounded-md transition-colors">
+                                  <Calendar className="h-3 w-3" />{event!.name} — {new Date(event!.date).toLocaleDateString("nl-BE")}
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div></TableCell></TableRow>
                     )}
                   </Fragment>

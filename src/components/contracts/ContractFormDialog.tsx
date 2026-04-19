@@ -38,7 +38,7 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.organisatie_id || !form.start_date || !form.end_date) { toast.error("Vul school, startdatum en einddatum in."); return; }
+    if (!form.organisatie_id || !form.start_date || !form.end_date) { toast.error("Vul organisatie, startdatum en einddatum in."); return; }
     const sanitized = sanitizeFormData(form);
     const saved: Contract = { ...(contract?.id ? { id: contract.id } : {}), organisatie_id: sanitized.organisatie_id, contract_type: sanitized.contract_type as Contract["contract_type"], start_date: sanitized.start_date, end_date: sanitized.end_date, renewal_date: sanitized.renewal_date, status: sanitized.status as Contract["status"], value: sanitized.value ? Number(sanitized.value) : null, description: sanitized.description, document_url: sanitized.document_url, notes: sanitized.notes, linked_event_ids: form.linked_event_ids } as Contract;
     onSave?.(saved);
@@ -53,10 +53,10 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{isEdit ? "Contract bewerken" : "Nieuw contract"}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div><Label>School *</Label><Select value={form.organisatie_id} onValueChange={(v) => update("organisatie_id", v)}><SelectTrigger><SelectValue placeholder="Kies een school..." /></SelectTrigger><SelectContent>{scholen.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
+          <div><Label>Organisatie *</Label><Select value={form.organisatie_id} onValueChange={(v) => update("organisatie_id", v)}><SelectTrigger><SelectValue placeholder="Kies een organisatie..." /></SelectTrigger><SelectContent>{scholen.map((s) => <SelectItem key={s.id} value={s.id}><span className="flex items-center gap-2"><span>{s.name}</span><span className="text-[10px] uppercase tracking-wide bg-muted text-muted-foreground px-1.5 py-0.5 rounded">{s.type}</span></span></SelectItem>)}</SelectContent></Select></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Type</Label><Select value={form.contract_type} onValueChange={(v) => update("contract_type", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="partnership">Partnership</SelectItem><SelectItem value="sponsoring">Sponsoring</SelectItem><SelectItem value="stage-overeenkomst">Stage-overeenkomst</SelectItem><SelectItem value="andere">Andere</SelectItem></SelectContent></Select></div>
-            <div><Label>Status</Label><Select value={form.status} onValueChange={(v) => update("status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="actief">Actief</SelectItem><SelectItem value="verlopen">Verlopen</SelectItem><SelectItem value="in onderhandeling">In onderhandeling</SelectItem></SelectContent></Select></div>
+            <div><Label>Status</Label><Select value={form.status} onValueChange={(v) => update("status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="in onderhandeling">In onderhandeling</SelectItem><SelectItem value="actief">Actief</SelectItem><SelectItem value="verlopen">Verlopen</SelectItem></SelectContent></Select></div>
           </div>
           <div>
             <div className="flex items-center justify-between"><Label>Beschrijving</Label><CharacterCounter current={form.description.length} max={MAX_LENGTHS.description} /></div>
