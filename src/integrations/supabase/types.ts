@@ -237,6 +237,7 @@ export type Database = {
           requires_booth_builder: boolean | null
           setup_date: string | null
           setup_time: string | null
+          short_code: string
           stand_type: string | null
           start_time: string | null
           status: string
@@ -271,6 +272,7 @@ export type Database = {
           requires_booth_builder?: boolean | null
           setup_date?: string | null
           setup_time?: string | null
+          short_code?: string
           stand_type?: string | null
           start_time?: string | null
           status?: string
@@ -305,6 +307,7 @@ export type Database = {
           requires_booth_builder?: boolean | null
           setup_date?: string | null
           setup_time?: string | null
+          short_code?: string
           stand_type?: string | null
           start_time?: string | null
           status?: string
