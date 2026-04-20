@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Copy, Download, Link2, MessageSquare, Star, ThumbsUp, BarChart3, Mail } from "lucide-react";
+import { Copy, Download, Link2, MessageSquare, BarChart3, Mail, Users } from "lucide-react";
 import type { FeedbackResponse } from "@/hooks/useFeedback";
 import { sendBulkEmails, buildFeedbackEmail } from "@/lib/email";
 
@@ -18,36 +18,42 @@ function avg(arr: (number | null)[]): number {
   return valid.length ? valid.reduce((s, v) => s + v, 0) / valid.length : 0;
 }
 
-function ScoreBar({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
+function ScoreBar({ label, value, max = 5 }: { label: string; value: number; max?: number }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex items-center gap-1.5 w-32 sm:w-40 shrink-0 text-sm text-muted-foreground">
-        {icon}
-        <span className="truncate">{label}</span>
-      </div>
+      <div className="w-44 sm:w-56 shrink-0 text-sm text-muted-foreground truncate">{label}</div>
       <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
         <div
           className="h-full bg-primary rounded-full transition-all duration-500"
-          style={{ width: `${(value / 5) * 100}%` }}
+          style={{ width: `${value > 0 ? (value / max) * 100 : 0}%` }}
         />
       </div>
-      <span className="text-sm font-semibold tabular-nums w-10 text-right">
-        {value > 0 ? value.toFixed(1) : "—"}
+      <span className="text-sm font-semibold tabular-nums w-14 text-right">
+        {value > 0 ? `${value.toFixed(1)}/${max}` : "—"}
       </span>
     </div>
   );
 }
 
 function exportResponsesCSV(responses: FeedbackResponse[], eventName: string) {
-  const headers = ["Naam", "E-mail", "Algemeen", "Organisatie", "Relevantie", "Stand", "Zou aanraden", "Opmerkingen", "Datum"];
+  const headers = [
+    "Naam", "E-mail",
+    "Relevantie publiek (1-5)", "Kwaliteit gesprekken (1-4)",
+    "Profielen ontmoet", "Bekendheid Elia (1-3)",
+    "Interesse (1-5)", "Effort/Return (1-3)",
+    "Opnieuw deelnemen (1-5)", "Reden", "Opmerkingen", "Datum",
+  ];
   const rows = responses.map((r) => [
     r.respondent_name,
     r.respondent_email ?? "",
-    r.overall_rating?.toString() ?? "",
-    r.organization_rating?.toString() ?? "",
-    r.relevance_rating?.toString() ?? "",
-    r.stand_rating?.toString() ?? "",
-    r.would_recommend == null ? "" : r.would_recommend ? "Ja" : "Nee",
+    r.audience_relevance?.toString() ?? "",
+    r.conversation_quality?.toString() ?? "",
+    (r.profiles_met ?? []).join(", "),
+    r.employer_awareness?.toString() ?? "",
+    r.interest_level?.toString() ?? "",
+    r.effort_vs_return?.toString() ?? "",
+    r.participate_again?.toString() ?? "",
+    (r.participate_again_reason ?? "").replace(/"/g, '""'),
     (r.comments ?? "").replace(/"/g, '""'),
     r.submitted_at ? new Date(r.submitted_at).toLocaleDateString("nl-BE") : "",
   ]);
@@ -180,14 +186,18 @@ export function EventFeedbackTab({ eventId, eventName }: { eventId: string; even
     </div>
   );
 
-  const avgOverall = avg(responses.map((r) => r.overall_rating));
-  const avgOrg = avg(responses.map((r) => r.organization_rating));
-  const avgRel = avg(responses.map((r) => r.relevance_rating));
-  const avgStand = avg(responses.map((r) => r.stand_rating));
-  const recommendPct = responses.length
-    ? Math.round((responses.filter((r) => r.would_recommend === true).length / responses.length) * 100)
-    : 0;
-  const commentsOnly = responses.filter((r) => r.comments?.trim());
+  const avgAudience = avg(responses.map((r) => r.audience_relevance));
+  const avgConversation = avg(responses.map((r) => r.conversation_quality));
+  const avgAwareness = avg(responses.map((r) => r.employer_awareness));
+  const avgInterest = avg(responses.map((r) => r.interest_level));
+  const avgEffort = avg(responses.map((r) => r.effort_vs_return));
+  const avgParticipate = avg(responses.map((r) => r.participate_again));
+
+  // Profiles met aggregation
+  const profileCounts = new Map<string, number>();
+  responses.forEach((r) => (r.profiles_met ?? []).forEach((p) => profileCounts.set(p, (profileCounts.get(p) ?? 0) + 1)));
+
+  const reasonsAndComments = responses.filter((r) => r.participate_again_reason?.trim() || r.comments?.trim());
 
   if (responses.length === 0) {
     return (
@@ -215,74 +225,88 @@ export function EventFeedbackTab({ eventId, eventName }: { eventId: string; even
           <p className="text-xs text-muted-foreground mt-1">Responses</p>
         </div>
         <div className="surface-card p-4 text-center">
-          <p className="text-2xl font-semibold tabular-nums">{avgOverall > 0 ? avgOverall.toFixed(1) : "—"}</p>
-          <p className="text-xs text-muted-foreground mt-1">Gem. score</p>
+          <p className="text-2xl font-semibold tabular-nums">{avgParticipate > 0 ? `${avgParticipate.toFixed(1)}/5` : "—"}</p>
+          <p className="text-xs text-muted-foreground mt-1">Opnieuw deelnemen</p>
         </div>
         <div className="surface-card p-4 text-center col-span-2 sm:col-span-1">
-          <p className="text-2xl font-semibold tabular-nums">{responses.length > 0 ? `${recommendPct}%` : "—"}</p>
-          <p className="text-xs text-muted-foreground mt-1">Zou aanraden</p>
+          <p className="text-2xl font-semibold tabular-nums">{avgInterest > 0 ? `${avgInterest.toFixed(1)}/5` : "—"}</p>
+          <p className="text-xs text-muted-foreground mt-1">Interesse in Elia</p>
         </div>
       </div>
 
       {/* Score bars */}
-      {responses.length > 0 && (
+      <div className="surface-card p-4 sm:p-5 space-y-3">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+          <BarChart3 className="h-4 w-4" /> Gemiddelde scores per vraag
+        </h3>
+        <div className="space-y-3">
+          <ScoreBar label="Relevantie publiek" value={avgAudience} max={5} />
+          <ScoreBar label="Kwaliteit gesprekken" value={avgConversation} max={4} />
+          <ScoreBar label="Bekendheid Elia" value={avgAwareness} max={3} />
+          <ScoreBar label="Interesse in Elia" value={avgInterest} max={5} />
+          <ScoreBar label="Effort vs return" value={avgEffort} max={3} />
+          <ScoreBar label="Opnieuw deelnemen" value={avgParticipate} max={5} />
+        </div>
+      </div>
+
+      {/* Profiles met */}
+      {profileCounts.size > 0 && (
         <div className="surface-card p-4 sm:p-5 space-y-3">
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" /> Scores per categorie
+            <Users className="h-4 w-4" /> Ontmoete profielen
           </h3>
-          <div className="space-y-3">
-            <ScoreBar label="Algemeen" value={avgOverall} icon={<Star className="h-3.5 w-3.5" />} />
-            <ScoreBar label="Organisatie" value={avgOrg} icon={<Star className="h-3.5 w-3.5" />} />
-            <ScoreBar label="Relevantie" value={avgRel} icon={<Star className="h-3.5 w-3.5" />} />
-            <ScoreBar label="Stand" value={avgStand} icon={<Star className="h-3.5 w-3.5" />} />
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 w-32 sm:w-40 shrink-0 text-sm text-muted-foreground">
-                <ThumbsUp className="h-3.5 w-3.5" />
-                <span>Zou aanraden</span>
-              </div>
-              <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-green-500 rounded-full transition-all duration-500" style={{ width: `${recommendPct}%` }} />
-              </div>
-              <span className="text-sm font-semibold tabular-nums w-10 text-right">{recommendPct}%</span>
-            </div>
+          <div className="flex flex-wrap gap-2">
+            {Array.from(profileCounts.entries())
+              .sort((a, b) => b[1] - a[1])
+              .map(([name, count]) => (
+                <span key={name} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                  {name} <span className="opacity-70">· {count}</span>
+                </span>
+              ))}
           </div>
         </div>
       )}
 
-      {/* Comments */}
-      {commentsOnly.length > 0 && (
+      {/* Reasons + Comments */}
+      {reasonsAndComments.length > 0 && (
         <div className="surface-card p-4 sm:p-5 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Opmerkingen ({commentsOnly.length})
+              Antwoorden &amp; opmerkingen ({reasonsAndComments.length})
             </h3>
-            <Button variant="outline" size="sm" onClick={() => exportResponsesCSV(responses, eventName)}>
-              <Download className="h-3.5 w-3.5 mr-1" /> CSV
-            </Button>
           </div>
           <div className="divide-y divide-border">
-            {commentsOnly.map((r) => (
-              <div key={r.id} className="py-3">
-                <div className="flex items-center justify-between mb-1">
+            {reasonsAndComments.map((r) => (
+              <div key={r.id} className="py-3 space-y-2">
+                <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">{r.respondent_name}</span>
                   <span className="text-xs text-muted-foreground">
                     {r.submitted_at ? new Date(r.submitted_at).toLocaleDateString("nl-BE") : ""}
                   </span>
                 </div>
-                <p className="text-sm text-muted-foreground">{r.comments}</p>
+                {r.participate_again_reason && (
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">Reden opnieuw deelnemen</p>
+                    <p className="text-sm text-foreground">{r.participate_again_reason}</p>
+                  </div>
+                )}
+                {r.comments && (
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">Overige opmerkingen</p>
+                    <p className="text-sm text-muted-foreground">{r.comments}</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {responses.length > 0 && (
-        <div className="flex justify-end">
-          <Button variant="outline" size="sm" onClick={() => exportResponsesCSV(responses, eventName)}>
-            <Download className="h-3.5 w-3.5 mr-1" /> Alle responses exporteren (CSV)
-          </Button>
-        </div>
-      )}
+      <div className="flex justify-end">
+        <Button variant="outline" size="sm" onClick={() => exportResponsesCSV(responses, eventName)}>
+          <Download className="h-3.5 w-3.5 mr-1" /> Alle responses exporteren (CSV)
+        </Button>
+      </div>
     </div>
   );
 }

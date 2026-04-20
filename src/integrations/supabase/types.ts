@@ -486,43 +486,52 @@ export type Database = {
       }
       feedback_responses: {
         Row: {
+          audience_relevance: number | null
           comments: string | null
+          conversation_quality: number | null
+          effort_vs_return: number | null
+          employer_awareness: number | null
           form_id: string
           id: string
-          organization_rating: number | null
-          overall_rating: number | null
-          relevance_rating: number | null
+          interest_level: number | null
+          participate_again: number | null
+          participate_again_reason: string | null
+          profiles_met: string[] | null
           respondent_email: string | null
           respondent_name: string
-          stand_rating: number | null
           submitted_at: string | null
-          would_recommend: boolean | null
         }
         Insert: {
+          audience_relevance?: number | null
           comments?: string | null
+          conversation_quality?: number | null
+          effort_vs_return?: number | null
+          employer_awareness?: number | null
           form_id: string
           id?: string
-          organization_rating?: number | null
-          overall_rating?: number | null
-          relevance_rating?: number | null
+          interest_level?: number | null
+          participate_again?: number | null
+          participate_again_reason?: string | null
+          profiles_met?: string[] | null
           respondent_email?: string | null
           respondent_name: string
-          stand_rating?: number | null
           submitted_at?: string | null
-          would_recommend?: boolean | null
         }
         Update: {
+          audience_relevance?: number | null
           comments?: string | null
+          conversation_quality?: number | null
+          effort_vs_return?: number | null
+          employer_awareness?: number | null
           form_id?: string
           id?: string
-          organization_rating?: number | null
-          overall_rating?: number | null
-          relevance_rating?: number | null
+          interest_level?: number | null
+          participate_again?: number | null
+          participate_again_reason?: string | null
+          profiles_met?: string[] | null
           respondent_email?: string | null
           respondent_name?: string
-          stand_rating?: number | null
           submitted_at?: string | null
-          would_recommend?: boolean | null
         }
         Relationships: [
           {

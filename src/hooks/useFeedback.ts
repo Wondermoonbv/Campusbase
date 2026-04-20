@@ -18,11 +18,14 @@ export interface FeedbackResponse {
   form_id: string;
   respondent_name: string;
   respondent_email: string | null;
-  overall_rating: number | null;
-  organization_rating: number | null;
-  relevance_rating: number | null;
-  stand_rating: number | null;
-  would_recommend: boolean | null;
+  audience_relevance: number | null;
+  conversation_quality: number | null;
+  profiles_met: string[] | null;
+  employer_awareness: number | null;
+  interest_level: number | null;
+  effort_vs_return: number | null;
+  participate_again: number | null;
+  participate_again_reason: string | null;
   comments: string | null;
   submitted_at: string | null;
 }
@@ -84,7 +87,7 @@ export function useFeedbackResponses(formId: string | undefined) {
       if (!formId) return [];
       const { data, error } = await supabase
         .from("feedback_responses")
-        .select("id, form_id, respondent_name, respondent_email, overall_rating, organization_rating, relevance_rating, stand_rating, would_recommend, comments, submitted_at")
+        .select("id, form_id, respondent_name, respondent_email, audience_relevance, conversation_quality, profiles_met, employer_awareness, interest_level, effort_vs_return, participate_again, participate_again_reason, comments, submitted_at")
         .eq("form_id", formId)
         .order("submitted_at", { ascending: false });
       if (error) throw error;
@@ -112,7 +115,7 @@ export function useAllFeedbackData() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("feedback_responses")
-        .select("id, form_id, overall_rating, organization_rating, relevance_rating, stand_rating, would_recommend, comments, respondent_name, respondent_email, submitted_at")
+        .select("id, form_id, audience_relevance, conversation_quality, profiles_met, employer_awareness, interest_level, effort_vs_return, participate_again, participate_again_reason, comments, respondent_name, respondent_email, submitted_at")
         .order("submitted_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as FeedbackResponse[];

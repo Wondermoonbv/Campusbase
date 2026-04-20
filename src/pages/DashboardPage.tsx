@@ -114,7 +114,7 @@ export default function DashboardPage() {
       const form = forms.find((f) => f.evenement_id === ev.id);
       const eventResponses = form ? responses.filter((r) => r.form_id === form.id) : [];
       const avgRating = eventResponses.length > 0
-        ? eventResponses.reduce((sum, r) => sum + (r.overall_rating ?? 0), 0) / eventResponses.length
+        ? eventResponses.reduce((sum, r) => sum + (r.participate_again ?? 0), 0) / eventResponses.length
         : null;
       const schoolName = ev.organisator_id ? scholen.find((s) => s.id === ev.organisator_id)?.name : null;
       return { ...ev, confirmedCount, avgRating, schoolName };
@@ -141,7 +141,7 @@ export default function DashboardPage() {
     );
     const allResponses = responses.filter((r) => allEventForms.some((f) => f.id === r.form_id));
     const avgFeedback = allResponses.length > 0
-      ? (allResponses.reduce((s, r) => s + (r.overall_rating ?? 0), 0) / allResponses.length).toFixed(1)
+      ? (allResponses.reduce((s, r) => s + (r.participate_again ?? 0), 0) / allResponses.length).toFixed(1)
       : "–";
 
     return { totalEvents, avgAmb, avgFeedback };
