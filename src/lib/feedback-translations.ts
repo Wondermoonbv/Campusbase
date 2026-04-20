@@ -1,0 +1,138 @@
+export type FeedbackLang = "nl" | "fr";
+
+export const feedbackTranslations = {
+  nl: {
+    title: "Feedback jobfairs",
+    intro:
+      "Bedankt om deel te nemen aan de jobbeurs! We willen graag jouw feedback verzamelen om onze toekomstige aanwezigheid op jobbeurzen verder te verbeteren. Het invullen van dit formulier duurt slechts enkele minuten.",
+    name_label: "Jouw naam",
+    email_label: "Email",
+    email_help: "optioneel",
+    email_placeholder: "voornaam.achternaam@elia.be",
+    multi_hint: "meerdere mogelijk",
+    q2_label: "Hoe relevant was het publiek voor Elia?",
+    q2_options: [
+      "Helemaal niet relevant",
+      "Matig relevant",
+      "Neutraal",
+      "Relevant",
+      "Zeer relevant",
+    ],
+    q3_label: "Hoe beoordeel je de kwaliteit van de gesprekken?",
+    q3_options: ["Slecht", "Beperkt", "Goed", "Zeer goed"],
+    q4_label: "Welk type profielen heb je voornamelijk ontmoet?",
+    q4_options: [
+      "Professionele bachelor",
+      "Academische bachelor",
+      "Master",
+      "Op zoek naar een stage",
+    ],
+    q5_label: "In welke mate waren studenten al bekend met Elia als werkgever?",
+    q5_options: ["Meestal niet bekend", "Enigszins bekend", "Meestal goed bekend"],
+    q6_label: "Hoe ervaarde je de interesse in Elia?",
+    q6_options: ["Negatief", "Matig", "Neutraal", "Positief", "Zeer positief"],
+    q7_label:
+      "Hoe beoordeel je, rekening houdend met de inspanning, de return van deze jobfair?",
+    q7_options: [
+      "Veel effort, weinig return",
+      "Effort en return in balans",
+      "Beperkte effort, veel return",
+    ],
+    q8_label: "Vind je dat Elia volgend jaar opnieuw aan deze jobbeurs moet deelnemen?",
+    q8_options: [
+      "Zeker niet",
+      "Waarschijnlijk niet",
+      "Twijfelgeval",
+      "Waarschijnlijk wel",
+      "Ja zeker!",
+    ],
+    q9_label: "Wat is de voornaamste reden voor jouw antwoord op de vorige vraag?",
+    q10_label: "Heb je nog andere feedback of observaties die je wil delen?",
+    submit: "Verzenden",
+    submitting: "Verzenden...",
+    thank_you_title: "Bedankt voor je feedback!",
+    thank_you_message:
+      "We gebruiken jouw input om onze toekomstige aanwezigheid op jobbeurzen te verbeteren.",
+    loading: "Laden...",
+    unavailable_title: "Formulier niet beschikbaar",
+    unavailable_message: "Dit feedback formulier is niet meer actief of bestaat niet.",
+    err_required: "Dit veld is verplicht.",
+    err_name: "Naam is verplicht.",
+    err_question: (n: number) => `Vraag ${n} is verplicht.`,
+    err_profiles: "Vraag 4: kies minstens één profiel.",
+    err_generic: "Er ging iets mis. Probeer het opnieuw.",
+    footer: "© {year} Elia Group — Campus Recruitment",
+  },
+  fr: {
+    title: "Feedback salons de l'emploi",
+    intro:
+      "Merci d'avoir participé au salon de l'emploi ! Nous souhaitons recueillir votre avis afin d'améliorer notre présence lors de futurs événements. Ce questionnaire ne prendra que quelques minutes.",
+    name_label: "Votre nom",
+    email_label: "Email",
+    email_help: "facultatif",
+    email_placeholder: "prenom.nom@elia.be",
+    multi_hint: "plusieurs choix possibles",
+    q2_label: "Quel était le degré de pertinence du public pour Elia?",
+    q2_options: [
+      "Pas pertinent",
+      "Moyennement pertinent",
+      "Neutre",
+      "Pertinent",
+      "Très pertinent",
+    ],
+    q3_label: "Comment évaluez-vous la qualité des conversations?",
+    q3_options: ["Mauvais", "Limité", "Bien", "Très bien"],
+    q4_label: "Quels types de profils avez-vous principalement rencontrés?",
+    q4_options: [
+      "Bachelier professionnel",
+      "Bachelier académique",
+      "Master",
+      "À la recherche d'un stage",
+    ],
+    q5_label:
+      "Dans quelle mesure les étudiants connaissaient-ils Elia en tant qu'employeur?",
+    q5_options: ["Majoritairement pas du tout", "Moyennement", "Majoritairement bien"],
+    q6_label: "Comment avez-vous perçu l'intérêt pour Elia sur le stand?",
+    q6_options: ["Négative", "Moyenne", "Neutre", "Positive", "Très positive"],
+    q7_label:
+      "Compte tenu de l'effort requis, comment évaluez-vous le retour global de ce job fair?",
+    q7_options: [
+      "Effort élevé, faible retour",
+      "Effort et retour équilibrés",
+      "Effort limité, retour élevé",
+    ],
+    q8_label:
+      "Pensez-vous qu'Elia devrait à nouveau participer à ce salon l'année prochaine?",
+    q8_options: [
+      "Certainement pas",
+      "Peu probable",
+      "À voir",
+      "Probablement",
+      "Certainement",
+    ],
+    q9_label: "Quelle est la raison principale de votre réponse à la question précédente?",
+    q10_label: "Avez-vous d'autres remarques ou observations à partager?",
+    submit: "Envoyer",
+    submitting: "Envoi...",
+    thank_you_title: "Merci pour votre retour !",
+    thank_you_message:
+      "Vos commentaires nous aident à améliorer notre présence lors des salons de l'emploi.",
+    loading: "Chargement...",
+    unavailable_title: "Formulaire indisponible",
+    unavailable_message: "Ce formulaire de feedback n'est plus actif ou n'existe pas.",
+    err_required: "Ce champ est obligatoire.",
+    err_name: "Le nom est requis.",
+    err_question: (n: number) => `Question ${n} requise.`,
+    err_profiles: "Question 4 : choisissez au moins un profil.",
+    err_generic: "Une erreur s'est produite. Veuillez réessayer.",
+    footer: "© {year} Elia Group — Campus Recruitment",
+  },
+} as const;
+
+// Canonical English/Dutch values stored in DB for profiles_met (independent of UI lang)
+export const PROFILES_VALUES = [
+  "Professionele bachelor",
+  "Academische bachelor",
+  "Master",
+  "Op zoek naar een stage",
+] as const;

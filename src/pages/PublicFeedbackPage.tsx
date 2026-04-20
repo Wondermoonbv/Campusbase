@@ -11,94 +11,48 @@ import { CheckCircle2 } from "lucide-react";
 import { stripHtml, MAX_LENGTHS } from "@/lib/sanitize";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
 import { cn } from "@/lib/utils";
+import {
+  feedbackTranslations,
+  PROFILES_VALUES,
+  type FeedbackLang,
+} from "@/lib/feedback-translations";
 
 const BRAND = "#0E6575";
 
-// ── Bilingual scale definitions ──
-const AUDIENCE_RELEVANCE = [
-  { v: 1, nl: "Helemaal niet relevant", fr: "Pas pertinent" },
-  { v: 2, nl: "Matig relevant", fr: "Moyennement pertinent" },
-  { v: 3, nl: "Neutraal", fr: "Neutre" },
-  { v: 4, nl: "Relevant", fr: "Pertinent" },
-  { v: 5, nl: "Zeer relevant", fr: "Très pertinent" },
-];
-const CONVERSATION_QUALITY = [
-  { v: 1, nl: "Slecht", fr: "Mauvais" },
-  { v: 2, nl: "Beperkt", fr: "Limité" },
-  { v: 3, nl: "Goed", fr: "Bien" },
-  { v: 4, nl: "Zeer goed", fr: "Très bien" },
-];
-const PROFILES_OPTIONS = [
-  { v: "Professionele bachelor", nl: "Professionele bachelor", fr: "Bachelier professionnel" },
-  { v: "Academische bachelor", nl: "Academische bachelor", fr: "Bachelier académique" },
-  { v: "Master", nl: "Master", fr: "Master" },
-  { v: "Op zoek naar een stage", nl: "Op zoek naar een stage", fr: "À la recherche d'un stage" },
-];
-const EMPLOYER_AWARENESS = [
-  { v: 1, nl: "Meestal niet bekend", fr: "Majoritairement pas du tout" },
-  { v: 2, nl: "Enigszins bekend", fr: "Moyennement" },
-  { v: 3, nl: "Meestal goed bekend", fr: "Majoritairement bien" },
-];
-const INTEREST_LEVEL = [
-  { v: 1, nl: "Negatief", fr: "Négative" },
-  { v: 2, nl: "Matig", fr: "Moyenne" },
-  { v: 3, nl: "Neutraal", fr: "Neutre" },
-  { v: 4, nl: "Positief", fr: "Positive" },
-  { v: 5, nl: "Zeer positief", fr: "Très positive" },
-];
-const EFFORT_RETURN = [
-  { v: 1, nl: "Veel effort, weinig return", fr: "Effort élevé, faible retour" },
-  { v: 2, nl: "Effort en return in balans", fr: "Effort et retour équilibrés" },
-  { v: 3, nl: "Beperkte effort, veel return", fr: "Effort limité, retour élevé" },
-];
-const PARTICIPATE_AGAIN = [
-  { v: 1, nl: "Zeker niet", fr: "Certainement pas" },
-  { v: 2, nl: "Waarschijnlijk niet", fr: "Peu probable" },
-  { v: 3, nl: "Twijfelgeval", fr: "À voir" },
-  { v: 4, nl: "Waarschijnlijk wel", fr: "Probablement" },
-  { v: 5, nl: "Ja zeker!", fr: "Certainement" },
-];
-
-interface ScaleOption { v: number; nl: string; fr: string }
-
 function ScaleField({
   number,
-  questionNl,
-  questionFr,
+  question,
   options,
   value,
   onChange,
   required,
 }: {
   number: number;
-  questionNl: string;
-  questionFr: string;
-  options: ScaleOption[];
+  question: string;
+  options: readonly string[];
   value: number | null;
   onChange: (v: number) => void;
   required?: boolean;
 }) {
   return (
     <fieldset className="space-y-3">
-      <legend className="space-y-1">
-        <div className="text-sm font-semibold text-gray-900">
-          {number}. {questionNl} {required && <span className="text-red-500">*</span>}
-        </div>
-        <div className="text-xs italic text-gray-500">{questionFr}</div>
+      <legend className="text-sm font-semibold text-gray-900">
+        {number}. {question} {required && <span className="text-red-500">*</span>}
       </legend>
       <div className="grid gap-2">
-        {options.map((opt) => {
-          const selected = value === opt.v;
+        {options.map((label, idx) => {
+          const v = idx + 1;
+          const selected = value === v;
           return (
             <button
-              key={opt.v}
+              key={v}
               type="button"
-              onClick={() => onChange(opt.v)}
+              onClick={() => onChange(v)}
               aria-pressed={selected}
               className={cn(
                 "w-full text-left px-3.5 py-2.5 rounded-lg border-2 transition-all",
                 "hover:border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1",
-                selected ? "border-current bg-opacity-5" : "border-gray-200 bg-white",
+                selected ? "border-current" : "border-gray-200 bg-white",
               )}
               style={selected ? { borderColor: BRAND, backgroundColor: `${BRAND}0d` } : undefined}
             >
@@ -110,12 +64,11 @@ function ScaleField({
                   )}
                   style={selected ? { borderColor: BRAND } : undefined}
                 >
-                  {selected && <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: BRAND }} />}
+                  {selected && (
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: BRAND }} />
+                  )}
                 </span>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm text-gray-900">{opt.nl}</div>
-                  <div className="text-xs italic text-gray-500">{opt.fr}</div>
-                </div>
+                <span className="text-sm text-gray-900">{label}</span>
               </div>
             </button>
           );
@@ -127,6 +80,8 @@ function ScaleField({
 
 export default function PublicFeedbackPage() {
   const { formId } = useParams();
+  const [lang, setLang] = useState<FeedbackLang>("nl");
+  const t = feedbackTranslations[lang];
 
   const { data: formData, isLoading } = useQuery({
     queryKey: ["public_feedback_form", formId],
@@ -166,15 +121,15 @@ export default function PublicFeedbackPage() {
     e.preventDefault();
     if (submitted || submitting) return;
     setError("");
-    if (!name.trim()) return setError("Naam is verplicht. / Le nom est requis.");
-    if (!audienceRelevance) return setError("Vraag 2 is verplicht. / Question 2 requise.");
-    if (!conversationQuality) return setError("Vraag 3 is verplicht.");
-    if (profilesMet.length === 0) return setError("Vraag 4: kies minstens één profiel.");
-    if (!employerAwareness) return setError("Vraag 5 is verplicht.");
-    if (!interestLevel) return setError("Vraag 6 is verplicht.");
-    if (!effortVsReturn) return setError("Vraag 7 is verplicht.");
-    if (!participateAgain) return setError("Vraag 8 is verplicht.");
-    if (!participateReason.trim()) return setError("Vraag 9 is verplicht.");
+    if (!name.trim()) return setError(t.err_name);
+    if (!audienceRelevance) return setError(t.err_question(2));
+    if (!conversationQuality) return setError(t.err_question(3));
+    if (profilesMet.length === 0) return setError(t.err_profiles);
+    if (!employerAwareness) return setError(t.err_question(5));
+    if (!interestLevel) return setError(t.err_question(6));
+    if (!effortVsReturn) return setError(t.err_question(7));
+    if (!participateAgain) return setError(t.err_question(8));
+    if (!participateReason.trim()) return setError(t.err_question(9));
 
     setSubmitting(true);
     try {
@@ -196,7 +151,7 @@ export default function PublicFeedbackPage() {
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {
-      setError(err.message || "Er ging iets mis. / Une erreur s'est produite.");
+      setError(err.message || t.err_generic);
     } finally {
       setSubmitting(false);
     }
@@ -205,7 +160,7 @@ export default function PublicFeedbackPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-pulse text-gray-400">Laden... / Chargement...</div>
+        <div className="animate-pulse text-gray-400">{t.loading}</div>
       </div>
     );
   }
@@ -214,9 +169,8 @@ export default function PublicFeedbackPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="text-center max-w-md">
-          <h1 className="text-xl font-semibold text-gray-800 mb-2">Formulier niet beschikbaar</h1>
-          <p className="text-sm italic text-gray-500 mb-4">Formulaire indisponible</p>
-          <p className="text-gray-500 text-sm">Dit feedback formulier is niet meer actief of bestaat niet.</p>
+          <h1 className="text-xl font-semibold text-gray-800 mb-2">{t.unavailable_title}</h1>
+          <p className="text-gray-500 text-sm">{t.unavailable_message}</p>
         </div>
       </div>
     );
@@ -229,15 +183,14 @@ export default function PublicFeedbackPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="text-center max-w-md space-y-4">
           <CheckCircle2 className="h-16 w-16 mx-auto" style={{ color: BRAND }} />
-          <h1 className="text-2xl font-semibold text-gray-800">Bedankt voor je feedback!</h1>
-          <p className="text-base italic text-gray-600">Merci pour votre retour!</p>
-          <p className="text-sm text-gray-500">
-            We gebruiken jouw input om onze toekomstige aanwezigheid op jobbeurzen te verbeteren.
-          </p>
+          <h1 className="text-2xl font-semibold text-gray-800">{t.thank_you_title}</h1>
+          <p className="text-sm text-gray-500">{t.thank_you_message}</p>
         </div>
       </div>
     );
   }
+
+  const dateLocale = lang === "fr" ? "fr-BE" : "nl-BE";
 
   return (
     <div className="min-h-screen bg-gray-50 py-6 sm:py-10 px-3 sm:px-4">
@@ -250,26 +203,48 @@ export default function PublicFeedbackPage() {
           >
             E
           </div>
-          <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">Feedback jobfairs</h1>
+
+          {/* Language picker */}
+          <div className="flex justify-center gap-2 mb-5" role="group" aria-label="Language / Taal">
+            {(["nl", "fr"] as const).map((code) => {
+              const active = lang === code;
+              const label = code === "nl" ? "Nederlands" : "Français";
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setLang(code)}
+                  aria-pressed={active}
+                  className={cn(
+                    "px-4 py-1.5 rounded-full text-sm font-medium border-2 transition-all",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1",
+                    active ? "text-white" : "text-gray-700 bg-white hover:border-gray-300",
+                  )}
+                  style={
+                    active
+                      ? { backgroundColor: BRAND, borderColor: BRAND }
+                      : { borderColor: "#e5e7eb" }
+                  }
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+
+          <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">{t.title}</h1>
           {event && (
             <p className="text-sm font-medium text-gray-700 mt-2">
               {event.name}
-              {event.date && ` · ${new Date(event.date).toLocaleDateString("nl-BE")}`}
+              {event.date && ` · ${new Date(event.date).toLocaleDateString(dateLocale)}`}
               {event.location && ` · ${event.location}`}
             </p>
           )}
         </div>
 
         {/* Intro */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6 mb-4 space-y-3">
-          <p className="text-sm text-gray-700 leading-relaxed">
-            Bedankt om deel te nemen aan de jobbeurs! We willen graag jouw feedback verzamelen om onze toekomstige
-            aanwezigheid op jobbeurzen verder te verbeteren. Het invullen van dit formulier duurt slechts enkele minuten.
-          </p>
-          <p className="text-sm italic text-gray-500 leading-relaxed">
-            Merci d'avoir participé au salon de l'emploi ! Nous souhaitons recueillir votre avis afin d'améliorer notre
-            présence lors de futurs événements. Ce questionnaire ne prendra que quelques minutes.
-          </p>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6 mb-4">
+          <p className="text-sm text-gray-700 leading-relaxed">{t.intro}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -277,8 +252,7 @@ export default function PublicFeedbackPage() {
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6 space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="name" className="text-sm font-semibold text-gray-900">
-                1. Jouw naam <span className="text-red-500">*</span>
-                <span className="block text-xs italic font-normal text-gray-500">Votre nom</span>
+                1. {t.name_label} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
@@ -291,15 +265,15 @@ export default function PublicFeedbackPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-sm font-semibold text-gray-900">
-                Email
-                <span className="block text-xs italic font-normal text-gray-500">Email (optioneel / facultatif)</span>
+                {t.email_label}{" "}
+                <span className="font-normal text-gray-500">({t.email_help})</span>
               </Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="voornaam.achternaam@elia.be"
+                placeholder={t.email_placeholder}
                 className="h-11"
                 maxLength={MAX_LENGTHS.email}
               />
@@ -309,9 +283,8 @@ export default function PublicFeedbackPage() {
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6">
             <ScaleField
               number={2}
-              questionNl="Hoe relevant was het publiek voor Elia?"
-              questionFr="Quel était le degré de pertinence du public pour Elia?"
-              options={AUDIENCE_RELEVANCE}
+              question={t.q2_label}
+              options={t.q2_options}
               value={audienceRelevance}
               onChange={setAudienceRelevance}
               required
@@ -321,9 +294,8 @@ export default function PublicFeedbackPage() {
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6">
             <ScaleField
               number={3}
-              questionNl="Hoe beoordeel je de kwaliteit van de gesprekken?"
-              questionFr="Comment évaluez-vous la qualité des conversations?"
-              options={CONVERSATION_QUALITY}
+              question={t.q3_label}
+              options={t.q3_options}
               value={conversationQuality}
               onChange={setConversationQuality}
               required
@@ -333,36 +305,26 @@ export default function PublicFeedbackPage() {
           {/* Profiles met (multi) */}
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6">
             <fieldset className="space-y-3">
-              <legend className="space-y-1">
-                <div className="text-sm font-semibold text-gray-900">
-                  4. Welk type profielen heb je voornamelijk ontmoet? <span className="text-red-500">*</span>
-                </div>
-                <div className="text-xs italic text-gray-500">
-                  Quels types de profils avez-vous principalement rencontrés? (meerdere mogelijk / plusieurs choix possibles)
-                </div>
+              <legend className="text-sm font-semibold text-gray-900">
+                4. {t.q4_label} <span className="text-red-500">*</span>{" "}
+                <span className="font-normal text-gray-500">({t.multi_hint})</span>
               </legend>
               <div className="grid gap-2">
-                {PROFILES_OPTIONS.map((opt) => {
-                  const checked = profilesMet.includes(opt.v);
+                {PROFILES_VALUES.map((val, idx) => {
+                  const checked = profilesMet.includes(val);
+                  const label = t.q4_options[idx];
                   return (
                     <label
-                      key={opt.v}
+                      key={val}
                       className={cn(
-                        "flex items-start gap-3 px-3.5 py-2.5 rounded-lg border-2 cursor-pointer transition-all",
+                        "flex items-center gap-3 px-3.5 py-2.5 rounded-lg border-2 cursor-pointer transition-all",
                         "hover:border-gray-300",
                         checked ? "border-current" : "border-gray-200 bg-white",
                       )}
                       style={checked ? { borderColor: BRAND, backgroundColor: `${BRAND}0d` } : undefined}
                     >
-                      <Checkbox
-                        checked={checked}
-                        onCheckedChange={() => toggleProfile(opt.v)}
-                        className="mt-0.5"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm text-gray-900">{opt.nl}</div>
-                        <div className="text-xs italic text-gray-500">{opt.fr}</div>
-                      </div>
+                      <Checkbox checked={checked} onCheckedChange={() => toggleProfile(val)} />
+                      <span className="text-sm text-gray-900">{label}</span>
                     </label>
                   );
                 })}
@@ -373,9 +335,8 @@ export default function PublicFeedbackPage() {
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6">
             <ScaleField
               number={5}
-              questionNl="In welke mate waren studenten al bekend met Elia als werkgever?"
-              questionFr="Dans quelle mesure les étudiants connaissaient-ils Elia en tant qu'employeur?"
-              options={EMPLOYER_AWARENESS}
+              question={t.q5_label}
+              options={t.q5_options}
               value={employerAwareness}
               onChange={setEmployerAwareness}
               required
@@ -385,9 +346,8 @@ export default function PublicFeedbackPage() {
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6">
             <ScaleField
               number={6}
-              questionNl="Hoe ervaarde je de interesse in Elia?"
-              questionFr="Comment avez-vous perçu l'intérêt pour Elia sur le stand?"
-              options={INTEREST_LEVEL}
+              question={t.q6_label}
+              options={t.q6_options}
               value={interestLevel}
               onChange={setInterestLevel}
               required
@@ -397,9 +357,8 @@ export default function PublicFeedbackPage() {
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6">
             <ScaleField
               number={7}
-              questionNl="Hoe beoordeel je, rekening houdend met de inspanning, de return van deze jobfair?"
-              questionFr="Compte tenu de l'effort requis, comment évaluez-vous le retour global de ce job fair?"
-              options={EFFORT_RETURN}
+              question={t.q7_label}
+              options={t.q7_options}
               value={effortVsReturn}
               onChange={setEffortVsReturn}
               required
@@ -409,9 +368,8 @@ export default function PublicFeedbackPage() {
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6">
             <ScaleField
               number={8}
-              questionNl="Vind je dat Elia volgend jaar opnieuw aan deze jobbeurs moet deelnemen?"
-              questionFr="Pensez-vous qu'Elia devrait à nouveau participer à ce salon l'année prochaine?"
-              options={PARTICIPATE_AGAIN}
+              question={t.q8_label}
+              options={t.q8_options}
               value={participateAgain}
               onChange={setParticipateAgain}
               required
@@ -420,13 +378,8 @@ export default function PublicFeedbackPage() {
 
           {participateAgain !== null && (
             <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6 space-y-3">
-              <Label htmlFor="reason" className="space-y-1">
-                <div className="text-sm font-semibold text-gray-900">
-                  9. Wat is de voornaamste reden voor jouw antwoord op de vorige vraag? <span className="text-red-500">*</span>
-                </div>
-                <div className="text-xs italic font-normal text-gray-500">
-                  Quelle est la raison principale de votre réponse à la question précédente?
-                </div>
+              <Label htmlFor="reason" className="text-sm font-semibold text-gray-900">
+                9. {t.q9_label} <span className="text-red-500">*</span>
               </Label>
               <div className="flex items-center justify-end">
                 <CharacterCounter current={participateReason.length} max={MAX_LENGTHS.description} />
@@ -443,13 +396,8 @@ export default function PublicFeedbackPage() {
           )}
 
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6 space-y-3">
-            <Label htmlFor="comments" className="space-y-1">
-              <div className="text-sm font-semibold text-gray-900">
-                10. Heb je nog andere feedback of observaties die je wil delen?
-              </div>
-              <div className="text-xs italic font-normal text-gray-500">
-                Avez-vous d'autres remarques ou observations à partager?
-              </div>
+            <Label htmlFor="comments" className="text-sm font-semibold text-gray-900">
+              10. {t.q10_label}
             </Label>
             <div className="flex items-center justify-end">
               <CharacterCounter current={comments.length} max={MAX_LENGTHS.description} />
@@ -475,12 +423,12 @@ export default function PublicFeedbackPage() {
             style={{ backgroundColor: BRAND }}
             disabled={submitting || submitted}
           >
-            {submitting ? "Verzenden... / Envoi..." : "Verzenden / Envoyer"}
+            {submitting ? t.submitting : t.submit}
           </Button>
         </form>
 
         <p className="text-center text-xs text-gray-400 mt-6">
-          © {new Date().getFullYear()} Elia Group — Campus Recruitment
+          {t.footer.replace("{year}", String(new Date().getFullYear()))}
         </p>
       </div>
     </div>
