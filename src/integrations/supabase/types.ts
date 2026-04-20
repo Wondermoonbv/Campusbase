@@ -450,6 +450,7 @@ export type Database = {
           feedback_mail_sent_at: string | null
           id: string
           is_active: boolean | null
+          short_code: string
           title: string
         }
         Insert: {
@@ -461,6 +462,7 @@ export type Database = {
           feedback_mail_sent_at?: string | null
           id?: string
           is_active?: boolean | null
+          short_code?: string
           title?: string
         }
         Update: {
@@ -472,6 +474,7 @@ export type Database = {
           feedback_mail_sent_at?: string | null
           id?: string
           is_active?: boolean | null
+          short_code?: string
           title?: string
         }
         Relationships: [
