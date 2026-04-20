@@ -38,7 +38,7 @@ export function useEvenementen() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("evenementen")
-        .select("id, name, type, date, start_time, end_time, setup_date, setup_time, teardown_time, location, organisator_id, team_members, elia_contact, budget, status, description, stand_type, booth_size, notes, requires_booth_builder, max_ambassadeurs, region, event_language, target_level, registration_type, follow_up_status")
+        .select("id, name, type, date, start_time, end_time, setup_date, setup_time, teardown_time, location, organisator_id, team_members, elia_contact, budget, status, description, stand_type, booth_size, notes, requires_booth_builder, max_ambassadeurs, region, event_language, target_level, registration_type, follow_up_status, short_code")
         .order("date", { ascending: true });
       if (error) { console.error("Error fetching evenementen:", error); return []; }
       return (data as any[]).map(mapEvent);

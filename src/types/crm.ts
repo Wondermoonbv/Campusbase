@@ -101,6 +101,7 @@ export interface Event {
   requires_booth_builder?: boolean | null;
   teardown_time?: string | null;
   max_ambassadeurs?: number | null;
+  short_code?: string;
 }
 
 export interface EventContactpersoon {
