@@ -69,6 +69,7 @@ function PublicRoutes() {
     <Suspense fallback={<PageFallback />}>
       <Routes>
         <Route path="/feedback/:formId" element={<PublicFeedbackPage />} />
+        <Route path="/f/:shortCode" element={<PublicFeedbackPage />} />
         <Route path="/inschrijven/:evenementId" element={<PublicInschrijvenPage />} />
         <Route path="/ambassadeur-portaal" element={<AmbassadeurPortaalPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
