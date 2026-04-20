@@ -43,19 +43,20 @@ interface EventRow {
   confirmed: number;
   responses: number;
   responseRate: number;
-  overall: number;
-  organization: number;
-  relevance: number;
-  stand: number;
-  recommend: number;
+  audience: number;
+  conversation: number;
+  awareness: number;
+  interest: number;
+  effort: number;
+  participate: number;
 }
 
-function ScoreBar({ value }: { value: number }) {
+function ScoreBar({ value, max = 5 }: { value: number; max?: number }) {
   if (value === 0) return <span className="text-muted-foreground text-sm">—</span>;
   return (
     <div className="flex items-center gap-1.5 min-w-[80px]">
-      <Progress value={(value / 5) * 100} className="h-1.5 flex-1" />
-      <span className="text-xs tabular-nums font-medium w-7 text-right">{value.toFixed(1)}</span>
+      <Progress value={(value / max) * 100} className="h-1.5 flex-1" />
+      <span className="text-xs tabular-nums font-medium w-10 text-right">{value.toFixed(1)}/{max}</span>
     </div>
   );
 }
@@ -81,16 +82,15 @@ export function EventFeedbackOverzicht() {
           (i) => i.evenement_id === event.id && i.status === "bevestigd"
         ).length;
         const responseRate = confirmed > 0 ? (resps.length / confirmed) * 100 : 0;
-        const recommendPct = resps.length > 0
-          ? (resps.filter((r) => r.would_recommend === true).length / resps.length) * 100 : 0;
         return {
           eventId: event.id, name: event.name, date: event.date, confirmed,
           responses: resps.length, responseRate,
-          overall: avgNums(resps.map((r) => r.overall_rating)),
-          organization: avgNums(resps.map((r) => r.organization_rating)),
-          relevance: avgNums(resps.map((r) => r.relevance_rating)),
-          stand: avgNums(resps.map((r) => r.stand_rating)),
-          recommend: recommendPct,
+          audience: avgNums(resps.map((r) => r.audience_relevance)),
+          conversation: avgNums(resps.map((r) => r.conversation_quality)),
+          awareness: avgNums(resps.map((r) => r.employer_awareness)),
+          interest: avgNums(resps.map((r) => r.interest_level)),
+          effort: avgNums(resps.map((r) => r.effort_vs_return)),
+          participate: avgNums(resps.map((r) => r.participate_again)),
         };
       })
       .filter(Boolean) as EventRow[];
@@ -108,15 +108,15 @@ export function EventFeedbackOverzicht() {
     const withResponses = rows.filter((r) => r.responses > 0);
     return {
       totalResponses: rows.reduce((s, r) => s + r.responses, 0),
-      avgOverall: withResponses.length > 0 ? withResponses.reduce((s, r) => s + r.overall, 0) / withResponses.length : 0,
+      avgParticipate: withResponses.length > 0 ? withResponses.reduce((s, r) => s + r.participate, 0) / withResponses.length : 0,
       avgResponseRate: rows.length > 0 ? rows.reduce((s, r) => s + r.responseRate, 0) / rows.length : 0,
     };
   }, [rows]);
 
   const exportCSV = () => {
-    const header = "Event;Datum;Bevestigd;Responses;Response rate (%);Overall;Organisatie;Relevantie;Stand;Zou aanraden (%)";
+    const header = "Event;Datum;Bevestigd;Responses;Response rate (%);Relevantie publiek;Kwaliteit gesprekken;Bekendheid Elia;Interesse;Effort/Return;Opnieuw deelnemen";
     const lines = sorted.map((r) =>
-      `${r.name};${new Date(r.date).toLocaleDateString("nl-BE")};${r.confirmed};${r.responses};${r.responseRate.toFixed(0)};${r.overall.toFixed(1)};${r.organization.toFixed(1)};${r.relevance.toFixed(1)};${r.stand.toFixed(1)};${r.recommend.toFixed(0)}`
+      `${r.name};${new Date(r.date).toLocaleDateString("nl-BE")};${r.confirmed};${r.responses};${r.responseRate.toFixed(0)};${r.audience.toFixed(1)};${r.conversation.toFixed(1)};${r.awareness.toFixed(1)};${r.interest.toFixed(1)};${r.effort.toFixed(1)};${r.participate.toFixed(1)}`
     );
     const csv = [header, ...lines].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -146,7 +146,7 @@ export function EventFeedbackOverzicht() {
       <div className="grid grid-cols-3 gap-3 mb-4">
         {[
           { icon: MessageSquare, label: "Totaal responses", value: totals.totalResponses },
-          { icon: Star, label: "Gem. overall score", value: totals.avgOverall > 0 ? `${totals.avgOverall.toFixed(1)}/5` : "—" },
+          { icon: Star, label: "Gem. opnieuw deelnemen", value: totals.avgParticipate > 0 ? `${totals.avgParticipate.toFixed(1)}/5` : "—" },
           { icon: TrendingUp, label: "Gem. response rate", value: `${totals.avgResponseRate.toFixed(0)}%` },
         ].map((kpi) => (
           <div key={kpi.label} className="flex items-start gap-2 p-3 rounded-lg bg-muted/50">
@@ -170,11 +170,11 @@ export function EventFeedbackOverzicht() {
               <SortableTableHead sortKey="confirmed" currentSort={sort} onSort={toggleSort} className="text-right">Bevestigd</SortableTableHead>
               <SortableTableHead sortKey="responses" currentSort={sort} onSort={toggleSort} className="text-right">Responses</SortableTableHead>
               <SortableTableHead sortKey="responseRate" currentSort={sort} onSort={toggleSort} className="text-right">Rate</SortableTableHead>
-              <SortableTableHead sortKey="overall" currentSort={sort} onSort={toggleSort}>Overall</SortableTableHead>
-              <SortableTableHead sortKey="organization" currentSort={sort} onSort={toggleSort}>Organisatie</SortableTableHead>
-              <SortableTableHead sortKey="relevance" currentSort={sort} onSort={toggleSort}>Relevantie</SortableTableHead>
-              <SortableTableHead sortKey="stand" currentSort={sort} onSort={toggleSort}>Stand</SortableTableHead>
-              <SortableTableHead sortKey="recommend" currentSort={sort} onSort={toggleSort} className="text-right">Aanraden</SortableTableHead>
+              <SortableTableHead sortKey="audience" currentSort={sort} onSort={toggleSort}>Publiek</SortableTableHead>
+              <SortableTableHead sortKey="conversation" currentSort={sort} onSort={toggleSort}>Gesprekken</SortableTableHead>
+              <SortableTableHead sortKey="interest" currentSort={sort} onSort={toggleSort}>Interesse</SortableTableHead>
+              <SortableTableHead sortKey="effort" currentSort={sort} onSort={toggleSort}>Effort/Return</SortableTableHead>
+              <SortableTableHead sortKey="participate" currentSort={sort} onSort={toggleSort}>Opnieuw</SortableTableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -197,13 +197,11 @@ export function EventFeedbackOverzicht() {
                 <TableCell className="text-right tabular-nums text-sm">{r.confirmed}</TableCell>
                 <TableCell className="text-right tabular-nums text-sm">{r.responses}</TableCell>
                 <TableCell className="text-right tabular-nums text-sm">{r.responseRate.toFixed(0)}%</TableCell>
-                <TableCell><ScoreBar value={r.overall} /></TableCell>
-                <TableCell><ScoreBar value={r.organization} /></TableCell>
-                <TableCell><ScoreBar value={r.relevance} /></TableCell>
-                <TableCell><ScoreBar value={r.stand} /></TableCell>
-                <TableCell className="text-right tabular-nums text-sm">
-                  {r.responses > 0 ? `${r.recommend.toFixed(0)}%` : "—"}
-                </TableCell>
+                <TableCell><ScoreBar value={r.audience} max={5} /></TableCell>
+                <TableCell><ScoreBar value={r.conversation} max={4} /></TableCell>
+                <TableCell><ScoreBar value={r.interest} max={5} /></TableCell>
+                <TableCell><ScoreBar value={r.effort} max={3} /></TableCell>
+                <TableCell><ScoreBar value={r.participate} max={5} /></TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -215,11 +213,11 @@ export function EventFeedbackOverzicht() {
                 <TableCell className="text-right text-sm">—</TableCell>
                 <TableCell className="text-right font-semibold tabular-nums text-sm">{totals.totalResponses}</TableCell>
                 <TableCell className="text-right font-semibold tabular-nums text-sm">ø {totals.avgResponseRate.toFixed(0)}%</TableCell>
-                <TableCell><ScoreBar value={totals.avgOverall} /></TableCell>
                 <TableCell />
                 <TableCell />
                 <TableCell />
                 <TableCell />
+                <TableCell><ScoreBar value={totals.avgParticipate} max={5} /></TableCell>
               </TableRow>
             </TableFooter>
           )}
