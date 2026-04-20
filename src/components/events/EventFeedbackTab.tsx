@@ -11,7 +11,10 @@ import { Copy, Download, Link2, MessageSquare, BarChart3, Mail, Users } from "lu
 import type { FeedbackResponse } from "@/hooks/useFeedback";
 import { sendBulkEmails, buildFeedbackEmail } from "@/lib/email";
 
-const getShareUrl = (formId: string) => `${window.location.origin}/feedback/${formId}`;
+const getShareUrl = (form: { id: string; short_code?: string | null }) =>
+  form.short_code
+    ? `${window.location.origin}/f/${form.short_code}`
+    : `${window.location.origin}/feedback/${form.id}`;
 
 function avg(arr: (number | null)[]): number {
   const valid = arr.filter((v): v is number => v != null);
@@ -72,7 +75,7 @@ function FeedbackLinkControls({
   copyLink,
   handleToggle,
 }: {
-  form: { id: string; is_active: boolean | null };
+  form: { id: string; is_active: boolean | null; short_code?: string | null };
   eventId: string;
   eventName: string;
   copyLink: () => void;
@@ -91,7 +94,7 @@ function FeedbackLinkControls({
 
     setSending(true);
     try {
-      const feedbackUrl = getShareUrl(form.id);
+      const feedbackUrl = getShareUrl(form);
       const emails = confirmed.map((ins) => {
         const amb = ambassadeurs.find((a) => a.id === ins.ambassadeur_id);
         return {
@@ -118,7 +121,7 @@ function FeedbackLinkControls({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
-          <span className="text-sm text-muted-foreground truncate">{getShareUrl(form.id)}</span>
+          <span className="text-sm text-muted-foreground truncate">{getShareUrl(form)}</span>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <Button variant="outline" size="sm" onClick={copyLink}>
@@ -171,7 +174,7 @@ export function EventFeedbackTab({ eventId, eventName }: { eventId: string; even
 
   const copyLink = () => {
     if (!form) return;
-    navigator.clipboard.writeText(getShareUrl(form.id));
+    navigator.clipboard.writeText(getShareUrl(form));
     toast.success("Link gekopieerd!");
   };
 

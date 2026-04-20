@@ -69,6 +69,7 @@ function PublicRoutes() {
     <Suspense fallback={<PageFallback />}>
       <Routes>
         <Route path="/feedback/:formId" element={<PublicFeedbackPage />} />
+        <Route path="/f/:shortCode" element={<PublicFeedbackPage />} />
         <Route path="/inschrijven/:evenementId" element={<PublicInschrijvenPage />} />
         <Route path="/ambassadeur-portaal" element={<AmbassadeurPortaalPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
@@ -83,7 +84,7 @@ function AppRoutes() {
   const [timedOut, setTimedOut] = useState(false);
   const location = useLocation();
   const pathname = location.pathname;
-  const isPublicRoute = pathname.startsWith("/feedback/") || pathname.startsWith("/inschrijven/") || pathname.startsWith("/ambassadeur-portaal") || pathname === "/privacy";
+  const isPublicRoute = pathname.startsWith("/feedback/") || pathname.startsWith("/f/") || pathname.startsWith("/inschrijven/") || pathname.startsWith("/ambassadeur-portaal") || pathname === "/privacy";
 
   useEffect(() => {
     if (!loading) return;
