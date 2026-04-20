@@ -159,8 +159,12 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
     }
   };
 
+  const signupUrl = event?.short_code
+    ? `${window.location.origin}/e/${event.short_code}/inschrijven`
+    : `${window.location.origin}/inschrijven/${eventId}`;
+
   const copyLink = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/inschrijven/${eventId}`);
+    navigator.clipboard.writeText(signupUrl);
     toast.success("Inschrijflink gekopieerd!");
   };
 
@@ -203,7 +207,7 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
           <div className="flex items-center gap-2 min-w-0">
             <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
             <span className="text-sm text-muted-foreground truncate">
-              {window.location.origin}/inschrijven/{eventId}
+              {signupUrl}
             </span>
           </div>
           <Button variant="outline" size="sm" onClick={copyLink}>
