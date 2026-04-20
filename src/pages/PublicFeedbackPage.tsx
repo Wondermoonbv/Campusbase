@@ -79,23 +79,29 @@ function ScaleField({
 }
 
 export default function PublicFeedbackPage() {
-  const { formId } = useParams();
+  const { formId, shortCode } = useParams();
   const [lang, setLang] = useState<FeedbackLang>("nl");
   const t = feedbackTranslations[lang];
 
   const { data: formData, isLoading } = useQuery({
-    queryKey: ["public_feedback_form", formId],
+    queryKey: ["public_feedback_form", formId ?? null, shortCode ?? null],
     queryFn: async () => {
-      if (!formId) return null;
-      const { data, error } = await supabase
+      const query = supabase
         .from("feedback_forms")
-        .select("*, evenementen(name, date, location)")
-        .eq("id", formId)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
+        .select("*, evenementen(name, date, location)");
+      if (shortCode) {
+        const { data, error } = await query.eq("short_code", shortCode).maybeSingle();
+        if (error) throw error;
+        return data;
+      }
+      if (formId) {
+        const { data, error } = await query.eq("id", formId).maybeSingle();
+        if (error) throw error;
+        return data;
+      }
+      return null;
     },
-    enabled: !!formId,
+    enabled: !!(formId || shortCode),
   });
 
   const [submitted, setSubmitted] = useState(false);
