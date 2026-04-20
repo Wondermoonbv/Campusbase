@@ -83,7 +83,7 @@ function AppRoutes() {
   const [timedOut, setTimedOut] = useState(false);
   const location = useLocation();
   const pathname = location.pathname;
-  const isPublicRoute = pathname.startsWith("/feedback/") || pathname.startsWith("/inschrijven/") || pathname.startsWith("/ambassadeur-portaal") || pathname === "/privacy";
+  const isPublicRoute = pathname.startsWith("/feedback/") || pathname.startsWith("/f/") || pathname.startsWith("/inschrijven/") || pathname.startsWith("/ambassadeur-portaal") || pathname === "/privacy";
 
   useEffect(() => {
     if (!loading) return;
