@@ -11,7 +11,7 @@ import { stripHtml, MAX_LENGTHS } from "@/lib/sanitize";
 const BRAND = "#0E6575";
 
 export default function PublicInschrijvenPage() {
-  const { evenementId } = useParams();
+  const { evenementId, shortCode } = useParams();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [department, setDepartment] = useState("");
@@ -20,14 +20,13 @@ export default function PublicInschrijvenPage() {
   const [error, setError] = useState("");
 
   const { data: event, isLoading } = useQuery({
-    queryKey: ["public_event", evenementId],
-    enabled: !!evenementId,
+    queryKey: ["public_event", evenementId ?? shortCode],
+    enabled: !!(evenementId || shortCode),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("evenementen")
-        .select("id, name, date, location")
-        .eq("id", evenementId!)
-        .single();
+      let query = supabase.from("evenementen").select("id, name, date, location");
+      if (shortCode) query = query.eq("short_code", shortCode);
+      else query = query.eq("id", evenementId!);
+      const { data, error } = await query.maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -35,7 +34,7 @@ export default function PublicInschrijvenPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (submitted || submitting) return;
+    if (submitted || submitting || !event) return;
     setError("");
     if (!name.trim() || !email.trim()) {
       setError("Naam en e-mail zijn verplicht.");
@@ -51,7 +50,7 @@ export default function PublicInschrijvenPage() {
 
       const { data, error: signupError } = await supabase.functions.invoke("public-event-signup", {
         body: {
-          evenementId,
+          evenementId: event.id,
           name: sanitizedName,
           email: sanitizedEmail,
           department: sanitizedDept,
