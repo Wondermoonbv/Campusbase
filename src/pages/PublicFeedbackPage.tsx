@@ -140,7 +140,7 @@ export default function PublicFeedbackPage() {
     setSubmitting(true);
     try {
       const { error: insertError } = await supabase.from("feedback_responses").insert({
-        form_id: formId!,
+        form_id: (formData as any)?.id ?? formId!,
         respondent_name: stripHtml(name.trim()),
         respondent_email: email.trim() || null,
         audience_relevance: audienceRelevance,
