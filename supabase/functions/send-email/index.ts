@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { checkRateLimit, getClientIP } from "../_shared/rate-limit.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -18,6 +19,12 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
+  }
+
+  const ip = getClientIP(req);
+  const rl = checkRateLimit(ip, { maxRequests: 10, windowSeconds: 60 });
+  if (!rl.allowed) {
+    return jsonResponse({ error: "Te veel verzoeken. Probeer het over " + rl.retryAfterSeconds + " seconden opnieuw." }, 429);
   }
 
   try {
