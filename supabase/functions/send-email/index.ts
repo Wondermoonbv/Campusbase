@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -8,7 +8,14 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-serve(async (req) => {
+function jsonResponse(body: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -18,14 +25,45 @@ serve(async (req) => {
       throw new Error("RESEND_API_KEY is not configured");
     }
 
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      return jsonResponse({ error: "Serverconfiguratie ontbreekt." }, 500);
+    }
+
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return jsonResponse({ error: "Niet geautoriseerd." }, 401);
+    }
+    const token = authHeader.slice("Bearer ".length);
+
+    const admin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    const { data: userData, error: userErr } = await admin.auth.getUser(token);
+    if (userErr || !userData?.user) {
+      return jsonResponse({ error: "Ongeldige token." }, 401);
+    }
+
+    const { data: roles } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userData.user.id);
+
+    const allowed = (roles ?? []).some(
+      (r: { role: string }) => r.role === "admin" || r.role === "editor"
+    );
+    if (!allowed) {
+      return jsonResponse({ error: "Geen toestemming om emails te versturen." }, 403);
+    }
+
     const body = await req.json();
     const { to, subject, html, replyTo, icsContent } = body;
 
     if (!to || !subject || !html) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields: to, subject, html" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "Missing required fields: to, subject, html" }, 400);
     }
 
     const attachments = icsContent
@@ -33,8 +71,8 @@ serve(async (req) => {
       : undefined;
 
     const emailPayload = {
-      from: "CampusBase <noreply@campusbase.be>",
-      reply_to: replyTo ?? "campusbase@campusbase.be",
+      from: "Elia Campus Recruitment <noreply@send.wondermoon.be>",
+      reply_to: replyTo ?? "campusbase@wondermoon.be",
       to: Array.isArray(to) ? to : [to],
       subject,
       html,
@@ -54,21 +92,15 @@ serve(async (req) => {
     console.log("Resend response:", res.status, JSON.stringify(data));
 
     if (!res.ok) {
-      return new Response(
-        JSON.stringify({ error: data }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: data }, 400);
     }
 
-    return new Response(
-      JSON.stringify({ success: true, messageId: data.id }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ success: true, messageId: data.id });
   } catch (error) {
     console.error("Edge Function error:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    return jsonResponse(
+      { error: error instanceof Error ? error.message : "Internal server error" },
+      500
     );
   }
 });
