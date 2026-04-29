@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.admin-reset-password]
 verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.public-ambassador-lookup]
+verify_jwt = false
