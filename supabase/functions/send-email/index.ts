@@ -71,8 +71,8 @@ Deno.serve(async (req) => {
       : undefined;
 
     const emailPayload = {
-      from: "Elia Campus Recruitment <noreply@send.wondermoon.be>",
-      reply_to: replyTo ?? "campusbase@wondermoon.be",
+      from: "Elia Campus Recruitment <noreply@campusbase.be>",
+      reply_to: replyTo ?? "campusbase@campusbase.be",
       to: Array.isArray(to) ? to : [to],
       subject,
       html,
