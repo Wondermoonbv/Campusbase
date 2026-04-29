@@ -460,7 +460,6 @@ export default function AmbassadeurPortaalPage() {
             ) : (
               <div className="space-y-3">
                 {events.map(ev => {
-                  const isFull = ev.max_ambassadeurs !== null && ev.signup_count >= ev.max_ambassadeurs;
                   const isActioning = !!actionLoadingMap[ev.id];
 
                   return (
@@ -543,24 +542,24 @@ export default function AmbassadeurPortaalPage() {
                           {!ev.my_status && (
                             <Button
                               size="sm"
-                              disabled={isFull || isActioning}
+                              disabled={isActioning}
                               onClick={() => handleSignup(ev.id)}
                               className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto"
                             >
                               {isActioning && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
-                              {isFull ? "Volzet" : "Inschrijven"}
+                              Inschrijven
                             </Button>
                           )}
 
                           {ev.my_status === "uitgenodigd" && ev.my_inschrijving_id && (
                             <Button
                               size="sm"
-                              disabled={isFull || isActioning}
+                              disabled={isActioning}
                               onClick={() => handleReSignup(ev.my_inschrijving_id!, ev.id)}
                               className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto"
                             >
                               {isActioning && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
-                              {isFull ? "Volzet" : "Inschrijven"}
+                              Inschrijven
                             </Button>
                           )}
 
@@ -581,12 +580,12 @@ export default function AmbassadeurPortaalPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              disabled={isFull || isActioning}
+                              disabled={isActioning}
                               onClick={() => handleReSignup(ev.my_inschrijving_id!, ev.id)}
                               className="w-full sm:w-auto"
                             >
                               {isActioning && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
-                              {isFull ? "Volzet" : "Opnieuw inschrijven"}
+                              Opnieuw inschrijven
                             </Button>
                           )}
 
