@@ -25,6 +25,7 @@ export type Database = {
           is_active: boolean | null
           notes: string | null
           phone: string | null
+          token_expires_at: string | null
         }
         Insert: {
           access_token?: string | null
@@ -36,6 +37,7 @@ export type Database = {
           is_active?: boolean | null
           notes?: string | null
           phone?: string | null
+          token_expires_at?: string | null
         }
         Update: {
           access_token?: string | null
@@ -47,6 +49,7 @@ export type Database = {
           is_active?: boolean | null
           notes?: string | null
           phone?: string | null
+          token_expires_at?: string | null
         }
         Relationships: []
       }
@@ -953,6 +956,10 @@ export type Database = {
       }
       reset_user_password: {
         Args: { new_password: string; target_email: string }
+        Returns: Json
+      }
+      rotate_ambassador_token: {
+        Args: { p_ambassador_id: string }
         Returns: Json
       }
       soft_delete_user: { Args: { target_user_id: string }; Returns: Json }
