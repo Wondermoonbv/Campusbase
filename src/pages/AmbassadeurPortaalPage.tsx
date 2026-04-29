@@ -19,7 +19,6 @@ interface Ambassadeur {
   full_name: string;
   email: string;
   department: string;
-  access_token: string;
 }
 
 interface PortalEvent {
@@ -55,6 +54,7 @@ export default function AmbassadeurPortaalPage() {
   const [searchParams] = useSearchParams();
   const [step, setStep] = useState<"loading" | "register" | "overview" | "invalid">("loading");
   const [ambassadeur, setAmbassadeur] = useState<Ambassadeur | null>(null);
+  const [currentToken, setCurrentToken] = useState<string>("");
   const [regForm, setRegForm] = useState({ full_name: "", email: "", department: "" });
   const [events, setEvents] = useState<PortalEvent[]>([]);
   const [pastEvents, setPastEvents] = useState<PastEvent[]>([]);
@@ -66,135 +66,113 @@ export default function AmbassadeurPortaalPage() {
     setActionLoadingMap(prev => ({ ...prev, [key]: value }));
   };
 
-  const loadEvents = useCallback(async (ambId: string, ambEmail: string) => {
+  const loginWithToken = useCallback(async (token: string): Promise<boolean> => {
     setEventsLoading(true);
     try {
-      const today = new Date().toISOString().split("T")[0];
-
-      const { data: evts, error: evtErr } = await supabase
-        .from("evenementen")
-        .select("id, name, date, location, organisator_id, max_ambassadeurs, start_time, end_time, setup_time, description")
-        .gte("date", today)
-        .neq("status", "geannuleerd")
-        .order("date", { ascending: true });
-
-      if (evtErr) throw evtErr;
-
-      const schoolIds = [...new Set((evts || []).map(e => e.organisator_id).filter(Boolean))] as string[];
-      let schoolMap: Record<string, string> = {};
-      if (schoolIds.length > 0) {
-        const { data: schools } = await supabase
-          .from("organisaties")
-          .select("id, name")
-          .in("id", schoolIds);
-        schoolMap = Object.fromEntries((schools || []).map(s => [s.id, s.name]));
-      }
-
-      const eventIds = (evts || []).map(e => e.id);
-
-      const [{ data: allSignups }, { data: mySignups }] = await Promise.all([
-        supabase
-          .from("event_inschrijvingen")
-          .select("evenement_id, status")
-          .in("evenement_id", eventIds)
-          .neq("status", "afgemeld"),
-        supabase
-          .from("event_inschrijvingen")
-          .select("id, evenement_id, status")
-          .eq("ambassadeur_id", ambId)
-          .in("evenement_id", eventIds),
-      ]);
-
-      const portalEvents: PortalEvent[] = (evts || []).map(e => {
-        const signupCount = (allSignups || []).filter(s => s.evenement_id === e.id).length;
-        const mySignup = (mySignups || []).find(s => s.evenement_id === e.id);
-        return {
-          id: e.id,
-          name: e.name,
-          date: e.date,
-          location: e.location || "",
-          school_name: e.organisator_id ? schoolMap[e.organisator_id] || null : null,
-          max_ambassadeurs: e.max_ambassadeurs,
-          signup_count: signupCount,
-          my_status: mySignup?.status || null,
-          my_inschrijving_id: mySignup?.id || null,
-          start_time: e.start_time || null,
-          end_time: e.end_time || null,
-          setup_time: e.setup_time || null,
-          contactpersoon: null,
-          description: e.description || null,
-        };
+      const { data, error } = await supabase.functions.invoke("public-ambassador-lookup", {
+        body: { accessToken: token },
       });
+      if (error || !data?.ambassador) return false;
 
-      setEvents(portalEvents);
+      const amb = data.ambassador as Ambassadeur;
+      setAmbassadeur(amb);
+      setCurrentToken(token);
+      localStorage.setItem(STORAGE_KEY, token);
+      window.history.replaceState(null, "", `${window.location.pathname}?token=${token}`);
+      setStep("overview");
 
-      // Load past events (last 5 where ambassador was confirmed)
-      const { data: pastEvts } = await supabase
-        .from("evenementen")
-        .select("id, name, date, location")
-        .lt("date", today)
-        .neq("status", "geannuleerd")
-        .order("date", { ascending: false })
-        .limit(20);
+      // Build events + past events from the single edge function response
+      const today = new Date().toISOString().split("T")[0];
+      const allEvents = (data.events ?? []) as Array<{
+        id: string;
+        name: string;
+        date: string;
+        location: string | null;
+        start_time: string | null;
+        end_time: string | null;
+        status: string;
+        max_ambassadeurs: number | null;
+        setup_time: string | null;
+        teardown_time: string | null;
+        short_code: string | null;
+      }>;
+      const enrollments = (data.enrollments ?? []) as Array<{
+        id: string;
+        evenement_id: string;
+        status: string;
+      }>;
+      const feedbackForms = (data.feedbackForms ?? []) as Array<{
+        id: string;
+        evenement_id: string;
+      }>;
+      const feedbackResponses = (data.feedbackResponses ?? []) as Array<{
+        id: string;
+        form_id: string;
+      }>;
 
-      if (pastEvts && pastEvts.length > 0) {
-        const pastIds = pastEvts.map(e => e.id);
-        const [{ data: pastSignups }, { data: feedbackForms }, { data: feedbackResponses }] = await Promise.all([
-          supabase.from("event_inschrijvingen").select("evenement_id, status").eq("ambassadeur_id", ambId).in("evenement_id", pastIds),
-          supabase.from("feedback_forms").select("id, evenement_id, is_active").in("evenement_id", pastIds),
-          supabase.from("feedback_responses").select("form_id, respondent_email").eq("respondent_email", ambEmail),
-        ]);
+      const myEnrollmentByEvent = new Map<string, { id: string; status: string }>();
+      enrollments.forEach(e => myEnrollmentByEvent.set(e.evenement_id, { id: e.id, status: e.status }));
 
-        const confirmedPastEvents: PastEvent[] = pastEvts
-          .filter(e => {
-            const signup = (pastSignups || []).find(s => s.evenement_id === e.id);
-            return signup?.status === "bevestigd";
-          })
-          .slice(0, 5)
-          .map(e => {
-            const form = (feedbackForms || []).find(f => f.evenement_id === e.id && f.is_active);
-            const hasGivenFeedback = form
-              ? (feedbackResponses || []).some(r => r.form_id === form.id)
-              : false;
-            return {
-              id: e.id,
-              name: e.name,
-              date: e.date,
-              location: e.location || "",
-              my_status: "bevestigd",
-              feedback_form_id: form?.id || null,
-              feedback_given: hasGivenFeedback,
-            };
-          });
+      const upcoming: PortalEvent[] = allEvents
+        .filter(e => e.date >= today)
+        .map(e => {
+          const mine = myEnrollmentByEvent.get(e.id);
+          return {
+            id: e.id,
+            name: e.name,
+            date: e.date,
+            location: e.location || "",
+            school_name: null,
+            max_ambassadeurs: e.max_ambassadeurs,
+            // Signup count is not exposed via the public lookup; show only own status.
+            signup_count: 0,
+            my_status: mine?.status ?? null,
+            my_inschrijving_id: mine?.id ?? null,
+            start_time: e.start_time,
+            end_time: e.end_time,
+            setup_time: e.setup_time,
+            contactpersoon: null,
+            description: null,
+          };
+        });
 
-        setPastEvents(confirmedPastEvents);
-      } else {
-        setPastEvents([]);
-      }
-    } catch {
-      toast.error("Kon events niet laden.");
+      setEvents(upcoming);
+
+      const past: PastEvent[] = allEvents
+        .filter(e => e.date < today)
+        .filter(e => myEnrollmentByEvent.get(e.id)?.status === "bevestigd")
+        .sort((a, b) => (a.date < b.date ? 1 : -1))
+        .slice(0, 5)
+        .map(e => {
+          const form = feedbackForms.find(f => f.evenement_id === e.id);
+          const hasGivenFeedback = form
+            ? feedbackResponses.some(r => r.form_id === form.id)
+            : false;
+          return {
+            id: e.id,
+            name: e.name,
+            date: e.date,
+            location: e.location || "",
+            my_status: "bevestigd",
+            feedback_form_id: form?.id ?? null,
+            feedback_given: hasGivenFeedback,
+          };
+        });
+
+      setPastEvents(past);
+      return true;
+    } catch (err) {
+      console.error("Ambassador lookup failed:", err);
+      return false;
     } finally {
       setEventsLoading(false);
     }
   }, []);
 
-  const loginWithToken = useCallback(async (token: string): Promise<boolean> => {
-    const { data, error } = await supabase
-      .from("ambassadeurs")
-      .select("id, full_name, email, department, access_token")
-      .eq("access_token", token)
-      .maybeSingle();
-
-    if (error || !data) return false;
-
-    setAmbassadeur(data as Ambassadeur);
-    localStorage.setItem(STORAGE_KEY, token);
-    // Update URL to include token
-    window.history.replaceState(null, "", `${window.location.pathname}?token=${token}`);
-    setStep("overview");
-    await loadEvents(data.id, data.email);
-    return true;
-  }, [loadEvents]);
+  const refreshPortal = useCallback(async () => {
+    if (!currentToken) return;
+    await loginWithToken(currentToken);
+  }, [currentToken, loginWithToken]);
 
   // Init: check URL token → localStorage token → show register
   useEffect(() => {
@@ -231,17 +209,14 @@ export default function AmbassadeurPortaalPage() {
       const { data, error } = await supabase
         .from("ambassadeurs")
         .insert({ full_name: name, email: cleanEmail, department: dept })
-        .select("id, full_name, email, department, access_token")
+        .select("access_token")
         .single();
 
       if (error) throw error;
 
-      const amb = data as Ambassadeur;
-      setAmbassadeur(amb);
-      localStorage.setItem(STORAGE_KEY, amb.access_token);
-      window.history.replaceState(null, "", `${window.location.pathname}?token=${amb.access_token}`);
-      setStep("overview");
-      await loadEvents(amb.id, amb.email);
+      const newToken = (data as { access_token: string }).access_token;
+      const ok = await loginWithToken(newToken);
+      if (!ok) throw new Error("Token niet geldig na registratie.");
       toast.success("Welkom! Bewaar deze link om in de toekomst direct toegang te krijgen tot je portaal.", { duration: 8000 });
     } catch {
       toast.error("Registratie mislukt. Probeer opnieuw.");
@@ -253,18 +228,19 @@ export default function AmbassadeurPortaalPage() {
   const handleLogout = () => {
     localStorage.removeItem(STORAGE_KEY);
     setAmbassadeur(null);
+    setCurrentToken("");
     setEvents([]);
     window.history.replaceState(null, "", window.location.pathname);
     setStep("register");
   };
 
   const handleSignup = async (eventId: string) => {
-    if (!ambassadeur) return;
+    if (!ambassadeur || !currentToken) return;
     setActionLoading(eventId, true);
     try {
       const { data, error } = await supabase.functions.invoke("public-event-rsvp", {
         body: {
-          accessToken: ambassadeur.access_token,
+          accessToken: currentToken,
           evenementId: eventId,
           action: "signup",
         },
@@ -276,7 +252,7 @@ export default function AmbassadeurPortaalPage() {
         return;
       }
       toast.success("Je bent ingeschreven!");
-      await loadEvents(ambassadeur.id, ambassadeur.email);
+      await refreshPortal();
     } catch {
       toast.error("Inschrijving mislukt.");
     } finally {
@@ -285,12 +261,12 @@ export default function AmbassadeurPortaalPage() {
   };
 
   const handleCancel = async (inschrijvingId: string, eventId: string) => {
-    if (!ambassadeur) return;
+    if (!ambassadeur || !currentToken) return;
     setActionLoading(eventId, true);
     try {
       const { data, error } = await supabase.functions.invoke("public-event-rsvp", {
         body: {
-          accessToken: ambassadeur.access_token,
+          accessToken: currentToken,
           evenementId: eventId,
           inschrijvingId: inschrijvingId,
           action: "cancel",
@@ -299,7 +275,7 @@ export default function AmbassadeurPortaalPage() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       toast.success("Je bent afgemeld.");
-      await loadEvents(ambassadeur.id, ambassadeur.email);
+      await refreshPortal();
     } catch {
       toast.error("Afmelden mislukt.");
     } finally {
@@ -308,12 +284,12 @@ export default function AmbassadeurPortaalPage() {
   };
 
   const handleReSignup = async (inschrijvingId: string, eventId: string) => {
-    if (!ambassadeur) return;
+    if (!ambassadeur || !currentToken) return;
     setActionLoading(eventId, true);
     try {
       const { data, error } = await supabase.functions.invoke("public-event-rsvp", {
         body: {
-          accessToken: ambassadeur.access_token,
+          accessToken: currentToken,
           evenementId: eventId,
           inschrijvingId: inschrijvingId,
           action: "resignup",
@@ -322,7 +298,7 @@ export default function AmbassadeurPortaalPage() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       toast.success("Je bent opnieuw ingeschreven!");
-      await loadEvents(ambassadeur.id, ambassadeur.email);
+      await refreshPortal();
     } catch {
       toast.error("Herinschrijving mislukt.");
     } finally {
@@ -331,8 +307,8 @@ export default function AmbassadeurPortaalPage() {
   };
 
   const copyPortalLink = () => {
-    if (!ambassadeur) return;
-    const link = `${window.location.origin}/ambassadeur-portaal?token=${ambassadeur.access_token}`;
+    if (!currentToken) return;
+    const link = `${window.location.origin}/ambassadeur-portaal?token=${currentToken}`;
     navigator.clipboard.writeText(link);
     toast.success("Je persoonlijke portaallink is gekopieerd!");
   };
@@ -484,7 +460,6 @@ export default function AmbassadeurPortaalPage() {
             ) : (
               <div className="space-y-3">
                 {events.map(ev => {
-                  const isFull = ev.max_ambassadeurs !== null && ev.signup_count >= ev.max_ambassadeurs;
                   const isActioning = !!actionLoadingMap[ev.id];
 
                   return (
@@ -534,7 +509,7 @@ export default function AmbassadeurPortaalPage() {
                           {ev.max_ambassadeurs !== null && (
                             <span className="flex items-center gap-1.5">
                               <Users className="h-3.5 w-3.5 shrink-0" />
-                              {ev.signup_count}/{ev.max_ambassadeurs} plaatsen
+                              max. {ev.max_ambassadeurs} plaatsen
                             </span>
                           )}
                         </div>
@@ -567,24 +542,24 @@ export default function AmbassadeurPortaalPage() {
                           {!ev.my_status && (
                             <Button
                               size="sm"
-                              disabled={isFull || isActioning}
+                              disabled={isActioning}
                               onClick={() => handleSignup(ev.id)}
                               className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto"
                             >
                               {isActioning && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
-                              {isFull ? "Volzet" : "Inschrijven"}
+                              Inschrijven
                             </Button>
                           )}
 
                           {ev.my_status === "uitgenodigd" && ev.my_inschrijving_id && (
                             <Button
                               size="sm"
-                              disabled={isFull || isActioning}
+                              disabled={isActioning}
                               onClick={() => handleReSignup(ev.my_inschrijving_id!, ev.id)}
                               className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto"
                             >
                               {isActioning && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
-                              {isFull ? "Volzet" : "Inschrijven"}
+                              Inschrijven
                             </Button>
                           )}
 
@@ -605,12 +580,12 @@ export default function AmbassadeurPortaalPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              disabled={isFull || isActioning}
+                              disabled={isActioning}
                               onClick={() => handleReSignup(ev.my_inschrijving_id!, ev.id)}
                               className="w-full sm:w-auto"
                             >
                               {isActioning && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
-                              {isFull ? "Volzet" : "Opnieuw inschrijven"}
+                              Opnieuw inschrijven
                             </Button>
                           )}
 
