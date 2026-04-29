@@ -28,7 +28,7 @@ export function generateICS(event: {
   const isAllDay = !event.start_time;
 
   const escapeText = (t: string) =>
-    t.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+    t.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r\n/g, "\\n").replace(/\r/g, "\\n").replace(/\n/g, "\\n");
 
   const lines = [
     "BEGIN:VCALENDAR",
