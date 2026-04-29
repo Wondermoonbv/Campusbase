@@ -510,7 +510,7 @@ export default function AmbassadeurPortaalPage() {
                           {ev.max_ambassadeurs !== null && (
                             <span className="flex items-center gap-1.5">
                               <Users className="h-3.5 w-3.5 shrink-0" />
-                              {ev.signup_count}/{ev.max_ambassadeurs} plaatsen
+                              max. {ev.max_ambassadeurs} plaatsen
                             </span>
                           )}
                         </div>
