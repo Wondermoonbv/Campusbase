@@ -407,6 +407,26 @@ export default function AmbassadeurPortaalPage() {
           </Card>
         )}
 
+        {step === "expired" && (
+          <Card className="max-w-md mx-auto shadow-md">
+            <CardContent className="pt-6 pb-6 text-center space-y-4">
+              <AlertCircle className="h-12 w-12 mx-auto text-destructive" />
+              <h2 className="text-xl font-semibold text-gray-900">Link verlopen</h2>
+              <p className="text-sm text-muted-foreground">
+                Je link is verlopen. Neem contact op met het Elia campus recruitment team voor een nieuwe link.
+              </p>
+              <a
+                href="mailto:campusbase@campusbase.be"
+                className="inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4"
+                style={{ color: BRAND.petrol }}
+              >
+                <Mail className="h-4 w-4" />
+                campusbase@campusbase.be
+              </a>
+            </CardContent>
+          </Card>
+        )}
+
         {step === "register" && (
           <Card className="max-w-md mx-auto shadow-md">
             <CardContent className="pt-6 pb-6 space-y-4">
