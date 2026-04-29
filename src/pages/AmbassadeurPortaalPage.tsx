@@ -52,7 +52,7 @@ const STORAGE_KEY = "ambassadeur_portal_token";
 
 export default function AmbassadeurPortaalPage() {
   const [searchParams] = useSearchParams();
-  const [step, setStep] = useState<"loading" | "register" | "overview" | "invalid">("loading");
+  const [step, setStep] = useState<"loading" | "register" | "overview" | "invalid" | "expired">("loading");
   const [ambassadeur, setAmbassadeur] = useState<Ambassadeur | null>(null);
   const [currentToken, setCurrentToken] = useState<string>("");
   const [regForm, setRegForm] = useState({ full_name: "", email: "", department: "" });
@@ -72,7 +72,16 @@ export default function AmbassadeurPortaalPage() {
       const { data, error } = await supabase.functions.invoke("public-ambassador-lookup", {
         body: { accessToken: token },
       });
-      if (error || !data?.ambassador) return false;
+      if (error || !data?.ambassador) {
+        // Detect expired-token signal from the edge function
+        const errMsg = (error as { message?: string } | null)?.message ?? "";
+        const ctx = (error as { context?: { expired?: boolean } } | null)?.context;
+        if (ctx?.expired || (data as { expired?: boolean } | null)?.expired || /verlopen/i.test(errMsg)) {
+          localStorage.removeItem(STORAGE_KEY);
+          setStep("expired");
+        }
+        return false;
+      }
 
       const amb = data.ambassador as Ambassadeur;
       setAmbassadeur(amb);
