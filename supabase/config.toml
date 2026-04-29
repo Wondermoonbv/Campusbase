@@ -1,16 +1,33 @@
 project_id = "ikurrflncrgwntpkmblg"
 
+# ============================================================
+# Edge Function JWT configuration
+# ============================================================
+# All functions use verify_jwt = false because the Supabase
+# project uses ES256 JWTs which are not supported by the
+# platform-level JWT verification.
+#
+# Authentication is handled IN-CODE:
+# - Public functions (public-event-*) verify ambassador tokens
+# - Admin functions verify JWT via admin.auth.getUser(token)
+#   and check user_roles for admin/editor permissions
+# - send-email verifies JWT + requires admin/editor role
+# ============================================================
+
 [functions.public-event-rsvp]
+verify_jwt = false
+
+[functions.public-event-signup]
+verify_jwt = false
+
+[functions.public-ambassador-lookup]
+verify_jwt = false
+
+[functions.send-email]
 verify_jwt = false
 
 [functions.admin-invite-user]
 verify_jwt = false
 
 [functions.admin-reset-password]
-verify_jwt = false
-
-[functions.send-email]
-verify_jwt = false
-
-[functions.public-ambassador-lookup]
 verify_jwt = false

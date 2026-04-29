@@ -52,7 +52,7 @@ const STORAGE_KEY = "ambassadeur_portal_token";
 
 export default function AmbassadeurPortaalPage() {
   const [searchParams] = useSearchParams();
-  const [step, setStep] = useState<"loading" | "register" | "overview" | "invalid">("loading");
+  const [step, setStep] = useState<"loading" | "register" | "overview" | "invalid" | "expired">("loading");
   const [ambassadeur, setAmbassadeur] = useState<Ambassadeur | null>(null);
   const [currentToken, setCurrentToken] = useState<string>("");
   const [regForm, setRegForm] = useState({ full_name: "", email: "", department: "" });
@@ -72,7 +72,16 @@ export default function AmbassadeurPortaalPage() {
       const { data, error } = await supabase.functions.invoke("public-ambassador-lookup", {
         body: { accessToken: token },
       });
-      if (error || !data?.ambassador) return false;
+      if (error || !data?.ambassador) {
+        // Detect expired-token signal from the edge function
+        const errMsg = (error as { message?: string } | null)?.message ?? "";
+        const ctx = (error as { context?: { expired?: boolean } } | null)?.context;
+        if (ctx?.expired || (data as { expired?: boolean } | null)?.expired || /verlopen/i.test(errMsg)) {
+          localStorage.removeItem(STORAGE_KEY);
+          setStep("expired");
+        }
+        return false;
+      }
 
       const amb = data.ambassador as Ambassadeur;
       setAmbassadeur(amb);
@@ -189,11 +198,10 @@ export default function AmbassadeurPortaalPage() {
       const ok = await loginWithToken(token);
       if (!ok) {
         localStorage.removeItem(STORAGE_KEY);
-        if (urlToken) {
-          setStep("invalid");
-        } else {
-          setStep("register");
-        }
+        setStep(prev => {
+          if (prev === "expired") return prev;
+          return urlToken ? "invalid" : "register";
+        });
       }
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -394,6 +402,26 @@ export default function AmbassadeurPortaalPage() {
               <Button variant="outline" onClick={() => setStep("register")}>
                 Nieuw registreren
               </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === "expired" && (
+          <Card className="max-w-md mx-auto shadow-md">
+            <CardContent className="pt-6 pb-6 text-center space-y-4">
+              <AlertCircle className="h-12 w-12 mx-auto text-destructive" />
+              <h2 className="text-xl font-semibold text-gray-900">Link verlopen</h2>
+              <p className="text-sm text-muted-foreground">
+                Je link is verlopen. Neem contact op met het Elia campus recruitment team voor een nieuwe link.
+              </p>
+              <a
+                href="mailto:campusbase@campusbase.be"
+                className="inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4"
+                style={{ color: BRAND.petrol }}
+              >
+                <Mail className="h-4 w-4" />
+                campusbase@campusbase.be
+              </a>
             </CardContent>
           </Card>
         )}
