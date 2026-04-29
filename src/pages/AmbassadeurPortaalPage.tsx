@@ -198,11 +198,10 @@ export default function AmbassadeurPortaalPage() {
       const ok = await loginWithToken(token);
       if (!ok) {
         localStorage.removeItem(STORAGE_KEY);
-        if (urlToken) {
-          setStep("invalid");
-        } else {
-          setStep("register");
-        }
+        setStep(prev => {
+          if (prev === "expired") return prev;
+          return urlToken ? "invalid" : "register";
+        });
       }
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
