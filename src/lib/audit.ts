@@ -25,18 +25,13 @@ interface AuditEntry {
 
 export async function writeAuditLog(entry: AuditEntry) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    await supabase.from("audit_log").insert([{
-      user_id: user.id,
-      user_email: user.email ?? null,
-      action: entry.action,
-      entity_type: entry.entity_type,
-      entity_id: entry.entity_id,
-      entity_name: entry.entity_name,
-      changes: (entry.changes ?? {}) as any,
-    }]);
+    await supabase.rpc("log_audit", {
+      p_action: entry.action,
+      p_entity_type: entry.entity_type,
+      p_entity_id: entry.entity_id,
+      p_entity_name: entry.entity_name,
+      p_changes: (entry.changes ?? {}) as any,
+    });
   } catch (err) {
     console.error("Audit log write failed:", err);
   }

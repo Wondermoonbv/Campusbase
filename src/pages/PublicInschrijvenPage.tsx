@@ -23,7 +23,7 @@ export default function PublicInschrijvenPage() {
     queryKey: ["public_event", evenementId ?? shortCode],
     enabled: !!(evenementId || shortCode),
     queryFn: async () => {
-      let query = supabase.from("evenementen").select("id, name, date, location");
+      let query = supabase.from("evenementen_public").select("id, name, date, location");
       if (shortCode) query = query.eq("short_code", shortCode);
       else query = query.eq("id", evenementId!);
       const { data, error } = await query.maybeSingle();

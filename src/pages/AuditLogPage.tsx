@@ -188,7 +188,11 @@ export default function AuditLogPage() {
         {isLoading ? (
           <div className="p-8 text-center text-muted-foreground animate-pulse">Laden...</div>
         ) : filtered.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">Geen activiteiten gevonden.</div>
+          <div className="p-8 text-center text-muted-foreground">
+            {entries.length === 0
+              ? "Geen activiteiten beschikbaar."
+              : "Geen activiteiten gevonden."}
+          </div>
         ) : (
           <Table>
             <TableHeader>
