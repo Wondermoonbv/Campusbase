@@ -128,6 +128,13 @@ export type Database = {
             referencedRelation: "organisaties"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contacten_school_id_fkey"
+            columns: ["organisatie_id"]
+            isOneToOne: false
+            referencedRelation: "organisaties_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contract_evenementen: {
@@ -156,6 +163,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "evenementen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_evenementen_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "evenementen_public"
             referencedColumns: ["id"]
           },
         ]
@@ -206,6 +220,13 @@ export type Database = {
             columns: ["organisatie_id"]
             isOneToOne: false
             referencedRelation: "organisaties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracten_school_id_fkey"
+            columns: ["organisatie_id"]
+            isOneToOne: false
+            referencedRelation: "organisaties_public"
             referencedColumns: ["id"]
           },
         ]
@@ -324,6 +345,13 @@ export type Database = {
             referencedRelation: "organisaties"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "evenementen_school_id_fkey"
+            columns: ["organisator_id"]
+            isOneToOne: false
+            referencedRelation: "organisaties_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       event_contactpersonen: {
@@ -364,6 +392,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "evenementen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_contactpersonen_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "evenementen_public"
             referencedColumns: ["id"]
           },
         ]
@@ -411,6 +446,13 @@ export type Database = {
             referencedRelation: "evenementen"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "event_inschrijvingen_evenement_id_fkey"
+            columns: ["evenement_id"]
+            isOneToOne: false
+            referencedRelation: "evenementen_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       event_opleidingen: {
@@ -432,6 +474,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "evenementen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_opleidingen_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "evenementen_public"
             referencedColumns: ["id"]
           },
           {
@@ -486,6 +535,13 @@ export type Database = {
             columns: ["evenement_id"]
             isOneToOne: false
             referencedRelation: "evenementen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_forms_evenement_id_fkey"
+            columns: ["evenement_id"]
+            isOneToOne: false
+            referencedRelation: "evenementen_public"
             referencedColumns: ["id"]
           },
         ]
@@ -583,6 +639,13 @@ export type Database = {
             columns: ["organisatie_id"]
             isOneToOne: false
             referencedRelation: "organisaties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opleidingen_school_id_fkey"
+            columns: ["organisatie_id"]
+            isOneToOne: false
+            referencedRelation: "organisaties_public"
             referencedColumns: ["id"]
           },
         ]
@@ -702,10 +765,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "taken_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "evenementen_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "taken_school_id_fkey"
             columns: ["organisatie_id"]
             isOneToOne: false
             referencedRelation: "organisaties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taken_school_id_fkey"
+            columns: ["organisatie_id"]
+            isOneToOne: false
+            referencedRelation: "organisaties_public"
             referencedColumns: ["id"]
           },
         ]
@@ -730,7 +807,115 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      evenementen_public: {
+        Row: {
+          date: string | null
+          end_time: string | null
+          id: string | null
+          location: string | null
+          max_ambassadeurs: number | null
+          name: string | null
+          setup_time: string | null
+          short_code: string | null
+          start_time: string | null
+          status: string | null
+          teardown_time: string | null
+        }
+        Insert: {
+          date?: string | null
+          end_time?: string | null
+          id?: string | null
+          location?: string | null
+          max_ambassadeurs?: number | null
+          name?: string | null
+          setup_time?: string | null
+          short_code?: string | null
+          start_time?: string | null
+          status?: string | null
+          teardown_time?: string | null
+        }
+        Update: {
+          date?: string | null
+          end_time?: string | null
+          id?: string | null
+          location?: string | null
+          max_ambassadeurs?: number | null
+          name?: string | null
+          setup_time?: string | null
+          short_code?: string | null
+          start_time?: string | null
+          status?: string | null
+          teardown_time?: string | null
+        }
+        Relationships: []
+      }
+      event_inschrijvingen_public: {
+        Row: {
+          ambassadeur_id: string | null
+          evenement_id: string | null
+          id: string | null
+          status: string | null
+        }
+        Insert: {
+          ambassadeur_id?: string | null
+          evenement_id?: string | null
+          id?: string | null
+          status?: string | null
+        }
+        Update: {
+          ambassadeur_id?: string | null
+          evenement_id?: string | null
+          id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_inschrijvingen_ambassadeur_id_fkey"
+            columns: ["ambassadeur_id"]
+            isOneToOne: false
+            referencedRelation: "ambassadeurs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_inschrijvingen_evenement_id_fkey"
+            columns: ["evenement_id"]
+            isOneToOne: false
+            referencedRelation: "evenementen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_inschrijvingen_evenement_id_fkey"
+            columns: ["evenement_id"]
+            isOneToOne: false
+            referencedRelation: "evenementen_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organisaties_public: {
+        Row: {
+          city: string | null
+          id: string | null
+          name: string | null
+          province: string | null
+          type: Database["public"]["Enums"]["organisatie_type"] | null
+        }
+        Insert: {
+          city?: string | null
+          id?: string | null
+          name?: string | null
+          province?: string | null
+          type?: Database["public"]["Enums"]["organisatie_type"] | null
+        }
+        Update: {
+          city?: string | null
+          id?: string | null
+          name?: string | null
+          province?: string | null
+          type?: Database["public"]["Enums"]["organisatie_type"] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_any_role: {
@@ -755,6 +940,16 @@ export type Database = {
           user_role?: string
         }
         Returns: Json
+      }
+      log_audit: {
+        Args: {
+          p_action: string
+          p_changes?: Json
+          p_entity_id: string
+          p_entity_name: string
+          p_entity_type: string
+        }
+        Returns: undefined
       }
       reset_user_password: {
         Args: { new_password: string; target_email: string }
