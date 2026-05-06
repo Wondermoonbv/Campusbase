@@ -79,6 +79,9 @@ export interface EventEmailData {
   opbouwTijd?: string | null;
   afbraakTijd?: string | null;
   contactpersoon?: string | null;
+  description?: string | null;
+  contactTerPlaatseName?: string | null;
+  contactTerPlaatsePhone?: string | null;
 }
 
 export function buildConfirmationEmail(
@@ -89,7 +92,14 @@ export function buildConfirmationEmail(
   const safeName = escapeHtml(ambassadeurName);
   const safeEventName = escapeHtml(event.eventName);
   const safeUrl = escapeUrl(portalUrl);
-  return `${WRAPPER_START}${getHeader()}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Bevestiging als ambassadeur</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${safeName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Je bent bevestigd als ambassadeur voor <strong>${safeEventName}</strong>. Hieronder vind je de praktische details.</p>`)}${row(`<table cellpadding="0" cellspacing="0" style="width:100%;margin:16px 0;">${infoRow("📅 Datum", formatDate(event.date))}${infoRow("📍 Locatie", event.location)}${infoRow("🏫 School", event.schoolName)}${infoRow("🕐 Startuur", event.startTime)}${infoRow("🕐 Einduur", event.endTime)}${infoRow("🔧 Opbouw", event.opbouwTijd)}${infoRow("🔧 Afbraak", event.afbraakTijd)}${infoRow("👤 Contact", event.contactpersoon)}</table>`)}${row(`<div style="text-align:center;margin:24px 0;"><a href="${safeUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Bekijk je portaal</a></div>`)}${WRAPPER_END}`;
+  const contactValue = event.contactTerPlaatseName
+    ? `${event.contactTerPlaatseName}${event.contactTerPlaatsePhone ? ` — ${event.contactTerPlaatsePhone}` : ""}`
+    : null;
+  const descriptionBlock = event.description && event.description.trim()
+    ? row(`<div style="margin:16px 0;padding:14px 16px;background:#f4f4f5;border-radius:6px;"><p style="font-size:13px;color:#71717a;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 6px;">Over dit event</p><p style="font-size:14px;color:#18181b;line-height:1.6;margin:0;white-space:pre-wrap;">${escapeHtml(event.description)}</p></div>`)
+    : "";
+  const calendarCta = row(`<div style="margin:24px 0;padding:16px;border:1px dashed #0E6575;border-radius:6px;background:#f0f9fa;text-align:center;"><p style="font-size:15px;color:#0E6575;font-weight:600;margin:0 0 6px;">📅 Voeg toe aan je agenda</p><p style="font-size:13px;color:#3f3f46;line-height:1.5;margin:0;">Er is een agenda-uitnodiging (.ics) bijgevoegd bij deze mail. Open de bijlage om het event aan je agenda toe te voegen.</p></div>`);
+  return `${WRAPPER_START}${getHeader()}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Bevestiging als ambassadeur</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${safeName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Je bent bevestigd als ambassadeur voor <strong>${safeEventName}</strong>. Hieronder vind je de praktische details.</p>`)}${row(`<table cellpadding="0" cellspacing="0" style="width:100%;margin:16px 0;">${infoRow("📅 Datum", formatDate(event.date))}${infoRow("📍 Locatie", event.location)}${infoRow("🏢 Organisator", event.schoolName)}${infoRow("🕐 Startuur", event.startTime)}${infoRow("🕐 Einduur", event.endTime)}${infoRow("📞 Contact ter plaatse", contactValue)}</table>`)}${descriptionBlock}${calendarCta}${row(`<div style="text-align:center;margin:24px 0;"><a href="${safeUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Bekijk je portaal</a></div>`)}${WRAPPER_END}`;
 }
 
 export function buildFeedbackEmail(
