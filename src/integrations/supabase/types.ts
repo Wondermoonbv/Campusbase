@@ -443,6 +443,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "event_inschrijvingen_ambassadeur_id_fkey"
+            columns: ["ambassadeur_id"]
+            isOneToOne: false
+            referencedRelation: "ambassadeurs_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "event_inschrijvingen_evenement_id_fkey"
             columns: ["evenement_id"]
             isOneToOne: false
@@ -810,6 +817,36 @@ export type Database = {
       }
     }
     Views: {
+      ambassadeurs_safe: {
+        Row: {
+          created_at: string | null
+          department: string | null
+          email: string | null
+          full_name: string | null
+          id: string | null
+          is_active: boolean | null
+          token_expires_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          token_expires_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          token_expires_at?: string | null
+        }
+        Relationships: []
+      }
       evenementen_public: {
         Row: {
           date: string | null
@@ -877,6 +914,13 @@ export type Database = {
             columns: ["ambassadeur_id"]
             isOneToOne: false
             referencedRelation: "ambassadeurs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_inschrijvingen_ambassadeur_id_fkey"
+            columns: ["ambassadeur_id"]
+            isOneToOne: false
+            referencedRelation: "ambassadeurs_safe"
             referencedColumns: ["id"]
           },
           {
