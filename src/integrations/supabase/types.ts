@@ -410,28 +410,34 @@ export type Database = {
         Row: {
           ambassadeur_id: string
           bevestigd_op: string | null
+          confirmation_snapshot: Json | null
           evenement_id: string
           id: string
           ingeschreven_op: string | null
           notities: string | null
+          reminder_sent_at: string | null
           status: string
         }
         Insert: {
           ambassadeur_id: string
           bevestigd_op?: string | null
+          confirmation_snapshot?: Json | null
           evenement_id: string
           id?: string
           ingeschreven_op?: string | null
           notities?: string | null
+          reminder_sent_at?: string | null
           status?: string
         }
         Update: {
           ambassadeur_id?: string
           bevestigd_op?: string | null
+          confirmation_snapshot?: Json | null
           evenement_id?: string
           id?: string
           ingeschreven_op?: string | null
           notities?: string | null
+          reminder_sent_at?: string | null
           status?: string
         }
         Relationships: [
