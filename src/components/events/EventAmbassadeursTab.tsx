@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { sendEmail, sendBulkEmails, buildConfirmationEmail, buildInvitationEmail } from "@/lib/email";
 import type { EventEmailData } from "@/lib/email";
 import { generateICS } from "@/lib/ics";
+import { supabase } from "@/integrations/supabase/client";
 
 const STATUSES = [
   { value: "uitgenodigd", label: "Uitgenodigd" },
@@ -120,7 +121,23 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
         const enrollment = enriched.find((e) => e.id === id);
         const amb = enrollment?.ambassadeur;
         if (amb?.email) {
-          const rawEvent = event as any;
+          // Fetch contact ter plaatse for this event
+          let contactName: string | null = null;
+          let contactPhone: string | null = null;
+          try {
+            const { data: cps } = await supabase
+              .from("event_contactpersonen")
+              .select("rol, contact:contacten(name, phone)")
+              .eq("event_id", eventId)
+              .eq("rol", "event_ter_plaatse")
+              .limit(1);
+            const cp = cps?.[0] as any;
+            if (cp?.contact) {
+              contactName = cp.contact.name ?? null;
+              contactPhone = cp.contact.phone ?? null;
+            }
+          } catch { /* ignore */ }
+
           const eventData: EventEmailData = {
             eventName: event.name,
             date: event.date,
@@ -128,9 +145,9 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
             schoolName: school?.name,
             startTime: event.start_time,
             endTime: event.end_time,
-            opbouwTijd: rawEvent.opbouw_tijd,
-            afbraakTijd: rawEvent.afbraak_tijd,
-            contactpersoon: event.elia_contact,
+            description: (event as any).description,
+            contactTerPlaatseName: contactName,
+            contactTerPlaatsePhone: contactPhone,
           };
 
           const portalUrl = `${window.location.origin}/ambassadeur-portaal?token=${amb.access_token}`;
@@ -141,7 +158,9 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
             start_time: event.start_time,
             end_time: event.end_time,
             location: event.location,
-            description: `Ambassadeur voor ${event.name}${school ? ` - ${school.name}` : ""}`,
+            description: (event as any).description
+              ? `${(event as any).description}\n\nAmbassadeur voor ${event.name}${school ? ` - ${school.name}` : ""}`
+              : `Ambassadeur voor ${event.name}${school ? ` - ${school.name}` : ""}`,
           });
 
           const subject = `Bevestiging: ${event.name} - ${new Date(event.date).toLocaleDateString("nl-BE")}`;
