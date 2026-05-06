@@ -28,7 +28,9 @@ export function EventFeedbackBanner({ eventId, eventName, eventDate }: Props) {
   const confirmed = inschrijvingen.filter((i) => i.status === "bevestigd");
   if (confirmed.length === 0) return null;
 
-  const feedbackUrl = `${window.location.origin}/feedback/${form.id}`;
+  const feedbackUrl = form.short_code
+    ? `${window.location.origin}/f/${form.short_code}`
+    : `${window.location.origin}/feedback/${form.id}`;
 
   const handleSend = async () => {
     setSending(true);

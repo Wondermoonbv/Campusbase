@@ -9,7 +9,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Pencil, Users, Clock, MapPin, CalendarDays, GraduationCap, CheckSquare, MessageSquare, UserCheck, Phone, Mail, AlertTriangle, Building2, Target, ClipboardList, FileText, Wrench } from "lucide-react";
+import { ArrowLeft, Pencil, Users, Clock, MapPin, CalendarDays, GraduationCap, CheckSquare, MessageSquare, UserCheck, Phone, Mail, AlertTriangle, Building2, Target, ClipboardList, FileText, Wrench, Ban } from "lucide-react";
 import type { ContactpersoonRol, Event } from "@/types/crm";
 import { toast } from "sonner";
 import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
@@ -234,7 +234,7 @@ export default function EventDetailPage() {
           </section>
 
           {/* SECTIE 6 — Stand & opbouw */}
-          {showStandSection && (
+          {showStandSection ? (
             <section className="surface-card p-4 sm:p-5 space-y-4">
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><Wrench className="h-4 w-4" /> Stand & opbouw</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -243,6 +243,13 @@ export default function EventDetailPage() {
                 {event.setup_date && <DetailField label="Opbouwdatum" value={formatDate(event.setup_date)} />}
                 {event.setup_time && <DetailField label="Opbouwtijd" value={event.setup_time} />}
                 {event.teardown_time && <DetailField label="Afbraaktijd" value={event.teardown_time} />}
+              </div>
+            </section>
+          ) : (
+            <section className="surface-card p-4 sm:p-5">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Ban className="h-4 w-4" />
+                <span>Geen standenbouwer vereist voor dit event</span>
               </div>
             </section>
           )}
