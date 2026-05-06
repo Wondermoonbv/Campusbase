@@ -168,6 +168,23 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
 
           if (result.success) {
             toast.success(`Bevestigingsmail verstuurd naar ${amb.email}`);
+            // Sla snapshot op van kritieke event-velden voor latere reminder-vergelijking
+            try {
+              await supabase
+                .from("event_inschrijvingen")
+                .update({
+                  confirmation_snapshot: {
+                    date: event.date,
+                    start_time: event.start_time ?? null,
+                    end_time: event.end_time ?? null,
+                    location: event.location ?? "",
+                  },
+                })
+                .eq("evenement_id", eventId)
+                .eq("ambassadeur_id", amb.id);
+            } catch (e) {
+              console.error("Snapshot opslaan mislukt", e);
+            }
           } else {
             toast.warning(`Status bijgewerkt, maar email naar ${amb.email} is mislukt: ${result.error}`);
           }
