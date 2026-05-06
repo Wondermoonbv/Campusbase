@@ -150,6 +150,10 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
   );
   const cpValid = hasEventTerPlaatse && !hasDuplicates && cpEntries.every((e) => e.contact_id);
 
+  const eventTimeInvalid = !!form.start_time && !!form.end_time && form.end_time <= form.start_time;
+  const setupTimeInvalid = !!form.setup_time && !!form.teardown_time && form.teardown_time <= form.setup_time;
+  const timesValid = !eventTimeInvalid && !setupTimeInvalid;
+
   const addCpEntry = () => setCpEntries([...cpEntries, { contact_id: "", rol: "event_ter_plaatse" }]);
   const removeCpEntry = (idx: number) => setCpEntries(cpEntries.filter((_, i) => i !== idx));
   const updateCpEntry = (idx: number, patch: Partial<ContactpersoonEntry>) => {
@@ -160,6 +164,10 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
     e.preventDefault();
     if (!cpValid) {
       toast.error("Voeg minstens één contact ter plaatse toe.");
+      return;
+    }
+    if (!timesValid) {
+      toast.error("Einduur moet na het startuur liggen.");
       return;
     }
     const sanitized = sanitizeFormData(form);
@@ -214,7 +222,13 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div><Label>Datum *</Label><Input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
               <div><Label>Startuur</Label><Input key={`${timeInputVersion}-start_time`} type="time" defaultValue={form.start_time} onChange={handleTimeChange("start_time")} onBlur={handleTimeBlur("start_time")} /></div>
-              <div><Label>Einduur</Label><Input key={`${timeInputVersion}-end_time`} type="time" defaultValue={form.end_time} onChange={handleTimeChange("end_time")} onBlur={handleTimeBlur("end_time")} /></div>
+              <div>
+                <Label>Einduur</Label>
+                <Input key={`${timeInputVersion}-end_time`} type="time" defaultValue={form.end_time} onChange={handleTimeChange("end_time")} onBlur={handleTimeBlur("end_time")} aria-invalid={eventTimeInvalid} />
+                {eventTimeInvalid && (
+                  <p className="text-xs text-destructive mt-1 flex items-center gap-1"><AlertTriangle className="h-3.5 w-3.5" /> Einduur moet na het startuur liggen</p>
+                )}
+              </div>
             </div>
             <div>
               <Label>Locatie</Label>
@@ -357,7 +371,13 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div><Label>Opbouwdatum</Label><Input type="date" value={form.setup_date} onChange={(e) => setForm({ ...form, setup_date: e.target.value })} /></div>
                   <div><Label>Opbouwtijd</Label><Input key={`${timeInputVersion}-setup_time`} type="time" defaultValue={form.setup_time} onChange={handleTimeChange("setup_time")} onBlur={handleTimeBlur("setup_time")} /></div>
-                  <div><Label>Afbraaktijd</Label><Input key={`${timeInputVersion}-teardown_time`} type="time" defaultValue={form.teardown_time} onChange={handleTimeChange("teardown_time")} onBlur={handleTimeBlur("teardown_time")} /></div>
+                  <div>
+                    <Label>Afbraaktijd</Label>
+                    <Input key={`${timeInputVersion}-teardown_time`} type="time" defaultValue={form.teardown_time} onChange={handleTimeChange("teardown_time")} onBlur={handleTimeBlur("teardown_time")} aria-invalid={setupTimeInvalid} />
+                    {setupTimeInvalid && (
+                      <p className="text-xs text-destructive mt-1 flex items-center gap-1"><AlertTriangle className="h-3.5 w-3.5" /> Afbraaktijd moet na opbouwtijd liggen</p>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -372,7 +392,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
             </div>
           </FormSection>
 
-          <Button type="submit" className="w-full" disabled={!cpValid && cpEntries.length > 0}>
+          <Button type="submit" className="w-full" disabled={(!cpValid && cpEntries.length > 0) || !timesValid}>
             {isEdit ? "Opslaan" : "Toevoegen"}
           </Button>
           {!cpValid && cpEntries.length > 0 && (
