@@ -94,6 +94,13 @@ function row(content: string) {
 
 type ChangedField = "date" | "start_time" | "end_time" | "location";
 
+const normTime = (t: string | null | undefined): string | null =>
+  t ? String(t).substring(0, 5) : null;
+const normDate = (d: string | null | undefined): string | null =>
+  d ? String(d).substring(0, 10) : null;
+const normLocation = (l: string | null | undefined): string | null =>
+  l ? String(l).trim().toLowerCase() : null;
+
 interface ReminderEvent {
   name: string;
   date: string;
@@ -131,10 +138,10 @@ function buildReminderEmail(
   daysUntil: number,
 ): { html: string; hasChanges: boolean } {
   const changes: Record<ChangedField, boolean> = {
-    date: !!(snapshot && snapshot.date && snapshot.date !== event.date),
-    start_time: !!(snapshot && (snapshot.start_time ?? null) !== (event.start_time ?? null)),
-    end_time: !!(snapshot && (snapshot.end_time ?? null) !== (event.end_time ?? null)),
-    location: !!(snapshot && (snapshot.location ?? "") !== (event.location ?? "")),
+    date: !!(snapshot && snapshot.date && normDate(snapshot.date) !== normDate(event.date)),
+    start_time: !!(snapshot && normTime(snapshot.start_time) !== normTime(event.start_time)),
+    end_time: !!(snapshot && normTime(snapshot.end_time) !== normTime(event.end_time)),
+    location: !!(snapshot && normLocation(snapshot.location) !== normLocation(event.location)),
   };
   const hasChanges = snapshot ? Object.values(changes).some(Boolean) : false;
 
