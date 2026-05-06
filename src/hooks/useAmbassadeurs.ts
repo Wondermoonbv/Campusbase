@@ -22,6 +22,13 @@ export interface EventInschrijving {
   ingeschreven_op: string;
   bevestigd_op: string | null;
   notities: string;
+  confirmation_snapshot?: {
+    date: string;
+    start_time: string | null;
+    end_time: string | null;
+    location: string;
+  } | null;
+  reminder_sent_at?: string | null;
 }
 
 export function useAmbassadeurs() {
