@@ -280,3 +280,80 @@ const Detail = memo(function Detail({ icon: Icon, label, value }: { icon: React.
     </div>
   );
 });
+
+function fmtTime(t: string | null | undefined) {
+  if (!t) return null;
+  return t.length > 5 ? t.slice(0, 5) : t;
+}
+
+const EventCard = memo(function EventCard({ ev, past }: { ev: StandEvent; past: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  const start = fmtTime(ev.start_time);
+  const end = fmtTime(ev.end_time);
+  const setupT = fmtTime(ev.setup_time);
+  const teardown = fmtTime(ev.teardown_time);
+  const eventTime = start && end ? `${start} - ${end}` : start || end;
+  const setupSameDay = !ev.setup_date || ev.setup_date === ev.date;
+  const setupLabel = [!setupSameDay && ev.setup_date ? format(parseISO(ev.setup_date), "d MMM", { locale: nl }) : null, setupT]
+    .filter(Boolean).join(" ");
+  const desc = ev.description || "";
+  const truncated = desc.length > 200;
+  const shownDesc = expanded || !truncated ? desc : desc.slice(0, 200).trimEnd() + "…";
+
+  return (
+    <Card className={past ? "opacity-60" : ""}>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="text-base">{ev.name}</CardTitle>
+          <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${past ? "text-muted-foreground bg-muted" : "text-primary bg-primary/10"}`}>
+            {past ? "Afgelopen" : "Aankomend"}
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        <div className="space-y-2">
+          <Detail icon={CalendarDays} label="Datum" value={format(parseISO(ev.date), "EEEE d MMMM yyyy", { locale: nl })} />
+          <Detail icon={MapPin} label="Locatie" value={ev.location} />
+          <Detail icon={Clock} label="Event" value={eventTime} />
+          <Detail icon={Wrench} label="Opbouw" value={setupLabel || null} />
+          <Detail icon={Wrench} label="Afbraak" value={teardown} />
+          <Detail icon={Ruler} label="Standgrootte" value={ev.booth_size} />
+          <Detail icon={Hash} label="Standnummer" value={ev.booth_number} />
+          <Detail icon={Car} label="Parking" value={ev.parking_info} />
+        </div>
+
+        {ev.contacts.length > 0 && (
+          <div className="border-l-2 border-primary/40 bg-primary/5 rounded-r-md px-3 py-2 space-y-1">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <UserIcon className="h-3 w-3" /> Contact ter plaatse
+            </p>
+            {ev.contacts.map((c, i) => (
+              <div key={i} className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <span className="font-medium">{c.name}</span>
+                {c.phone && (
+                  <a href={`tel:${c.phone}`} className="inline-flex items-center gap-1 text-primary hover:underline">
+                    <Phone className="h-3 w-3" />{c.phone}
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {desc && (
+          <div className="flex items-start gap-2 pt-1">
+            <StickyNote className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {shownDesc}
+              {truncated && (
+                <button onClick={() => setExpanded((v) => !v)} className="ml-1 text-primary hover:underline">
+                  {expanded ? "minder" : "meer lezen"}
+                </button>
+              )}
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+});
