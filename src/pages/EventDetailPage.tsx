@@ -276,7 +276,7 @@ export default function EventDetailPage() {
           )}
 
           <section className="surface-card p-4 sm:p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><Paperclip className="h-4 w-4" /> Bijlagen</h2>
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><Paperclip className="h-4 w-4" /> Documenten</h2>
             <AttachmentsSection entityType="event" entityId={event.id} />
           </section>
         </TabsContent>

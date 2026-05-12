@@ -40,7 +40,8 @@ export function useAttachments(entityType: "event" | "contract", entityId: strin
     mutationFn: async (file: File) => {
       if (!entityId) throw new Error("Entity ID ontbreekt");
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const path = `${entityType}/${entityId}/${Date.now()}_${safeName}`;
+      const uuid = (crypto as any).randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const path = `${entityType}s/${entityId}/${uuid}-${safeName}`;
       const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
         contentType: file.type || "application/octet-stream",
         upsert: false,
