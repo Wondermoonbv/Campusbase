@@ -36,6 +36,9 @@ interface PortalEvent {
   setup_time: string | null;
   contactpersoon: string | null;
   description: string | null;
+  booth_number: string | null;
+  parking_info: string | null;
+  locker_code: string | null;
 }
 
 interface PastEvent {
@@ -104,6 +107,9 @@ export default function AmbassadeurPortaalPage() {
         setup_time: string | null;
         teardown_time: string | null;
         short_code: string | null;
+        booth_number: string | null;
+        parking_info: string | null;
+        locker_code: string | null;
       }>;
       const enrollments = (data.enrollments ?? []) as Array<{
         id: string;
@@ -142,6 +148,9 @@ export default function AmbassadeurPortaalPage() {
             setup_time: e.setup_time,
             contactpersoon: null,
             description: null,
+            booth_number: e.booth_number ?? null,
+            parking_info: e.parking_info ?? null,
+            locker_code: e.locker_code ?? null,
           };
         });
 
