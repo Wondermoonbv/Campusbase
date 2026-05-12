@@ -107,7 +107,7 @@ export function useEventInschrijvingen(eventId?: string) {
         .select()
         .single();
       if (error) throw error;
-      return data as EventInschrijving;
+      return data as unknown as EventInschrijving;
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["event_inschrijvingen", eventId] });

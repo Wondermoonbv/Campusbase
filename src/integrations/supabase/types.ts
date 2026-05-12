@@ -463,8 +463,11 @@ export type Database = {
         Row: {
           ambassadeur_id: string
           bevestigd_op: string | null
+          briefing_sent_at: string | null
           confirmation_snapshot: Json | null
           evenement_id: string
+          feedback_request_sent_at: string | null
+          feedback_response_id: string | null
           id: string
           ingeschreven_op: string | null
           notities: string | null
@@ -474,8 +477,11 @@ export type Database = {
         Insert: {
           ambassadeur_id: string
           bevestigd_op?: string | null
+          briefing_sent_at?: string | null
           confirmation_snapshot?: Json | null
           evenement_id: string
+          feedback_request_sent_at?: string | null
+          feedback_response_id?: string | null
           id?: string
           ingeschreven_op?: string | null
           notities?: string | null
@@ -485,8 +491,11 @@ export type Database = {
         Update: {
           ambassadeur_id?: string
           bevestigd_op?: string | null
+          briefing_sent_at?: string | null
           confirmation_snapshot?: Json | null
           evenement_id?: string
+          feedback_request_sent_at?: string | null
+          feedback_response_id?: string | null
           id?: string
           ingeschreven_op?: string | null
           notities?: string | null
@@ -520,6 +529,13 @@ export type Database = {
             columns: ["evenement_id"]
             isOneToOne: false
             referencedRelation: "evenementen_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_inschrijvingen_feedback_response_id_fkey"
+            columns: ["feedback_response_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_responses"
             referencedColumns: ["id"]
           },
         ]
