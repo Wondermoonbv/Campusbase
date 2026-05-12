@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { Loader2, MapPin, CalendarDays, School, Users, CheckCircle2, Clock, AlertCircle, Mail, Link2, CalendarPlus, User, FileText } from "lucide-react";
+import { Loader2, MapPin, CalendarDays, School, Users, CheckCircle2, Clock, AlertCircle, Mail, Link2, CalendarPlus, User, FileText, Paperclip, Download } from "lucide-react";
 import { toast } from "sonner";
 import { stripHtml } from "@/lib/sanitize";
 import { generateICS } from "@/lib/ics";
@@ -39,6 +39,7 @@ interface PortalEvent {
   booth_number: string | null;
   parking_info: string | null;
   locker_code: string | null;
+  attachments: { id: string; file_name: string; signed_url: string | null }[];
 }
 
 interface PastEvent {
@@ -124,6 +125,15 @@ export default function AmbassadeurPortaalPage() {
         id: string;
         form_id: string;
       }>;
+      const attachmentsAll = (data.attachments ?? []) as Array<{
+        id: string; evenement_id: string; file_name: string; signed_url: string | null;
+      }>;
+      const attsByEvent = new Map<string, { id: string; file_name: string; signed_url: string | null }[]>();
+      attachmentsAll.forEach(a => {
+        const list = attsByEvent.get(a.evenement_id) ?? [];
+        list.push({ id: a.id, file_name: a.file_name, signed_url: a.signed_url });
+        attsByEvent.set(a.evenement_id, list);
+      });
 
       const myEnrollmentByEvent = new Map<string, { id: string; status: string }>();
       enrollments.forEach(e => myEnrollmentByEvent.set(e.evenement_id, { id: e.id, status: e.status }));
@@ -151,6 +161,7 @@ export default function AmbassadeurPortaalPage() {
             booth_number: e.booth_number ?? null,
             parking_info: e.parking_info ?? null,
             locker_code: e.locker_code ?? null,
+            attachments: attsByEvent.get(e.id) ?? [],
           };
         });
 
@@ -564,6 +575,26 @@ export default function AmbassadeurPortaalPage() {
                             {ev.parking_info && (
                               <span className="sm:col-span-2 whitespace-pre-wrap"><strong className="text-foreground">Parking:</strong> {ev.parking_info}</span>
                             )}
+                          </div>
+                        )}
+                        {ev.attachments.length > 0 && (
+                          <div className="border-t border-border/50 pt-2 space-y-1">
+                            <p className="text-xs font-medium text-foreground flex items-center gap-1.5">
+                              <Paperclip className="h-3 w-3" /> Bijlagen
+                            </p>
+                            <ul className="space-y-1">
+                              {ev.attachments.map((a) => (
+                                <li key={a.id}>
+                                  {a.signed_url ? (
+                                    <a href={a.signed_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+                                      <Download className="h-3 w-3" /> {a.file_name}
+                                    </a>
+                                  ) : (
+                                    <span className="text-sm text-muted-foreground">{a.file_name}</span>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
                           </div>
                         )}
 
