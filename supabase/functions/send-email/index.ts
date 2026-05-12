@@ -39,6 +39,72 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Serverconfiguratie ontbreekt." }, 500);
     }
 
+    const body = await req.json();
+
+    // Public template path (no admin/editor auth required) — used by the
+    // marketing site contact form. Still rate-limited via the IP check above.
+    if (body?.template === "marketing-lead") {
+      const d = body.data ?? {};
+      const naam = typeof d.naam === "string" ? d.naam.trim() : "";
+      const organisatie = typeof d.organisatie === "string" ? d.organisatie.trim() : "";
+      const email = typeof d.email === "string" ? d.email.trim() : "";
+      const functie = typeof d.functie === "string" ? d.functie.trim() : "";
+      const boodschap = typeof d.boodschap === "string" ? d.boodschap.trim() : "";
+      const hoeGehoord = typeof d.hoeGehoord === "string" ? d.hoeGehoord.trim() : "";
+
+      if (!naam || !organisatie || !email) {
+        return jsonResponse({ error: "Naam, organisatie en e-mail zijn verplicht" }, 400);
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return jsonResponse({ error: "Ongeldig e-mailadres" }, 400);
+      }
+
+      const esc = (s: string) =>
+        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+      const subject = `Nieuwe demo-aanvraag van ${naam} (${organisatie})`;
+      const rows = [
+        `<tr><td style="padding:6px 12px;font-weight:600;">Naam:</td><td style="padding:6px 12px;">${esc(naam)}</td></tr>`,
+        `<tr><td style="padding:6px 12px;font-weight:600;">Organisatie:</td><td style="padding:6px 12px;">${esc(organisatie)}</td></tr>`,
+        `<tr><td style="padding:6px 12px;font-weight:600;">E-mail:</td><td style="padding:6px 12px;"><a href="mailto:${esc(email)}">${esc(email)}</a></td></tr>`,
+        functie ? `<tr><td style="padding:6px 12px;font-weight:600;">Functie:</td><td style="padding:6px 12px;">${esc(functie)}</td></tr>` : "",
+        hoeGehoord ? `<tr><td style="padding:6px 12px;font-weight:600;">Hoe gehoord:</td><td style="padding:6px 12px;">${esc(hoeGehoord)}</td></tr>` : "",
+      ].join("");
+
+      const html = `
+        <div style="font-family:system-ui,-apple-system,sans-serif;color:#111;max-width:600px;">
+          <h2 style="margin:0 0 16px;">Nieuwe demo-aanvraag via campusbase.be</h2>
+          <table style="border-collapse:collapse;width:100%;background:#f8f9fa;border-radius:8px;overflow:hidden;">
+            ${rows}
+          </table>
+          ${boodschap ? `
+            <div style="margin-top:20px;padding:16px;background:#fff;border-left:4px solid #2563eb;border-radius:4px;">
+              <p style="margin:0 0 8px;font-weight:600;">Boodschap:</p>
+              <p style="margin:0;white-space:pre-wrap;">${esc(boodschap)}</p>
+            </div>
+          ` : ""}
+        </div>
+      `;
+
+      const payload = {
+        from: "CampusBase <noreply@campusbase.be>",
+        to: ["hello@campusbase.be"],
+        reply_to: email,
+        subject,
+        html,
+      };
+
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      console.log("Resend response (marketing-lead):", res.status, JSON.stringify(data));
+      if (!res.ok) return jsonResponse({ error: data }, 400);
+      return jsonResponse({ success: true, messageId: data.id });
+    }
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return jsonResponse({ error: "Niet geautoriseerd." }, 401);
@@ -66,7 +132,6 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Geen toestemming om emails te versturen." }, 403);
     }
 
-    const body = await req.json();
     const { to, subject, html, replyTo, icsContent } = body;
 
     if (!to || !subject || !html) {
