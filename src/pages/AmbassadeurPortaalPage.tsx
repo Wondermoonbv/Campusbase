@@ -339,6 +339,9 @@ export default function AmbassadeurPortaalPage() {
     if (ev.setup_time) descParts.push(`Opbouwtijd: ${ev.setup_time}`);
     if (ev.contactpersoon) descParts.push(`Contactpersoon: ${ev.contactpersoon}`);
     if (ev.description) descParts.push(ev.description);
+    if (ev.booth_number) descParts.push(`Standnummer: ${ev.booth_number}`);
+    if (ev.parking_info) descParts.push(`Parking: ${ev.parking_info}`);
+    if (ev.locker_code) descParts.push(`Locker & iPad: ${ev.locker_code}`);
 
     const ics = generateICS({
       name: ev.name,
