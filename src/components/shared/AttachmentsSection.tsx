@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAttachments, type Attachment } from "@/hooks/useAttachments";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfiles } from "@/hooks/useProfiles";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { toast } from "sonner";
 import { FileText, Image as ImageIcon, FileSpreadsheet, FileType2, Upload, Trash2, Loader2, Download, Paperclip } from "lucide-react";
@@ -54,11 +55,13 @@ interface Props {
 }
 
 export function AttachmentsSection({ entityType, entityId, readOnly = false }: Props) {
-  const { canEdit } = useAuth();
+  const { canEdit, isAdmin } = useAuth();
+  const { resolveAssignee } = useProfiles();
   const inputRef = useRef<HTMLInputElement>(null);
   const [deleteTarget, setDeleteTarget] = useState<Attachment | null>(null);
   const { attachments, isLoading, uploadAttachment, deleteAttachment, getDownloadUrl } = useAttachments(entityType, entityId);
   const allowEdit = !readOnly && canEdit;
+  const allowDelete = !readOnly && isAdmin;
   const limitReached = attachments.length >= MAX_COUNT;
 
   if (!entityId) {
@@ -67,28 +70,40 @@ export function AttachmentsSection({ entityType, entityId, readOnly = false }: P
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const file = files[0];
-    if (!isAllowedFile(file)) {
-      toast.error("Bestandstype niet toegestaan. Alleen PDF, JPG, PNG, DOCX en XLSX zijn toegestaan.");
-      if (inputRef.current) inputRef.current.value = "";
-      return;
-    }
-    if (file.size > MAX_SIZE) {
-      toast.error(`Bestand is te groot (max ${MAX_SIZE / 1024 / 1024} MB).`);
-      return;
-    }
-    if (limitReached) {
+    const list = Array.from(files);
+    const remaining = MAX_COUNT - attachments.length;
+    if (remaining <= 0) {
       toast.error(`Maximum ${MAX_COUNT} bijlagen bereikt.`);
+      if (inputRef.current) inputRef.current.value = "";
       return;
     }
-    try {
-      await uploadAttachment.mutateAsync(file);
-      toast.success("Bestand geüpload.");
-    } catch (e: any) {
-      toast.error(`Upload mislukt: ${e?.message ?? "onbekende fout"}`);
-    } finally {
-      if (inputRef.current) inputRef.current.value = "";
+    const toUpload = list.slice(0, remaining);
+    if (list.length > remaining) {
+      toast.warning(`Slechts ${remaining} bestand(en) geüpload. Maximum bereikt.`);
     }
+    let success = 0;
+    let failed = 0;
+    for (const file of toUpload) {
+      if (!isAllowedFile(file)) {
+        toast.error(`"${file.name}" overgeslagen: type niet toegestaan.`);
+        failed++;
+        continue;
+      }
+      if (file.size > MAX_SIZE) {
+        toast.error(`"${file.name}" overgeslagen: te groot (max ${MAX_SIZE / 1024 / 1024} MB).`);
+        failed++;
+        continue;
+      }
+      try {
+        await uploadAttachment.mutateAsync(file);
+        success++;
+      } catch (e: any) {
+        toast.error(`Upload "${file.name}" mislukt: ${e?.message ?? "onbekende fout"}`);
+        failed++;
+      }
+    }
+    if (success > 0) toast.success(`${success} bestand(en) geüpload.`);
+    if (inputRef.current) inputRef.current.value = "";
   };
 
   const handleDownload = async (a: Attachment) => {
@@ -135,10 +150,15 @@ export function AttachmentsSection({ entityType, entityId, readOnly = false }: P
                 </button>
                 <span className="text-xs text-muted-foreground tabular-nums shrink-0 hidden sm:inline">{formatSize(a.file_size)}</span>
                 <span className="text-xs text-muted-foreground shrink-0 hidden md:inline">{formatDate(a.uploaded_at)}</span>
+                {a.uploaded_by && (
+                  <span className="text-xs text-muted-foreground shrink-0 hidden lg:inline truncate max-w-[140px]" title={resolveAssignee(a.uploaded_by)}>
+                    {resolveAssignee(a.uploaded_by)}
+                  </span>
+                )}
                 <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleDownload(a)} aria-label="Download">
                   <Download className="h-3.5 w-3.5" />
                 </Button>
-                {allowEdit && (
+                {allowDelete && (
                   <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setDeleteTarget(a)} aria-label="Verwijderen">
                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
                   </Button>
@@ -155,6 +175,7 @@ export function AttachmentsSection({ entityType, entityId, readOnly = false }: P
             ref={inputRef}
             type="file"
             className="hidden"
+            multiple
             accept={ACCEPT}
             onChange={(e) => handleFiles(e.target.files)}
           />
@@ -166,7 +187,7 @@ export function AttachmentsSection({ entityType, entityId, readOnly = false }: P
             onClick={() => inputRef.current?.click()}
           >
             {uploadAttachment.isPending ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Upload className="h-3.5 w-3.5 mr-1.5" />}
-            Bestand uploaden
+            Bestanden uploaden
           </Button>
           <span className="text-xs text-muted-foreground">
             {attachments.length}/{MAX_COUNT} · max 10 MB · PDF, JPG, PNG, DOCX, XLSX
