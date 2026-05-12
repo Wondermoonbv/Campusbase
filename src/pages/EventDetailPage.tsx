@@ -255,6 +255,17 @@ export default function EventDetailPage() {
           )}
 
           {/* SECTIE 7 — Notities */}
+          {(event.booth_number || event.parking_info || event.locker_code) && (
+            <section className="surface-card p-4 sm:p-5 space-y-4">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><ClipboardList className="h-4 w-4" /> Praktische info</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {event.booth_number && <DetailField label="Standnummer" value={event.booth_number} />}
+                {event.locker_code && <DetailField label="Locker & iPad code" value={event.locker_code} />}
+                {event.parking_info && <div className="sm:col-span-2"><DetailField label="Parkeerinfo" value={event.parking_info} /></div>}
+              </div>
+            </section>
+          )}
+
           {hasNotes && (
             <section className="surface-card p-4 sm:p-5 space-y-3">
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><FileText className="h-4 w-4" /> Notities</h2>
