@@ -18,6 +18,7 @@ import { EventFeedbackBanner } from "@/components/events/EventFeedbackBanner";
 import { EventAmbassadeursTab } from "@/components/events/EventAmbassadeursTab";
 import { EventFormDialog } from "@/components/events/EventFormDialog";
 import { AttachmentsSection } from "@/components/shared/AttachmentsSection";
+import { EventCommunicationSection } from "@/components/events/EventCommunicationSection";
 import { Paperclip } from "lucide-react";
 import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, CONTACTPERSOON_ROL_LABELS, contactpersoonRolVariant, followUpVariant } from "@/lib/event-labels";
 
@@ -279,6 +280,10 @@ export default function EventDetailPage() {
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><Paperclip className="h-4 w-4" /> Documenten</h2>
             <AttachmentsSection entityType="event" entityId={event.id} />
           </section>
+
+          {canEdit && (
+            <EventCommunicationSection eventId={event.id} eventDate={event.date} />
+          )}
         </TabsContent>
 
         <TabsContent value="ambassadeurs">
