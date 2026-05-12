@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   LogOut, MapPin, Clock, Ruler, StickyNote, CalendarDays,
-  ListTodo, ArrowUp, Minus, AlertTriangle, Hash, Car, Phone, User as UserIcon, Wrench,
+  ListTodo, ArrowUp, Minus, AlertTriangle, Hash, Car, Phone, User as UserIcon, Wrench, Paperclip, Download,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -33,6 +33,7 @@ interface StandEvent {
   parking_info: string | null;
   description: string | null;
   contacts: { name: string; phone: string | null }[];
+  attachments: { id: string; file_name: string; file_path: string }[];
 }
 
 const priorityIcon: Record<string, React.ReactNode> = {
@@ -90,7 +91,25 @@ export default function StandenbouwerPage() {
         contactsByEvent.set(row.event_id, list);
       });
 
-      setEvents(data.map((e: any) => ({ ...e, contacts: contactsByEvent.get(e.id) ?? [] })));
+      const { data: atts } = ids.length
+        ? await supabase
+            .from("attachments")
+            .select("id, entity_id, file_name, file_path")
+            .eq("entity_type", "event")
+            .in("entity_id", ids)
+        : { data: [] as any[] };
+      const attsByEvent = new Map<string, { id: string; file_name: string; file_path: string }[]>();
+      (atts ?? []).forEach((row: any) => {
+        const list = attsByEvent.get(row.entity_id) ?? [];
+        list.push({ id: row.id, file_name: row.file_name, file_path: row.file_path });
+        attsByEvent.set(row.entity_id, list);
+      });
+
+      setEvents(data.map((e: any) => ({
+        ...e,
+        contacts: contactsByEvent.get(e.id) ?? [],
+        attachments: attsByEvent.get(e.id) ?? [],
+      })));
       setLoading(false);
     }
     load();
@@ -351,6 +370,31 @@ const EventCard = memo(function EventCard({ ev, past }: { ev: StandEvent; past: 
                 </button>
               )}
             </p>
+          </div>
+        )}
+
+        {ev.attachments.length > 0 && (
+          <div className="border-t border-border/50 pt-2 space-y-1">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <Paperclip className="h-3 w-3" /> Bijlagen
+            </p>
+            <ul className="space-y-1">
+              {ev.attachments.map((a) => (
+                <li key={a.id}>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const { data, error } = await supabase.storage.from("attachments").createSignedUrl(a.file_path, 3600);
+                      if (error || !data) { toast.error("Download mislukt."); return; }
+                      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+                    }}
+                    className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                  >
+                    <Download className="h-3 w-3" /> {a.file_name}
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </CardContent>
