@@ -550,6 +550,19 @@ export default function AmbassadeurPortaalPage() {
                             </span>
                           )}
                         </div>
+                        {(ev.booth_number || ev.parking_info || ev.locker_code) && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground border-t border-border/50 pt-2">
+                            {ev.booth_number && (
+                              <span><strong className="text-foreground">Standnummer:</strong> {ev.booth_number}</span>
+                            )}
+                            {ev.locker_code && (
+                              <span><strong className="text-foreground">Locker & iPad:</strong> {ev.locker_code}</span>
+                            )}
+                            {ev.parking_info && (
+                              <span className="sm:col-span-2 whitespace-pre-wrap"><strong className="text-foreground">Parking:</strong> {ev.parking_info}</span>
+                            )}
+                          </div>
+                        )}
 
                         {ev.description && (
                           <p className="text-xs italic text-muted-foreground">
