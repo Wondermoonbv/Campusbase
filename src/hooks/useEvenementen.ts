@@ -27,6 +27,9 @@ function mapEvent(row: any): Event {
     booth_size: row.booth_size ?? null,
     requires_booth_builder: row.requires_booth_builder ?? false,
     max_ambassadeurs: row.max_ambassadeurs ?? null,
+    booth_number: row.booth_number ?? null,
+    parking_info: row.parking_info ?? null,
+    locker_code: row.locker_code ?? null,
   };
 }
 
@@ -38,7 +41,7 @@ export function useEvenementen() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("evenementen")
-        .select("id, name, type, date, start_time, end_time, setup_date, setup_time, teardown_time, location, organisator_id, team_members, elia_contact, budget, status, description, stand_type, booth_size, notes, requires_booth_builder, max_ambassadeurs, region, event_language, target_level, registration_type, follow_up_status, short_code")
+        .select("id, name, type, date, start_time, end_time, setup_date, setup_time, teardown_time, location, organisator_id, team_members, elia_contact, budget, status, description, stand_type, booth_size, notes, requires_booth_builder, max_ambassadeurs, region, event_language, target_level, registration_type, follow_up_status, short_code, booth_number, parking_info, locker_code")
         .order("date", { ascending: true });
       if (error) { console.error("Error fetching evenementen:", error); return []; }
       return (data as any[]).map(mapEvent);
@@ -61,6 +64,9 @@ export function useEvenementen() {
       if (payload.event_language === "" || payload.event_language === "none") payload.event_language = null;
       if (payload.target_level === "" || payload.target_level === "none") payload.target_level = null;
       if (payload.registration_type === "" || payload.registration_type === "none") payload.registration_type = null;
+      if (payload.booth_number === "") payload.booth_number = null;
+      if (payload.parking_info === "") payload.parking_info = null;
+      if (payload.locker_code === "") payload.locker_code = null;
 
       if (event.id) {
         const { id, created_at, ...updates } = payload;

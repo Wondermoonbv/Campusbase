@@ -236,6 +236,7 @@ export type Database = {
       }
       evenementen: {
         Row: {
+          booth_number: string | null
           booth_size: string | null
           budget: number | null
           date: string
@@ -250,10 +251,12 @@ export type Database = {
             | null
           id: string
           location: string | null
+          locker_code: string | null
           max_ambassadeurs: number | null
           name: string
           notes: string | null
           organisator_id: string | null
+          parking_info: string | null
           region: Database["public"]["Enums"]["region_enum"] | null
           registration_type:
             | Database["public"]["Enums"]["registration_type_enum"]
@@ -271,6 +274,7 @@ export type Database = {
           type: string
         }
         Insert: {
+          booth_number?: string | null
           booth_size?: string | null
           budget?: number | null
           date: string
@@ -285,10 +289,12 @@ export type Database = {
             | null
           id?: string
           location?: string | null
+          locker_code?: string | null
           max_ambassadeurs?: number | null
           name: string
           notes?: string | null
           organisator_id?: string | null
+          parking_info?: string | null
           region?: Database["public"]["Enums"]["region_enum"] | null
           registration_type?:
             | Database["public"]["Enums"]["registration_type_enum"]
@@ -306,6 +312,7 @@ export type Database = {
           type?: string
         }
         Update: {
+          booth_number?: string | null
           booth_size?: string | null
           budget?: number | null
           date?: string
@@ -320,10 +327,12 @@ export type Database = {
             | null
           id?: string
           location?: string | null
+          locker_code?: string | null
           max_ambassadeurs?: number | null
           name?: string
           notes?: string | null
           organisator_id?: string | null
+          parking_info?: string | null
           region?: Database["public"]["Enums"]["region_enum"] | null
           registration_type?:
             | Database["public"]["Enums"]["registration_type_enum"]

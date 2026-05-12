@@ -36,6 +36,9 @@ interface PortalEvent {
   setup_time: string | null;
   contactpersoon: string | null;
   description: string | null;
+  booth_number: string | null;
+  parking_info: string | null;
+  locker_code: string | null;
 }
 
 interface PastEvent {
@@ -104,6 +107,9 @@ export default function AmbassadeurPortaalPage() {
         setup_time: string | null;
         teardown_time: string | null;
         short_code: string | null;
+        booth_number: string | null;
+        parking_info: string | null;
+        locker_code: string | null;
       }>;
       const enrollments = (data.enrollments ?? []) as Array<{
         id: string;
@@ -142,6 +148,9 @@ export default function AmbassadeurPortaalPage() {
             setup_time: e.setup_time,
             contactpersoon: null,
             description: null,
+            booth_number: e.booth_number ?? null,
+            parking_info: e.parking_info ?? null,
+            locker_code: e.locker_code ?? null,
           };
         });
 
@@ -330,6 +339,9 @@ export default function AmbassadeurPortaalPage() {
     if (ev.setup_time) descParts.push(`Opbouwtijd: ${ev.setup_time}`);
     if (ev.contactpersoon) descParts.push(`Contactpersoon: ${ev.contactpersoon}`);
     if (ev.description) descParts.push(ev.description);
+    if (ev.booth_number) descParts.push(`Standnummer: ${ev.booth_number}`);
+    if (ev.parking_info) descParts.push(`Parking: ${ev.parking_info}`);
+    if (ev.locker_code) descParts.push(`Locker & iPad: ${ev.locker_code}`);
 
     const ics = generateICS({
       name: ev.name,
@@ -541,6 +553,19 @@ export default function AmbassadeurPortaalPage() {
                             </span>
                           )}
                         </div>
+                        {(ev.booth_number || ev.parking_info || ev.locker_code) && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground border-t border-border/50 pt-2">
+                            {ev.booth_number && (
+                              <span><strong className="text-foreground">Standnummer:</strong> {ev.booth_number}</span>
+                            )}
+                            {ev.locker_code && (
+                              <span><strong className="text-foreground">Locker & iPad:</strong> {ev.locker_code}</span>
+                            )}
+                            {ev.parking_info && (
+                              <span className="sm:col-span-2 whitespace-pre-wrap"><strong className="text-foreground">Parking:</strong> {ev.parking_info}</span>
+                            )}
+                          </div>
+                        )}
 
                         {ev.description && (
                           <p className="text-xs italic text-muted-foreground">
