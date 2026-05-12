@@ -13,6 +13,7 @@ import type { Contract } from "@/types/crm";
 import { toast } from "sonner";
 import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
+import { AttachmentsSection } from "@/components/shared/AttachmentsSection";
 
 interface ContractFormDialogProps { open: boolean; onOpenChange: (open: boolean) => void; contract?: Contract; onSave?: (contract: Contract) => void; }
 
@@ -76,6 +77,14 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
             <Textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} rows={2} maxLength={MAX_LENGTHS.notes} />
           </div>
           <div><Label className="mb-2 block">Gekoppelde evenementen</Label><div className="border border-border rounded-lg max-h-40 overflow-y-auto p-2 space-y-1.5">{relevantEvents.length === 0 ? <p className="text-xs text-muted-foreground p-1">Geen evenementen beschikbaar.</p> : relevantEvents.map((event) => <label key={event.id} className="flex items-center gap-2 text-sm p-1.5 rounded hover:bg-muted/40 cursor-pointer"><Checkbox checked={form.linked_event_ids.includes(event.id)} onCheckedChange={() => toggleEvent(event.id)} /><span className="flex-1">{event.name}</span><span className="text-xs text-muted-foreground">{new Date(event.date).toLocaleDateString("nl-BE")}</span></label>)}</div></div>
+          <div>
+            <Label className="mb-2 block">Documenten</Label>
+            {contract?.id ? (
+              <AttachmentsSection entityType="contract" entityId={contract.id} />
+            ) : (
+              <p className="text-sm text-muted-foreground italic">Sla het contract eerst op om documenten te kunnen toevoegen.</p>
+            )}
+          </div>
           <div className="flex justify-end gap-2 pt-2"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuleren</Button><Button type="submit">{isEdit ? "Opslaan" : "Toevoegen"}</Button></div>
         </form>
       </DialogContent>
