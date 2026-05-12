@@ -392,6 +392,40 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           </FormSection>
 
           {/* SECTIE 7 — Notities (standaard dicht) */}
+          <FormSection title="Praktische info" defaultOpen={false}>
+            {form.requires_booth_builder && (
+              <div>
+                <Label>Standnummer</Label>
+                <Input
+                  value={form.booth_number}
+                  onChange={(e) => setForm({ ...form, booth_number: e.target.value })}
+                  maxLength={MAX_LENGTHS.shortText}
+                  placeholder="bv. 141 (Hal 4)"
+                />
+              </div>
+            )}
+            <div>
+              <Label>Parkeerinformatie</Label>
+              <Textarea
+                rows={2}
+                value={form.parking_info}
+                onChange={(e) => setForm({ ...form, parking_info: e.target.value })}
+                maxLength={MAX_LENGTHS.notes}
+                placeholder="bv. Parking PA3, 1 ticket voorzien aan de stand"
+              />
+            </div>
+            <div>
+              <Label>Locker & iPad code</Label>
+              <Input
+                value={form.locker_code}
+                onChange={(e) => setForm({ ...form, locker_code: e.target.value })}
+                maxLength={MAX_LENGTHS.shortText}
+                placeholder="bv. Locker: 840 / iPad: 8400"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">Deze info wordt mee verstuurd in de bevestigings- en herinneringsmail naar ambassadeurs.</p>
+          </FormSection>
+
           <FormSection title="Notities" defaultOpen={false}>
             <div>
               <div className="flex items-center justify-between"><Label>Interne notities</Label><CharacterCounter current={form.notes.length} max={MAX_LENGTHS.notes} /></div>
