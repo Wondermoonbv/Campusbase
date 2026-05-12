@@ -238,7 +238,7 @@ Deno.serve(async (req) => {
     // 1. Find events on target date, not cancelled
     const { data: events, error: evErr } = await admin
       .from("evenementen")
-      .select("id, name, date, start_time, end_time, location, description, status, organisator_id")
+      .select("id, name, date, start_time, end_time, location, description, status, organisator_id, booth_number, parking_info, locker_code")
       .eq("date", targetDateStr)
       .neq("status", "geannuleerd");
 
@@ -287,6 +287,13 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      // All confirmed ambassadeurs for this event (for "Wie gaat er nog?")
+      const { data: confirmedAll } = await admin
+        .from("event_inschrijvingen")
+        .select("ambassadeur_id, ambassadeur:ambassadeurs(full_name)")
+        .eq("evenement_id", event.id)
+        .eq("status", "bevestigd");
+
       const eventData: ReminderEvent = {
         name: event.name,
         date: event.date,
@@ -295,7 +302,19 @@ Deno.serve(async (req) => {
         location: event.location ?? null,
         description: (event as any).description ?? null,
         organisator_name: organisatorName,
+        booth_number: (event as any).booth_number ?? null,
+        parking_info: (event as any).parking_info ?? null,
+        locker_code: (event as any).locker_code ?? null,
       };
+
+      const extraDescParts: string[] = [];
+      if (eventData.booth_number) extraDescParts.push(`Standnummer: ${eventData.booth_number}`);
+      if (eventData.parking_info) extraDescParts.push(`Parking: ${eventData.parking_info}`);
+      if (eventData.locker_code) extraDescParts.push(`Locker & iPad: ${eventData.locker_code}`);
+      const baseDesc = (event as any).description ?? "";
+      const fullDesc = extraDescParts.length > 0
+        ? (baseDesc ? `${baseDesc}\n\n${extraDescParts.join("\n")}` : extraDescParts.join("\n"))
+        : baseDesc || null;
 
       const icsContent = generateICS({
         name: event.name,
@@ -303,7 +322,7 @@ Deno.serve(async (req) => {
         start_time: event.start_time,
         end_time: event.end_time,
         location: event.location,
-        description: (event as any).description ?? null,
+        description: fullDesc,
       });
 
       for (const ins of inschrijvingen ?? []) {
@@ -313,6 +332,9 @@ Deno.serve(async (req) => {
         try {
           const portalUrl = `https://elia-recruit-flow.lovable.app/ambassadeur-portaal?token=${amb.access_token}`;
           const snapshot = (ins as any).confirmation_snapshot as Snapshot | null;
+          const otherAmbassadeurs = (confirmedAll ?? [])
+            .filter((c: any) => c.ambassadeur_id !== ins.ambassadeur_id && c.ambassadeur?.full_name)
+            .map((c: any) => c.ambassadeur.full_name as string);
           const { html } = buildReminderEmail(
             amb.full_name,
             eventData,
@@ -321,6 +343,7 @@ Deno.serve(async (req) => {
             contactPhone,
             portalUrl,
             REMINDER_DAYS_BEFORE,
+            otherAmbassadeurs,
           );
           const subject = `Herinnering: ${event.name} — ${new Date(event.date).toLocaleDateString("nl-BE")}`;
 
