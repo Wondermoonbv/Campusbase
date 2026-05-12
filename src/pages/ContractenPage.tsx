@@ -126,18 +126,20 @@ export default function ContractenPage() {
                   </div>
                   {isExpanded && (
                     <div className="px-4 pb-4 pt-0 space-y-2 border-t border-border mt-0 pt-3">
-                      {c.description && <p className="text-sm">{c.description}</p>}
-                      {c.notes && <p className="text-sm text-muted-foreground">{c.notes}</p>}
-                      <p className="text-xs text-muted-foreground">
-                        Document:{" "}
-                        {c.document_url ? (
-                          <a href={c.document_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                            <ExternalLink className="h-3 w-3" /> Bekijken
-                          </a>
-                        ) : (
-                          <span className="italic">Geen document</span>
-                        )}
-                      </p>
+                       {c.description && <p className="text-sm">{c.description}</p>}
+                       {c.notes && <p className="text-sm text-muted-foreground">{c.notes}</p>}
+                       {c.document_url && (
+                         <p className="text-xs text-muted-foreground">
+                           Externe link:{" "}
+                           <a href={c.document_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                             <ExternalLink className="h-3 w-3" /> Bekijken
+                           </a>
+                         </p>
+                       )}
+                       <div onClick={(e) => e.stopPropagation()}>
+                         <p className="text-xs font-medium text-muted-foreground mb-1.5">Documenten</p>
+                         <AttachmentsSection entityType="contract" entityId={c.id} />
+                       </div>
                       {linkedEvents.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
                           {linkedEvents.map((event) => (
@@ -198,15 +200,17 @@ export default function ContractenPage() {
                       <TableRow className="bg-muted/10 hover:bg-muted/10"><TableCell colSpan={9} className="p-4"><div className="space-y-3">
                         {c.description && <div><p className="text-xs font-medium text-muted-foreground mb-1">Beschrijving</p><p className="text-sm">{c.description}</p></div>}
                         {c.notes && <div><p className="text-xs font-medium text-muted-foreground mb-1">Notities</p><p className="text-sm">{c.notes}</p></div>}
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground mb-1">Document</p>
-                          {c.document_url ? (
+                        {c.document_url && (
+                          <div>
+                            <p className="text-xs font-medium text-muted-foreground mb-1">Externe link</p>
                             <a href={c.document_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline inline-flex items-center gap-1">
                               <ExternalLink className="h-3 w-3" /> Document bekijken
                             </a>
-                          ) : (
-                            <p className="text-sm italic text-muted-foreground">Geen document</p>
-                          )}
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground mb-1.5">Documenten</p>
+                          <AttachmentsSection entityType="contract" entityId={c.id} />
                         </div>
                         {linkedEvents.length > 0 && (
                           <div>
