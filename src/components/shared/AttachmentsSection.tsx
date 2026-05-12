@@ -9,6 +9,22 @@ import { FileText, Image as ImageIcon, FileSpreadsheet, FileType2, Upload, Trash
 const MAX_SIZE = 10 * 1024 * 1024;
 const MAX_COUNT = 10;
 const ACCEPT = ".pdf,.jpg,.jpeg,.png,.docx,.xlsx,application/pdf,image/jpeg,image/png,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+const ALLOWED_EXTENSIONS = ["pdf", "jpg", "jpeg", "png", "docx", "xlsx"];
+const ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+];
+
+function isAllowedFile(file: File): boolean {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  const mime = (file.type || "").toLowerCase();
+  const extOk = ALLOWED_EXTENSIONS.includes(ext);
+  const mimeOk = mime === "" || ALLOWED_MIME_TYPES.includes(mime);
+  return extOk && mimeOk;
+}
 
 function fileIcon(type: string | null, name: string) {
   const t = (type || "").toLowerCase();
@@ -52,6 +68,11 @@ export function AttachmentsSection({ entityType, entityId, readOnly = false }: P
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const file = files[0];
+    if (!isAllowedFile(file)) {
+      toast.error("Bestandstype niet toegestaan. Alleen PDF, JPG, PNG, DOCX en XLSX zijn toegestaan.");
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
     if (file.size > MAX_SIZE) {
       toast.error(`Bestand is te groot (max ${MAX_SIZE / 1024 / 1024} MB).`);
       return;
