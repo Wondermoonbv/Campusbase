@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Download, Plus, ChevronDown, ChevronUp, ExternalLink, Calendar, Pencil, Trash2, FileText } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContractFormDialog } from "@/components/contracts/ContractFormDialog";
+import { AttachmentsSection } from "@/components/shared/AttachmentsSection";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
