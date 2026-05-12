@@ -29,6 +29,9 @@ export interface EventInschrijving {
     location: string;
   } | null;
   reminder_sent_at?: string | null;
+  briefing_sent_at?: string | null;
+  feedback_request_sent_at?: string | null;
+  feedback_response_id?: string | null;
 }
 
 export function useAmbassadeurs() {
@@ -91,7 +94,7 @@ export function useEventInschrijvingen(eventId?: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("event_inschrijvingen")
-        .select("id, evenement_id, ambassadeur_id, status, ingeschreven_op, bevestigd_op, notities")
+        .select("id, evenement_id, ambassadeur_id, status, ingeschreven_op, bevestigd_op, notities, reminder_sent_at, briefing_sent_at, feedback_request_sent_at, feedback_response_id")
         .eq("evenement_id", eventId!)
         .order("ingeschreven_op", { ascending: false });
       if (error) { console.error(error); return []; }
