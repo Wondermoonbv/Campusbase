@@ -138,6 +138,14 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
             }
           } catch { /* ignore */ }
 
+          // Andere bevestigde ambassadeurs (exclusief de huidige ontvanger)
+          const otherAmbassadeurs = enriched
+            .filter((x) => x.status === "bevestigd" && x.ambassadeur_id !== amb.id && x.ambassadeur?.full_name)
+            .map((x) => x.ambassadeur!.full_name);
+          // Voeg de huidige ambassadeur ook toe aan de "bevestigd" set in deze flow,
+          // want zijn status is net naar 'bevestigd' gewijzigd (de lokale enriched is mogelijk nog niet ververst).
+          // We laten 'm bewust uit de lijst — hij weet dat hij zelf gaat.
+
           const eventData: EventEmailData = {
             eventName: event.name,
             date: event.date,
@@ -148,19 +156,29 @@ export function EventAmbassadeursTab({ eventId }: { eventId: string }) {
             description: (event as any).description,
             contactTerPlaatseName: contactName,
             contactTerPlaatsePhone: contactPhone,
+            boothNumber: (event as any).booth_number,
+            parkingInfo: (event as any).parking_info,
+            lockerCode: (event as any).locker_code,
+            otherAmbassadeurs,
           };
 
           const portalUrl = `${window.location.origin}/ambassadeur-portaal?token=${amb.access_token}`;
           const html = buildConfirmationEmail(amb.full_name, eventData, portalUrl);
+          const extraDescParts: string[] = [];
+          if ((event as any).booth_number) extraDescParts.push(`Standnummer: ${(event as any).booth_number}`);
+          if ((event as any).parking_info) extraDescParts.push(`Parking: ${(event as any).parking_info}`);
+          if ((event as any).locker_code) extraDescParts.push(`Locker & iPad: ${(event as any).locker_code}`);
+          const baseDesc = (event as any).description
+            ? `${(event as any).description}\n\nAmbassadeur voor ${event.name}${school ? ` - ${school.name}` : ""}`
+            : `Ambassadeur voor ${event.name}${school ? ` - ${school.name}` : ""}`;
+          const fullDesc = extraDescParts.length > 0 ? `${baseDesc}\n\n${extraDescParts.join("\n")}` : baseDesc;
           const icsContent = generateICS({
             name: event.name,
             date: event.date,
             start_time: event.start_time,
             end_time: event.end_time,
             location: event.location,
-            description: (event as any).description
-              ? `${(event as any).description}\n\nAmbassadeur voor ${event.name}${school ? ` - ${school.name}` : ""}`
-              : `Ambassadeur voor ${event.name}${school ? ` - ${school.name}` : ""}`,
+            description: fullDesc,
           });
 
           const subject = `Bevestiging: ${event.name} - ${new Date(event.date).toLocaleDateString("nl-BE")}`;
