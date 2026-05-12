@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   LogOut, MapPin, Clock, Ruler, StickyNote, CalendarDays,
-  ListTodo, ArrowUp, Minus, AlertTriangle,
+  ListTodo, ArrowUp, Minus, AlertTriangle, Hash, Car, Phone, User as UserIcon, Wrench,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -24,8 +24,15 @@ interface StandEvent {
   date: string;
   location: string | null;
   setup_time: string | null;
+  setup_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
   teardown_time: string | null;
   booth_size: string | null;
+  booth_number: string | null;
+  parking_info: string | null;
+  description: string | null;
+  contacts: { name: string; phone: string | null }[];
 }
 
 const priorityIcon: Record<string, React.ReactNode> = {
@@ -62,16 +69,39 @@ export default function StandenbouwerPage() {
     async function load() {
       const { data, error } = await supabase
         .from("evenementen")
-        .select("id, name, date, location, setup_time, teardown_time, booth_size")
+        .select("id, name, date, location, setup_date, setup_time, start_time, end_time, teardown_time, booth_size, booth_number, parking_info, description")
         .eq("requires_booth_builder", true)
         .order("date", { ascending: true });
-      if (!error && data) setEvents(data as unknown as StandEvent[]);
+      if (error || !data) { setLoading(false); return; }
+
+      const ids = data.map((e: any) => e.id);
+      const { data: cps } = ids.length
+        ? await supabase
+            .from("event_contactpersonen")
+            .select("event_id, contact:contacten(name, phone)")
+            .in("event_id", ids)
+            .eq("rol", "event_ter_plaatse")
+        : { data: [] as any[] };
+      const contactsByEvent = new Map<string, { name: string; phone: string | null }[]>();
+      (cps ?? []).forEach((row: any) => {
+        if (!row.contact) return;
+        const list = contactsByEvent.get(row.event_id) ?? [];
+        list.push({ name: row.contact.name, phone: row.contact.phone });
+        contactsByEvent.set(row.event_id, list);
+      });
+
+      setEvents(data.map((e: any) => ({ ...e, contacts: contactsByEvent.get(e.id) ?? [] })));
       setLoading(false);
     }
     load();
   }, []);
 
   const today = new Date().toISOString().slice(0, 10);
+  const sortedEvents = useMemo(() => {
+    const upcoming = events.filter((e) => e.date >= today).sort((a, b) => a.date.localeCompare(b.date));
+    const past = events.filter((e) => e.date < today).sort((a, b) => b.date.localeCompare(a.date));
+    return [...upcoming, ...past];
+  }, [events, today]);
   const now = useMemo(() => new Date(), []);
   const eventIds = useMemo(() => events.map((e) => e.id), [events]);
 
@@ -135,36 +165,13 @@ export default function StandenbouwerPage() {
             <h2 className="text-xl font-semibold mb-4">Evenementen overzicht</h2>
             {loading ? (
               <EventsSkeleton />
-            ) : events.length === 0 ? (
+            ) : sortedEvents.length === 0 ? (
               <p className="text-sm text-muted-foreground">Geen evenementen gevonden waar een standenbouwer nodig is.</p>
             ) : (
               <div className="space-y-3">
-                {events.map((ev) => {
-                  const past = ev.date < today;
-                  return (
-                    <Card key={ev.id} className={past ? "opacity-50" : ""}>
-                      <CardHeader className="pb-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <CardTitle className="text-base">{ev.name}</CardTitle>
-                          {past && (
-                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0">
-                              Afgelopen
-                            </span>
-                          )}
-                        </div>
-                      </CardHeader>
-                      <CardContent className="grid gap-2 text-sm">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <Detail icon={CalendarDays} label="Datum" value={format(parseISO(ev.date), "d MMMM yyyy", { locale: nl })} />
-                          <Detail icon={MapPin} label="Locatie" value={ev.location} />
-                          <Detail icon={Clock} label="Opbouwuur" value={ev.setup_time} />
-                          <Detail icon={Clock} label="Afbraaktijd" value={ev.teardown_time} />
-                          <Detail icon={Ruler} label="Standgrootte" value={ev.booth_size} />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                {sortedEvents.map((ev) => (
+                  <EventCard key={ev.id} ev={ev} past={ev.date < today} />
+                ))}
               </div>
             )}
           </TabsContent>
