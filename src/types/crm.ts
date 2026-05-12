@@ -102,6 +102,9 @@ export interface Event {
   teardown_time?: string | null;
   max_ambassadeurs?: number | null;
   short_code?: string;
+  booth_number?: string | null;
+  parking_info?: string | null;
+  locker_code?: string | null;
 }
 
 export interface EventContactpersoon {
