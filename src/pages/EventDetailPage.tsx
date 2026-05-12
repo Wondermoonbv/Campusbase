@@ -17,6 +17,8 @@ import { EventFeedbackTab } from "@/components/events/EventFeedbackTab";
 import { EventFeedbackBanner } from "@/components/events/EventFeedbackBanner";
 import { EventAmbassadeursTab } from "@/components/events/EventAmbassadeursTab";
 import { EventFormDialog } from "@/components/events/EventFormDialog";
+import { AttachmentsSection } from "@/components/shared/AttachmentsSection";
+import { Paperclip } from "lucide-react";
 import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, CONTACTPERSOON_ROL_LABELS, contactpersoonRolVariant, followUpVariant } from "@/lib/event-labels";
 
 export default function EventDetailPage() {
@@ -272,6 +274,11 @@ export default function EventDetailPage() {
               <p className="text-sm whitespace-pre-wrap">{event.notes}</p>
             </section>
           )}
+
+          <section className="surface-card p-4 sm:p-5 space-y-3">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><Paperclip className="h-4 w-4" /> Bijlagen</h2>
+            <AttachmentsSection entityType="event" entityId={event.id} />
+          </section>
         </TabsContent>
 
         <TabsContent value="ambassadeurs">

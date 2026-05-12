@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
 import { FormSection } from "@/components/events/FormSection";
+import { AttachmentsSection } from "@/components/shared/AttachmentsSection";
 import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, CONTACTPERSOON_ROL_LABELS } from "@/lib/event-labels";
 import type { Event, ContactpersoonRol } from "@/types/crm";
 import { Trash2, Plus, AlertTriangle } from "lucide-react";
@@ -424,6 +425,14 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
               />
             </div>
             <p className="text-xs text-muted-foreground">Deze info wordt mee verstuurd in de bevestigings- en herinneringsmail naar ambassadeurs.</p>
+          </FormSection>
+
+          <FormSection title="Bijlagen" defaultOpen={false}>
+            {event?.id ? (
+              <AttachmentsSection entityType="event" entityId={event.id} />
+            ) : (
+              <p className="text-sm text-muted-foreground italic">Sla het event eerst op om bijlagen te kunnen toevoegen.</p>
+            )}
           </FormSection>
 
           <FormSection title="Notities" defaultOpen={false}>
