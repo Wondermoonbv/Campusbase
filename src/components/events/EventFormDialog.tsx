@@ -43,6 +43,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
     max_ambassadeurs: "",
     region: "" as string, event_language: "" as string, target_level: "" as string,
     registration_type: "" as string, follow_up_status: "to_do" as string,
+    booth_number: "", parking_info: "", locker_code: "",
   });
 
   const [cpEntries, setCpEntries] = useState<ContactpersoonEntry[]>([]);
@@ -91,6 +92,9 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           target_level: event.target_level || "",
           registration_type: event.registration_type || "",
           follow_up_status: event.follow_up_status || "to_do",
+          booth_number: event.booth_number || "",
+          parking_info: event.parking_info || "",
+          locker_code: event.locker_code || "",
         });
       } else {
         setForm({
@@ -103,6 +107,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           max_ambassadeurs: "",
           region: "", event_language: "", target_level: "", registration_type: "",
           follow_up_status: "to_do",
+          booth_number: "", parking_info: "", locker_code: "",
         });
         setCpEntries([]);
       }
@@ -194,6 +199,9 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       target_level: sanitized.target_level || null,
       registration_type: sanitized.registration_type || null,
       follow_up_status: sanitized.follow_up_status || "to_do",
+      booth_number: sanitized.booth_number || null,
+      parking_info: sanitized.parking_info || null,
+      locker_code: sanitized.locker_code || null,
     } as Event;
     onSave?.(saved, cpEntries.filter((e) => e.contact_id));
     toast.success(isEdit ? "Evenement bijgewerkt." : "Evenement toegevoegd.");
