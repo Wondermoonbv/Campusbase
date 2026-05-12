@@ -20,6 +20,7 @@ const ContactenPage = lazy(() => import("./pages/ContactenPage"));
 const OrganisatieDetailPage = lazy(() => import("./pages/OrganisatieDetailPage"));
 const OpleidingenPage = lazy(() => import("./pages/OpleidingenPage"));
 const ContractenPage = lazy(() => import("./pages/ContractenPage"));
+const ContractDetailPage = lazy(() => import("./pages/ContractDetailPage"));
 const EventenPage = lazy(() => import("./pages/EventenPage"));
 const EventDetailPage = lazy(() => import("./pages/EventDetailPage"));
 const RapportagePage = lazy(() => import("./pages/RapportagePage"));
@@ -171,6 +172,7 @@ function AppRoutes() {
           <Route path="/contacten" element={<ContactenPage />} />
           <Route path="/opleidingen" element={<OpleidingenPage />} />
           <Route path="/contracten" element={<ContractenPage />} />
+          <Route path="/contracten/:id" element={<ContractDetailPage />} />
           <Route path="/evenementen" element={<EventenPage />} />
           <Route path="/evenementen/:id" element={<EventDetailPage />} />
           <Route path="/rapportage" element={<RapportagePage />} />
