@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   LogOut, MapPin, Clock, Ruler, StickyNote, CalendarDays,
-  ListTodo, ArrowUp, Minus, AlertTriangle,
+  ListTodo, ArrowUp, Minus, AlertTriangle, Hash, Car, Phone, User as UserIcon, Wrench,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -24,8 +24,15 @@ interface StandEvent {
   date: string;
   location: string | null;
   setup_time: string | null;
+  setup_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
   teardown_time: string | null;
   booth_size: string | null;
+  booth_number: string | null;
+  parking_info: string | null;
+  description: string | null;
+  contacts: { name: string; phone: string | null }[];
 }
 
 const priorityIcon: Record<string, React.ReactNode> = {
@@ -62,16 +69,39 @@ export default function StandenbouwerPage() {
     async function load() {
       const { data, error } = await supabase
         .from("evenementen")
-        .select("id, name, date, location, setup_time, teardown_time, booth_size")
+        .select("id, name, date, location, setup_date, setup_time, start_time, end_time, teardown_time, booth_size, booth_number, parking_info, description")
         .eq("requires_booth_builder", true)
         .order("date", { ascending: true });
-      if (!error && data) setEvents(data as unknown as StandEvent[]);
+      if (error || !data) { setLoading(false); return; }
+
+      const ids = data.map((e: any) => e.id);
+      const { data: cps } = ids.length
+        ? await supabase
+            .from("event_contactpersonen")
+            .select("event_id, contact:contacten(name, phone)")
+            .in("event_id", ids)
+            .eq("rol", "event_ter_plaatse")
+        : { data: [] as any[] };
+      const contactsByEvent = new Map<string, { name: string; phone: string | null }[]>();
+      (cps ?? []).forEach((row: any) => {
+        if (!row.contact) return;
+        const list = contactsByEvent.get(row.event_id) ?? [];
+        list.push({ name: row.contact.name, phone: row.contact.phone });
+        contactsByEvent.set(row.event_id, list);
+      });
+
+      setEvents(data.map((e: any) => ({ ...e, contacts: contactsByEvent.get(e.id) ?? [] })));
       setLoading(false);
     }
     load();
   }, []);
 
   const today = new Date().toISOString().slice(0, 10);
+  const sortedEvents = useMemo(() => {
+    const upcoming = events.filter((e) => e.date >= today).sort((a, b) => a.date.localeCompare(b.date));
+    const past = events.filter((e) => e.date < today).sort((a, b) => b.date.localeCompare(a.date));
+    return [...upcoming, ...past];
+  }, [events, today]);
   const now = useMemo(() => new Date(), []);
   const eventIds = useMemo(() => events.map((e) => e.id), [events]);
 
@@ -135,36 +165,13 @@ export default function StandenbouwerPage() {
             <h2 className="text-xl font-semibold mb-4">Evenementen overzicht</h2>
             {loading ? (
               <EventsSkeleton />
-            ) : events.length === 0 ? (
+            ) : sortedEvents.length === 0 ? (
               <p className="text-sm text-muted-foreground">Geen evenementen gevonden waar een standenbouwer nodig is.</p>
             ) : (
               <div className="space-y-3">
-                {events.map((ev) => {
-                  const past = ev.date < today;
-                  return (
-                    <Card key={ev.id} className={past ? "opacity-50" : ""}>
-                      <CardHeader className="pb-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <CardTitle className="text-base">{ev.name}</CardTitle>
-                          {past && (
-                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0">
-                              Afgelopen
-                            </span>
-                          )}
-                        </div>
-                      </CardHeader>
-                      <CardContent className="grid gap-2 text-sm">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <Detail icon={CalendarDays} label="Datum" value={format(parseISO(ev.date), "d MMMM yyyy", { locale: nl })} />
-                          <Detail icon={MapPin} label="Locatie" value={ev.location} />
-                          <Detail icon={Clock} label="Opbouwuur" value={ev.setup_time} />
-                          <Detail icon={Clock} label="Afbraaktijd" value={ev.teardown_time} />
-                          <Detail icon={Ruler} label="Standgrootte" value={ev.booth_size} />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                {sortedEvents.map((ev) => (
+                  <EventCard key={ev.id} ev={ev} past={ev.date < today} />
+                ))}
               </div>
             )}
           </TabsContent>
@@ -271,5 +278,82 @@ const Detail = memo(function Detail({ icon: Icon, label, value }: { icon: React.
       <span className="text-muted-foreground">{label}:</span>
       <span className="font-medium">{value}</span>
     </div>
+  );
+});
+
+function fmtTime(t: string | null | undefined) {
+  if (!t) return null;
+  return t.length > 5 ? t.slice(0, 5) : t;
+}
+
+const EventCard = memo(function EventCard({ ev, past }: { ev: StandEvent; past: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  const start = fmtTime(ev.start_time);
+  const end = fmtTime(ev.end_time);
+  const setupT = fmtTime(ev.setup_time);
+  const teardown = fmtTime(ev.teardown_time);
+  const eventTime = start && end ? `${start} - ${end}` : start || end;
+  const setupSameDay = !ev.setup_date || ev.setup_date === ev.date;
+  const setupLabel = [!setupSameDay && ev.setup_date ? format(parseISO(ev.setup_date), "d MMM", { locale: nl }) : null, setupT]
+    .filter(Boolean).join(" ");
+  const desc = ev.description || "";
+  const truncated = desc.length > 200;
+  const shownDesc = expanded || !truncated ? desc : desc.slice(0, 200).trimEnd() + "…";
+
+  return (
+    <Card className={past ? "opacity-60" : ""}>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="text-base">{ev.name}</CardTitle>
+          <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${past ? "text-muted-foreground bg-muted" : "text-primary bg-primary/10"}`}>
+            {past ? "Afgelopen" : "Aankomend"}
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        <div className="space-y-2">
+          <Detail icon={CalendarDays} label="Datum" value={format(parseISO(ev.date), "EEEE d MMMM yyyy", { locale: nl })} />
+          <Detail icon={MapPin} label="Locatie" value={ev.location} />
+          <Detail icon={Clock} label="Event" value={eventTime} />
+          <Detail icon={Wrench} label="Opbouw" value={setupLabel || null} />
+          <Detail icon={Wrench} label="Afbraak" value={teardown} />
+          <Detail icon={Ruler} label="Standgrootte" value={ev.booth_size} />
+          <Detail icon={Hash} label="Standnummer" value={ev.booth_number} />
+          <Detail icon={Car} label="Parking" value={ev.parking_info} />
+        </div>
+
+        {ev.contacts.length > 0 && (
+          <div className="border-l-2 border-primary/40 bg-primary/5 rounded-r-md px-3 py-2 space-y-1">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <UserIcon className="h-3 w-3" /> Contact ter plaatse
+            </p>
+            {ev.contacts.map((c, i) => (
+              <div key={i} className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <span className="font-medium">{c.name}</span>
+                {c.phone && (
+                  <a href={`tel:${c.phone}`} className="inline-flex items-center gap-1 text-primary hover:underline">
+                    <Phone className="h-3 w-3" />{c.phone}
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {desc && (
+          <div className="flex items-start gap-2 pt-1">
+            <StickyNote className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {shownDesc}
+              {truncated && (
+                <button onClick={() => setExpanded((v) => !v)} className="ml-1 text-primary hover:underline">
+                  {expanded ? "minder" : "meer lezen"}
+                </button>
+              )}
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 });
