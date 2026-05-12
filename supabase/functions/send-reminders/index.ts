@@ -109,6 +109,9 @@ interface ReminderEvent {
   location: string | null;
   description: string | null;
   organisator_name: string | null;
+  booth_number: string | null;
+  parking_info: string | null;
+  locker_code: string | null;
 }
 
 interface Snapshot {
@@ -136,6 +139,7 @@ function buildReminderEmail(
   contactPhone: string | null,
   portalUrl: string,
   daysUntil: number,
+  otherAmbassadeurs: string[] = [],
 ): { html: string; hasChanges: boolean } {
   const changes: Record<ChangedField, boolean> = {
     date: !!(snapshot && snapshot.date && normDate(snapshot.date) !== normDate(event.date)),
@@ -159,15 +163,22 @@ function buildReminderEmail(
     ${reminderRow("🕐 Startuur", event.start_time, snapshot?.start_time ?? null, changes.start_time)}
     ${reminderRow("🕐 Einduur", event.end_time, snapshot?.end_time ?? null, changes.end_time)}
     ${contactName ? `<tr><td style="padding:6px 0;font-size:14px;color:#71717a;width:140px;">📞 Contact ter plaatse</td><td style="padding:6px 0;font-size:14px;color:#18181b;">${escapeHtml(contactName)}${contactPhone ? ` — ${escapeHtml(contactPhone)}` : ""}</td></tr>` : ""}
+    ${event.booth_number ? `<tr><td style="padding:6px 0;font-size:14px;color:#71717a;width:140px;">🏢 Standnummer</td><td style="padding:6px 0;font-size:14px;color:#18181b;">${escapeHtml(event.booth_number)}</td></tr>` : ""}
+    ${event.parking_info ? `<tr><td style="padding:6px 0;font-size:14px;color:#71717a;width:140px;vertical-align:top;">🅿️ Parking</td><td style="padding:6px 0;font-size:14px;color:#18181b;white-space:pre-wrap;">${escapeHtml(event.parking_info)}</td></tr>` : ""}
+    ${event.locker_code ? `<tr><td style="padding:6px 0;font-size:14px;color:#71717a;width:140px;">🔐 Locker & iPad</td><td style="padding:6px 0;font-size:14px;color:#18181b;">${escapeHtml(event.locker_code)}</td></tr>` : ""}
   </table>`;
 
   const descriptionBlock = event.description && event.description.trim()
     ? row(`<div style="margin:16px 0;padding:14px 16px;background:#f4f4f5;border-radius:6px;"><p style="font-size:13px;color:#71717a;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 6px;">Over dit event</p><p style="font-size:14px;color:#18181b;line-height:1.6;margin:0;white-space:pre-wrap;">${escapeHtml(event.description)}</p></div>`)
     : "";
 
+  const othersBlock = otherAmbassadeurs.length > 0
+    ? row(`<div style="margin:16px 0;padding:14px 16px;background:#f0f9fa;border-radius:6px;"><p style="font-size:13px;color:#0E6575;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 8px;font-weight:600;">Wie gaat er nog?</p><p style="font-size:13px;color:#3f3f46;margin:0 0 8px;">De volgende collega's zijn ook bevestigd voor dit event:</p><ul style="margin:0;padding-left:20px;font-size:14px;color:#18181b;line-height:1.7;">${otherAmbassadeurs.map((n) => `<li>${escapeHtml(n)}</li>`).join("")}</ul></div>`)
+    : "";
+
   const calendarCta = row(`<div style="margin:24px 0;padding:16px;border:1px dashed #0E6575;border-radius:6px;background:#f0f9fa;text-align:center;"><p style="font-size:15px;color:#0E6575;font-weight:600;margin:0 0 6px;">📅 Voeg toe aan je agenda</p><p style="font-size:13px;color:#3f3f46;line-height:1.5;margin:0;">Er is een agenda-uitnodiging (.ics) bijgevoegd bij deze mail. Open de bijlage om het event aan je agenda toe te voegen.</p></div>`);
 
-  const html = `${WRAPPER_START}${HEADER}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Herinnering: ${safeEventName}</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${safeName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Over <strong>${daysUntil} dag${daysUntil === 1 ? "" : "en"}</strong> vindt <strong>${safeEventName}</strong> plaats. Hieronder vind je de praktische details.</p>`)}${warningBanner}${row(detailsTable)}${descriptionBlock}${calendarCta}${row(`<div style="text-align:center;margin:24px 0;"><a href="${safeUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Bekijk je portaal</a></div>`)}${WRAPPER_END}`;
+  const html = `${WRAPPER_START}${HEADER}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Herinnering: ${safeEventName}</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${safeName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Over <strong>${daysUntil} dag${daysUntil === 1 ? "" : "en"}</strong> vindt <strong>${safeEventName}</strong> plaats. Hieronder vind je de praktische details.</p>`)}${warningBanner}${row(detailsTable)}${descriptionBlock}${othersBlock}${calendarCta}${row(`<div style="text-align:center;margin:24px 0;"><a href="${safeUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Bekijk je portaal</a></div>`)}${WRAPPER_END}`;
 
   return { html, hasChanges };
 }
