@@ -1,17 +1,15 @@
-import { useMemo, useState, useCallback, memo, Fragment } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useContracten } from "@/hooks/useContracten";
 import { useScholen } from "@/hooks/useScholen";
-import { useEvenementen } from "@/hooks/useEvenementen";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, Plus, ChevronDown, ChevronUp, ExternalLink, Calendar, Pencil, Trash2, FileText } from "lucide-react";
+import { Download, Plus, ChevronRight, Pencil, Trash2, FileText } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContractFormDialog } from "@/components/contracts/ContractFormDialog";
-import { AttachmentsSection } from "@/components/shared/AttachmentsSection";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
@@ -43,13 +41,12 @@ function ListSkeleton() {
 
 export default function ContractenPage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const filterExpiring = searchParams.get("expiring") === "90";
   const { contracten, isLoading, upsertContract, deleteContract } = useContracten();
   const { scholen } = useScholen();
-  const { evenementen } = useEvenementen();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editContract, setEditContract] = useState<Contract | undefined>();
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Contract | null>(null);
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("school");
@@ -115,49 +112,22 @@ export default function ContractenPage() {
           <div className="block md:hidden space-y-2">
             {sorted.map((c) => {
               const school = schoolMap.get(c.organisatie_id);
-              const isExpanded = expandedId === c.id;
-              const linkedEvents = (c.linked_event_ids || []).map((eid) => evenementen.find((e) => e.id === eid)).filter(Boolean);
               return (
                 <div key={c.id} className={`surface-card overflow-hidden ${getExpiryColor(c.end_date)}`}>
-                  <div className="p-4 cursor-pointer active:scale-[0.99] transition-transform" onClick={() => setExpandedId(isExpanded ? null : c.id)}>
+                  <button type="button" className="w-full text-left p-4 active:scale-[0.99] transition-transform" onClick={() => navigate(`/contracten/${c.id}`)}>
                     <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1"><p className="font-medium text-sm">{school?.name ?? "—"}</p><p className="text-xs text-muted-foreground mt-0.5 capitalize">{c.contract_type}</p><p className="text-xs text-muted-foreground mt-0.5">{new Date(c.start_date).toLocaleDateString("nl-BE")} → {new Date(c.end_date).toLocaleDateString("nl-BE")}</p></div>
-                      <div className="flex flex-col items-end gap-1"><StatusBadge status={c.status} />{c.value && <span className="text-xs font-medium tabular-nums">€{c.value.toLocaleString("nl-BE")}</span>}</div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm">{school?.name ?? "—"}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 capitalize">{c.contract_type}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{new Date(c.start_date).toLocaleDateString("nl-BE")} → {new Date(c.end_date).toLocaleDateString("nl-BE")}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <StatusBadge status={c.status} />
+                        {c.value && <span className="text-xs font-medium tabular-nums">€{c.value.toLocaleString("nl-BE")}</span>}
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
                     </div>
-                  </div>
-                  {isExpanded && (
-                    <div className="px-4 pb-4 pt-0 space-y-2 border-t border-border mt-0 pt-3">
-                       {c.description && <p className="text-sm">{c.description}</p>}
-                       {c.notes && <p className="text-sm text-muted-foreground">{c.notes}</p>}
-                       {c.document_url && (
-                         <p className="text-xs text-muted-foreground">
-                           Externe link:{" "}
-                           <a href={c.document_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                             <ExternalLink className="h-3 w-3" /> Bekijken
-                           </a>
-                         </p>
-                       )}
-                       <div onClick={(e) => e.stopPropagation()}>
-                         <p className="text-xs font-medium text-muted-foreground mb-1.5">Documenten</p>
-                         <AttachmentsSection entityType="contract" entityId={c.id} />
-                       </div>
-                      {linkedEvents.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {linkedEvents.map((event) => (
-                            <Link key={event!.id} to={`/evenementen/${event!.id}`} onClick={(e) => e.stopPropagation()} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded hover:bg-primary/20 transition-colors">
-                              {event!.name}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                      {canEdit && (
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="h-9" onClick={(e) => { e.stopPropagation(); setEditContract(c); setDialogOpen(true); }}>Bewerken</Button>
-                          <Button size="sm" variant="outline" className="h-9 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}><Trash2 className="h-3.5 w-3.5 mr-1" /> Verwijderen</Button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  </button>
                 </div>
               );
             })}
@@ -165,7 +135,6 @@ export default function ContractenPage() {
 
           <div className="surface-card overflow-hidden hidden md:block">
             <Table><TableHeader><TableRow>
-              <TableHead className="w-8" />
               <SortableTableHead sortKey="school" currentSort={sort} onSort={toggleSort}>Organisatie</SortableTableHead>
               <SortableTableHead sortKey="type" currentSort={sort} onSort={toggleSort}>Type</SortableTableHead>
               <SortableTableHead sortKey="start" currentSort={sort} onSort={toggleSort}>Start</SortableTableHead>
@@ -173,16 +142,12 @@ export default function ContractenPage() {
               <SortableTableHead sortKey="renewal" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Vernieuwingsdatum</SortableTableHead>
               <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
               <SortableTableHead sortKey="value" currentSort={sort} onSort={toggleSort} className="text-right">Waarde</SortableTableHead>
-              <TableHead className="w-20" />
+              <TableHead className="w-24" />
             </TableRow></TableHeader>
               <TableBody>{sorted.map((c) => {
                 const school = schoolMap.get(c.organisatie_id);
-                const isExpanded = expandedId === c.id;
-                const linkedEvents = (c.linked_event_ids || []).map((eid) => evenementen.find((e) => e.id === eid)).filter(Boolean);
                 return (
-                  <Fragment key={c.id}>
-                    <TableRow className={`hover:bg-muted/30 cursor-pointer ${getExpiryColor(c.end_date)}`} onClick={() => setExpandedId(isExpanded ? null : c.id)}>
-                      <TableCell className="px-2">{isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}</TableCell>
+                    <TableRow key={c.id} className={`hover:bg-muted/30 cursor-pointer ${getExpiryColor(c.end_date)}`} onClick={() => navigate(`/contracten/${c.id}`)}>
                       <TableCell className="font-medium">{school?.name ?? "—"}</TableCell>
                       <TableCell className="capitalize">{c.contract_type}</TableCell>
                       <TableCell>{new Date(c.start_date).toLocaleDateString("nl-BE")}</TableCell>
@@ -191,43 +156,13 @@ export default function ContractenPage() {
                       <TableCell><StatusBadge status={c.status} /></TableCell>
                       <TableCell className="text-right tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
                       <TableCell>
-                        <div className="flex gap-0.5">
+                        <div className="flex gap-0.5 items-center justify-end">
                           {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Contract bewerken" onClick={(e) => { e.stopPropagation(); setEditContract(c); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
                           {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Contract verwijderen" onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
                         </div>
                       </TableCell>
                     </TableRow>
-                    {isExpanded && (
-                      <TableRow className="bg-muted/10 hover:bg-muted/10"><TableCell colSpan={9} className="p-4"><div className="space-y-3">
-                        {c.description && <div><p className="text-xs font-medium text-muted-foreground mb-1">Beschrijving</p><p className="text-sm">{c.description}</p></div>}
-                        {c.notes && <div><p className="text-xs font-medium text-muted-foreground mb-1">Notities</p><p className="text-sm">{c.notes}</p></div>}
-                        {c.document_url && (
-                          <div>
-                            <p className="text-xs font-medium text-muted-foreground mb-1">Externe link</p>
-                            <a href={c.document_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline inline-flex items-center gap-1">
-                              <ExternalLink className="h-3 w-3" /> Document bekijken
-                            </a>
-                          </div>
-                        )}
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground mb-1.5">Documenten</p>
-                          <AttachmentsSection entityType="contract" entityId={c.id} />
-                        </div>
-                        {linkedEvents.length > 0 && (
-                          <div>
-                            <p className="text-xs font-medium text-muted-foreground mb-1.5">Gekoppelde evenementen</p>
-                            <div className="flex flex-wrap gap-2">
-                              {linkedEvents.map((event) => (
-                                <Link key={event!.id} to={`/evenementen/${event!.id}`} onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1.5 text-xs bg-primary/10 text-primary hover:bg-primary/20 px-2.5 py-1 rounded-md transition-colors">
-                                  <Calendar className="h-3 w-3" />{event!.name} — {new Date(event!.date).toLocaleDateString("nl-BE")}
-                                </Link>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div></TableCell></TableRow>
-                    )}
-                  </Fragment>
                 );
               })}</TableBody></Table>
             <div className="p-3 border-t border-border text-xs text-muted-foreground flex flex-wrap gap-4">
