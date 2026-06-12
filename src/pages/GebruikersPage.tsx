@@ -213,11 +213,6 @@ export default function GebruikersPage() {
     navigate(u.role === "standenbouwer" ? "/standenbouwer" : "/");
   }, [simulateUser, navigate]);
 
-  const handleTabChange = (value: string) => {
-    if (value === "activiteit") setSearchParams({ tab: "activiteit" });
-    else setSearchParams({});
-  };
-
   return (
     <div className="page-container animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
