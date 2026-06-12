@@ -1,8 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useViewAs } from "@/contexts/ViewAsContext";
-import { useActivity, ActivityAction, ActivityEntityType } from "@/contexts/ActivityContext";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/supabase-helpers";
 import { Button } from "@/components/ui/button";
@@ -11,9 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2, Search, GraduationCap, CalendarDays, FileText, BookOpen, CheckSquare, UserPlus, Eye, KeyRound, Copy, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, UserPlus, Eye, KeyRound, Copy, RefreshCw } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -22,67 +20,11 @@ import { toast } from "sonner";
 import type { AppUser, UserRole } from "@/contexts/AuthContext";
 import { writeAuditLog } from "@/lib/audit";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
-import { formatDistanceToNow } from "date-fns";
-import { nl } from "date-fns/locale";
-
-const entityIcons: Record<ActivityEntityType, React.ElementType> = {
-  school: GraduationCap,
-  evenement: CalendarDays,
-  contract: FileText,
-  opleiding: BookOpen,
-  taak: CheckSquare,
-};
-
-const actionIcons: Record<ActivityAction, React.ElementType> = {
-  aangemaakt: Plus,
-  bewerkt: Pencil,
-  verwijderd: Trash2,
-};
-
-const actionColors: Record<ActivityAction, string> = {
-  aangemaakt: "text-success",
-  bewerkt: "text-primary",
-  verwijderd: "text-destructive",
-};
-
-function ActivityRow({ activity: a }: { activity: ReturnType<typeof useActivity>["activities"][0] }) {
-  const ActionIcon = actionIcons[a.action];
-  const EntityIcon = entityIcons[a.entityType];
-
-  return (
-    <div className="flex items-start sm:items-center gap-3 px-3 sm:px-4 py-3">
-      <UserAvatar name={a.userName} avatarUrl={a.userAvatarUrl} className="h-8 w-8 shrink-0" />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm leading-relaxed">
-          <span className="font-medium">{a.userName}</span>
-          {" "}
-          <span className="text-muted-foreground">heeft</span>
-          {" "}
-          <span className={`inline-flex items-center gap-1 font-medium ${actionColors[a.action]}`}>
-            <ActionIcon className="h-3 w-3" />
-            {a.action}
-          </span>
-          {": "}
-          <span className="inline-flex items-center gap-1">
-            <EntityIcon className="h-3 w-3 text-muted-foreground" />
-            <span className="font-medium">{a.entityName}</span>
-          </span>
-        </p>
-      </div>
-      <time className="text-xs text-muted-foreground whitespace-nowrap tabular-nums shrink-0">
-        {formatDistanceToNow(new Date(a.timestamp), { addSuffix: true, locale: nl })}
-      </time>
-    </div>
-  );
-}
 
 export default function GebruikersPage() {
   const { users, updateUser, user: currentUser, isAdmin, refreshUsers } = useAuth();
   const { simulateUser } = useViewAs();
   const navigate = useNavigate();
-  const { activities } = useActivity();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get("tab") === "activiteit" ? "activiteit" : "gebruikers";
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editUser, setEditUser] = useState<AppUser | null>(null);
@@ -173,11 +115,6 @@ export default function GebruikersPage() {
 
   const { sort, toggleSort } = useSort("lastName");
 
-  const [actSearch, setActSearch] = useState("");
-  const [filterUser, setFilterUser] = useState("alle");
-  const [filterAction, setFilterAction] = useState("alle");
-  const [filterPeriod, setFilterPeriod] = useState("alle");
-
   const sorted = useMemo(() => {
     return sortItems(users, sort, (u, key) => {
       switch (key) {
@@ -188,27 +125,6 @@ export default function GebruikersPage() {
       }
     });
   }, [users, sort]);
-
-  const activityUsers = useMemo(() =>
-    [...new Map(activities.map((a) => [a.userId, a.userName])).values()].sort(),
-    [activities]
-  );
-
-  const filtered = useMemo(() => {
-    const now = Date.now();
-    return activities.filter((a) => {
-      if (actSearch && !a.entityName.toLowerCase().includes(actSearch.toLowerCase()) && !a.userName.toLowerCase().includes(actSearch.toLowerCase())) return false;
-      if (filterUser !== "alle" && a.userName !== filterUser) return false;
-      if (filterAction !== "alle" && a.action !== filterAction) return false;
-      if (filterPeriod !== "alle") {
-        const age = now - new Date(a.timestamp).getTime();
-        if (filterPeriod === "vandaag" && age > 86400000) return false;
-        if (filterPeriod === "week" && age > 7 * 86400000) return false;
-        if (filterPeriod === "maand" && age > 30 * 86400000) return false;
-      }
-      return true;
-    });
-  }, [activities, actSearch, filterUser, filterAction, filterPeriod]);
 
   // Invite user via RPC
   const handleInvite = useCallback(async (e: React.FormEvent) => {
@@ -297,29 +213,18 @@ export default function GebruikersPage() {
     navigate(u.role === "standenbouwer" ? "/standenbouwer" : "/");
   }, [simulateUser, navigate]);
 
-  const handleTabChange = (value: string) => {
-    if (value === "activiteit") setSearchParams({ tab: "activiteit" });
-    else setSearchParams({});
-  };
-
   return (
     <div className="page-container animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
         <h1>Gebruikers</h1>
-        {activeTab === "gebruikers" && isAdmin && (
+        {isAdmin && (
           <Button size="sm" className="h-10 sm:h-8" onClick={() => { setInviteOpen(true); setInviteForm({ fullName: "", email: "", password: "", role: "editor" }); }}>
             <UserPlus className="h-4 w-4 mr-1" /> Gebruiker uitnodigen
           </Button>
         )}
       </div>
 
-      <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList>
-          <TabsTrigger value="gebruikers">Gebruikers</TabsTrigger>
-          <TabsTrigger value="activiteit">Activiteit</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="gebruikers" className="mt-4">
+      <div className="mt-4">
           {/* Mobile card view */}
           <div className="block md:hidden space-y-2">
             {sorted.map((u) => {
@@ -483,57 +388,7 @@ export default function GebruikersPage() {
               {sorted.length} gebruiker{sorted.length !== 1 ? "s" : ""}
             </div>
           </div>
-        </TabsContent>
-
-        <TabsContent value="activiteit" className="mt-4">
-          <div className="surface-card p-3 sm:p-4 mb-4">
-            <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
-              <div className="relative flex-1 min-w-0 sm:min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Zoeken..." value={actSearch} onChange={(e) => setActSearch(e.target.value)} className="pl-9 h-10 sm:h-9" />
-              </div>
-              <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3">
-                <Select value={filterUser} onValueChange={setFilterUser}>
-                  <SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9"><SelectValue placeholder="Gebruiker" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="alle">Alle gebruikers</SelectItem>
-                    {activityUsers.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Select value={filterAction} onValueChange={setFilterAction}>
-                  <SelectTrigger className="w-full sm:w-[160px] h-10 sm:h-9"><SelectValue placeholder="Actie" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="alle">Alle acties</SelectItem>
-                    <SelectItem value="aangemaakt">Aangemaakt</SelectItem>
-                    <SelectItem value="bewerkt">Bewerkt</SelectItem>
-                    <SelectItem value="verwijderd">Verwijderd</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={filterPeriod} onValueChange={setFilterPeriod}>
-                  <SelectTrigger className="w-full sm:w-[150px] h-10 sm:h-9 col-span-2 sm:col-span-1"><SelectValue placeholder="Periode" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="alle">Alle tijd</SelectItem>
-                    <SelectItem value="vandaag">Vandaag</SelectItem>
-                    <SelectItem value="week">Afgelopen week</SelectItem>
-                    <SelectItem value="maand">Afgelopen maand</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          <div className="surface-card overflow-hidden divide-y divide-border">
-            {filtered.length === 0 ? (
-              <p className="p-6 text-center text-sm text-muted-foreground">Geen activiteiten gevonden.</p>
-            ) : (
-              filtered.map((a) => <ActivityRow key={a.id} activity={a} />)
-            )}
-          </div>
-          <div className="mt-3 text-xs text-muted-foreground">
-            {filtered.length} activiteit{filtered.length !== 1 ? "en" : ""}
-          </div>
-        </TabsContent>
-      </Tabs>
+      </div>
 
       {/* Invite Dialog */}
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
