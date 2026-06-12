@@ -388,57 +388,7 @@ export default function GebruikersPage() {
               {sorted.length} gebruiker{sorted.length !== 1 ? "s" : ""}
             </div>
           </div>
-        </TabsContent>
-
-        <TabsContent value="activiteit" className="mt-4">
-          <div className="surface-card p-3 sm:p-4 mb-4">
-            <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
-              <div className="relative flex-1 min-w-0 sm:min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Zoeken..." value={actSearch} onChange={(e) => setActSearch(e.target.value)} className="pl-9 h-10 sm:h-9" />
-              </div>
-              <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3">
-                <Select value={filterUser} onValueChange={setFilterUser}>
-                  <SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9"><SelectValue placeholder="Gebruiker" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="alle">Alle gebruikers</SelectItem>
-                    {activityUsers.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Select value={filterAction} onValueChange={setFilterAction}>
-                  <SelectTrigger className="w-full sm:w-[160px] h-10 sm:h-9"><SelectValue placeholder="Actie" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="alle">Alle acties</SelectItem>
-                    <SelectItem value="aangemaakt">Aangemaakt</SelectItem>
-                    <SelectItem value="bewerkt">Bewerkt</SelectItem>
-                    <SelectItem value="verwijderd">Verwijderd</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={filterPeriod} onValueChange={setFilterPeriod}>
-                  <SelectTrigger className="w-full sm:w-[150px] h-10 sm:h-9 col-span-2 sm:col-span-1"><SelectValue placeholder="Periode" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="alle">Alle tijd</SelectItem>
-                    <SelectItem value="vandaag">Vandaag</SelectItem>
-                    <SelectItem value="week">Afgelopen week</SelectItem>
-                    <SelectItem value="maand">Afgelopen maand</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          <div className="surface-card overflow-hidden divide-y divide-border">
-            {filtered.length === 0 ? (
-              <p className="p-6 text-center text-sm text-muted-foreground">Geen activiteiten gevonden.</p>
-            ) : (
-              filtered.map((a) => <ActivityRow key={a.id} activity={a} />)
-            )}
-          </div>
-          <div className="mt-3 text-xs text-muted-foreground">
-            {filtered.length} activiteit{filtered.length !== 1 ? "en" : ""}
-          </div>
-        </TabsContent>
-      </Tabs>
+      </div>
 
       {/* Invite Dialog */}
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
