@@ -336,7 +336,7 @@ export default function GebruikersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sorted.map((u) => {
+                {visibleUsers.map((u) => {
                   const isActive = (u as any).active !== false;
                   return (
                     <TableRow key={u.id} className={!isActive ? "opacity-50" : ""}>
@@ -414,7 +414,8 @@ export default function GebruikersPage() {
               </TableBody>
             </Table>
             <div className="p-3 border-t border-border text-xs text-muted-foreground">
-              {sorted.length} gebruiker{sorted.length !== 1 ? "s" : ""}
+              {visibleUsers.length} gebruiker{visibleUsers.length !== 1 ? "s" : ""}
+              {inactiveCount > 0 && !showInactive && ` (${inactiveCount} inactief verborgen)`}
             </div>
           </div>
       </div>
