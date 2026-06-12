@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useViewAs } from "@/contexts/ViewAsContext";
 import { useNavigate } from "react-router-dom";
