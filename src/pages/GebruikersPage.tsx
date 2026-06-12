@@ -208,6 +208,17 @@ export default function GebruikersPage() {
     }
   }, [currentUser, refreshUsers]);
 
+  const [showInactive, setShowInactive] = useState(false);
+
+  const visibleUsers = useMemo(() => {
+    if (showInactive) return sorted;
+    return sorted.filter((u) => (u as any).active !== false);
+  }, [sorted, showInactive]);
+
+  const inactiveCount = useMemo(() => {
+    return sorted.filter((u) => (u as any).active === false).length;
+  }, [sorted]);
+
   const handleViewAs = useCallback((u: AppUser) => {
     simulateUser(u.name, u.role);
     navigate(u.role === "standenbouwer" ? "/standenbouwer" : "/");
@@ -224,10 +235,28 @@ export default function GebruikersPage() {
         )}
       </div>
 
-      <div className="mt-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Switch
+            id="show-inactive"
+            checked={showInactive}
+            onCheckedChange={setShowInactive}
+          />
+          <Label htmlFor="show-inactive" className="text-sm cursor-pointer">
+            Toon inactieve gebruikers
+          </Label>
+          {inactiveCount > 0 && !showInactive && (
+            <Badge variant="secondary" className="text-xs">
+              {inactiveCount} verborgen
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-2">
           {/* Mobile card view */}
           <div className="block md:hidden space-y-2">
-            {sorted.map((u) => {
+            {visibleUsers.map((u) => {
               const isActive = (u as any).active !== false;
               return (
                 <div key={u.id} className={`surface-card p-4 ${!isActive ? "opacity-50" : ""}`}>
