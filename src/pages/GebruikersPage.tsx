@@ -224,13 +224,7 @@ export default function GebruikersPage() {
         )}
       </div>
 
-      <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList>
-          <TabsTrigger value="gebruikers">Gebruikers</TabsTrigger>
-          <TabsTrigger value="activiteit">Activiteit</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="gebruikers" className="mt-4">
+      <div className="mt-4">
           {/* Mobile card view */}
           <div className="block md:hidden space-y-2">
             {sorted.map((u) => {
