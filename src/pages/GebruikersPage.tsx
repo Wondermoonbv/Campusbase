@@ -217,7 +217,7 @@ export default function GebruikersPage() {
     <div className="page-container animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
         <h1>Gebruikers</h1>
-        {activeTab === "gebruikers" && isAdmin && (
+        {isAdmin && (
           <Button size="sm" className="h-10 sm:h-8" onClick={() => { setInviteOpen(true); setInviteForm({ fullName: "", email: "", password: "", role: "editor" }); }}>
             <UserPlus className="h-4 w-4 mr-1" /> Gebruiker uitnodigen
           </Button>
