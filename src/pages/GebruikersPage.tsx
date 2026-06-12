@@ -1,8 +1,7 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useViewAs } from "@/contexts/ViewAsContext";
-import { useActivity, ActivityAction, ActivityEntityType } from "@/contexts/ActivityContext";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/supabase-helpers";
 import { Button } from "@/components/ui/button";
@@ -11,9 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2, Search, GraduationCap, CalendarDays, FileText, BookOpen, CheckSquare, UserPlus, Eye, KeyRound, Copy, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, UserPlus, Eye, KeyRound, Copy, RefreshCw } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -22,59 +20,6 @@ import { toast } from "sonner";
 import type { AppUser, UserRole } from "@/contexts/AuthContext";
 import { writeAuditLog } from "@/lib/audit";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
-import { formatDistanceToNow } from "date-fns";
-import { nl } from "date-fns/locale";
-
-const entityIcons: Record<ActivityEntityType, React.ElementType> = {
-  school: GraduationCap,
-  evenement: CalendarDays,
-  contract: FileText,
-  opleiding: BookOpen,
-  taak: CheckSquare,
-};
-
-const actionIcons: Record<ActivityAction, React.ElementType> = {
-  aangemaakt: Plus,
-  bewerkt: Pencil,
-  verwijderd: Trash2,
-};
-
-const actionColors: Record<ActivityAction, string> = {
-  aangemaakt: "text-success",
-  bewerkt: "text-primary",
-  verwijderd: "text-destructive",
-};
-
-function ActivityRow({ activity: a }: { activity: ReturnType<typeof useActivity>["activities"][0] }) {
-  const ActionIcon = actionIcons[a.action];
-  const EntityIcon = entityIcons[a.entityType];
-
-  return (
-    <div className="flex items-start sm:items-center gap-3 px-3 sm:px-4 py-3">
-      <UserAvatar name={a.userName} avatarUrl={a.userAvatarUrl} className="h-8 w-8 shrink-0" />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm leading-relaxed">
-          <span className="font-medium">{a.userName}</span>
-          {" "}
-          <span className="text-muted-foreground">heeft</span>
-          {" "}
-          <span className={`inline-flex items-center gap-1 font-medium ${actionColors[a.action]}`}>
-            <ActionIcon className="h-3 w-3" />
-            {a.action}
-          </span>
-          {": "}
-          <span className="inline-flex items-center gap-1">
-            <EntityIcon className="h-3 w-3 text-muted-foreground" />
-            <span className="font-medium">{a.entityName}</span>
-          </span>
-        </p>
-      </div>
-      <time className="text-xs text-muted-foreground whitespace-nowrap tabular-nums shrink-0">
-        {formatDistanceToNow(new Date(a.timestamp), { addSuffix: true, locale: nl })}
-      </time>
-    </div>
-  );
-}
 
 export default function GebruikersPage() {
   const { users, updateUser, user: currentUser, isAdmin, refreshUsers } = useAuth();
