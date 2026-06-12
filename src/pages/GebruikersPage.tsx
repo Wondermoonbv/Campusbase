@@ -115,11 +115,6 @@ export default function GebruikersPage() {
 
   const { sort, toggleSort } = useSort("lastName");
 
-  const [actSearch, setActSearch] = useState("");
-  const [filterUser, setFilterUser] = useState("alle");
-  const [filterAction, setFilterAction] = useState("alle");
-  const [filterPeriod, setFilterPeriod] = useState("alle");
-
   const sorted = useMemo(() => {
     return sortItems(users, sort, (u, key) => {
       switch (key) {
@@ -130,27 +125,6 @@ export default function GebruikersPage() {
       }
     });
   }, [users, sort]);
-
-  const activityUsers = useMemo(() =>
-    [...new Map(activities.map((a) => [a.userId, a.userName])).values()].sort(),
-    [activities]
-  );
-
-  const filtered = useMemo(() => {
-    const now = Date.now();
-    return activities.filter((a) => {
-      if (actSearch && !a.entityName.toLowerCase().includes(actSearch.toLowerCase()) && !a.userName.toLowerCase().includes(actSearch.toLowerCase())) return false;
-      if (filterUser !== "alle" && a.userName !== filterUser) return false;
-      if (filterAction !== "alle" && a.action !== filterAction) return false;
-      if (filterPeriod !== "alle") {
-        const age = now - new Date(a.timestamp).getTime();
-        if (filterPeriod === "vandaag" && age > 86400000) return false;
-        if (filterPeriod === "week" && age > 7 * 86400000) return false;
-        if (filterPeriod === "maand" && age > 30 * 86400000) return false;
-      }
-      return true;
-    });
-  }, [activities, actSearch, filterUser, filterAction, filterPeriod]);
 
   // Invite user via RPC
   const handleInvite = useCallback(async (e: React.FormEvent) => {
