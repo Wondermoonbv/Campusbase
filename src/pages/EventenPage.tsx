@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { useEventContactpersonen } from "@/hooks/useEventContactpersonen";
+import { useEventOrganisaties } from "@/hooks/useEventOrganisaties";
 import { useOpleidingen, useEventOpleidingen } from "@/hooks/useOpleidingen";
 import { writeAuditLog } from "@/lib/audit";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -55,6 +56,7 @@ export default function EventenPage() {
   const initialPeriod = searchParams.get("period") ?? "all";
   const { evenementen, isLoading, upsertEvent, deleteEvent } = useEvenementen();
   const { syncContactpersonen } = useEventContactpersonen();
+  const { syncOrganisaties } = useEventOrganisaties();
   const { opleidingen } = useOpleidingen();
   const { eventOpleidingen } = useEventOpleidingen();
   const [search, setSearch] = useState("");
@@ -76,15 +78,18 @@ export default function EventenPage() {
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
 
-  const handleSave = useCallback(async (saved: Event, cpEntries?: { contact_id: string; rol: ContactpersoonRol }[]) => {
+  const handleSave = useCallback(async (saved: Event, cpEntries?: { contact_id: string; rol: ContactpersoonRol }[], organisatieIds?: string[]) => {
     try {
       const result = await upsertEvent.mutateAsync(saved);
       const eventId = (result as any)?.data?.id || saved.id;
       if (eventId && cpEntries && cpEntries.length > 0) {
         await syncContactpersonen.mutateAsync({ eventId, items: cpEntries });
       }
+      if (eventId) {
+        await syncOrganisaties.mutateAsync({ eventId, organisatieIds: organisatieIds ?? [] });
+      }
     } catch { toast.error("Fout bij opslaan."); }
-  }, [upsertEvent, syncContactpersonen]);
+  }, [upsertEvent, syncContactpersonen, syncOrganisaties]);
 
   const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;
