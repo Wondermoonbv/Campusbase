@@ -133,6 +133,28 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave, defaultPa
             </Select>
             <p className="text-xs text-muted-foreground mt-1">Laat leeg om zelf een hoofdorganisatie te zijn. Vul in om een campus / suborganisatie te maken.</p>
           </div>
+          {isStudentenvereniging && (
+            <>
+              <div className="flex items-center justify-between rounded-md border border-border p-3">
+                <div>
+                  <Label htmlFor="is_nationaal" className="cursor-pointer">Nationale vereniging</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">Schakel in als deze vereniging nationaal actief is.</p>
+                </div>
+                <Switch id="is_nationaal" checked={form.is_nationaal} onCheckedChange={(v) => update("is_nationaal", v)} />
+              </div>
+              <div>
+                <Label>Verbonden hogeschool/universiteit</Label>
+                <Select value={form.verbonden_instelling_id || "none"} onValueChange={(v) => update("verbonden_instelling_id", v === "none" ? "" : v)}>
+                  <SelectTrigger><SelectValue placeholder="Geen — niet verbonden" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Geen — niet verbonden</SelectItem>
+                    {schoolOptions.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">Optioneel. Koppel de vereniging aan een hogeschool of universiteit.</p>
+              </div>
+            </>
+          )}
           <div>
             <div className="flex items-center justify-between"><Label>Notities</Label><CharacterCounter current={form.notes.length} max={MAX_LENGTHS.notes} /></div>
             <Textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} rows={3} maxLength={MAX_LENGTHS.notes} />
