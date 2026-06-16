@@ -121,6 +121,12 @@ export default function OrganisatiesPage() {
     return map;
   }, [contacten]);
 
+  const parentMap = useMemo(() => {
+    const map = new Map<string, string>();
+    scholen.forEach((s) => { map.set(s.id, s.name); });
+    return map;
+  }, [scholen]);
+
   const exportCSV = useCallback(() => {
     const headers = ["Naam", "Type", "Stad", "Provincie", "Taal", "Status", "Contact", "Email"];
     const rows = sorted.map((s) => {
