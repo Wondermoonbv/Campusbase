@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
 import { useScholen } from "@/hooks/useScholen";
+import { Switch } from "@/components/ui/switch";
 
 const ORGANISATIE_TYPE_OPTIONS: { value: OrganisatieType; label: string }[] = [
   { value: "school", label: "School" },
@@ -39,21 +40,25 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave, defaultPa
     name: "", type: "school" as OrganisatieType, school_type: "universiteit" as string, province: "", city: "",
     website: "", language: "NL" as string, notes: "", status: "prospect" as string,
     parent_id: "" as string,
+    is_nationaal: false,
+    verbonden_instelling_id: "" as string,
   });
 
   useEffect(() => {
     if (open) {
       if (school) {
-        setForm({ name: school.name, type: school.type || "school", school_type: school.school_type, province: school.province, city: school.city, website: school.website || "", language: school.language, notes: school.notes || "", status: school.status, parent_id: school.parent_id || "" });
+        setForm({ name: school.name, type: school.type || "school", school_type: school.school_type, province: school.province, city: school.city, website: school.website || "", language: school.language, notes: school.notes || "", status: school.status, parent_id: school.parent_id || "", is_nationaal: !!school.is_nationaal, verbonden_instelling_id: school.verbonden_instelling_id || "" });
       } else {
-        setForm({ name: "", type: "school", school_type: "universiteit", province: "", city: "", website: "", language: "NL", notes: "", status: "prospect", parent_id: defaultParentId || "" });
+        setForm({ name: "", type: "school", school_type: "universiteit", province: "", city: "", website: "", language: "NL", notes: "", status: "prospect", parent_id: defaultParentId || "", is_nationaal: false, verbonden_instelling_id: "" });
       }
     }
   }, [open, school, defaultParentId]);
 
-  const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
+  const update = (field: string, value: string | boolean) => setForm((p) => ({ ...p, [field]: value }));
 
   const isSchoolType = form.type === "school";
+  const isStudentenvereniging = form.type === "studentenvereniging";
+  const schoolOptions = scholen.filter((s) => s.type === "school" && s.id !== school?.id);
 
   // Eligible parents: hoofdorganisaties (parent_id IS NULL) and not self
   const parentOptions = scholen.filter((s) => !s.parent_id && s.id !== school?.id);
@@ -81,6 +86,8 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave, defaultPa
       notes: sanitized.notes,
       status: sanitized.status as School["status"],
       parent_id: sanitized.parent_id && sanitized.parent_id !== "none" ? sanitized.parent_id : null,
+      is_nationaal: isStudentenvereniging ? !!form.is_nationaal : false,
+      verbonden_instelling_id: isStudentenvereniging && sanitized.verbonden_instelling_id && sanitized.verbonden_instelling_id !== "none" ? sanitized.verbonden_instelling_id : null,
     };
     onSave?.(saved as School);
     toast.success(isEdit ? "Organisatie bijgewerkt." : "Organisatie toegevoegd.");
@@ -126,6 +133,28 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave, defaultPa
             </Select>
             <p className="text-xs text-muted-foreground mt-1">Laat leeg om zelf een hoofdorganisatie te zijn. Vul in om een campus / suborganisatie te maken.</p>
           </div>
+          {isStudentenvereniging && (
+            <>
+              <div className="flex items-center justify-between rounded-md border border-border p-3">
+                <div>
+                  <Label htmlFor="is_nationaal" className="cursor-pointer">Nationale vereniging</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">Schakel in als deze vereniging nationaal actief is.</p>
+                </div>
+                <Switch id="is_nationaal" checked={form.is_nationaal} onCheckedChange={(v) => update("is_nationaal", v)} />
+              </div>
+              <div>
+                <Label>Verbonden hogeschool/universiteit</Label>
+                <Select value={form.verbonden_instelling_id || "none"} onValueChange={(v) => update("verbonden_instelling_id", v === "none" ? "" : v)}>
+                  <SelectTrigger><SelectValue placeholder="Geen — niet verbonden" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Geen — niet verbonden</SelectItem>
+                    {schoolOptions.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">Optioneel. Koppel de vereniging aan een hogeschool of universiteit.</p>
+              </div>
+            </>
+          )}
           <div>
             <div className="flex items-center justify-between"><Label>Notities</Label><CharacterCounter current={form.notes.length} max={MAX_LENGTHS.notes} /></div>
             <Textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} rows={3} maxLength={MAX_LENGTHS.notes} />

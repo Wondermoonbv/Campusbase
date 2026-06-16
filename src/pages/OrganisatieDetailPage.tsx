@@ -63,6 +63,8 @@ export default function OrganisatieDetailPage() {
   const isHoofd = !org.parent_id;
   const parentOrg = org.parent_id ? scholen.find((s) => s.id === org.parent_id) : null;
   const campuses = scholen.filter((s) => s.parent_id === org.id);
+  const verbondenInstelling = org.verbonden_instelling_id ? scholen.find((s) => s.id === org.verbonden_instelling_id) : null;
+  const isStudentenvereniging = org.type === "studentenvereniging";
 
   const handleSaveSchool = async (saved: School) => {
     try { await upsertSchool.mutateAsync(saved); } catch { toast.error("Fout bij opslaan."); }
@@ -96,8 +98,16 @@ export default function OrganisatieDetailPage() {
               <Badge variant={isHoofd ? "default" : "secondary"}>
                 {isHoofd ? "Hoofdorganisatie" : "Campus / suborganisatie"}
               </Badge>
+              {isStudentenvereniging && org.is_nationaal && (
+                <Badge variant="outline">Nationaal</Badge>
+              )}
               <StatusBadge status={org.status} />
             </div>
+            {isStudentenvereniging && verbondenInstelling && (
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">
+                verbonden aan <Link to={`/organisaties/${verbondenInstelling.id}`} className="text-primary hover:underline">{verbondenInstelling.name}</Link>
+              </p>
+            )}
             <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
               {isSchool && <span className="capitalize">{org.school_type}</span>}
               {(org.city || org.province) && <span>{[org.city, org.province].filter(Boolean).join(", ")}</span>}

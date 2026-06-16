@@ -784,6 +784,7 @@ export type Database = {
           city: string
           created_at: string | null
           id: string
+          is_nationaal: boolean
           language: string
           name: string
           notes: string | null
@@ -792,12 +793,14 @@ export type Database = {
           school_type: string
           status: string
           type: Database["public"]["Enums"]["organisatie_type"]
+          verbonden_instelling_id: string | null
           website: string | null
         }
         Insert: {
           city: string
           created_at?: string | null
           id?: string
+          is_nationaal?: boolean
           language?: string
           name: string
           notes?: string | null
@@ -806,12 +809,14 @@ export type Database = {
           school_type?: string
           status?: string
           type?: Database["public"]["Enums"]["organisatie_type"]
+          verbonden_instelling_id?: string | null
           website?: string | null
         }
         Update: {
           city?: string
           created_at?: string | null
           id?: string
+          is_nationaal?: boolean
           language?: string
           name?: string
           notes?: string | null
@@ -820,6 +825,7 @@ export type Database = {
           school_type?: string
           status?: string
           type?: Database["public"]["Enums"]["organisatie_type"]
+          verbonden_instelling_id?: string | null
           website?: string | null
         }
         Relationships: [
@@ -833,6 +839,20 @@ export type Database = {
           {
             foreignKeyName: "organisaties_parent_id_fkey"
             columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "organisaties_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organisaties_verbonden_instelling_id_fkey"
+            columns: ["verbonden_instelling_id"]
+            isOneToOne: false
+            referencedRelation: "organisaties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organisaties_verbonden_instelling_id_fkey"
+            columns: ["verbonden_instelling_id"]
             isOneToOne: false
             referencedRelation: "organisaties_public"
             referencedColumns: ["id"]

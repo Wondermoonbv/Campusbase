@@ -25,6 +25,8 @@ export interface School {
   created_at: string;
   contacts?: Contact[];
   parent_id?: string | null;
+  is_nationaal?: boolean;
+  verbonden_instelling_id?: string | null;
 }
 
 export interface EventOrganisatie {
