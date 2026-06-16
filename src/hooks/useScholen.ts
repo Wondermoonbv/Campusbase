@@ -11,7 +11,7 @@ export function useScholen() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("organisaties")
-        .select("id, name, type, school_type, province, city, website, language, notes, status, created_at, parent_id")
+        .select("id, name, type, school_type, province, city, website, language, notes, status, created_at, parent_id, is_nationaal, verbonden_instelling_id")
         .order("name", { ascending: true });
       if (error) { console.error("Error fetching organisaties:", error); return []; }
       return data as unknown as School[];
