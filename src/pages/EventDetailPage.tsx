@@ -45,6 +45,9 @@ export default function EventDetailPage() {
   }
 
   const organisator = event.organisator_id ? scholen.find((s) => s.id === event.organisator_id) : null;
+  const linkedOrgs = eventOrgLinks
+    .map((l) => scholen.find((s) => s.id === l.organisatie_id))
+    .filter(Boolean) as typeof scholen;
   const linkedPrograms = opleidingen.filter((p) => initialProgramIds.includes(p.id)).map((p) => ({ ...p, school: scholen.find((s) => s.id === p.organisatie_id) }));
 
   const sortedContactpersonen = [...eventContactpersonen].sort((a, b) => {
@@ -112,7 +115,7 @@ export default function EventDetailPage() {
               <DetailField label="Tijd" value={event.start_time || event.end_time ? `${event.start_time || "—"} – ${event.end_time || "—"}` : "—"} icon={<Clock className="h-3.5 w-3.5" />} />
               <DetailField label="Locatie" value={event.location || "—"} icon={<MapPin className="h-3.5 w-3.5" />} />
               <div className="sm:col-span-2">
-                <Label className="text-xs text-muted-foreground">Organisator</Label>
+                <Label className="text-xs text-muted-foreground">Hoofdorganisator</Label>
                 <p className="text-sm mt-1 flex items-center gap-1.5">
                   <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
                   {organisator ? (
@@ -123,6 +126,23 @@ export default function EventDetailPage() {
                   ) : "—"}
                 </p>
               </div>
+              {linkedOrgs.length > 0 && (
+                <div className="sm:col-span-2">
+                  <Label className="text-xs text-muted-foreground">Gekoppelde organisaties / campussen</Label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {linkedOrgs.map((o) => {
+                      const parent = o.parent_id ? scholen.find((s) => s.id === o.parent_id) : null;
+                      return (
+                        <Link key={o.id} to={`/organisaties/${o.id}`} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 hover:bg-muted px-3 py-1 text-xs">
+                          <Building2 className="h-3 w-3 text-muted-foreground" />
+                          <span className="font-medium">{o.name}</span>
+                          {parent && <span className="text-muted-foreground">· {parent.name}</span>}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               {event.description && (
                 <div className="sm:col-span-2">
                   <Label className="text-xs text-muted-foreground">Beschrijving</Label>
