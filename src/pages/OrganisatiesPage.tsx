@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Download, Pencil, Upload, Trash2, Building2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
@@ -214,7 +215,16 @@ export default function OrganisatiesPage() {
               <TableBody>
                 {sorted.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen organisaties gevonden.</TableCell></TableRow> : sorted.map((org) => (
                   <TableRow key={org.id} className="cursor-pointer hover:bg-muted/30" onClick={() => navigate(`/organisaties/${org.id}`)}>
-                    <TableCell className="font-medium">{org.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <span className="inline-flex items-center gap-2">
+                        {org.name}
+                        {org.parent_id ? (
+                          <Badge variant="secondary" className="text-[10px]">Campus</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px]">Hoofd</Badge>
+                        )}
+                      </span>
+                    </TableCell>
                     <TableCell>{ORGANISATIE_TYPE_LABELS[org.type] || org.type}</TableCell>
                     <TableCell>{org.city || "—"}</TableCell>
                     <TableCell className="hidden lg:table-cell">{org.province || "—"}</TableCell>
