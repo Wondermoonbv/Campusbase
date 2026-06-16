@@ -118,7 +118,19 @@ export default function RapportagePage() {
     return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
   }, [filteredEvents, scholen, eventOrgLinks]);
   const budgetByType = useMemo(() => { const s: Record<string, number> = {}; filteredEvents.forEach((e) => { s[e.type] = (s[e.type] || 0) + (e.budget ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredEvents]);
-  const budgetBySchool = useMemo(() => { const s: Record<string, number> = {}; filteredEvents.forEach((e) => { const name = e.organisator_id ? (scholen.find((sc) => sc.id === e.organisator_id)?.name ?? "Onbekend") : "Multi-school"; s[name] = (s[name] || 0) + (e.budget ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents, scholen]);
+  const budgetBySchool = useMemo(() => {
+    const orgById = new Map(scholen.map((s) => [s.id, s]));
+    const s: Record<string, number> = {};
+    filteredContracts
+      .filter((c) => c.status === "actief")
+      .forEach((c) => {
+        const org = orgById.get(c.organisatie_id);
+        const headId = org?.parent_id ?? c.organisatie_id;
+        const name = orgById.get(headId)?.name ?? "Onbekend";
+        s[name] = (s[name] || 0) + (c.value ?? 0);
+      });
+    return Object.entries(s).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [filteredContracts, scholen]);
   const contractsByType = useMemo(() => { const s: Record<string, number> = {}; filteredContracts.forEach((c) => { s[c.contract_type] = (s[c.contract_type] || 0) + (c.value ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredContracts]);
   const totalContractValue = filteredContracts.filter((c) => c.status === "actief").reduce((s, c) => s + (c.value ?? 0), 0);
 
