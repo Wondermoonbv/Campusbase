@@ -177,7 +177,7 @@ export default function RapportagePage() {
         <ChartCard title="Budget per type event (€)" data={budgetByType} chartId="budget-type">
           <ResponsiveContainer width="100%" height={250}><BarChart data={budgetByType}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="name" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 10 }} width={50} tickFormatter={(v) => `€${v.toLocaleString()}`} /><Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} /><Bar dataKey="value" fill="#ef7c14" radius={[2, 2, 0, 0]} /></BarChart></ResponsiveContainer>
         </ChartCard>
-        <ChartCard title="Budget per hoofdorganisatie (€)" data={budgetBySchool} chartId="budget-school">
+        <ChartCard title="Contractwaarde per hoofdorganisatie (€)" data={budgetBySchool} chartId="budget-school">
           <ResponsiveContainer width="100%" height={250}><BarChart data={budgetBySchool} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={(v) => `€${v.toLocaleString()}`} /><YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 9 }} /><Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} /><Bar dataKey="value" fill="#0E6575" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
         </ChartCard>
         <ChartCard title="Contractwaarde per type (€)" data={contractsByType} chartId="contracts-type">
