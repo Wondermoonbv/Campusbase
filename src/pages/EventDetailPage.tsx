@@ -5,6 +5,7 @@ import { useEvenementen } from "@/hooks/useEvenementen";
 import { useScholen, useContacten } from "@/hooks/useScholen";
 import { useOpleidingen, useEventOpleidingen } from "@/hooks/useOpleidingen";
 import { useEventContactpersonen } from "@/hooks/useEventContactpersonen";
+import { useEventOrganisaties } from "@/hooks/useEventOrganisaties";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -31,6 +32,7 @@ export default function EventDetailPage() {
   const { opleidingen } = useOpleidingen();
   const { eventOpleidingen } = useEventOpleidingen();
   const { contactpersonen: eventContactpersonen, syncContactpersonen } = useEventContactpersonen(id);
+  const { links: eventOrgLinks, syncOrganisaties } = useEventOrganisaties(id);
 
   const event = evenementen.find((e) => e.id === id);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
@@ -51,12 +53,13 @@ export default function EventDetailPage() {
     return (a.contact?.name || "").localeCompare(b.contact?.name || "");
   });
 
-  const handleFormSave = async (saved: Event, cpEntries: { contact_id: string; rol: ContactpersoonRol }[]) => {
+  const handleFormSave = async (saved: Event, cpEntries: { contact_id: string; rol: ContactpersoonRol }[], organisatieIds: string[]) => {
     try {
       const result = await upsertEvent.mutateAsync(saved);
       const eventId = (result as any)?.data?.id || saved.id || id;
       if (eventId) {
         await syncContactpersonen.mutateAsync({ eventId, items: cpEntries });
+        await syncOrganisaties.mutateAsync({ eventId, organisatieIds });
       }
     } catch { toast.error("Fout bij opslaan."); }
   };
