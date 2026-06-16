@@ -195,9 +195,17 @@ export default function OrganisatiesPage() {
               <div key={org.id} className="surface-card p-4 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate(`/organisaties/${org.id}`)}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-sm truncate">{org.name}</p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="font-medium text-sm truncate">{org.name}</p>
+                      {org.type === "studentenvereniging" && org.is_nationaal && (
+                        <Badge variant="outline" className="text-[10px]">Nationaal</Badge>
+                      )}
+                    </div>
                     {org.parent_id && parentMap.get(org.parent_id) && (
                       <p className="text-xs text-muted-foreground mt-0.5">onder {parentMap.get(org.parent_id)}</p>
+                    )}
+                    {org.type === "studentenvereniging" && org.verbonden_instelling_id && parentMap.get(org.verbonden_instelling_id) && (
+                      <p className="text-xs text-muted-foreground mt-0.5">verbonden aan {parentMap.get(org.verbonden_instelling_id)}</p>
                     )}
                     <p className="text-xs text-muted-foreground mt-0.5">{ORGANISATIE_TYPE_LABELS[org.type]} · {org.city || "—"} · {org.language || "—"}</p>
                   </div>
@@ -236,9 +244,15 @@ export default function OrganisatiesPage() {
                           ) : (
                             <Badge variant="outline" className="text-[10px]">Hoofd</Badge>
                           )}
+                          {org.type === "studentenvereniging" && org.is_nationaal && (
+                            <Badge variant="outline" className="text-[10px]">Nationaal</Badge>
+                          )}
                         </span>
                         {org.parent_id && parentMap.get(org.parent_id) && (
                           <span className="text-xs text-muted-foreground mt-0.5">onder {parentMap.get(org.parent_id)}</span>
+                        )}
+                        {org.type === "studentenvereniging" && org.verbonden_instelling_id && parentMap.get(org.verbonden_instelling_id) && (
+                          <span className="text-xs text-muted-foreground mt-0.5">verbonden aan {parentMap.get(org.verbonden_instelling_id)}</span>
                         )}
                       </div>
                     </TableCell>
