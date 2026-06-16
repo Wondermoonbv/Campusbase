@@ -577,6 +577,50 @@ export type Database = {
           },
         ]
       }
+      event_organisaties: {
+        Row: {
+          event_id: string
+          organisatie_id: string
+        }
+        Insert: {
+          event_id: string
+          organisatie_id: string
+        }
+        Update: {
+          event_id?: string
+          organisatie_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_organisaties_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "evenementen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_organisaties_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "evenementen_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_organisaties_organisatie_id_fkey"
+            columns: ["organisatie_id"]
+            isOneToOne: false
+            referencedRelation: "organisaties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_organisaties_organisatie_id_fkey"
+            columns: ["organisatie_id"]
+            isOneToOne: false
+            referencedRelation: "organisaties_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback_forms: {
         Row: {
           created_at: string | null
@@ -743,6 +787,7 @@ export type Database = {
           language: string
           name: string
           notes: string | null
+          parent_id: string | null
           province: string
           school_type: string
           status: string
@@ -756,6 +801,7 @@ export type Database = {
           language?: string
           name: string
           notes?: string | null
+          parent_id?: string | null
           province: string
           school_type?: string
           status?: string
@@ -769,13 +815,29 @@ export type Database = {
           language?: string
           name?: string
           notes?: string | null
+          parent_id?: string | null
           province?: string
           school_type?: string
           status?: string
           type?: Database["public"]["Enums"]["organisatie_type"]
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "organisaties_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "organisaties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organisaties_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "organisaties_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
