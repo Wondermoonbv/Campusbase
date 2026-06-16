@@ -40,6 +40,7 @@ const SCHOOL_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "status", label: "Status", validate: (v) => !v || ["actief", "inactief", "prospect"].includes(v.toLowerCase()) ? null : "Moet actief, inactief of prospect zijn" },
   { key: "website", label: "Website" },
   { key: "notes", label: "Notities" },
+  { key: "hoofdorganisatie", label: "Hoofdorganisatie" },
 ];
 
 function ListSkeleton() {
@@ -286,18 +287,40 @@ export default function OrganisatiesPage() {
         templateFilename="scholen_template.xlsx"
         duplicateCheck={{ keys: ["name", "city"], existingData: scholen.map((s) => ({ name: s.name, city: s.city })) }}
         onImport={async (rows) => {
-          for (const row of rows) {
-            await upsertSchool.mutateAsync({
-              name: row.name,
-              type: "school" as any,
-              school_type: (row.type?.toLowerCase() || "universiteit") as any,
-              city: row.city,
-              province: row.province,
-              language: (row.language?.toUpperCase() || "NL") as any,
-              status: (row.status?.toLowerCase() || "actief") as any,
-              website: row.website || "",
-              notes: row.notes || "",
-            });
+          const buildPayload = (row: any, parent_id: string | null) => ({
+            name: row.name,
+            type: "school" as any,
+            school_type: (row.type?.toLowerCase() || "universiteit") as any,
+            city: row.city,
+            province: row.province,
+            language: (row.language?.toUpperCase() || "NL") as any,
+            status: (row.status?.toLowerCase() || "actief") as any,
+            website: row.website || "",
+            notes: row.notes || "",
+            parent_id,
+          });
+
+          const parents = rows.filter((r) => !r.hoofdorganisatie?.trim());
+          const children = rows.filter((r) => r.hoofdorganisatie?.trim());
+
+          // Pass 1: parents
+          const nameToId = new Map<string, string>();
+          for (const s of scholen) nameToId.set(s.name.toLowerCase(), s.id);
+
+          for (const row of parents) {
+            const result = await upsertSchool.mutateAsync(buildPayload(row, null));
+            nameToId.set(row.name.toLowerCase(), result.data.id);
+          }
+
+          // Pass 2: children
+          for (const row of children) {
+            const parentName = row.hoofdorganisatie.trim().toLowerCase();
+            const parentId = nameToId.get(parentName);
+            if (!parentId) {
+              toast.error(`Hoofdorganisatie "${row.hoofdorganisatie}" niet gevonden voor "${row.name}" — overgeslagen.`);
+              continue;
+            }
+            await upsertSchool.mutateAsync(buildPayload(row, parentId));
           }
         }}
       />
