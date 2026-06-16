@@ -14,6 +14,7 @@ import type { School, OrganisatieType } from "@/types/crm";
 import { toast } from "sonner";
 import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
+import { useScholen } from "@/hooks/useScholen";
 
 const ORGANISATIE_TYPE_OPTIONS: { value: OrganisatieType; label: string }[] = [
   { value: "school", label: "School" },
@@ -28,28 +29,34 @@ interface SchoolFormDialogProps {
   onOpenChange: (open: boolean) => void;
   school?: School;
   onSave?: (school: School) => void;
+  defaultParentId?: string;
 }
 
-export function SchoolFormDialog({ open, onOpenChange, school, onSave }: SchoolFormDialogProps) {
+export function SchoolFormDialog({ open, onOpenChange, school, onSave, defaultParentId }: SchoolFormDialogProps) {
   const isEdit = !!school;
+  const { scholen } = useScholen();
   const [form, setForm] = useState({
     name: "", type: "school" as OrganisatieType, school_type: "universiteit" as string, province: "", city: "",
     website: "", language: "NL" as string, notes: "", status: "prospect" as string,
+    parent_id: "" as string,
   });
 
   useEffect(() => {
     if (open) {
       if (school) {
-        setForm({ name: school.name, type: school.type || "school", school_type: school.school_type, province: school.province, city: school.city, website: school.website || "", language: school.language, notes: school.notes || "", status: school.status });
+        setForm({ name: school.name, type: school.type || "school", school_type: school.school_type, province: school.province, city: school.city, website: school.website || "", language: school.language, notes: school.notes || "", status: school.status, parent_id: school.parent_id || "" });
       } else {
-        setForm({ name: "", type: "school", school_type: "universiteit", province: "", city: "", website: "", language: "NL", notes: "", status: "prospect" });
+        setForm({ name: "", type: "school", school_type: "universiteit", province: "", city: "", website: "", language: "NL", notes: "", status: "prospect", parent_id: defaultParentId || "" });
       }
     }
-  }, [open, school]);
+  }, [open, school, defaultParentId]);
 
   const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
 
   const isSchoolType = form.type === "school";
+
+  // Eligible parents: hoofdorganisaties (parent_id IS NULL) and not self
+  const parentOptions = scholen.filter((s) => !s.parent_id && s.id !== school?.id);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +80,7 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave }: SchoolF
       language: isSchoolType ? sanitized.language as School["language"] : "NL",
       notes: sanitized.notes,
       status: sanitized.status as School["status"],
+      parent_id: sanitized.parent_id && sanitized.parent_id !== "none" ? sanitized.parent_id : null,
     };
     onSave?.(saved as School);
     toast.success(isEdit ? "Organisatie bijgewerkt." : "Organisatie toegevoegd.");
@@ -107,6 +115,17 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave }: SchoolF
           </div>
           <div><Label>Website</Label><Input value={form.website} onChange={(e) => update("website", e.target.value)} placeholder="https://" maxLength={MAX_LENGTHS.url} /></div>
           <div><Label>Status</Label><Select value={form.status} onValueChange={(v) => update("status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="actief">Actief</SelectItem><SelectItem value="inactief">Inactief</SelectItem><SelectItem value="prospect">Prospect</SelectItem></SelectContent></Select></div>
+          <div>
+            <Label>Hoofdorganisatie</Label>
+            <Select value={form.parent_id || "none"} onValueChange={(v) => update("parent_id", v === "none" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="Geen — dit is een hoofdorganisatie" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Geen — hoofdorganisatie</SelectItem>
+                {parentOptions.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">Laat leeg om zelf een hoofdorganisatie te zijn. Vul in om een campus / suborganisatie te maken.</p>
+          </div>
           <div>
             <div className="flex items-center justify-between"><Label>Notities</Label><CharacterCounter current={form.notes.length} max={MAX_LENGTHS.notes} /></div>
             <Textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} rows={3} maxLength={MAX_LENGTHS.notes} />
