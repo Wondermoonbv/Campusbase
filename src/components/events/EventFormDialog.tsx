@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, type ChangeEvent, type FocusEvent } from "react";
 import { useScholen, useContacten } from "@/hooks/useScholen";
 import { useEventContactpersonen } from "@/hooks/useEventContactpersonen";
+import { useEventOrganisaties } from "@/hooks/useEventOrganisaties";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
@@ -16,7 +20,7 @@ import { FormSection } from "@/components/events/FormSection";
 import { AttachmentsSection } from "@/components/shared/AttachmentsSection";
 import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, CONTACTPERSOON_ROL_LABELS } from "@/lib/event-labels";
 import type { Event, ContactpersoonRol } from "@/types/crm";
-import { Trash2, Plus, AlertTriangle } from "lucide-react";
+import { Trash2, Plus, AlertTriangle, ChevronsUpDown, X, Building2 } from "lucide-react";
 
 interface ContactpersoonEntry {
   contact_id: string;
@@ -25,15 +29,19 @@ interface ContactpersoonEntry {
 
 type TimeField = "start_time" | "end_time" | "setup_time" | "teardown_time";
 
-interface EventFormDialogProps { open: boolean; onOpenChange: (v: boolean) => void; event?: Event; onSave?: (event: Event, contactpersonen: ContactpersoonEntry[]) => void; }
+interface EventFormDialogProps { open: boolean; onOpenChange: (v: boolean) => void; event?: Event; onSave?: (event: Event, contactpersonen: ContactpersoonEntry[], organisatieIds: string[]) => void; }
 
 export function EventFormDialog({ open, onOpenChange, event, onSave }: EventFormDialogProps) {
   const isEdit = !!event;
   const { scholen } = useScholen();
   const { contacten: allContacten } = useContacten();
   const { contactpersonen: existingCP } = useEventContactpersonen(event?.id);
+  const { links: existingOrgLinks } = useEventOrganisaties(event?.id);
   const [confirmOrgChange, setConfirmOrgChange] = useState<string | null>(null);
   const [timeInputVersion, setTimeInputVersion] = useState(0);
+  const [selectedOrgIds, setSelectedOrgIds] = useState<string[]>([]);
+  const [orgPickerOpen, setOrgPickerOpen] = useState(false);
+  const [orgSearch, setOrgSearch] = useState("");
 
   const [form, setForm] = useState({
     name: "", type: "jobbeurs" as string, date: "", start_time: "", end_time: "",
@@ -111,6 +119,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           booth_number: "", parking_info: "", locker_code: "",
         });
         setCpEntries([]);
+        setSelectedOrgIds([]);
       }
     }
   }, [open, event]);
@@ -122,24 +131,78 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
     }
   }, [open, event?.id, existingCP]);
 
-  const handleOrganisatorChange = (v: string) => {
-    const oldOrg = form.organisator_id;
-    const newOrg = v;
-    if (oldOrg && oldOrg !== newOrg && cpEntries.length > 0) {
-      setConfirmOrgChange(newOrg);
-    } else {
-      setForm({ ...form, organisator_id: newOrg });
+  // Load existing org links into selection when editing
+  useEffect(() => {
+    if (open && event) {
+      setSelectedOrgIds(existingOrgLinks.map((l) => l.organisatie_id));
     }
+  }, [open, event?.id, existingOrgLinks]);
+
+  // Derive "hoofdorganisator" from selection
+  const orgById = useMemo(() => new Map(scholen.map((s) => [s.id, s])), [scholen]);
+  const derivedOrganisatorId = useMemo(() => {
+    if (selectedOrgIds.length === 0) return null;
+    const hoofdIds = Array.from(new Set(selectedOrgIds.map((id) => {
+      const o = orgById.get(id);
+      if (!o) return id;
+      return o.parent_id || o.id;
+    })));
+    return hoofdIds[0] ?? null;
+  }, [selectedOrgIds, orgById]);
+
+  // Keep form.organisator_id in sync with derived value
+  useEffect(() => {
+    setForm((prev) => prev.organisator_id === (derivedOrganisatorId ?? "")
+      ? prev
+      : { ...prev, organisator_id: derivedOrganisatorId ?? "" });
+  }, [derivedOrganisatorId]);
+
+  const toggleOrg = (id: string) => {
+    const isOn = selectedOrgIds.includes(id);
+    const next = isOn ? selectedOrgIds.filter((x) => x !== id) : [...selectedOrgIds, id];
+    const prevHoofd = derivedOrganisatorId;
+    const newHoofd = (() => {
+      if (next.length === 0) return null;
+      const ids = Array.from(new Set(next.map((i) => orgById.get(i)?.parent_id || i)));
+      return ids[0] ?? null;
+    })();
+    if (prevHoofd && newHoofd && prevHoofd !== newHoofd && cpEntries.length > 0) {
+      setConfirmOrgChange(JSON.stringify(next));
+      return;
+    }
+    setSelectedOrgIds(next);
   };
 
   const confirmOrgSwitch = () => {
     if (confirmOrgChange) {
-      setForm({ ...form, organisator_id: confirmOrgChange });
-      setCpEntries([]);
-      toast.info("Contactpersonen gereset omdat organisator gewijzigd is.");
+      try {
+        const next = JSON.parse(confirmOrgChange) as string[];
+        setSelectedOrgIds(next);
+        setCpEntries([]);
+        toast.info("Contactpersonen gereset omdat de hoofdorganisator gewijzigd is.");
+      } catch { /* noop */ }
       setConfirmOrgChange(null);
     }
   };
+
+  // Build grouped org list (hoofd + campuses)
+  const orgGroups = useMemo(() => {
+    const sortedAll = [...scholen].sort((a, b) => a.name.localeCompare(b.name));
+    const hoofden = sortedAll.filter((s) => !s.parent_id);
+    const search = orgSearch.trim().toLowerCase();
+    const matches = (name: string) => !search || name.toLowerCase().includes(search);
+    return hoofden.map((h) => {
+      const campuses = sortedAll.filter((s) => s.parent_id === h.id);
+      const filteredCampuses = campuses.filter((c) => matches(c.name));
+      const hoofdVisible = matches(h.name) || filteredCampuses.length > 0;
+      return { hoofd: h, campuses: filteredCampuses, visible: hoofdVisible };
+    }).filter((g) => g.visible);
+  }, [scholen, orgSearch]);
+
+  const selectedOrgs = useMemo(
+    () => selectedOrgIds.map((id) => orgById.get(id)).filter(Boolean) as typeof scholen,
+    [selectedOrgIds, orgById]
+  );
 
   const orgContacten = useMemo(() => {
     const orgId = form.organisator_id && form.organisator_id !== "none" ? form.organisator_id : null;
@@ -182,7 +245,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       name: sanitized.name, type: sanitized.type as Event["type"],
       date: sanitized.date, start_time: sanitized.start_time,
       end_time: sanitized.end_time, location: sanitized.location,
-      organisator_id: sanitized.organisator_id || null,
+      organisator_id: derivedOrganisatorId,
       elia_contact: sanitized.elia_contact,
       team_members: sanitized.team_members ? sanitized.team_members.split(",").map((s) => s.trim()).filter(Boolean) : [],
       description: sanitized.description,
@@ -204,12 +267,10 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       parking_info: sanitized.parking_info || null,
       locker_code: sanitized.locker_code || null,
     } as Event;
-    onSave?.(saved, cpEntries.filter((e) => e.contact_id));
+    onSave?.(saved, cpEntries.filter((e) => e.contact_id), selectedOrgIds);
     toast.success(isEdit ? "Evenement bijgewerkt." : "Evenement toegevoegd.");
     onOpenChange(false);
   };
-
-  const sortedOrgs = [...scholen].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <>
@@ -245,18 +306,72 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
               <p className="text-xs text-muted-foreground mt-1">bv. Brussels Expo, KU Leuven campus, of Online</p>
             </div>
             <div>
-              <Label>Organisator *</Label>
-              <Select value={form.organisator_id} onValueChange={handleOrganisatorChange}>
-                <SelectTrigger><SelectValue placeholder="Selecteer organisator" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Geen</SelectItem>
-                  {sortedOrgs.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.name} ({ORGANISATIE_TYPE_LABELS[s.type] || s.type})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Organisator(en)</Label>
+              <Popover open={orgPickerOpen} onOpenChange={setOrgPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-between font-normal h-auto min-h-10 py-2"
+                  >
+                    <span className="flex flex-wrap gap-1 text-left">
+                      {selectedOrgs.length === 0 ? (
+                        <span className="text-muted-foreground">Selecteer hoofdorganisatie of campussen…</span>
+                      ) : selectedOrgs.map((o) => (
+                        <Badge key={o.id} variant="secondary" className="gap-1">
+                          {o.name}
+                          <X className="h-3 w-3 cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleOrg(o.id); }} />
+                        </Badge>
+                      ))}
+                    </span>
+                    <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <div className="p-2 border-b border-border">
+                    <Input
+                      placeholder="Zoeken…"
+                      value={orgSearch}
+                      onChange={(e) => setOrgSearch(e.target.value)}
+                      className="h-8"
+                    />
+                  </div>
+                  <div className="max-h-72 overflow-y-auto py-1">
+                    {orgGroups.length === 0 && (
+                      <div className="px-3 py-4 text-xs text-muted-foreground text-center">Geen organisaties gevonden.</div>
+                    )}
+                    {orgGroups.map(({ hoofd, campuses }) => (
+                      <div key={hoofd.id} className="py-1">
+                        <label className="flex items-center gap-2 px-3 py-1.5 hover:bg-muted/50 cursor-pointer text-sm font-medium">
+                          <Checkbox
+                            checked={selectedOrgIds.includes(hoofd.id)}
+                            onCheckedChange={() => toggleOrg(hoofd.id)}
+                          />
+                          <Building2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span className="truncate">{hoofd.name}</span>
+                          <span className="text-[10px] text-muted-foreground ml-auto">{ORGANISATIE_TYPE_LABELS[hoofd.type] || hoofd.type}</span>
+                        </label>
+                        {campuses.map((c) => (
+                          <label key={c.id} className="flex items-center gap-2 pl-9 pr-3 py-1.5 hover:bg-muted/50 cursor-pointer text-sm">
+                            <Checkbox
+                              checked={selectedOrgIds.includes(c.id)}
+                              onCheckedChange={() => toggleOrg(c.id)}
+                            />
+                            <span className="truncate">{c.name}</span>
+                            {c.city && <span className="text-[10px] text-muted-foreground ml-auto">{c.city}</span>}
+                          </label>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              {derivedOrganisatorId && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Hoofdorganisator (voor mails en weergave): <span className="font-medium">{orgById.get(derivedOrganisatorId)?.name}</span>
+                </p>
+              )}
             </div>
             <div>
               <div className="flex items-center justify-between"><Label>Beschrijving</Label><CharacterCounter current={form.description.length} max={MAX_LENGTHS.description} /></div>
@@ -456,9 +571,9 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
     <AlertDialog open={!!confirmOrgChange} onOpenChange={(v) => { if (!v) setConfirmOrgChange(null); }}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Organisator wijzigen?</AlertDialogTitle>
+          <AlertDialogTitle>Hoofdorganisator wijzigen?</AlertDialogTitle>
           <AlertDialogDescription>
-            Organisator wijzigen verwijdert de gekoppelde contactpersonen (die horen bij de vorige organisator). Doorgaan?
+            Deze wijziging verandert ook de hoofdorganisator en verwijdert de gekoppelde contactpersonen (die horen bij de vorige organisator). Doorgaan?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

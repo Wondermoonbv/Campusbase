@@ -24,6 +24,12 @@ export interface School {
   status: SchoolStatus;
   created_at: string;
   contacts?: Contact[];
+  parent_id?: string | null;
+}
+
+export interface EventOrganisatie {
+  event_id: string;
+  organisatie_id: string;
 }
 
 export interface Contact {

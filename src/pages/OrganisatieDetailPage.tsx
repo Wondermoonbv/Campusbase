@@ -7,7 +7,7 @@ import { useEvenementen } from "@/hooks/useEvenementen";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ExternalLink, Mail, Phone, Edit, Plus, Linkedin, User, CheckSquare, Trash2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Mail, Phone, Edit, Plus, Linkedin, User, CheckSquare, Trash2, Building2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState } from "react";
@@ -38,6 +38,7 @@ export default function OrganisatieDetailPage() {
 
   const org = scholen.find((s) => s.id === id);
   const [editOpen, setEditOpen] = useState(false);
+  const [campusDialogOpen, setCampusDialogOpen] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [editContact, setEditContact] = useState<Contact | undefined>(undefined);
   const [programDialogOpen, setProgramDialogOpen] = useState(false);
@@ -59,6 +60,9 @@ export default function OrganisatieDetailPage() {
   const programs = opleidingen.filter((p) => p.organisatie_id === org.id);
   const contracts = contracten.filter((c) => c.organisatie_id === org.id);
   const orgEvents = evenementen.filter((e) => e.organisator_id === org.id);
+  const isHoofd = !org.parent_id;
+  const parentOrg = org.parent_id ? scholen.find((s) => s.id === org.parent_id) : null;
+  const campuses = scholen.filter((s) => s.parent_id === org.id);
 
   const handleSaveSchool = async (saved: School) => {
     try { await upsertSchool.mutateAsync(saved); } catch { toast.error("Fout bij opslaan."); }
@@ -89,12 +93,20 @@ export default function OrganisatieDetailPage() {
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
               <h1 className="text-lg sm:text-2xl">{org.name}</h1>
               <Badge variant="outline">{ORGANISATIE_TYPE_LABELS[org.type]}</Badge>
+              <Badge variant={isHoofd ? "default" : "secondary"}>
+                {isHoofd ? "Hoofdorganisatie" : "Campus / suborganisatie"}
+              </Badge>
               <StatusBadge status={org.status} />
             </div>
             <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
               {isSchool && <span className="capitalize">{org.school_type}</span>}
               {(org.city || org.province) && <span>{[org.city, org.province].filter(Boolean).join(", ")}</span>}
               {isSchool && <span>{org.language}</span>}
+              {parentOrg && (
+                <span className="inline-flex items-center gap-1">
+                  Onderdeel van <Link to={`/organisaties/${parentOrg.id}`} className="text-primary hover:underline">{parentOrg.name}</Link>
+                </span>
+              )}
             </div>
           </div>
           {canEdit && (
@@ -109,6 +121,36 @@ export default function OrganisatieDetailPage() {
         </div>
         {org.notes && <p className="mt-3 text-sm text-muted-foreground">{org.notes}</p>}
       </div>
+
+      {isHoofd && (
+        <div className="surface-card p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2"><Building2 className="h-4 w-4" /> Campussen / suborganisaties ({campuses.length})</h2>
+            {canEdit && (
+              <Button size="sm" variant="outline" className="h-10 sm:h-8" onClick={() => setCampusDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" /> Campus toevoegen
+              </Button>
+            )}
+          </div>
+          {campuses.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nog geen campussen of suborganisaties.</p>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {campuses.map((c) => (
+                <Link key={c.id} to={`/organisaties/${c.id}`} className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20 hover:bg-muted/40 transition">
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm truncate">{c.name}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {[c.city, c.province].filter(Boolean).join(", ") || ORGANISATIE_TYPE_LABELS[c.type]}
+                    </div>
+                  </div>
+                  <StatusBadge status={c.status} />
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="surface-card p-4 sm:p-6 mb-4 sm:mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -189,6 +231,9 @@ export default function OrganisatieDetailPage() {
       </Tabs>
 
       <SchoolFormDialog open={editOpen} onOpenChange={setEditOpen} school={org} onSave={handleSaveSchool} />
+      {isHoofd && (
+        <SchoolFormDialog open={campusDialogOpen} onOpenChange={setCampusDialogOpen} defaultParentId={org.id} onSave={handleSaveSchool} />
+      )}
       <ContactFormDialog open={contactDialogOpen} onOpenChange={setContactDialogOpen} schoolId={org.id} contact={editContact} onSave={handleSaveContact} />
       {isSchool && <ProgramFormDialog open={programDialogOpen} onOpenChange={setProgramDialogOpen} schoolId={org.id} onSave={async (p) => { try { await upsertOpleiding.mutateAsync(p); } catch { toast.error("Fout."); } }} />}
       <TaskFormDialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen} defaultSchoolId={org.id} />
