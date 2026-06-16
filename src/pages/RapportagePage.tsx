@@ -118,7 +118,19 @@ export default function RapportagePage() {
     return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
   }, [filteredEvents, scholen, eventOrgLinks]);
   const budgetByType = useMemo(() => { const s: Record<string, number> = {}; filteredEvents.forEach((e) => { s[e.type] = (s[e.type] || 0) + (e.budget ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredEvents]);
-  const budgetBySchool = useMemo(() => { const s: Record<string, number> = {}; filteredEvents.forEach((e) => { const name = e.organisator_id ? (scholen.find((sc) => sc.id === e.organisator_id)?.name ?? "Onbekend") : "Multi-school"; s[name] = (s[name] || 0) + (e.budget ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents, scholen]);
+  const budgetBySchool = useMemo(() => {
+    const orgById = new Map(scholen.map((s) => [s.id, s]));
+    const s: Record<string, number> = {};
+    filteredContracts
+      .filter((c) => c.status === "actief")
+      .forEach((c) => {
+        const org = orgById.get(c.organisatie_id);
+        const headId = org?.parent_id ?? c.organisatie_id;
+        const name = orgById.get(headId)?.name ?? "Onbekend";
+        s[name] = (s[name] || 0) + (c.value ?? 0);
+      });
+    return Object.entries(s).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [filteredContracts, scholen]);
   const contractsByType = useMemo(() => { const s: Record<string, number> = {}; filteredContracts.forEach((c) => { s[c.contract_type] = (s[c.contract_type] || 0) + (c.value ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredContracts]);
   const totalContractValue = filteredContracts.filter((c) => c.status === "actief").reduce((s, c) => s + (c.value ?? 0), 0);
 
@@ -165,7 +177,7 @@ export default function RapportagePage() {
         <ChartCard title="Budget per type event (€)" data={budgetByType} chartId="budget-type">
           <ResponsiveContainer width="100%" height={250}><BarChart data={budgetByType}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="name" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 10 }} width={50} tickFormatter={(v) => `€${v.toLocaleString()}`} /><Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} /><Bar dataKey="value" fill="#ef7c14" radius={[2, 2, 0, 0]} /></BarChart></ResponsiveContainer>
         </ChartCard>
-        <ChartCard title="Budget per hoofdorganisatie (€)" data={budgetBySchool} chartId="budget-school">
+        <ChartCard title="Contractwaarde per hoofdorganisatie (€)" data={budgetBySchool} chartId="budget-school">
           <ResponsiveContainer width="100%" height={250}><BarChart data={budgetBySchool} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={(v) => `€${v.toLocaleString()}`} /><YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 9 }} /><Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} /><Bar dataKey="value" fill="#0E6575" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
         </ChartCard>
         <ChartCard title="Contractwaarde per type (€)" data={contractsByType} chartId="contracts-type">
