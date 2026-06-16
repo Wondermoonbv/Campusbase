@@ -40,6 +40,7 @@ const SCHOOL_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "status", label: "Status", validate: (v) => !v || ["actief", "inactief", "prospect"].includes(v.toLowerCase()) ? null : "Moet actief, inactief of prospect zijn" },
   { key: "website", label: "Website" },
   { key: "notes", label: "Notities" },
+  { key: "hoofdorganisatie", label: "Hoofdorganisatie" },
 ];
 
 function ListSkeleton() {
