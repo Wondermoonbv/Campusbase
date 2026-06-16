@@ -228,14 +228,19 @@ export default function OrganisatiesPage() {
                 {sorted.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen organisaties gevonden.</TableCell></TableRow> : sorted.map((org) => (
                   <TableRow key={org.id} className="cursor-pointer hover:bg-muted/30" onClick={() => navigate(`/organisaties/${org.id}`)}>
                     <TableCell className="font-medium">
-                      <span className="inline-flex items-center gap-2">
-                        {org.name}
-                        {org.parent_id ? (
-                          <Badge variant="secondary" className="text-[10px]">Campus</Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-[10px]">Hoofd</Badge>
+                      <div className="flex flex-col">
+                        <span className="inline-flex items-center gap-2">
+                          {org.name}
+                          {org.parent_id ? (
+                            <Badge variant="secondary" className="text-[10px]">Campus</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px]">Hoofd</Badge>
+                          )}
+                        </span>
+                        {org.parent_id && parentMap.get(org.parent_id) && (
+                          <span className="text-xs text-muted-foreground mt-0.5">onder {parentMap.get(org.parent_id)}</span>
                         )}
-                      </span>
+                      </div>
                     </TableCell>
                     <TableCell>{ORGANISATIE_TYPE_LABELS[org.type] || org.type}</TableCell>
                     <TableCell>{org.city || "—"}</TableCell>
