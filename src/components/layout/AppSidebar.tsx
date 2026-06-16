@@ -59,7 +59,7 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: "CAMPUS",
+    label: "DATABASE",
     items: [
       {
         title: "Organisaties",
@@ -71,13 +71,13 @@ const navGroups: NavGroup[] = [
         ],
       },
       { title: "Opleidingen", url: "/opleidingen", icon: BookOpen, roles: ["admin", "editor", "viewer"] },
-      { title: "Evenementen", url: "/evenementen", icon: CalendarDays, roles: ["admin", "editor", "viewer"] },
-      { title: "Ambassadeurs", url: "/ambassadeurs", icon: UserCheck, roles: ["admin", "editor", "viewer"] },
     ],
   },
   {
     label: "BEHEER",
     items: [
+      { title: "Evenementen", url: "/evenementen", icon: CalendarDays, roles: ["admin", "editor", "viewer"] },
+      { title: "Ambassadeurs", url: "/ambassadeurs", icon: UserCheck, roles: ["admin", "editor", "viewer"] },
       { title: "Contracten & Partnerships", url: "/contracten", icon: FileText, roles: ["admin", "editor"] },
       { title: "Taken", url: "/taken", icon: CheckSquare, roles: ["admin", "editor"] },
     ],
