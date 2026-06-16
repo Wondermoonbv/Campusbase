@@ -121,6 +121,12 @@ export default function OrganisatiesPage() {
     return map;
   }, [contacten]);
 
+  const parentMap = useMemo(() => {
+    const map = new Map<string, string>();
+    scholen.forEach((s) => { map.set(s.id, s.name); });
+    return map;
+  }, [scholen]);
+
   const exportCSV = useCallback(() => {
     const headers = ["Naam", "Type", "Stad", "Provincie", "Taal", "Status", "Contact", "Email"];
     const rows = sorted.map((s) => {
@@ -188,7 +194,13 @@ export default function OrganisatiesPage() {
             {sorted.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen organisaties gevonden.</div> : sorted.map((org) => (
               <div key={org.id} className="surface-card p-4 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate(`/organisaties/${org.id}`)}>
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1"><p className="font-medium text-sm truncate">{org.name}</p><p className="text-xs text-muted-foreground mt-0.5">{ORGANISATIE_TYPE_LABELS[org.type]} · {org.city || "—"} · {org.language || "—"}</p></div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm truncate">{org.name}</p>
+                    {org.parent_id && parentMap.get(org.parent_id) && (
+                      <p className="text-xs text-muted-foreground mt-0.5">onder {parentMap.get(org.parent_id)}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-0.5">{ORGANISATIE_TYPE_LABELS[org.type]} · {org.city || "—"} · {org.language || "—"}</p>
+                  </div>
                   <div className="flex items-center gap-1">
                     <StatusBadge status={org.status} />
                     {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`${org.name} verwijderen`} onClick={(e) => { e.stopPropagation(); setDeleteTarget(org); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
@@ -216,14 +228,19 @@ export default function OrganisatiesPage() {
                 {sorted.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen organisaties gevonden.</TableCell></TableRow> : sorted.map((org) => (
                   <TableRow key={org.id} className="cursor-pointer hover:bg-muted/30" onClick={() => navigate(`/organisaties/${org.id}`)}>
                     <TableCell className="font-medium">
-                      <span className="inline-flex items-center gap-2">
-                        {org.name}
-                        {org.parent_id ? (
-                          <Badge variant="secondary" className="text-[10px]">Campus</Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-[10px]">Hoofd</Badge>
+                      <div className="flex flex-col">
+                        <span className="inline-flex items-center gap-2">
+                          {org.name}
+                          {org.parent_id ? (
+                            <Badge variant="secondary" className="text-[10px]">Campus</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px]">Hoofd</Badge>
+                          )}
+                        </span>
+                        {org.parent_id && parentMap.get(org.parent_id) && (
+                          <span className="text-xs text-muted-foreground mt-0.5">onder {parentMap.get(org.parent_id)}</span>
                         )}
-                      </span>
+                      </div>
                     </TableCell>
                     <TableCell>{ORGANISATIE_TYPE_LABELS[org.type] || org.type}</TableCell>
                     <TableCell>{org.city || "—"}</TableCell>
