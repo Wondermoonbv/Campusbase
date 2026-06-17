@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Mail, Phone, Users, FileText, MessageCircle, Plus, Settings2 } from "lucide-react";
+import { Mail, Phone, Users, FileText, MessageCircle, Plus, Settings2, Pencil } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useContacten, useScholen } from "@/hooks/useScholen";
 import { useProfiles } from "@/hooks/useProfiles";
@@ -40,6 +40,7 @@ export function ContactmomentenSection({ organisatieId, contactId }: Props) {
   const { canEdit } = useAuth();
   const { scholen } = useScholen();
   const { contacten: orgContacten } = useContacten(organisatieId);
+  const { contacten: allContacten } = useContacten();
   const { profiles } = useProfiles();
 
   const org = scholen.find((s) => s.id === organisatieId);
@@ -51,6 +52,7 @@ export function ContactmomentenSection({ organisatieId, contactId }: Props) {
 
   const [includeCampuses, setIncludeCampuses] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editMoment, setEditMoment] = useState<Contactmoment | null>(null);
 
   const orgIds = useMemo(() => {
     if (isHoofd && includeCampuses) return [organisatieId, ...campuses.map((c) => c.id)];
@@ -60,7 +62,10 @@ export function ContactmomentenSection({ organisatieId, contactId }: Props) {
   const { contactmomenten, isLoading } = useContactmomenten(orgIds, contactId ? { contactId } : undefined);
 
   const orgMap = useMemo(() => Object.fromEntries(scholen.map((s) => [s.id, s])), [scholen]);
-  const contactMap = useMemo(() => Object.fromEntries(orgContacten.map((c) => [c.id, c])), [orgContacten]);
+  const contactMap = useMemo(
+    () => Object.fromEntries([...allContacten, ...orgContacten].map((c) => [c.id, c])),
+    [allContacten, orgContacten],
+  );
   const profileMap = useMemo(() => Object.fromEntries(profiles.map((p) => [p.id, p])), [profiles]);
 
   const resolveContactName = (item: Contactmoment): string | null => {
@@ -104,6 +109,13 @@ export function ContactmomentenSection({ organisatieId, contactId }: Props) {
             const campusName = isHoofd && includeCampuses && item.organisatie_id !== organisatieId
               ? orgMap[item.organisatie_id]?.name
               : null;
+            const collegaNames = item.collega_ids
+              .map((id) => profileMap[id]?.full_name)
+              .filter(Boolean) as string[];
+            const contactNames = item.contact_ids
+              .map((id) => contactMap[id]?.name)
+              .filter(Boolean) as string[];
+            const betrokkenen = [...collegaNames, ...contactNames];
 
             return (
               <li key={item.id} className={`flex gap-3 p-3 rounded-lg border ${isSysteem ? "border-dashed border-border bg-muted/10" : "border-border bg-muted/20"}`}>
@@ -121,9 +133,26 @@ export function ContactmomentenSection({ organisatieId, contactId }: Props) {
                         ↳ {campusName}
                       </span>
                     )}
+                    {canEdit && !isSysteem && (
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 ml-auto"
+                        onClick={() => setEditMoment(item)}
+                        aria-label="Bewerken"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                   </div>
                   {item.notities && (
                     <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{item.notities}</p>
+                  )}
+                  {betrokkenen.length > 0 && (
+                    <p className="text-xs text-muted-foreground mt-1.5">
+                      <span className="font-medium">Betrokken:</span> {betrokkenen.join(", ")}
+                    </p>
                   )}
                   <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 text-xs text-muted-foreground">
                     <span>{formatDate(item.occurred_at)}</span>
@@ -143,6 +172,12 @@ export function ContactmomentenSection({ organisatieId, contactId }: Props) {
         onOpenChange={setDialogOpen}
         organisatieId={organisatieId}
         contactId={contactId ?? null}
+      />
+      <ContactmomentDialog
+        open={!!editMoment}
+        onOpenChange={(o) => { if (!o) setEditMoment(null); }}
+        organisatieId={editMoment?.organisatie_id}
+        moment={editMoment}
       />
     </div>
   );
