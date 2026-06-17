@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Edit, Trash2, Mail, Phone, Linkedin, User, Building2 } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Mail, Phone, Linkedin, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useContacten, useScholen } from "@/hooks/useScholen";
@@ -67,35 +68,31 @@ export default function ContactDetailPage() {
 
       <div className="surface-card p-4 sm:p-6 mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-          <div className="flex items-start gap-3 min-w-0">
-            <div className="h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <User className="h-5 w-5 text-primary" />
-            </div>
-            <div className="min-w-0">
+          <div>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
               <h1 className="text-lg sm:text-2xl">{contact.name}</h1>
-              {(contact.role || contact.department) && (
-                <p className="text-sm text-muted-foreground">
-                  {[contact.role, contact.department].filter(Boolean).join(" — ")}
-                </p>
-              )}
-              {organisatie ? (
-                <p className="text-sm mt-1 inline-flex items-center gap-1">
-                  <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-                  <Link to={`/organisaties/${organisatie.id}`} className="text-primary hover:underline">{organisatie.name}</Link>
-                  <OrganisatieLabel organisatieId={organisatie.id} />
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground italic mt-1">Geen organisatie gekoppeld</p>
-              )}
+              {contact.role && <Badge variant="outline">{contact.role}</Badge>}
             </div>
+            {contact.department && (
+              <p className="text-sm text-muted-foreground mb-1">{contact.department}</p>
+            )}
+            {organisatie ? (
+              <p className="text-xs sm:text-sm text-muted-foreground inline-flex items-center gap-1">
+                <Building2 className="h-3.5 w-3.5" />
+                <Link to={`/organisaties/${organisatie.id}`} className="text-primary hover:underline">{organisatie.name}</Link>
+                <OrganisatieLabel organisatieId={organisatie.id} />
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground italic">Geen organisatie gekoppeld</p>
+            )}
           </div>
           {canEdit && (
-            <div className="flex gap-2 shrink-0">
+            <div className="flex gap-2">
               <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => setEditOpen(true)}>
                 <Edit className="h-4 w-4 mr-1" /> Bewerken
               </Button>
-              <Button variant="outline" size="sm" className="h-10 sm:h-8 text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)}>
-                <Trash2 className="h-4 w-4 mr-1" /> Verwijderen
+              <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => setDeleteOpen(true)}>
+                <Trash2 className="h-4 w-4 mrkt mr-1" /> Verwijderen
               </Button>
             </div>
           )}
@@ -128,7 +125,9 @@ export default function ContactDetailPage() {
         <ContactmomentenSection organisatieId={contact.organisatie_id} contactId={contact.id} />
       ) : (
         <div className="surface-card p-4 sm:p-6 mb-4 sm:mb-6">
-          <h2 className="text-base sm:text-lg font-semibold mb-2">Logboek</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base sm:text-lg font-semibold">Logboek</h2>
+          </div>
           <p className="text-sm text-muted-foreground">Koppel deze contactpersoon eerst aan een organisatie om contactmomenten te kunnen loggen.</p>
         </div>
       )}
