@@ -264,7 +264,7 @@ export default function OrganisatiesPage() {
                     <TableCell className={`font-medium ${type === "campus" ? "pl-8" : ""}`}>
                       <div className="flex flex-col">
                         <span className="inline-flex items-center gap-2">
-                          {org.name}
+                          {type === "campus" ? "↳ " : ""}{org.name}
                           {org.parent_id ? (
                             <Badge variant="secondary" className="text-[10px]">Campus</Badge>
                           ) : (
