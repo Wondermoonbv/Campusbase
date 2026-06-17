@@ -184,6 +184,74 @@ export type Database = {
           },
         ]
       }
+      contactmomenten: {
+        Row: {
+          bron: string
+          contact_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          notities: string | null
+          occurred_at: string
+          onderwerp: string
+          organisatie_id: string
+          type: string
+        }
+        Insert: {
+          bron?: string
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notities?: string | null
+          occurred_at?: string
+          onderwerp: string
+          organisatie_id: string
+          type?: string
+        }
+        Update: {
+          bron?: string
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notities?: string | null
+          occurred_at?: string
+          onderwerp?: string
+          organisatie_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contactmomenten_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacten"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contactmomenten_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contactmomenten_organisatie_id_fkey"
+            columns: ["organisatie_id"]
+            isOneToOne: false
+            referencedRelation: "organisaties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contactmomenten_organisatie_id_fkey"
+            columns: ["organisatie_id"]
+            isOneToOne: false
+            referencedRelation: "organisaties_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_evenementen: {
         Row: {
           contract_id: string
