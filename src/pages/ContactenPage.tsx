@@ -12,41 +12,45 @@ import { OrganisatieLabel } from "@/components/organisaties/OrganisatieLabel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Edit, Trash2, Mail, Phone, Users, MessageSquarePlus, Send } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import type { Contact } from "@/types/crm";
 import { ContactmomentDialog } from "@/components/contactmomenten/ContactmomentDialog";
 import { ContactMailDialog } from "@/components/contacten/ContactMailDialog";
 
 const ContactMobileCard = memo(function ContactMobileCard({
-  contact: c, school, canEdit, onEdit, onDelete, onLog, onMail,
+  contact: c, school, canEdit, onEdit, onDelete, onLog, onMail, onOpen,
 }: {
   contact: Contact; school: { id: string; name: string } | null; canEdit: boolean;
-  onEdit: (c: Contact) => void; onDelete: (c: Contact) => void; onLog: (c: Contact) => void; onMail: (c: Contact) => void;
+  onEdit: (c: Contact) => void; onDelete: (c: Contact) => void; onLog: (c: Contact) => void; onMail: (c: Contact) => void; onOpen: (c: Contact) => void;
 }) {
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
   return (
-    <div className="surface-card p-4 space-y-1.5">
+    <div
+      className="surface-card p-4 space-y-1.5 cursor-pointer active:scale-[0.98] transition-transform"
+      onClick={() => onOpen(c)}
+    >
       <div className="flex items-center justify-between">
-        <Link to={`/contacten/${c.id}`} className="font-medium text-sm text-primary hover:underline">{c.name}</Link>
+        <span className="font-medium text-sm">{c.name}</span>
         {canEdit && (
           <div className="flex gap-0.5">
-            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Mail sturen naar ${c.name}`} onClick={() => onMail(c)} disabled={!c.email || !c.organisatie_id}><Send className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Mail sturen naar ${c.name}`} onClick={(e) => { stop(e); onMail(c); }} disabled={!c.email || !c.organisatie_id}><Send className="h-3.5 w-3.5" /></Button>
             {c.organisatie_id && (
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Contactmoment loggen voor ${c.name}`} onClick={() => onLog(c)}><MessageSquarePlus className="h-3.5 w-3.5" /></Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Contactmoment loggen voor ${c.name}`} onClick={(e) => { stop(e); onLog(c); }}><MessageSquarePlus className="h-3.5 w-3.5" /></Button>
             )}
-            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} bewerken`} onClick={() => onEdit(c)}><Edit className="h-3.5 w-3.5" /></Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} verwijderen`} onClick={() => onDelete(c)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} bewerken`} onClick={(e) => { stop(e); onEdit(c); }}><Edit className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} verwijderen`} onClick={(e) => { stop(e); onDelete(c); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
           </div>
         )}
       </div>
       {c.role && <p className="text-xs text-muted-foreground">{c.role}</p>}
       {school ? (
-        <Link to={`/organisaties/${school.id}`} className="text-xs text-primary hover:underline">{school.name}<OrganisatieLabel organisatieId={school.id} /></Link>
+        <Link to={`/organisaties/${school.id}`} onClick={stop} className="text-xs text-primary hover:underline">{school.name}<OrganisatieLabel organisatieId={school.id} /></Link>
       ) : (
         <span className="text-xs text-muted-foreground italic">Geen organisatie</span>
       )}
       <div className="flex flex-wrap gap-3 text-xs">
-        {c.email && <a href={`mailto:${c.email}`} className="text-primary hover:underline inline-flex items-center gap-1"><Mail className="h-3 w-3" /> {c.email}</a>}
+        {c.email && <a href={`mailto:${c.email}`} onClick={stop} className="text-primary hover:underline inline-flex items-center gap-1"><Mail className="h-3 w-3" /> {c.email}</a>}
         {c.phone && <span className="text-muted-foreground inline-flex items-center gap-1"><Phone className="h-3 w-3" /> {c.phone}</span>}
       </div>
     </div>
@@ -54,35 +58,34 @@ const ContactMobileCard = memo(function ContactMobileCard({
 });
 
 const ContactTableRow = memo(function ContactTableRow({
-  contact: c, school, canEdit, onEdit, onDelete, onLog, onMail,
+  contact: c, school, canEdit, onEdit, onDelete, onLog, onMail, onOpen,
 }: {
   contact: Contact; school: { id: string; name: string } | null; canEdit: boolean;
-  onEdit: (c: Contact) => void; onDelete: (c: Contact) => void; onLog: (c: Contact) => void; onMail: (c: Contact) => void;
+  onEdit: (c: Contact) => void; onDelete: (c: Contact) => void; onLog: (c: Contact) => void; onMail: (c: Contact) => void; onOpen: (c: Contact) => void;
 }) {
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
   return (
-    <TableRow>
-      <TableCell className="font-medium">
-        <Link to={`/contacten/${c.id}`} className="text-primary hover:underline">{c.name}</Link>
-      </TableCell>
+    <TableRow className="cursor-pointer hover:bg-muted/30" onClick={() => onOpen(c)}>
+      <TableCell className="font-medium">{c.name}</TableCell>
       <TableCell>{c.role || "—"}</TableCell>
       <TableCell>
         {school ? (
-          <Link to={`/organisaties/${school.id}`} className="text-primary hover:underline">{school.name}<OrganisatieLabel organisatieId={school.id} /></Link>
+          <Link to={`/organisaties/${school.id}`} onClick={stop} className="text-primary hover:underline">{school.name}<OrganisatieLabel organisatieId={school.id} /></Link>
         ) : (
           <span className="text-muted-foreground italic text-xs">Geen organisatie</span>
         )}
       </TableCell>
-      <TableCell>{c.email ? <a href={`mailto:${c.email}`} className="text-primary hover:underline">{c.email}</a> : "—"}</TableCell>
+      <TableCell>{c.email ? <a href={`mailto:${c.email}`} onClick={stop} className="text-primary hover:underline">{c.email}</a> : "—"}</TableCell>
       <TableCell>{c.phone || "—"}</TableCell>
       {canEdit && (
         <TableCell>
           <div className="flex gap-0.5">
-            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Mail sturen naar ${c.name}`} onClick={() => onMail(c)} disabled={!c.email || !c.organisatie_id}><Send className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Mail sturen naar ${c.name}`} onClick={(e) => { stop(e); onMail(c); }} disabled={!c.email || !c.organisatie_id}><Send className="h-3.5 w-3.5" /></Button>
             {c.organisatie_id && (
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Contactmoment loggen voor ${c.name}`} onClick={() => onLog(c)}><MessageSquarePlus className="h-3.5 w-3.5" /></Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Contactmoment loggen voor ${c.name}`} onClick={(e) => { stop(e); onLog(c); }}><MessageSquarePlus className="h-3.5 w-3.5" /></Button>
             )}
-            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} bewerken`} onClick={() => onEdit(c)}><Edit className="h-3.5 w-3.5" /></Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} verwijderen`} onClick={() => onDelete(c)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} bewerken`} onClick={(e) => { stop(e); onEdit(c); }}><Edit className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} verwijderen`} onClick={(e) => { stop(e); onDelete(c); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
           </div>
         </TableCell>
       )}
@@ -108,6 +111,7 @@ export default function ContactenPage() {
   const { contacten, isLoading, upsertContact, deleteContact } = useContacten();
   const { scholen } = useScholen();
   const { canEdit } = useAuth();
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [schoolFilter, setSchoolFilter] = useState("all");
@@ -145,6 +149,7 @@ export default function ContactenPage() {
   const handleDeleteClick = useCallback((c: Contact) => setDeleteTarget(c), []);
   const handleLogClick = useCallback((c: Contact) => setLogTarget(c), []);
   const handleMailClick = useCallback((c: Contact) => setMailTarget(c), []);
+  const handleOpen = useCallback((c: Contact) => navigate(`/contacten/${c.id}`), [navigate]);
 
   return (
     <div className="page-container animate-fade-in-up">
@@ -193,6 +198,7 @@ export default function ContactenPage() {
                 onDelete={handleDeleteClick}
                 onLog={handleLogClick}
                 onMail={handleMailClick}
+                onOpen={handleOpen}
               />
             ))}
           </div>
@@ -223,6 +229,7 @@ export default function ContactenPage() {
                     onDelete={handleDeleteClick}
                     onLog={handleLogClick}
                     onMail={handleMailClick}
+                    onOpen={handleOpen}
                   />
                 ))}
               </TableBody>
