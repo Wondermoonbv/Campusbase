@@ -61,15 +61,8 @@ const navGroups: NavGroup[] = [
   {
     label: "DATABASE",
     items: [
-      {
-        title: "Organisaties",
-        url: "/organisaties",
-        icon: Building2,
-        roles: ["admin", "editor", "viewer"],
-        children: [
-          { title: "Contacten", url: "/contacten", icon: Contact, roles: ["admin", "editor", "viewer"] },
-        ],
-      },
+      { title: "Organisaties", url: "/organisaties", icon: Building2, roles: ["admin", "editor", "viewer"] },
+      { title: "Contacten", url: "/contacten", icon: Contact, roles: ["admin", "editor", "viewer"] },
       { title: "Opleidingen", url: "/opleidingen", icon: BookOpen, roles: ["admin", "editor", "viewer"] },
     ],
   },
