@@ -20,8 +20,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Checkbox } from "@/components/ui/checkbox";
-import { sendEmail, sendBulkEmails, buildPortalLinkEmail } from "@/lib/email";
+import { sendEmail, sendBulkEmails, buildPortalLinkEmail, buildCustomAmbassadorEmail } from "@/lib/email";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { CustomMailDialog } from "@/components/ambassadeurs/CustomMailDialog";
 
 const AMB_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "full_name", label: "Naam", required: true },
@@ -125,6 +126,9 @@ export default function AmbassadeursPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sendingLinks, setSendingLinks] = useState(false);
   const [rotatingLinks, setRotatingLinks] = useState(false);
+  const [mailDialogOpen, setMailDialogOpen] = useState(false);
+  const [mailTargets, setMailTargets] = useState<Ambassadeur[]>([]);
+  const [sendingMail, setSendingMail] = useState(false);
 
   const toggleSelected = (id: string) => {
     setSelectedIds((prev) => {
