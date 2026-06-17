@@ -90,6 +90,8 @@ export default function ContactDetailPage() {
           </div>
           {canEdit && (
             <div className="flex gap-2">
+              {/* Mail sturen knop verborgen tot na tests */}
+              {/*
               <Button
                 variant="outline"
                 size="sm"
@@ -100,6 +102,7 @@ export default function ContactDetailPage() {
               >
                 <Send className="h-4 w-4 mr-1" /> Mail sturen
               </Button>
+              */}
               <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => setEditOpen(true)}>
                 <Edit className="h-4 w-4 mr-1" /> Bewerken
               </Button>
