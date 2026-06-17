@@ -160,6 +160,11 @@ export function buildCustomAmbassadorEmail(
   return `${WRAPPER_START}${getHeader()}${row(`<p style="font-size:14px;color:#3f3f46;line-height:1.6;margin:24px 0 8px;">Dag ${safeName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">${safeBody}</p>`)}${button}${WRAPPER_END}`;
 }
 
+export function buildSimpleEmail(bodyText: string): string {
+  const safeBody = escapeHtml(bodyText).replace(/\r?\n/g, "<br/>");
+  return `${WRAPPER_START}${getHeader()}${row(`<div style="font-size:14px;color:#3f3f46;line-height:1.6;margin:24px 0;">${safeBody}</div>`)}${WRAPPER_END}`;
+}
+
 export function buildInvitationEmail(
   ambassadeurName: string,
   event: EventEmailData,

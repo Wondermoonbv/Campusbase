@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Edit, Trash2, Mail, Phone, Linkedin, Building2 } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Mail, Phone, Linkedin, Building2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +10,7 @@ import { ContactFormDialog } from "@/components/schools/ContactFormDialog";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { OrganisatieLabel } from "@/components/organisaties/OrganisatieLabel";
 import { ContactmomentenSection } from "@/components/contactmomenten/ContactmomentenSection";
+import { ContactMailDialog } from "@/components/contacten/ContactMailDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
 import type { Contact } from "@/types/crm";
@@ -23,6 +24,7 @@ export default function ContactDetailPage() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [mailOpen, setMailOpen] = useState(false);
 
   const contact = contacten.find((c) => c.id === id);
   const organisatie = contact?.organisatie_id ? scholen.find((s) => s.id === contact.organisatie_id) : null;
@@ -88,6 +90,16 @@ export default function ContactDetailPage() {
           </div>
           {canEdit && (
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-10 sm:h-8"
+                onClick={() => setMailOpen(true)}
+                disabled={!contact.email}
+                title={contact.email ? undefined : "Geen e-mailadres"}
+              >
+                <Send className="h-4 w-4 mr-1" /> Mail sturen
+              </Button>
               <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => setEditOpen(true)}>
                 <Edit className="h-4 w-4 mr-1" /> Bewerken
               </Button>
@@ -134,6 +146,7 @@ export default function ContactDetailPage() {
 
       <ContactFormDialog open={editOpen} onOpenChange={setEditOpen} contact={contact} onSave={handleSave} showSchoolSelect />
       <DeleteConfirmDialog open={deleteOpen} onClose={() => setDeleteOpen(false)} onConfirm={handleDelete} itemName={contact.name} isLoading={deleteContact.isPending} />
+      <ContactMailDialog open={mailOpen} onOpenChange={setMailOpen} contact={contact} />
     </div>
   );
 }
