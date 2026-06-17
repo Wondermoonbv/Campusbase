@@ -237,6 +237,59 @@ export default function AmbassadeursPage() {
     }
   };
 
+  const openMailDialog = useCallback((targets: Ambassadeur[]) => {
+    if (targets.length === 0) {
+      toast.warning("Geen ambassadeurs geselecteerd.");
+      return;
+    }
+    setMailTargets(targets);
+    setMailDialogOpen(true);
+  }, []);
+
+  const handleSendCustomMail = useCallback(async (subject: string, body: string, includePortal: boolean) => {
+    if (mailTargets.length === 0) return;
+    setSendingMail(true);
+    try {
+      const emails: { to: string; subject: string; html: string }[] = [];
+      let rotated = 0;
+      for (const a of mailTargets) {
+        let portalUrl: string | undefined;
+        if (includePortal) {
+          const wasExpired = tokenValidity(a.token_expires_at).variant === "expired" || !a.access_token;
+          const token = await ensureFreshToken(a);
+          if (!token) {
+            toast.error(`Geen portaaltoken voor ${a.full_name}`);
+            continue;
+          }
+          if (wasExpired) rotated++;
+          portalUrl = `${window.location.origin}/ambassadeur-portaal?token=${token}`;
+        }
+        emails.push({
+          to: a.email,
+          subject,
+          html: buildCustomAmbassadorEmail(a.full_name, body, portalUrl),
+        });
+      }
+      if (rotated > 0) queryClient.invalidateQueries({ queryKey: ["ambassadeurs"] });
+      if (emails.length === 0) {
+        toast.error("Kon geen mails versturen.");
+        return;
+      }
+      const result = await sendBulkEmails(emails);
+      if (result.sent > 0) toast.success(`Mail verstuurd naar ${result.sent} ambassadeur(s)`);
+      if (result.failed.length > 0) {
+        result.failed.forEach((f) => toast.error(`Mail naar ${f.to} mislukt: ${f.error}`));
+      }
+      setMailDialogOpen(false);
+      setMailTargets([]);
+      setSelectedIds(new Set());
+    } catch {
+      toast.error("Fout bij versturen.");
+    } finally {
+      setSendingMail(false);
+    }
+  }, [mailTargets, ensureFreshToken, queryClient]);
+
   // Build maps
   const eventMap = useMemo(() => {
     const m: Record<string, { name: string; date: string }> = {};
@@ -354,6 +407,9 @@ export default function AmbassadeursPage() {
                 </Button>
                 <Button variant="outline" onClick={handleSendPortalLinks} disabled={sendingLinks || rotatingLinks}>
                   <Send className="h-4 w-4 mr-1" /> {sendingLinks ? "Versturen..." : `Portaallinks versturen (${selectedIds.size})`}
+                </Button>
+                <Button variant="outline" onClick={() => openMailDialog(ambassadeurs.filter((a) => selectedIds.has(a.id)))} disabled={sendingLinks || rotatingLinks}>
+                  <Mail className="h-4 w-4 mr-1" /> Mail sturen ({selectedIds.size})
                 </Button>
               </>
             )}
