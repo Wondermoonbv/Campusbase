@@ -11,16 +11,17 @@ import { OrganisatieSelect } from "@/components/organisaties/OrganisatieSelect";
 import { OrganisatieLabel } from "@/components/organisaties/OrganisatieLabel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Edit, Trash2, Mail, Phone, Users } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Mail, Phone, Users, MessageSquarePlus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import type { Contact } from "@/types/crm";
+import { ContactmomentDialog } from "@/components/contactmomenten/ContactmomentDialog";
 
 const ContactMobileCard = memo(function ContactMobileCard({
-  contact: c, school, canEdit, onEdit, onDelete,
+  contact: c, school, canEdit, onEdit, onDelete, onLog,
 }: {
   contact: Contact; school: { id: string; name: string } | null; canEdit: boolean;
-  onEdit: (c: Contact) => void; onDelete: (c: Contact) => void;
+  onEdit: (c: Contact) => void; onDelete: (c: Contact) => void; onLog: (c: Contact) => void;
 }) {
   return (
     <div className="surface-card p-4 space-y-1.5">
@@ -28,6 +29,9 @@ const ContactMobileCard = memo(function ContactMobileCard({
         <span className="font-medium text-sm">{c.name}</span>
         {canEdit && (
           <div className="flex gap-0.5">
+            {c.organisatie_id && (
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Contactmoment loggen voor ${c.name}`} onClick={() => onLog(c)}><MessageSquarePlus className="h-3.5 w-3.5" /></Button>
+            )}
             <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} bewerken`} onClick={() => onEdit(c)}><Edit className="h-3.5 w-3.5" /></Button>
             <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} verwijderen`} onClick={() => onDelete(c)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
           </div>
@@ -48,10 +52,10 @@ const ContactMobileCard = memo(function ContactMobileCard({
 });
 
 const ContactTableRow = memo(function ContactTableRow({
-  contact: c, school, canEdit, onEdit, onDelete,
+  contact: c, school, canEdit, onEdit, onDelete, onLog,
 }: {
   contact: Contact; school: { id: string; name: string } | null; canEdit: boolean;
-  onEdit: (c: Contact) => void; onDelete: (c: Contact) => void;
+  onEdit: (c: Contact) => void; onDelete: (c: Contact) => void; onLog: (c: Contact) => void;
 }) {
   return (
     <TableRow>
@@ -69,6 +73,9 @@ const ContactTableRow = memo(function ContactTableRow({
       {canEdit && (
         <TableCell>
           <div className="flex gap-0.5">
+            {c.organisatie_id && (
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Contactmoment loggen voor ${c.name}`} onClick={() => onLog(c)}><MessageSquarePlus className="h-3.5 w-3.5" /></Button>
+            )}
             <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} bewerken`} onClick={() => onEdit(c)}><Edit className="h-3.5 w-3.5" /></Button>
             <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} verwijderen`} onClick={() => onDelete(c)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
           </div>
@@ -102,6 +109,7 @@ export default function ContactenPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editContact, setEditContact] = useState<Contact | undefined>(undefined);
   const [deleteTarget, setDeleteTarget] = useState<Contact | null>(null);
+  const [logTarget, setLogTarget] = useState<Contact | null>(null);
 
   const schoolMap = useMemo(() => Object.fromEntries(scholen.map((s) => [s.id, s])), [scholen]);
 
@@ -129,6 +137,7 @@ export default function ContactenPage() {
 
   const handleEdit = useCallback((c: Contact) => { setEditContact(c); setDialogOpen(true); }, []);
   const handleDeleteClick = useCallback((c: Contact) => setDeleteTarget(c), []);
+  const handleLogClick = useCallback((c: Contact) => setLogTarget(c), []);
 
   return (
     <div className="page-container animate-fade-in-up">
@@ -175,6 +184,7 @@ export default function ContactenPage() {
                 canEdit={canEdit}
                 onEdit={handleEdit}
                 onDelete={handleDeleteClick}
+                onLog={handleLogClick}
               />
             ))}
           </div>
@@ -203,6 +213,7 @@ export default function ContactenPage() {
                     canEdit={canEdit}
                     onEdit={handleEdit}
                     onDelete={handleDeleteClick}
+                    onLog={handleLogClick}
                   />
                 ))}
               </TableBody>
@@ -213,6 +224,12 @@ export default function ContactenPage() {
 
       <ContactFormDialog open={dialogOpen} onOpenChange={setDialogOpen} contact={editContact} onSave={handleSave} showSchoolSelect />
       <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget?.name ?? ""} isLoading={deleteContact.isPending} />
+      <ContactmomentDialog
+        open={!!logTarget}
+        onOpenChange={(o) => { if (!o) setLogTarget(null); }}
+        organisatieId={logTarget?.organisatie_id ?? undefined}
+        contactId={logTarget?.id ?? null}
+      />
     </div>
   );
 }
