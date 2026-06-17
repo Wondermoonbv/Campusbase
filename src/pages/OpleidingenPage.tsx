@@ -16,6 +16,7 @@ import { FIELDS_OF_STUDY } from "@/types/crm";
 import type { Program } from "@/types/crm";
 import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
 import { OrganisatieSelect } from "@/components/organisaties/OrganisatieSelect";
+import { OrganisatieLabel } from "@/components/organisaties/OrganisatieLabel";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
@@ -148,7 +149,7 @@ export default function OpleidingenPage() {
               <div key={p.id} className="surface-card overflow-hidden">
                 <div className="p-4 cursor-pointer active:scale-[0.99] transition-transform" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1"><p className="font-medium text-sm">{p.name}</p><Link to={`/organisaties/${p.organisatie_id}`} className="text-xs text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}</Link><p className="text-xs text-muted-foreground mt-0.5 capitalize">{p.study_level} · {p.field_of_study}</p></div>
+                    <div className="min-w-0 flex-1"><p className="font-medium text-sm">{p.name}</p><Link to={`/organisaties/${p.organisatie_id}`} className="text-xs text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}<OrganisatieLabel organisatieId={p.organisatie_id} /></Link><p className="text-xs text-muted-foreground mt-0.5 capitalize">{p.study_level} · {p.field_of_study}</p></div>
                     <div className="flex items-center gap-1">
                       <span className="text-sm font-medium tabular-nums">{p.student_count ?? "—"}</span>
                       {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(p); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
@@ -179,7 +180,7 @@ export default function OpleidingenPage() {
                   <TableRow className="hover:bg-muted/30 cursor-pointer" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
                     <TableCell className="px-2">{p.linkedEvents.length > 0 && (expandedId === p.id ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />)}</TableCell>
                     <TableCell className="font-medium">{p.name}</TableCell>
-                    <TableCell><Link to={`/organisaties/${p.organisatie_id}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}</Link></TableCell>
+                    <TableCell><Link to={`/organisaties/${p.organisatie_id}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}<OrganisatieLabel organisatieId={p.organisatie_id} /></Link></TableCell>
                     <TableCell className="hidden lg:table-cell">{p.faculty}</TableCell>
                     <TableCell className="capitalize">{p.study_level}</TableCell>
                     <TableCell className="hidden lg:table-cell">{p.field_of_study}</TableCell>

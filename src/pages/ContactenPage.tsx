@@ -8,6 +8,7 @@ import { handleDeleteError } from "@/lib/delete-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { OrganisatieSelect } from "@/components/organisaties/OrganisatieSelect";
+import { OrganisatieLabel } from "@/components/organisaties/OrganisatieLabel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Edit, Trash2, Mail, Phone, Users } from "lucide-react";
@@ -34,7 +35,7 @@ const ContactMobileCard = memo(function ContactMobileCard({
       </div>
       {c.role && <p className="text-xs text-muted-foreground">{c.role}</p>}
       {school ? (
-        <Link to={`/organisaties/${school.id}`} className="text-xs text-primary hover:underline">{school.name}</Link>
+        <Link to={`/organisaties/${school.id}`} className="text-xs text-primary hover:underline">{school.name}<OrganisatieLabel organisatieId={school.id} /></Link>
       ) : (
         <span className="text-xs text-muted-foreground italic">Geen organisatie</span>
       )}
@@ -58,7 +59,7 @@ const ContactTableRow = memo(function ContactTableRow({
       <TableCell>{c.role || "—"}</TableCell>
       <TableCell>
         {school ? (
-          <Link to={`/organisaties/${school.id}`} className="text-primary hover:underline">{school.name}</Link>
+          <Link to={`/organisaties/${school.id}`} className="text-primary hover:underline">{school.name}<OrganisatieLabel organisatieId={school.id} /></Link>
         ) : (
           <span className="text-muted-foreground italic text-xs">Geen organisatie</span>
         )}

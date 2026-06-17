@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, AlertTriangle, ArrowUp, Minus, Pencil, Trash2, ListTodo } from "lucide-react";
 import { TaskFormDialog } from "@/components/tasks/TaskFormDialog";
+import { OrganisatieLabel } from "@/components/organisaties/OrganisatieLabel";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { Link } from "react-router-dom";
@@ -177,8 +178,8 @@ const TaskTable = memo(function TaskTable({ tasks, scholen, evenementen, resolve
                     <span className="text-xs text-muted-foreground">{resolveAssignee(task.assigned_to)}</span>
                     <span className={`text-xs tabular-nums ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>{new Date(task.due_date).toLocaleDateString("nl-BE")}{overdue && " ⚠"}</span>
                   </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="flex gap-1">{school && <Link to={`/organisaties/${school.id}`} className="text-xs text-primary hover:underline">{school.name}</Link>}{event && <Link to={`/evenementen/${event.id}`} className="text-xs text-primary hover:underline">{event.name}</Link>}</div>
+                    <div className="flex items-center justify-between mt-2">
+                    <div className="flex gap-1">{school && <Link to={`/organisaties/${school.id}`} className="text-xs text-primary hover:underline">{school.name}<OrganisatieLabel organisatieId={school.id} /></Link>}{event && <Link to={`/evenementen/${event.id}`} className="text-xs text-primary hover:underline">{event.name}</Link>}</div>
                     <div className="flex gap-1"><Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${task.title} bewerken`} onClick={() => onEdit(task)}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button><Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${task.title} verwijderen`} onClick={() => onDelete(task)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button></div>
                   </div>
                 </div>
@@ -209,7 +210,7 @@ const TaskTable = memo(function TaskTable({ tasks, scholen, evenementen, resolve
                 <TableCell><span className="inline-flex items-center gap-1 text-xs capitalize">{priorityIcon[task.priority]} {task.priority}</span></TableCell>
                 <TableCell className="text-sm">{resolveAssignee(task.assigned_to)}</TableCell>
                 <TableCell><span className={`text-sm tabular-nums ${overdue ? "text-destructive font-medium" : ""}`}>{new Date(task.due_date).toLocaleDateString("nl-BE")}{overdue && <AlertTriangle className="inline h-3 w-3 ml-1 -mt-0.5" />}</span></TableCell>
-                <TableCell className="hidden lg:table-cell"><div className="flex flex-col gap-0.5">{school && <Link to={`/organisaties/${school.id}`} className="text-xs text-primary hover:underline">{school.name}</Link>}{event && <Link to={`/evenementen/${event.id}`} className="text-xs text-primary hover:underline">{event.name}</Link>}{!school && !event && <span className="text-xs text-muted-foreground">—</span>}</div></TableCell>
+                <TableCell className="hidden lg:table-cell"><div className="flex flex-col gap-0.5">{school && <Link to={`/organisaties/${school.id}`} className="text-xs text-primary hover:underline">{school.name}<OrganisatieLabel organisatieId={school.id} /></Link>}{event && <Link to={`/evenementen/${event.id}`} className="text-xs text-primary hover:underline">{event.name}</Link>}{!school && !event && <span className="text-xs text-muted-foreground">—</span>}</div></TableCell>
                 <TableCell><StatusBadge status={task.status} /></TableCell>
                 <TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${task.title} bewerken`} onClick={() => onEdit(task)}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button><Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${task.title} verwijderen`} onClick={() => onDelete(task)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button></div></TableCell>
               </TableRow>
