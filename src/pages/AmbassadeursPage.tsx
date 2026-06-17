@@ -780,6 +780,14 @@ export default function AmbassadeursPage() {
           }
         }}
       />
+
+      <CustomMailDialog
+        open={mailDialogOpen}
+        onOpenChange={(open) => { setMailDialogOpen(open); if (!open) setMailTargets([]); }}
+        recipientCount={mailTargets.length}
+        sending={sendingMail}
+        onSend={handleSendCustomMail}
+      />
     </div>
   );
 }
