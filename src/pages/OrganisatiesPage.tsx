@@ -128,6 +128,31 @@ export default function OrganisatiesPage() {
     return map;
   }, [scholen]);
 
+  const hasActiveFilter = useMemo(() =>
+    search.trim().length > 0 || filterOrgType !== "all" || filterProvince !== "all" || filterLanguage !== "all" || filterStatus !== "all"
+  , [search, filterOrgType, filterProvince, filterLanguage, filterStatus]);
+
+  const displayRows = useMemo(() => {
+    if (hasActiveFilter) return sorted.map((org) => ({ type: "flat" as const, org }));
+    const heads = sortItems(scholen.filter((s) => !s.parent_id), sort, (s, key) => {
+      switch (key) {
+        case "name": return s.name; case "type": return s.type; case "city": return s.city;
+        case "province": return s.province; case "language": return s.language; case "status": return s.status;
+        default: return s.name;
+      }
+    });
+    const rows: { type: "head" | "campus"; org: School }[] = [];
+    const headIds = new Set(heads.map((h) => h.id));
+    heads.forEach((head) => {
+      rows.push({ type: "head", org: head });
+      const campuses = scholen.filter((s) => s.parent_id === head.id).sort((a, b) => a.name.localeCompare(b.name));
+      campuses.forEach((c) => rows.push({ type: "campus", org: c }));
+    });
+    const orphans = scholen.filter((s) => s.parent_id && !headIds.has(s.parent_id)).sort((a, b) => a.name.localeCompare(b.name));
+    orphans.forEach((o) => rows.push({ type: "campus", org: o }));
+    return rows;
+  }, [hasActiveFilter, sorted, scholen, sort]);
+
   const exportCSV = useCallback(() => {
     const headers = ["Naam", "Type", "Stad", "Provincie", "Taal", "Status", "Contact", "Email"];
     const rows = sorted.map((s) => {
