@@ -109,6 +109,7 @@ export default function ContactenPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editContact, setEditContact] = useState<Contact | undefined>(undefined);
   const [deleteTarget, setDeleteTarget] = useState<Contact | null>(null);
+  const [logTarget, setLogTarget] = useState<Contact | null>(null);
 
   const schoolMap = useMemo(() => Object.fromEntries(scholen.map((s) => [s.id, s])), [scholen]);
 
@@ -136,6 +137,7 @@ export default function ContactenPage() {
 
   const handleEdit = useCallback((c: Contact) => { setEditContact(c); setDialogOpen(true); }, []);
   const handleDeleteClick = useCallback((c: Contact) => setDeleteTarget(c), []);
+  const handleLogClick = useCallback((c: Contact) => setLogTarget(c), []);
 
   return (
     <div className="page-container animate-fade-in-up">
@@ -182,6 +184,7 @@ export default function ContactenPage() {
                 canEdit={canEdit}
                 onEdit={handleEdit}
                 onDelete={handleDeleteClick}
+                onLog={handleLogClick}
               />
             ))}
           </div>
@@ -210,6 +213,7 @@ export default function ContactenPage() {
                     canEdit={canEdit}
                     onEdit={handleEdit}
                     onDelete={handleDeleteClick}
+                    onLog={handleLogClick}
                   />
                 ))}
               </TableBody>
@@ -220,6 +224,12 @@ export default function ContactenPage() {
 
       <ContactFormDialog open={dialogOpen} onOpenChange={setDialogOpen} contact={editContact} onSave={handleSave} showSchoolSelect />
       <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget?.name ?? ""} isLoading={deleteContact.isPending} />
+      <ContactmomentDialog
+        open={!!logTarget}
+        onOpenChange={(o) => { if (!o) setLogTarget(null); }}
+        organisatieId={logTarget?.organisatie_id ?? undefined}
+        contactId={logTarget?.id ?? null}
+      />
     </div>
   );
 }
