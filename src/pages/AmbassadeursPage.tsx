@@ -20,8 +20,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Checkbox } from "@/components/ui/checkbox";
-import { sendEmail, sendBulkEmails, buildPortalLinkEmail } from "@/lib/email";
+import { sendEmail, sendBulkEmails, buildPortalLinkEmail, buildCustomAmbassadorEmail } from "@/lib/email";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { CustomMailDialog } from "@/components/ambassadeurs/CustomMailDialog";
 
 const AMB_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "full_name", label: "Naam", required: true },
@@ -125,6 +126,9 @@ export default function AmbassadeursPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sendingLinks, setSendingLinks] = useState(false);
   const [rotatingLinks, setRotatingLinks] = useState(false);
+  const [mailDialogOpen, setMailDialogOpen] = useState(false);
+  const [mailTargets, setMailTargets] = useState<Ambassadeur[]>([]);
+  const [sendingMail, setSendingMail] = useState(false);
 
   const toggleSelected = (id: string) => {
     setSelectedIds((prev) => {
@@ -232,6 +236,59 @@ export default function AmbassadeursPage() {
       setSendingLinks(false);
     }
   };
+
+  const openMailDialog = useCallback((targets: Ambassadeur[]) => {
+    if (targets.length === 0) {
+      toast.warning("Geen ambassadeurs geselecteerd.");
+      return;
+    }
+    setMailTargets(targets);
+    setMailDialogOpen(true);
+  }, []);
+
+  const handleSendCustomMail = useCallback(async (subject: string, body: string, includePortal: boolean) => {
+    if (mailTargets.length === 0) return;
+    setSendingMail(true);
+    try {
+      const emails: { to: string; subject: string; html: string }[] = [];
+      let rotated = 0;
+      for (const a of mailTargets) {
+        let portalUrl: string | undefined;
+        if (includePortal) {
+          const wasExpired = tokenValidity(a.token_expires_at).variant === "expired" || !a.access_token;
+          const token = await ensureFreshToken(a);
+          if (!token) {
+            toast.error(`Geen portaaltoken voor ${a.full_name}`);
+            continue;
+          }
+          if (wasExpired) rotated++;
+          portalUrl = `${window.location.origin}/ambassadeur-portaal?token=${token}`;
+        }
+        emails.push({
+          to: a.email,
+          subject,
+          html: buildCustomAmbassadorEmail(a.full_name, body, portalUrl),
+        });
+      }
+      if (rotated > 0) queryClient.invalidateQueries({ queryKey: ["ambassadeurs"] });
+      if (emails.length === 0) {
+        toast.error("Kon geen mails versturen.");
+        return;
+      }
+      const result = await sendBulkEmails(emails);
+      if (result.sent > 0) toast.success(`Mail verstuurd naar ${result.sent} ambassadeur(s)`);
+      if (result.failed.length > 0) {
+        result.failed.forEach((f) => toast.error(`Mail naar ${f.to} mislukt: ${f.error}`));
+      }
+      setMailDialogOpen(false);
+      setMailTargets([]);
+      setSelectedIds(new Set());
+    } catch {
+      toast.error("Fout bij versturen.");
+    } finally {
+      setSendingMail(false);
+    }
+  }, [mailTargets, ensureFreshToken, queryClient]);
 
   // Build maps
   const eventMap = useMemo(() => {
@@ -351,6 +408,9 @@ export default function AmbassadeursPage() {
                 <Button variant="outline" onClick={handleSendPortalLinks} disabled={sendingLinks || rotatingLinks}>
                   <Send className="h-4 w-4 mr-1" /> {sendingLinks ? "Versturen..." : `Portaallinks versturen (${selectedIds.size})`}
                 </Button>
+                <Button variant="outline" onClick={() => openMailDialog(ambassadeurs.filter((a) => selectedIds.has(a.id)))} disabled={sendingLinks || rotatingLinks}>
+                  <Mail className="h-4 w-4 mr-1" /> Mail sturen ({selectedIds.size})
+                </Button>
               </>
             )}
             <Button variant="outline" onClick={() => setImportOpen(true)}>
@@ -463,6 +523,7 @@ export default function AmbassadeursPage() {
                         <div className="flex gap-1 py-2">
                           <Button variant="ghost" size="sm" onClick={() => handleEdit(a)}><Pencil className="h-3.5 w-3.5 mr-1" />Bewerken</Button>
                           <Button variant="ghost" size="sm" onClick={() => handleRotateOne(a)}><RefreshCw className="h-3.5 w-3.5 mr-1" />Link vernieuwen</Button>
+                          <Button variant="ghost" size="sm" onClick={() => openMailDialog([a])}><Mail className="h-3.5 w-3.5 mr-1" />Mail sturen</Button>
                           <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeleteClick(a)}><Trash2 className="h-3.5 w-3.5 mr-1" />Verwijderen</Button>
                         </div>
                       )}
@@ -603,6 +664,20 @@ export default function AmbassadeursPage() {
                                 </TooltipTrigger>
                                 <TooltipContent>Portaallink naar {a.full_name} sturen</TooltipContent>
                               </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    aria-label={`Mail sturen naar ${a.full_name}`}
+                                    onClick={() => openMailDialog([a])}
+                                  >
+                                    <Mail className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Mail sturen naar {a.full_name}</TooltipContent>
+                              </Tooltip>
                               <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${a.full_name} bewerken`} onClick={() => handleEdit(a)}><Pencil className="h-3.5 w-3.5" /></Button>
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" aria-label={`${a.full_name} verwijderen`} onClick={() => handleDeleteClick(a)}><Trash2 className="h-3.5 w-3.5" /></Button>
                             </div>
@@ -704,6 +779,14 @@ export default function AmbassadeursPage() {
             });
           }
         }}
+      />
+
+      <CustomMailDialog
+        open={mailDialogOpen}
+        onOpenChange={(open) => { setMailDialogOpen(open); if (!open) setMailTargets([]); }}
+        recipientCount={mailTargets.length}
+        sending={sendingMail}
+        onSend={handleSendCustomMail}
       />
     </div>
   );
