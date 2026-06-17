@@ -331,9 +331,14 @@ export default function AmbassadeursPage() {
         {canEdit && (
           <div className="flex gap-2 flex-wrap">
             {selectedIds.size > 0 && (
-              <Button variant="outline" onClick={handleSendPortalLinks} disabled={sendingLinks}>
-                <Send className="h-4 w-4 mr-1" /> {sendingLinks ? "Versturen..." : `Portaallinks versturen (${selectedIds.size})`}
-              </Button>
+              <>
+                <Button variant="outline" onClick={handleRotateBulk} disabled={rotatingLinks || sendingLinks}>
+                  <RefreshCw className="h-4 w-4 mr-1" /> {rotatingLinks ? "Vernieuwen..." : `Links vernieuwen (${selectedIds.size})`}
+                </Button>
+                <Button variant="outline" onClick={handleSendPortalLinks} disabled={sendingLinks || rotatingLinks}>
+                  <Send className="h-4 w-4 mr-1" /> {sendingLinks ? "Versturen..." : `Portaallinks versturen (${selectedIds.size})`}
+                </Button>
+              </>
             )}
             <Button variant="outline" onClick={() => setImportOpen(true)}>
               <Upload className="h-4 w-4 mr-1" /> Import
