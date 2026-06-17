@@ -94,14 +94,17 @@ Deno.serve(async (req) => {
       .select("id, form_id")
       .eq("respondent_email", ambassador.email);
 
-    const eventIds = (events ?? []).map((e: any) => e.id);
+    // Only expose attachments for events where THIS ambassador is confirmed.
+    const confirmedEventIds = (enrollments ?? [])
+      .filter((e: any) => e.status === "bevestigd")
+      .map((e: any) => e.evenement_id);
     let attachmentsOut: Array<{ id: string; evenement_id: string; file_name: string; file_path: string; signed_url: string | null }> = [];
-    if (eventIds.length > 0) {
+    if (confirmedEventIds.length > 0) {
       const { data: atts } = await admin
         .from("attachments")
         .select("id, entity_id, file_name, file_path")
         .eq("entity_type", "event")
-        .in("entity_id", eventIds);
+        .in("entity_id", confirmedEventIds);
       if (atts && atts.length > 0) {
         const paths = atts.map((a: any) => a.file_path);
         const { data: signed } = await admin.storage.from("attachments").createSignedUrls(paths, 3600);
