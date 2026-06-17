@@ -12,6 +12,7 @@ export interface Ambassadeur {
   is_active: boolean;
   created_at: string;
   access_token: string;
+  token_expires_at: string | null;
 }
 
 export interface EventInschrijving {
@@ -42,7 +43,7 @@ export function useAmbassadeurs() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ambassadeurs")
-        .select("id, full_name, email, phone, department, notes, is_active, created_at, access_token")
+        .select("id, full_name, email, phone, department, notes, is_active, created_at, access_token, token_expires_at")
         .order("full_name", { ascending: true });
       if (error) { console.error(error); return []; }
       return data as Ambassadeur[];

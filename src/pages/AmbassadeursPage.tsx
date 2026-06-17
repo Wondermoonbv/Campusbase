@@ -15,7 +15,7 @@ import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { AmbassadeurFormDialog } from "@/components/ambassadeurs/AmbassadeurFormDialog";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Plus, Pencil, Trash2, Upload, Users, ChevronDown, ChevronRight, UserCheck, Clock, Mail, CheckCircle2, Link2, Send } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Upload, Users, ChevronDown, ChevronRight, UserCheck, Clock, Mail, CheckCircle2, Link2, Send, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -32,6 +32,34 @@ const AMB_IMPORT_COLUMNS: ImportColumn[] = [
 ];
 
 const STATUS_OPTIONS = ["uitgenodigd", "ingeschreven", "bevestigd", "backup", "afgemeld"] as const;
+
+function tokenValidity(expires: string | null | undefined): {
+  label: string;
+  variant: "neutral" | "warning" | "expired" | "none";
+} {
+  if (!expires) return { label: "Geen vervaldatum", variant: "none" };
+  const d = new Date(expires);
+  const now = Date.now();
+  const diff = d.getTime() - now;
+  if (diff < 0) return { label: "Verlopen", variant: "expired" };
+  const sevenDays = 7 * 24 * 60 * 60 * 1000;
+  const dateStr = d.toLocaleDateString("nl-BE", { day: "numeric", month: "short", year: "numeric" });
+  if (diff < sevenDays) return { label: "Verloopt binnenkort", variant: "warning" };
+  return { label: `Geldig tot ${dateStr}`, variant: "neutral" };
+}
+
+function TokenValidityBadge({ expires }: { expires: string | null | undefined }) {
+  const v = tokenValidity(expires);
+  const cls =
+    v.variant === "expired"
+      ? "bg-red-100 text-red-800 border-red-200"
+      : v.variant === "warning"
+      ? "bg-orange-100 text-orange-800 border-orange-200"
+      : v.variant === "none"
+      ? "bg-muted text-muted-foreground border-border"
+      : "bg-muted text-muted-foreground border-border";
+  return <Badge variant="outline" className={`${cls} text-xs whitespace-nowrap`}>{v.label}</Badge>;
+}
 
 function statusColor(status: string) {
   switch (status) {
@@ -83,6 +111,7 @@ export default function AmbassadeursPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sendingLinks, setSendingLinks] = useState(false);
+  const [rotatingLinks, setRotatingLinks] = useState(false);
 
   const toggleSelected = (id: string) => {
     setSelectedIds((prev) => {
@@ -100,19 +129,84 @@ export default function AmbassadeursPage() {
     }
   };
 
+  // Rotate a single ambassador token via RPC. Returns the new token, or null on failure.
+  const rotateToken = useCallback(async (ambassadorId: string): Promise<string | null> => {
+    const { data, error } = await supabase.rpc("rotate_ambassador_token", { p_ambassador_id: ambassadorId });
+    if (error) {
+      console.error(error);
+      return null;
+    }
+    const res = data as { success?: boolean; new_token?: string } | null;
+    return res?.new_token ?? null;
+  }, []);
+
+  // Ensure the ambassador has a non-expired token. Rotates if expired (or missing); leaves valid ones untouched.
+  const ensureFreshToken = useCallback(async (a: Ambassadeur): Promise<string | null> => {
+    const v = tokenValidity(a.token_expires_at);
+    if (a.access_token && v.variant !== "expired" && v.variant !== "none") {
+      return a.access_token;
+    }
+    return await rotateToken(a.id);
+  }, [rotateToken]);
+
+  const handleRotateOne = useCallback(async (a: Ambassadeur) => {
+    const tok = await rotateToken(a.id);
+    if (tok) {
+      toast.success(`Link vernieuwd voor ${a.full_name}`);
+      queryClient.invalidateQueries({ queryKey: ["ambassadeurs"] });
+    } else {
+      toast.error("Fout bij vernieuwen van link");
+    }
+  }, [rotateToken, queryClient]);
+
+  const handleRotateBulk = useCallback(async () => {
+    const selected = ambassadeurs.filter((a) => selectedIds.has(a.id));
+    if (selected.length === 0) {
+      toast.warning("Geen ambassadeurs geselecteerd.");
+      return;
+    }
+    setRotatingLinks(true);
+    let ok = 0;
+    let fail = 0;
+    for (const a of selected) {
+      const tok = await rotateToken(a.id);
+      if (tok) ok++; else fail++;
+    }
+    queryClient.invalidateQueries({ queryKey: ["ambassadeurs"] });
+    if (ok > 0) toast.success(`Link vernieuwd voor ${ok} ambassadeur(s)`);
+    if (fail > 0) toast.error(`Vernieuwen mislukt voor ${fail} ambassadeur(s)`);
+    setRotatingLinks(false);
+  }, [ambassadeurs, selectedIds, rotateToken, queryClient]);
+
   const handleSendPortalLinks = async () => {
-    const selected = ambassadeurs.filter((a) => selectedIds.has(a.id) && a.access_token);
+    const selected = ambassadeurs.filter((a) => selectedIds.has(a.id));
     if (selected.length === 0) {
       toast.warning("Geen ambassadeurs geselecteerd.");
       return;
     }
     setSendingLinks(true);
     try {
-      const emails = selected.map((a) => ({
-        to: a.email,
-        subject: "Elia Campus Events — Ambassadeur Portaal",
-        html: buildPortalLinkEmail(a.full_name, `${window.location.origin}/ambassadeur-portaal?token=${a.access_token}`),
-      }));
+      const emails: { to: string; subject: string; html: string }[] = [];
+      let rotated = 0;
+      for (const a of selected) {
+        const wasExpired = tokenValidity(a.token_expires_at).variant === "expired" || !a.access_token;
+        const token = await ensureFreshToken(a);
+        if (!token) {
+          toast.error(`Geen portaaltoken voor ${a.full_name}`);
+          continue;
+        }
+        if (wasExpired) rotated++;
+        emails.push({
+          to: a.email,
+          subject: "Elia Campus Events — Ambassadeur Portaal",
+          html: buildPortalLinkEmail(a.full_name, `${window.location.origin}/ambassadeur-portaal?token=${token}`),
+        });
+      }
+      if (rotated > 0) queryClient.invalidateQueries({ queryKey: ["ambassadeurs"] });
+      if (emails.length === 0) {
+        toast.error("Kon geen portaallinks versturen.");
+        return;
+      }
       const result = await sendBulkEmails(emails);
       if (result.sent > 0) toast.success(`Portaallink verstuurd naar ${result.sent} ambassadeur(s)`);
       if (result.failed.length > 0) {
@@ -237,9 +331,14 @@ export default function AmbassadeursPage() {
         {canEdit && (
           <div className="flex gap-2 flex-wrap">
             {selectedIds.size > 0 && (
-              <Button variant="outline" onClick={handleSendPortalLinks} disabled={sendingLinks}>
-                <Send className="h-4 w-4 mr-1" /> {sendingLinks ? "Versturen..." : `Portaallinks versturen (${selectedIds.size})`}
-              </Button>
+              <>
+                <Button variant="outline" onClick={handleRotateBulk} disabled={rotatingLinks || sendingLinks}>
+                  <RefreshCw className="h-4 w-4 mr-1" /> {rotatingLinks ? "Vernieuwen..." : `Links vernieuwen (${selectedIds.size})`}
+                </Button>
+                <Button variant="outline" onClick={handleSendPortalLinks} disabled={sendingLinks || rotatingLinks}>
+                  <Send className="h-4 w-4 mr-1" /> {sendingLinks ? "Versturen..." : `Portaallinks versturen (${selectedIds.size})`}
+                </Button>
+              </>
             )}
             <Button variant="outline" onClick={() => setImportOpen(true)}>
               <Upload className="h-4 w-4 mr-1" /> Import
@@ -343,12 +442,14 @@ export default function AmbassadeursPage() {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground ml-6">{a.email}</p>
+                    <div className="ml-6 mt-1"><TokenValidityBadge expires={a.token_expires_at} /></div>
                   </button>
                   {isExpanded && (
                     <div className="border-t border-border px-4 pb-3">
                       {canEdit && (
                         <div className="flex gap-1 py-2">
                           <Button variant="ghost" size="sm" onClick={() => handleEdit(a)}><Pencil className="h-3.5 w-3.5 mr-1" />Bewerken</Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleRotateOne(a)}><RefreshCw className="h-3.5 w-3.5 mr-1" />Link vernieuwen</Button>
                           <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeleteClick(a)}><Trash2 className="h-3.5 w-3.5 mr-1" />Verwijderen</Button>
                         </div>
                       )}
@@ -401,6 +502,7 @@ export default function AmbassadeursPage() {
                   <th className="px-4 py-3 font-medium text-muted-foreground text-center">Events</th>
                   <th className="px-4 py-3 font-medium text-muted-foreground">Pending</th>
                   <th className="px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 font-medium text-muted-foreground">Portaallink</th>
                   {canEdit && <th className="px-4 py-3 font-medium text-muted-foreground text-right">Acties</th>}
                 </tr>
               </thead>
@@ -433,6 +535,7 @@ export default function AmbassadeursPage() {
                           )}
                         </td>
                         <td className="px-4 py-3"><StatusBadge status={a.is_active ? "actief" : "inactief"} /></td>
+                        <td className="px-4 py-3"><TokenValidityBadge expires={a.token_expires_at} /></td>
                         {canEdit && (
                           <td className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
@@ -443,17 +546,34 @@ export default function AmbassadeursPage() {
                                     variant="ghost"
                                     size="icon"
                                     className="h-8 w-8"
+                                    aria-label={`Portaallink ${a.full_name} vernieuwen`}
+                                    onClick={() => handleRotateOne(a)}
+                                  >
+                                    <RefreshCw className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Link vernieuwen</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
                                     aria-label={`Portaallink naar ${a.full_name} sturen`}
                                     onClick={async () => {
-                                      if (!(a as any).access_token) {
+                                      const token = await ensureFreshToken(a);
+                                      if (!token) {
                                         toast.error("Geen portaaltoken beschikbaar");
                                         return;
                                       }
+                                      const wasExpired = tokenValidity(a.token_expires_at).variant === "expired" || !a.access_token;
+                                      if (wasExpired) queryClient.invalidateQueries({ queryKey: ["ambassadeurs"] });
                                       try {
                                         const result = await sendEmail({
                                           to: a.email,
                                           subject: "Elia Campus Events — Ambassadeur Portaal",
-                                          html: buildPortalLinkEmail(a.full_name, `${window.location.origin}/ambassadeur-portaal?token=${(a as any).access_token}`),
+                                          html: buildPortalLinkEmail(a.full_name, `${window.location.origin}/ambassadeur-portaal?token=${token}`),
                                         });
                                         if (result.success) {
                                           toast.success(`Portaallink verzonden naar ${a.full_name}`);
@@ -478,7 +598,7 @@ export default function AmbassadeursPage() {
                       </tr>
                       {isExpanded && (
                         <tr>
-                          <td colSpan={canEdit ? 9 : 7} className="bg-muted/20 px-8 py-3">
+                          <td colSpan={canEdit ? 10 : 8} className="bg-muted/20 px-8 py-3">
                             {ambInschrijvingen.length === 0 ? (
                               <p className="text-sm text-muted-foreground">Geen event-koppelingen</p>
                             ) : (
