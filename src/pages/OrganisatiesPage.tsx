@@ -128,6 +128,31 @@ export default function OrganisatiesPage() {
     return map;
   }, [scholen]);
 
+  const hasActiveFilter = useMemo(() =>
+    search.trim().length > 0 || filterOrgType !== "all" || filterProvince !== "all" || filterLanguage !== "all" || filterStatus !== "all"
+  , [search, filterOrgType, filterProvince, filterLanguage, filterStatus]);
+
+  const displayRows = useMemo(() => {
+    if (hasActiveFilter) return sorted.map((org) => ({ type: "flat" as const, org }));
+    const heads = sortItems(scholen.filter((s) => !s.parent_id), sort, (s, key) => {
+      switch (key) {
+        case "name": return s.name; case "type": return s.type; case "city": return s.city;
+        case "province": return s.province; case "language": return s.language; case "status": return s.status;
+        default: return s.name;
+      }
+    });
+    const rows: { type: "head" | "campus"; org: School }[] = [];
+    const headIds = new Set(heads.map((h) => h.id));
+    heads.forEach((head) => {
+      rows.push({ type: "head", org: head });
+      const campuses = scholen.filter((s) => s.parent_id === head.id).sort((a, b) => a.name.localeCompare(b.name));
+      campuses.forEach((c) => rows.push({ type: "campus", org: c }));
+    });
+    const orphans = scholen.filter((s) => s.parent_id && !headIds.has(s.parent_id)).sort((a, b) => a.name.localeCompare(b.name));
+    orphans.forEach((o) => rows.push({ type: "campus", org: o }));
+    return rows;
+  }, [hasActiveFilter, sorted, scholen, sort]);
+
   const exportCSV = useCallback(() => {
     const headers = ["Naam", "Type", "Stad", "Provincie", "Taal", "Status", "Contact", "Email"];
     const rows = sorted.map((s) => {
@@ -192,12 +217,12 @@ export default function OrganisatiesPage() {
       ) : (
         <>
           <div className="block md:hidden space-y-2">
-            {sorted.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen organisaties gevonden.</div> : sorted.map((org) => (
+            {displayRows.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen organisaties gevonden.</div> : displayRows.map(({ type, org }) => (
               <div key={org.id} className="surface-card p-4 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate(`/organisaties/${org.id}`)}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="font-medium text-sm truncate">{org.name}</p>
+                      <p className={`font-medium text-sm truncate ${type === "campus" ? "pl-4" : ""}`}>{type === "campus" ? "↳ " : ""}{org.name}</p>
                       {org.type === "studentenvereniging" && org.is_nationaal && (
                         <Badge variant="outline" className="text-[10px]">Nationaal</Badge>
                       )}
@@ -234,12 +259,12 @@ export default function OrganisatiesPage() {
                 <TableHead className="w-20" />
               </TableRow></TableHeader>
               <TableBody>
-                {sorted.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen organisaties gevonden.</TableCell></TableRow> : sorted.map((org) => (
+                {displayRows.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen organisaties gevonden.</TableCell></TableRow> : displayRows.map(({ type, org }) => (
                   <TableRow key={org.id} className="cursor-pointer hover:bg-muted/30" onClick={() => navigate(`/organisaties/${org.id}`)}>
-                    <TableCell className="font-medium">
+                    <TableCell className={`font-medium ${type === "campus" ? "pl-8" : ""}`}>
                       <div className="flex flex-col">
                         <span className="inline-flex items-center gap-2">
-                          {org.name}
+                          {type === "campus" ? "↳ " : ""}{org.name}
                           {org.parent_id ? (
                             <Badge variant="secondary" className="text-[10px]">Campus</Badge>
                           ) : (
