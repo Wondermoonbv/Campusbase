@@ -577,7 +577,8 @@ export default function AmbassadeurPortaalPage() {
                             )}
                           </div>
                         )}
-                        {ev.attachments.length > 0 && (
+                        {ev.my_status === "bevestigd" ? (
+                          ev.attachments.length > 0 && (
                           <div className="border-t border-border/50 pt-2 space-y-1">
                             <p className="text-xs font-medium text-foreground flex items-center gap-1.5">
                               <Paperclip className="h-3 w-3" /> Bijlagen
@@ -595,6 +596,14 @@ export default function AmbassadeurPortaalPage() {
                                 </li>
                               ))}
                             </ul>
+                          </div>
+                          )
+                        ) : (
+                          <div className="border-t border-border/50 pt-2">
+                            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                              <Paperclip className="h-3 w-3 shrink-0" />
+                              Bijlagen worden zichtbaar zodra je deelname bevestigd is.
+                            </p>
                           </div>
                         )}
 
