@@ -92,7 +92,7 @@ export default function ContactDetailPage() {
                 <Edit className="h-4 w-4 mr-1" /> Bewerken
               </Button>
               <Button variant="outline" size="sm" className="h-10 sm:h-8" onClick={() => setDeleteOpen(true)}>
-                <Trash2 className="h-4 w-4 mrkt mr-1" /> Verwijderen
+                <Trash2 className="h-4 w-4 mr-1" /> Verwijderen
               </Button>
             </div>
           )}
