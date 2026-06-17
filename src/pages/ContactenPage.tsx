@@ -7,7 +7,7 @@ import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { OrganisatieSelect } from "@/components/organisaties/OrganisatieSelect";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Edit, Trash2, Mail, Phone, Users } from "lucide-react";
@@ -107,7 +107,7 @@ export default function ContactenPage() {
   const filtered = useMemo(() => contacten.filter((c) => {
     const schoolName = c.organisatie_id ? schoolMap[c.organisatie_id]?.name ?? "" : "";
     const matchesSearch = !search || [c.name, c.email, schoolName].some((f) => f?.toLowerCase().includes(search.toLowerCase()));
-    const matchesSchool = schoolFilter === "all" || (schoolFilter === "__none__" ? !c.organisatie_id : c.organisatie_id === schoolFilter);
+    const matchesSchool = schoolFilter === "all" || (schoolFilter === "" ? !c.organisatie_id : c.organisatie_id === schoolFilter);
     return matchesSearch && matchesSchool;
   }), [contacten, schoolMap, search, schoolFilter]);
 
@@ -145,14 +145,17 @@ export default function ContactenPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Zoek op naam, email of school..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <Select value={schoolFilter} onValueChange={setSchoolFilter}>
-          <SelectTrigger className="w-full sm:w-[220px]"><SelectValue placeholder="Alle scholen" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Alle organisaties</SelectItem>
-            <SelectItem value="__none__">Geen organisatie</SelectItem>
-            {scholen.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <OrganisatieSelect
+          value={schoolFilter}
+          onChange={setSchoolFilter}
+          allOption
+          allLabel="Alle organisaties"
+          allValue="all"
+          allowNone
+          noneLabel="Geen organisatie"
+          placeholder="Alle organisaties"
+          className="w-full sm:w-[220px]"
+        />
       </div>
 
       {isLoading ? <ListSkeleton /> : contacten.length === 0 ? (
