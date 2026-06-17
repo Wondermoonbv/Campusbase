@@ -194,6 +194,8 @@ export default function OrganisatieDetailPage() {
         )}
       </div>
 
+      <ContactmomentenSection organisatieId={org.id} />
+
       <Tabs defaultValue={isSchool ? "programs" : "contracts"}>
         <TabsList className="w-full sm:w-auto overflow-x-auto">
           {isSchool && <TabsTrigger value="programs" className="text-xs sm:text-sm">Opleidingen ({programs.length})</TabsTrigger>}
