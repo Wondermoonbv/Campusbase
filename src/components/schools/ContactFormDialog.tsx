@@ -4,8 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useScholen } from "@/hooks/useScholen";
+import { OrganisatieSelect } from "@/components/organisaties/OrganisatieSelect";
 import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
 import type { Contact } from "@/types/crm";
@@ -22,7 +21,6 @@ interface ContactFormDialogProps {
 
 export function ContactFormDialog({ open, onOpenChange, schoolId, contact, onSave, showSchoolSelect = false }: ContactFormDialogProps) {
   const isEdit = !!contact;
-  const { scholen } = useScholen();
   const [form, setForm] = useState({ name: "", email: "", phone: "", role: "", department: "", notes: "", linkedin_url: "", organisatie_id: schoolId ?? "" });
 
   useEffect(() => {
@@ -66,15 +64,13 @@ export function ContactFormDialog({ open, onOpenChange, schoolId, contact, onSav
           {showSchoolSelect && (
             <div>
               <Label>School</Label>
-              <Select value={form.organisatie_id} onValueChange={(v) => update("organisatie_id", v === "__none__" ? "" : v)}>
-                <SelectTrigger><SelectValue placeholder="Geen school" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">Geen school</SelectItem>
-                  {scholen.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <OrganisatieSelect
+                value={form.organisatie_id}
+                onChange={(v) => update("organisatie_id", v)}
+                allowNone
+                noneLabel="Geen school"
+                placeholder="Geen school"
+              />
             </div>
           )}
           <div><Label>Functie / Rol</Label><Input value={form.role} onChange={(e) => update("role", e.target.value)} placeholder="bv. Career Services Manager" maxLength={MAX_LENGTHS.shortText} /></div>

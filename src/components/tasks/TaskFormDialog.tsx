@@ -5,8 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useScholen } from "@/hooks/useScholen";
 import { useEvenementen } from "@/hooks/useEvenementen";
+import { OrganisatieSelect } from "@/components/organisaties/OrganisatieSelect";
 import { useProfiles } from "@/hooks/useProfiles";
 import { toast } from "sonner";
 import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
@@ -16,7 +16,6 @@ import type { Task, TaskPriority, TaskStatus } from "@/types/crm";
 interface TaskFormDialogProps { open: boolean; onOpenChange: (v: boolean) => void; defaultSchoolId?: string | null; defaultEventId?: string | null; task?: Task | null; onSave?: (task: Task) => void; }
 
 export function TaskFormDialog({ open, onOpenChange, defaultSchoolId, defaultEventId, task, onSave }: TaskFormDialogProps) {
-  const { scholen } = useScholen();
   const { evenementen } = useEvenementen();
   const { profiles, isLoading: profilesLoading } = useProfiles();
   const [title, setTitle] = useState("");
@@ -79,7 +78,7 @@ export function TaskFormDialog({ open, onOpenChange, defaultSchoolId, defaultEve
             <div><Label>Status</Label><Select value={status} onValueChange={(v) => setStatus(v as TaskStatus)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="open">Open</SelectItem><SelectItem value="in behandeling">In behandeling</SelectItem><SelectItem value="afgerond">Afgerond</SelectItem></SelectContent></Select></div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div><Label>School</Label><Select value={organisatieId} onValueChange={setOrganisatieId}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{scholen.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label>School</Label><OrganisatieSelect value={organisatieId} onChange={setOrganisatieId} placeholder="Optioneel" allowNone noneLabel="Geen" /></div>
             <div><Label>Evenement</Label><Select value={eventId} onValueChange={setEventId}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{evenementen.map((ev) => <SelectItem key={ev.id} value={ev.id}>{ev.name}</SelectItem>)}</SelectContent></Select></div>
           </div>
           <DialogFooter><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuleren</Button><Button type="submit" disabled={!title || !assignedTo || !dueDate}>{isEditing ? "Opslaan" : "Aanmaken"}</Button></DialogFooter>

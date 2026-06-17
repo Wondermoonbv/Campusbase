@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useScholen } from "@/hooks/useScholen";
+import { OrganisatieSelect } from "@/components/organisaties/OrganisatieSelect";
 import { FIELDS_OF_STUDY } from "@/types/crm";
 import type { Program } from "@/types/crm";
 import { toast } from "sonner";
@@ -14,7 +14,6 @@ interface ProgramFormDialogProps { open: boolean; onOpenChange: (open: boolean) 
 
 export function ProgramFormDialog({ open, onOpenChange, program, schoolId, onSave }: ProgramFormDialogProps) {
   const isEdit = !!program;
-  const { scholen } = useScholen();
   const [form, setForm] = useState({ name: "", organisatie_id: schoolId ?? "", faculty: "", study_level: "bachelor" as string, field_of_study: "", student_count: "" });
 
   useEffect(() => {
@@ -39,7 +38,7 @@ export function ProgramFormDialog({ open, onOpenChange, program, schoolId, onSav
         <DialogHeader><DialogTitle>{isEdit ? "Opleiding bewerken" : "Nieuwe opleiding"}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2"><Label>Naam *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required maxLength={MAX_LENGTHS.name} /></div>
-          <div className="space-y-2"><Label>School *</Label><Select value={form.organisatie_id} onValueChange={(v) => setForm({ ...form, organisatie_id: v })} required><SelectTrigger><SelectValue placeholder="Selecteer een school" /></SelectTrigger><SelectContent>{scholen.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-2"><Label>School *</Label><OrganisatieSelect value={form.organisatie_id} onChange={(v) => setForm({ ...form, organisatie_id: v })} placeholder="Selecteer een school" required /></div>
           <div className="space-y-2"><Label>Faculteit</Label><Input value={form.faculty} onChange={(e) => setForm({ ...form, faculty: e.target.value })} maxLength={MAX_LENGTHS.shortText} /></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2"><Label>Niveau *</Label><Select value={form.study_level} onValueChange={(v) => setForm({ ...form, study_level: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="bachelor">Bachelor</SelectItem><SelectItem value="master">Master</SelectItem><SelectItem value="graduaat">Graduaat</SelectItem></SelectContent></Select></div>
