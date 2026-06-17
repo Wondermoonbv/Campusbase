@@ -19,6 +19,7 @@ import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
 import type { School, Contact, OrganisatieType } from "@/types/crm";
+import { ContactmomentenSection } from "@/components/contactmomenten/ContactmomentenSection";
 
 const ORGANISATIE_TYPE_LABELS: Record<OrganisatieType, string> = {
   school: "School",
