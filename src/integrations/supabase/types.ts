@@ -184,6 +184,66 @@ export type Database = {
           },
         ]
       }
+      contactmoment_collegas: {
+        Row: {
+          contactmoment_id: string
+          profile_id: string
+        }
+        Insert: {
+          contactmoment_id: string
+          profile_id: string
+        }
+        Update: {
+          contactmoment_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contactmoment_collegas_contactmoment_id_fkey"
+            columns: ["contactmoment_id"]
+            isOneToOne: false
+            referencedRelation: "contactmomenten"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contactmoment_collegas_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contactmoment_contacten: {
+        Row: {
+          contact_id: string
+          contactmoment_id: string
+        }
+        Insert: {
+          contact_id: string
+          contactmoment_id: string
+        }
+        Update: {
+          contact_id?: string
+          contactmoment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contactmoment_contacten_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacten"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contactmoment_contacten_contactmoment_id_fkey"
+            columns: ["contactmoment_id"]
+            isOneToOne: false
+            referencedRelation: "contactmomenten"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contactmomenten: {
         Row: {
           bron: string
