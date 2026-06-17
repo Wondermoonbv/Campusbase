@@ -217,7 +217,7 @@ export default function OrganisatiesPage() {
       ) : (
         <>
           <div className="block md:hidden space-y-2">
-            {sorted.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen organisaties gevonden.</div> : sorted.map((org) => (
+            {displayRows.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen organisaties gevonden.</div> : displayRows.map(({ type, org }) => (
               <div key={org.id} className="surface-card p-4 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate(`/organisaties/${org.id}`)}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
