@@ -26,7 +26,7 @@ const ContactMobileCard = memo(function ContactMobileCard({
   return (
     <div className="surface-card p-4 space-y-1.5">
       <div className="flex items-center justify-between">
-        <span className="font-medium text-sm">{c.name}</span>
+        <Link to={`/contacten/${c.id}`} className="font-medium text-sm text-primary hover:underline">{c.name}</Link>
         {canEdit && (
           <div className="flex gap-0.5">
             {c.organisatie_id && (
@@ -59,7 +59,9 @@ const ContactTableRow = memo(function ContactTableRow({
 }) {
   return (
     <TableRow>
-      <TableCell className="font-medium">{c.name}</TableCell>
+      <TableCell className="font-medium">
+        <Link to={`/contacten/${c.id}`} className="text-primary hover:underline">{c.name}</Link>
+      </TableCell>
       <TableCell>{c.role || "—"}</TableCell>
       <TableCell>
         {school ? (

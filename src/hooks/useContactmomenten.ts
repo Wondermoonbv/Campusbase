@@ -26,21 +26,27 @@ export interface NewContactmoment {
   occurred_at: string;
 }
 
-export function useContactmomenten(organisatieIds: string[]) {
+export function useContactmomenten(organisatieIds: string[], opts?: { contactId?: string }) {
   const qc = useQueryClient();
   const ids = [...organisatieIds].sort();
-  const key = ["contactmomenten", ids];
+  const contactId = opts?.contactId;
+  const key = contactId
+    ? ["contactmomenten", "contact", contactId]
+    : ["contactmomenten", ids];
 
   const { data = [], isLoading } = useQuery({
     queryKey: key,
-    enabled: ids.length > 0,
+    enabled: !!contactId || ids.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("contactmomenten")
-        .select("id, organisatie_id, contact_id, type, onderwerp, notities, occurred_at, created_by, bron, created_at")
-        .in("organisatie_id", ids)
-        .order("occurred_at", { ascending: false })
-        .limit(500);
+        .select("id, organisatie_id, contact_id, type, onderwerp, notities, occurred_at, created_by, bron, created_at");
+      if (contactId) {
+        query = query.eq("contact_id", contactId);
+      } else {
+        query = query.in("organisatie_id", ids);
+      }
+      const { data, error } = await query.order("occurred_at", { ascending: false }).limit(500);
       if (error) { console.error("Error fetching contactmomenten:", error); return []; }
       return data as unknown as Contactmoment[];
     },

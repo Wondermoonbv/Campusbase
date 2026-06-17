@@ -33,16 +33,17 @@ function formatDate(iso: string): string {
 
 interface Props {
   organisatieId: string;
+  contactId?: string;
 }
 
-export function ContactmomentenSection({ organisatieId }: Props) {
+export function ContactmomentenSection({ organisatieId, contactId }: Props) {
   const { canEdit } = useAuth();
   const { scholen } = useScholen();
   const { contacten: orgContacten } = useContacten(organisatieId);
   const { profiles } = useProfiles();
 
   const org = scholen.find((s) => s.id === organisatieId);
-  const isHoofd = !!org && !org.parent_id;
+  const isHoofd = !!org && !org.parent_id && !contactId;
   const campuses = useMemo(
     () => (isHoofd ? scholen.filter((s) => s.parent_id === organisatieId) : []),
     [scholen, organisatieId, isHoofd],
@@ -56,7 +57,7 @@ export function ContactmomentenSection({ organisatieId }: Props) {
     return [organisatieId];
   }, [isHoofd, includeCampuses, organisatieId, campuses]);
 
-  const { contactmomenten, isLoading } = useContactmomenten(orgIds);
+  const { contactmomenten, isLoading } = useContactmomenten(orgIds, contactId ? { contactId } : undefined);
 
   const orgMap = useMemo(() => Object.fromEntries(scholen.map((s) => [s.id, s])), [scholen]);
   const contactMap = useMemo(() => Object.fromEntries(orgContacten.map((c) => [c.id, c])), [orgContacten]);
@@ -141,6 +142,7 @@ export function ContactmomentenSection({ organisatieId }: Props) {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         organisatieId={organisatieId}
+        contactId={contactId ?? null}
       />
     </div>
   );

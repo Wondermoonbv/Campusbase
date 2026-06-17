@@ -17,6 +17,7 @@ const LoginPage = lazy(() => import("./pages/LoginPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const OrganisatiesPage = lazy(() => import("./pages/OrganisatiesPage"));
 const ContactenPage = lazy(() => import("./pages/ContactenPage"));
+const ContactDetailPage = lazy(() => import("./pages/ContactDetailPage"));
 const OrganisatieDetailPage = lazy(() => import("./pages/OrganisatieDetailPage"));
 const OpleidingenPage = lazy(() => import("./pages/OpleidingenPage"));
 const ContractenPage = lazy(() => import("./pages/ContractenPage"));
@@ -170,6 +171,7 @@ function AppRoutes() {
           <Route path="/scholen" element={<Navigate to="/organisaties" replace />} />
           <Route path="/scholen/:id" element={<Navigate to="/organisaties" replace />} />
           <Route path="/contacten" element={<ContactenPage />} />
+          <Route path="/contacten/:id" element={<ContactDetailPage />} />
           <Route path="/opleidingen" element={<OpleidingenPage />} />
           <Route path="/contracten" element={<ContractenPage />} />
           <Route path="/contracten/:id" element={<ContractDetailPage />} />
