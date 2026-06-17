@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Download, Plus, ChevronRight, Pencil, Trash2, FileText } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContractFormDialog } from "@/components/contracts/ContractFormDialog";
+import { OrganisatieLabel } from "@/components/organisaties/OrganisatieLabel";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
@@ -117,7 +118,7 @@ export default function ContractenPage() {
                   <button type="button" className="w-full text-left p-4 active:scale-[0.99] transition-transform" onClick={() => navigate(`/contracten/${c.id}`)}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm">{school?.name ?? "—"}</p>
+                        <p className="font-medium text-sm">{school?.name ?? "—"}<OrganisatieLabel organisatieId={school?.id} /></p>
                         <p className="text-xs text-muted-foreground mt-0.5 capitalize">{c.contract_type}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">{new Date(c.start_date).toLocaleDateString("nl-BE")} → {new Date(c.end_date).toLocaleDateString("nl-BE")}</p>
                       </div>
@@ -148,7 +149,7 @@ export default function ContractenPage() {
                 const school = schoolMap.get(c.organisatie_id);
                 return (
                     <TableRow key={c.id} className={`hover:bg-muted/30 cursor-pointer ${getExpiryColor(c.end_date)}`} onClick={() => navigate(`/contracten/${c.id}`)}>
-                      <TableCell className="font-medium">{school?.name ?? "—"}</TableCell>
+                      <TableCell className="font-medium">{school?.name ?? "—"}<OrganisatieLabel organisatieId={school?.id} /></TableCell>
                       <TableCell className="capitalize">{c.contract_type}</TableCell>
                       <TableCell>{new Date(c.start_date).toLocaleDateString("nl-BE")}</TableCell>
                       <TableCell>{new Date(c.end_date).toLocaleDateString("nl-BE")}</TableCell>
