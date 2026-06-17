@@ -111,6 +111,7 @@ export default function AmbassadeursPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sendingLinks, setSendingLinks] = useState(false);
+  const [rotatingLinks, setRotatingLinks] = useState(false);
 
   const toggleSelected = (id: string) => {
     setSelectedIds((prev) => {
@@ -128,19 +129,84 @@ export default function AmbassadeursPage() {
     }
   };
 
+  // Rotate a single ambassador token via RPC. Returns the new token, or null on failure.
+  const rotateToken = useCallback(async (ambassadorId: string): Promise<string | null> => {
+    const { data, error } = await supabase.rpc("rotate_ambassador_token", { p_ambassador_id: ambassadorId });
+    if (error) {
+      console.error(error);
+      return null;
+    }
+    const res = data as { success?: boolean; new_token?: string } | null;
+    return res?.new_token ?? null;
+  }, []);
+
+  // Ensure the ambassador has a non-expired token. Rotates if expired (or missing); leaves valid ones untouched.
+  const ensureFreshToken = useCallback(async (a: Ambassadeur): Promise<string | null> => {
+    const v = tokenValidity(a.token_expires_at);
+    if (a.access_token && v.variant !== "expired" && v.variant !== "none") {
+      return a.access_token;
+    }
+    return await rotateToken(a.id);
+  }, [rotateToken]);
+
+  const handleRotateOne = useCallback(async (a: Ambassadeur) => {
+    const tok = await rotateToken(a.id);
+    if (tok) {
+      toast.success(`Link vernieuwd voor ${a.full_name}`);
+      queryClient.invalidateQueries({ queryKey: ["ambassadeurs"] });
+    } else {
+      toast.error("Fout bij vernieuwen van link");
+    }
+  }, [rotateToken, queryClient]);
+
+  const handleRotateBulk = useCallback(async () => {
+    const selected = ambassadeurs.filter((a) => selectedIds.has(a.id));
+    if (selected.length === 0) {
+      toast.warning("Geen ambassadeurs geselecteerd.");
+      return;
+    }
+    setRotatingLinks(true);
+    let ok = 0;
+    let fail = 0;
+    for (const a of selected) {
+      const tok = await rotateToken(a.id);
+      if (tok) ok++; else fail++;
+    }
+    queryClient.invalidateQueries({ queryKey: ["ambassadeurs"] });
+    if (ok > 0) toast.success(`Link vernieuwd voor ${ok} ambassadeur(s)`);
+    if (fail > 0) toast.error(`Vernieuwen mislukt voor ${fail} ambassadeur(s)`);
+    setRotatingLinks(false);
+  }, [ambassadeurs, selectedIds, rotateToken, queryClient]);
+
   const handleSendPortalLinks = async () => {
-    const selected = ambassadeurs.filter((a) => selectedIds.has(a.id) && a.access_token);
+    const selected = ambassadeurs.filter((a) => selectedIds.has(a.id));
     if (selected.length === 0) {
       toast.warning("Geen ambassadeurs geselecteerd.");
       return;
     }
     setSendingLinks(true);
     try {
-      const emails = selected.map((a) => ({
-        to: a.email,
-        subject: "Elia Campus Events — Ambassadeur Portaal",
-        html: buildPortalLinkEmail(a.full_name, `${window.location.origin}/ambassadeur-portaal?token=${a.access_token}`),
-      }));
+      const emails: { to: string; subject: string; html: string }[] = [];
+      let rotated = 0;
+      for (const a of selected) {
+        const wasExpired = tokenValidity(a.token_expires_at).variant === "expired" || !a.access_token;
+        const token = await ensureFreshToken(a);
+        if (!token) {
+          toast.error(`Geen portaaltoken voor ${a.full_name}`);
+          continue;
+        }
+        if (wasExpired) rotated++;
+        emails.push({
+          to: a.email,
+          subject: "Elia Campus Events — Ambassadeur Portaal",
+          html: buildPortalLinkEmail(a.full_name, `${window.location.origin}/ambassadeur-portaal?token=${token}`),
+        });
+      }
+      if (rotated > 0) queryClient.invalidateQueries({ queryKey: ["ambassadeurs"] });
+      if (emails.length === 0) {
+        toast.error("Kon geen portaallinks versturen.");
+        return;
+      }
       const result = await sendBulkEmails(emails);
       if (result.sent > 0) toast.success(`Portaallink verstuurd naar ${result.sent} ambassadeur(s)`);
       if (result.failed.length > 0) {
