@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useScholen } from "@/hooks/useScholen";
 import { OrganisatieSelect } from "@/components/organisaties/OrganisatieSelect";
 import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
@@ -22,7 +21,6 @@ interface ContactFormDialogProps {
 
 export function ContactFormDialog({ open, onOpenChange, schoolId, contact, onSave, showSchoolSelect = false }: ContactFormDialogProps) {
   const isEdit = !!contact;
-  const { scholen } = useScholen();
   const [form, setForm] = useState({ name: "", email: "", phone: "", role: "", department: "", notes: "", linkedin_url: "", organisatie_id: schoolId ?? "" });
 
   useEffect(() => {
