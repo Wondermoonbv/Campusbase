@@ -259,7 +259,7 @@ export default function OrganisatiesPage() {
                 <TableHead className="w-20" />
               </TableRow></TableHeader>
               <TableBody>
-                {sorted.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen organisaties gevonden.</TableCell></TableRow> : sorted.map((org) => (
+                {displayRows.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen organisaties gevonden.</TableCell></TableRow> : displayRows.map(({ type, org }) => (
                   <TableRow key={org.id} className="cursor-pointer hover:bg-muted/30" onClick={() => navigate(`/organisaties/${org.id}`)}>
                     <TableCell className="font-medium">
                       <div className="flex flex-col">
