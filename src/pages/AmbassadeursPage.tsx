@@ -33,6 +33,17 @@ const AMB_IMPORT_COLUMNS: ImportColumn[] = [
 
 const STATUS_OPTIONS = ["uitgenodigd", "ingeschreven", "bevestigd", "backup", "afgemeld"] as const;
 
+function daysUntil(expires: string | null | undefined): number | null {
+  if (!expires) return null;
+  const d = new Date(expires);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const end = new Date(d);
+  end.setHours(0, 0, 0, 0);
+  const diff = Math.round((end.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+  return diff;
+}
+
 function tokenValidity(expires: string | null | undefined): {
   label: string;
   variant: "neutral" | "warning" | "expired" | "none";
@@ -44,8 +55,10 @@ function tokenValidity(expires: string | null | undefined): {
   if (diff < 0) return { label: "Verlopen", variant: "expired" };
   const sevenDays = 7 * 24 * 60 * 60 * 1000;
   const dateStr = d.toLocaleDateString("nl-BE", { day: "numeric", month: "short", year: "numeric" });
-  if (diff < sevenDays) return { label: "Verloopt binnenkort", variant: "warning" };
-  return { label: `Geldig tot ${dateStr}`, variant: "neutral" };
+  const remaining = daysUntil(expires);
+  const daysText = remaining === 1 ? "nog 1 dag" : `nog ${remaining} dagen`;
+  if (diff < sevenDays) return { label: `Verloopt binnenkort — ${dateStr} (${daysText})`, variant: "warning" };
+  return { label: `Geldig tot ${dateStr} (${daysText})`, variant: "neutral" };
 }
 
 function TokenValidityBadge({ expires }: { expires: string | null | undefined }) {
