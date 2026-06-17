@@ -500,6 +500,7 @@ export default function AmbassadeursPage() {
                   <th className="px-4 py-3 font-medium text-muted-foreground text-center">Events</th>
                   <th className="px-4 py-3 font-medium text-muted-foreground">Pending</th>
                   <th className="px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 font-medium text-muted-foreground">Portaallink</th>
                   {canEdit && <th className="px-4 py-3 font-medium text-muted-foreground text-right">Acties</th>}
                 </tr>
               </thead>
@@ -532,6 +533,7 @@ export default function AmbassadeursPage() {
                           )}
                         </td>
                         <td className="px-4 py-3"><StatusBadge status={a.is_active ? "actief" : "inactief"} /></td>
+                        <td className="px-4 py-3"><TokenValidityBadge expires={a.token_expires_at} /></td>
                         {canEdit && (
                           <td className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
@@ -542,17 +544,34 @@ export default function AmbassadeursPage() {
                                     variant="ghost"
                                     size="icon"
                                     className="h-8 w-8"
+                                    aria-label={`Portaallink ${a.full_name} vernieuwen`}
+                                    onClick={() => handleRotateOne(a)}
+                                  >
+                                    <RefreshCw className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Link vernieuwen</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
                                     aria-label={`Portaallink naar ${a.full_name} sturen`}
                                     onClick={async () => {
-                                      if (!(a as any).access_token) {
+                                      const token = await ensureFreshToken(a);
+                                      if (!token) {
                                         toast.error("Geen portaaltoken beschikbaar");
                                         return;
                                       }
+                                      const wasExpired = tokenValidity(a.token_expires_at).variant === "expired" || !a.access_token;
+                                      if (wasExpired) queryClient.invalidateQueries({ queryKey: ["ambassadeurs"] });
                                       try {
                                         const result = await sendEmail({
                                           to: a.email,
                                           subject: "Elia Campus Events — Ambassadeur Portaal",
-                                          html: buildPortalLinkEmail(a.full_name, `${window.location.origin}/ambassadeur-portaal?token=${(a as any).access_token}`),
+                                          html: buildPortalLinkEmail(a.full_name, `${window.location.origin}/ambassadeur-portaal?token=${token}`),
                                         });
                                         if (result.success) {
                                           toast.success(`Portaallink verzonden naar ${a.full_name}`);
@@ -577,7 +596,7 @@ export default function AmbassadeursPage() {
                       </tr>
                       {isExpanded && (
                         <tr>
-                          <td colSpan={canEdit ? 9 : 7} className="bg-muted/20 px-8 py-3">
+                          <td colSpan={canEdit ? 10 : 8} className="bg-muted/20 px-8 py-3">
                             {ambInschrijvingen.length === 0 ? (
                               <p className="text-sm text-muted-foreground">Geen event-koppelingen</p>
                             ) : (
