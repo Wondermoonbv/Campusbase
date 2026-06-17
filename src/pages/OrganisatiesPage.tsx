@@ -261,7 +261,7 @@ export default function OrganisatiesPage() {
               <TableBody>
                 {displayRows.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen organisaties gevonden.</TableCell></TableRow> : displayRows.map(({ type, org }) => (
                   <TableRow key={org.id} className="cursor-pointer hover:bg-muted/30" onClick={() => navigate(`/organisaties/${org.id}`)}>
-                    <TableCell className="font-medium">
+                    <TableCell className={`font-medium ${type === "campus" ? "pl-8" : ""}`}>
                       <div className="flex flex-col">
                         <span className="inline-flex items-center gap-2">
                           {org.name}
