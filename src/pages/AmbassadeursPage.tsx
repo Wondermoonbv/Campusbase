@@ -15,7 +15,7 @@ import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { AmbassadeurFormDialog } from "@/components/ambassadeurs/AmbassadeurFormDialog";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Plus, Pencil, Trash2, Upload, Users, ChevronDown, ChevronRight, UserCheck, Clock, Mail, CheckCircle2, Link2, Send } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Upload, Users, ChevronDown, ChevronRight, UserCheck, Clock, Mail, CheckCircle2, Link2, Send, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -32,6 +32,34 @@ const AMB_IMPORT_COLUMNS: ImportColumn[] = [
 ];
 
 const STATUS_OPTIONS = ["uitgenodigd", "ingeschreven", "bevestigd", "backup", "afgemeld"] as const;
+
+function tokenValidity(expires: string | null | undefined): {
+  label: string;
+  variant: "neutral" | "warning" | "expired" | "none";
+} {
+  if (!expires) return { label: "Geen vervaldatum", variant: "none" };
+  const d = new Date(expires);
+  const now = Date.now();
+  const diff = d.getTime() - now;
+  if (diff < 0) return { label: "Verlopen", variant: "expired" };
+  const sevenDays = 7 * 24 * 60 * 60 * 1000;
+  const dateStr = d.toLocaleDateString("nl-BE", { day: "numeric", month: "short", year: "numeric" });
+  if (diff < sevenDays) return { label: "Verloopt binnenkort", variant: "warning" };
+  return { label: `Geldig tot ${dateStr}`, variant: "neutral" };
+}
+
+function TokenValidityBadge({ expires }: { expires: string | null | undefined }) {
+  const v = tokenValidity(expires);
+  const cls =
+    v.variant === "expired"
+      ? "bg-red-100 text-red-800 border-red-200"
+      : v.variant === "warning"
+      ? "bg-orange-100 text-orange-800 border-orange-200"
+      : v.variant === "none"
+      ? "bg-muted text-muted-foreground border-border"
+      : "bg-muted text-muted-foreground border-border";
+  return <Badge variant="outline" className={`${cls} text-xs whitespace-nowrap`}>{v.label}</Badge>;
+}
 
 function statusColor(status: string) {
   switch (status) {
