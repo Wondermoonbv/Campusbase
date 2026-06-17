@@ -222,7 +222,7 @@ export default function OrganisatiesPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="font-medium text-sm truncate">{org.name}</p>
+                      <p className={`font-medium text-sm truncate ${type === "campus" ? "pl-4" : ""}`}>{type === "campus" ? "↳ " : ""}{org.name}</p>
                       {org.type === "studentenvereniging" && org.is_nationaal && (
                         <Badge variant="outline" className="text-[10px]">Nationaal</Badge>
                       )}
