@@ -664,6 +664,20 @@ export default function AmbassadeursPage() {
                                 </TooltipTrigger>
                                 <TooltipContent>Portaallink naar {a.full_name} sturen</TooltipContent>
                               </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    aria-label={`Mail sturen naar ${a.full_name}`}
+                                    onClick={() => openMailDialog([a])}
+                                  >
+                                    <Mail className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Mail sturen naar {a.full_name}</TooltipContent>
+                              </Tooltip>
                               <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${a.full_name} bewerken`} onClick={() => handleEdit(a)}><Pencil className="h-3.5 w-3.5" /></Button>
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" aria-label={`${a.full_name} verwijderen`} onClick={() => handleDeleteClick(a)}><Trash2 className="h-3.5 w-3.5" /></Button>
                             </div>
