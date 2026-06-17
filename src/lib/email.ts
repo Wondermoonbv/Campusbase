@@ -147,6 +147,19 @@ export function buildPortalLinkEmail(
   return `${WRAPPER_START}${getHeader()}${row(`<h1 style="font-size:20px;color:#18181b;margin:24px 0 8px;">Jouw Elia Campus Portaal</h1><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Hallo ${safeName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">Via onderstaande link kan je je inschrijven voor aankomende Elia campus events en je beschikbaarheid beheren.</p>`)}${row(`<div style="text-align:center;margin:24px 0;"><a href="${safeUrl}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Open mijn portaal</a></div><p style="font-size:12px;color:#71717a;text-align:center;">Bewaar deze link — het is je persoonlijke toegang.</p>`)}${WRAPPER_END}`;
 }
 
+export function buildCustomAmbassadorEmail(
+  fullName: string,
+  bodyText: string,
+  portalUrl?: string
+): string {
+  const safeName = escapeHtml(fullName);
+  const safeBody = escapeHtml(bodyText).replace(/\r?\n/g, "<br/>");
+  const button = portalUrl
+    ? row(`<div style="text-align:center;margin:24px 0;"><a href="${escapeUrl(portalUrl)}" style="display:inline-block;background:#0E6575;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Bekijk je portaal</a></div>`)
+    : "";
+  return `${WRAPPER_START}${getHeader()}${row(`<p style="font-size:14px;color:#3f3f46;line-height:1.6;margin:24px 0 8px;">Dag ${safeName},</p><p style="font-size:14px;color:#3f3f46;line-height:1.6;">${safeBody}</p>`)}${button}${WRAPPER_END}`;
+}
+
 export function buildInvitationEmail(
   ambassadeurName: string,
   event: EventEmailData,
