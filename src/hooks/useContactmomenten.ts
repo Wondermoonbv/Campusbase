@@ -54,8 +54,7 @@ async function syncJunction(
     if (error) throw error;
   }
   if (toRemove.length > 0) {
-    const { error } = await supabase
-      .from(table)
+    const { error } = await (supabase.from(table) as any)
       .delete()
       .eq("contactmoment_id", momentId)
       .in(fk, toRemove);
