@@ -442,12 +442,14 @@ export default function AmbassadeursPage() {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground ml-6">{a.email}</p>
+                    <div className="ml-6 mt-1"><TokenValidityBadge expires={a.token_expires_at} /></div>
                   </button>
                   {isExpanded && (
                     <div className="border-t border-border px-4 pb-3">
                       {canEdit && (
                         <div className="flex gap-1 py-2">
                           <Button variant="ghost" size="sm" onClick={() => handleEdit(a)}><Pencil className="h-3.5 w-3.5 mr-1" />Bewerken</Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleRotateOne(a)}><RefreshCw className="h-3.5 w-3.5 mr-1" />Link vernieuwen</Button>
                           <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeleteClick(a)}><Trash2 className="h-3.5 w-3.5 mr-1" />Verwijderen</Button>
                         </div>
                       )}
