@@ -15,6 +15,7 @@ import { Search, Download, Plus, ChevronDown, ChevronRight, Pencil, Trash2, Uplo
 import { FIELDS_OF_STUDY } from "@/types/crm";
 import type { Program } from "@/types/crm";
 import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
+import { OrganisatieSelect } from "@/components/organisaties/OrganisatieSelect";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
