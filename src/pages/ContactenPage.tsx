@@ -11,16 +11,17 @@ import { OrganisatieSelect } from "@/components/organisaties/OrganisatieSelect";
 import { OrganisatieLabel } from "@/components/organisaties/OrganisatieLabel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Edit, Trash2, Mail, Phone, Users } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Mail, Phone, Users, MessageSquarePlus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import type { Contact } from "@/types/crm";
+import { ContactmomentDialog } from "@/components/contactmomenten/ContactmomentDialog";
 
 const ContactMobileCard = memo(function ContactMobileCard({
-  contact: c, school, canEdit, onEdit, onDelete,
+  contact: c, school, canEdit, onEdit, onDelete, onLog,
 }: {
   contact: Contact; school: { id: string; name: string } | null; canEdit: boolean;
-  onEdit: (c: Contact) => void; onDelete: (c: Contact) => void;
+  onEdit: (c: Contact) => void; onDelete: (c: Contact) => void; onLog: (c: Contact) => void;
 }) {
   return (
     <div className="surface-card p-4 space-y-1.5">
@@ -28,6 +29,9 @@ const ContactMobileCard = memo(function ContactMobileCard({
         <span className="font-medium text-sm">{c.name}</span>
         {canEdit && (
           <div className="flex gap-0.5">
+            {c.organisatie_id && (
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Contactmoment loggen voor ${c.name}`} onClick={() => onLog(c)}><MessageSquarePlus className="h-3.5 w-3.5" /></Button>
+            )}
             <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} bewerken`} onClick={() => onEdit(c)}><Edit className="h-3.5 w-3.5" /></Button>
             <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} verwijderen`} onClick={() => onDelete(c)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
           </div>
@@ -48,10 +52,10 @@ const ContactMobileCard = memo(function ContactMobileCard({
 });
 
 const ContactTableRow = memo(function ContactTableRow({
-  contact: c, school, canEdit, onEdit, onDelete,
+  contact: c, school, canEdit, onEdit, onDelete, onLog,
 }: {
   contact: Contact; school: { id: string; name: string } | null; canEdit: boolean;
-  onEdit: (c: Contact) => void; onDelete: (c: Contact) => void;
+  onEdit: (c: Contact) => void; onDelete: (c: Contact) => void; onLog: (c: Contact) => void;
 }) {
   return (
     <TableRow>
@@ -69,6 +73,9 @@ const ContactTableRow = memo(function ContactTableRow({
       {canEdit && (
         <TableCell>
           <div className="flex gap-0.5">
+            {c.organisatie_id && (
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Contactmoment loggen voor ${c.name}`} onClick={() => onLog(c)}><MessageSquarePlus className="h-3.5 w-3.5" /></Button>
+            )}
             <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} bewerken`} onClick={() => onEdit(c)}><Edit className="h-3.5 w-3.5" /></Button>
             <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${c.name} verwijderen`} onClick={() => onDelete(c)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
           </div>
