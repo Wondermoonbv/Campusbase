@@ -28,7 +28,7 @@ import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION
 
 const EVENT_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "name", label: "Naam", required: true },
-  { key: "type", label: "Type", required: true, validate: (v) => ["jobbeurs", "campus presentatie", "workshop", "hackathon", "andere"].includes(v.toLowerCase()) ? null : "Ongeldig type" },
+  { key: "type", label: "Type", required: true, validate: (v) => ["jobbeurs", "beursstand", "campus presentatie", "workshop", "hackathon", "andere"].includes(v.toLowerCase()) ? null : "Ongeldig type" },
   { key: "date", label: "Datum", required: true, validate: (v) => /^\d{4}-\d{2}-\d{2}$/.test(v) ? null : "Formaat: YYYY-MM-DD" },
   { key: "start_time", label: "Startuur" }, { key: "end_time", label: "Einduur" },
   { key: "location", label: "Locatie", required: true }, { key: "responsible", label: "Verantwoordelijke" },
@@ -168,7 +168,7 @@ export default function EventenPage() {
         <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
           <div className="relative flex-1 min-w-0 sm:min-w-[200px]"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Zoeken..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 sm:h-9" /></div>
           <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3">
-            <Select value={filterType} onValueChange={setFilterType}><SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9"><SelectValue placeholder="Type" /></SelectTrigger><SelectContent><SelectItem value="all">Alle types</SelectItem><SelectItem value="jobbeurs">Jobbeurs</SelectItem><SelectItem value="campus presentatie">Campus presentatie</SelectItem><SelectItem value="workshop">Workshop</SelectItem><SelectItem value="hackathon">Hackathon</SelectItem></SelectContent></Select>
+            <Select value={filterType} onValueChange={setFilterType}><SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9"><SelectValue placeholder="Type" /></SelectTrigger><SelectContent><SelectItem value="all">Alle types</SelectItem><SelectItem value="jobbeurs">Jobbeurs</SelectItem><SelectItem value="beursstand">Beursstand</SelectItem><SelectItem value="campus presentatie">Campus presentatie</SelectItem><SelectItem value="workshop">Workshop</SelectItem><SelectItem value="hackathon">Hackathon</SelectItem></SelectContent></Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}><SelectTrigger className="w-full sm:w-[150px] h-10 sm:h-9"><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">Alle statussen</SelectItem><SelectItem value="gepland">Gepland</SelectItem><SelectItem value="bevestigd">Bevestigd</SelectItem><SelectItem value="afgelopen">Afgelopen</SelectItem><SelectItem value="geannuleerd">Geannuleerd</SelectItem></SelectContent></Select>
             <Select value={filterFieldOfStudy} onValueChange={setFilterFieldOfStudy}><SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9 col-span-2 sm:col-span-1"><SelectValue placeholder="Studierichting" /></SelectTrigger><SelectContent><SelectItem value="all">Alle studierichtingen</SelectItem>{FIELDS_OF_STUDY.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent></Select>
             <Button variant={showExtraFilters || hasExtraFilters ? "default" : "outline"} size="sm" className="h-10 sm:h-9" onClick={() => setShowExtraFilters(!showExtraFilters)}>
