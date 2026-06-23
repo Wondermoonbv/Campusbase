@@ -8,7 +8,7 @@ export type StudyLevel = "bachelor" | "master" | "graduaat";
 export type ContractType = "partnership" | "sponsoring" | "stage-overeenkomst" | "andere";
 export type StandType = "jobbeurs stand" | "infotafel" | "presentatie" | "workshop" | "anders";
 export type ContractStatus = "actief" | "verlopen" | "in onderhandeling";
-export type EventType = "jobbeurs" | "campus presentatie" | "workshop" | "hackathon" | "andere";
+export type EventType = "jobbeurs" | "beursstand" | "campus presentatie" | "workshop" | "hackathon" | "andere";
 export type EventStatus = "gepland" | "bevestigd" | "afgelopen" | "geannuleerd";
 
 export interface School {
