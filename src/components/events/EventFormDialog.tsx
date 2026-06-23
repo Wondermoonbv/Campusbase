@@ -205,14 +205,14 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
   );
 
   const orgContacten = useMemo(() => {
-    const orgId = form.organisator_id && form.organisator_id !== "none" ? form.organisator_id : null;
-    if (!orgId) return [];
+    if (selectedOrgIds.length === 0) return [];
+    const selectedSet = new Set(selectedOrgIds);
     return allContacten
-      .filter((c) => c.organisatie_id === orgId)
+      .filter((c) => c.organisatie_id && selectedSet.has(c.organisatie_id))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [allContacten, form.organisator_id]);
+  }, [allContacten, selectedOrgIds]);
 
-  const hasOrganisator = !!form.organisator_id && form.organisator_id !== "none";
+  const hasOrganisator = selectedOrgIds.length > 0;
   const hasEventTerPlaatse = cpEntries.some((e) => e.rol === "event_ter_plaatse");
   const hasDuplicates = cpEntries.some((e, i) =>
     cpEntries.findIndex((o) => o.contact_id === e.contact_id && o.rol === e.rol) !== i
@@ -437,11 +437,16 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
                               Geen contactpersonen bekend. Voeg eerst een contact toe via de organisatie-detailpagina.
                             </div>
                           ) : (
-                            orgContacten.map((c) => (
-                              <SelectItem key={c.id} value={c.id}>
-                                {c.name}{c.role ? ` — ${c.role}` : ""}{c.department ? ` (${c.department})` : ""}
-                              </SelectItem>
-                            ))
+                            orgContacten.map((c) => {
+                              const org = c.organisatie_id ? orgById.get(c.organisatie_id) : null;
+                              return (
+                                <SelectItem key={c.id} value={c.id}>
+                                  {c.name} — {org?.name || "Onbekende organisatie"}
+                                  {c.role ? ` — ${c.role}` : ""}
+                                  {c.department ? ` (${c.department})` : ""}
+                                </SelectItem>
+                              );
+                            })
                           )}
                         </SelectContent>
                       </Select>
