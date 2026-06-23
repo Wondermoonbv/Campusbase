@@ -437,11 +437,16 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
                               Geen contactpersonen bekend. Voeg eerst een contact toe via de organisatie-detailpagina.
                             </div>
                           ) : (
-                            orgContacten.map((c) => (
-                              <SelectItem key={c.id} value={c.id}>
-                                {c.name}{c.role ? ` — ${c.role}` : ""}{c.department ? ` (${c.department})` : ""}
-                              </SelectItem>
-                            ))
+                            orgContacten.map((c) => {
+                              const org = c.organisatie_id ? orgById.get(c.organisatie_id) : null;
+                              return (
+                                <SelectItem key={c.id} value={c.id}>
+                                  {c.name} — {org?.name || "Onbekende organisatie"}
+                                  {c.role ? ` — ${c.role}` : ""}
+                                  {c.department ? ` (${c.department})` : ""}
+                                </SelectItem>
+                              );
+                            })
                           )}
                         </SelectContent>
                       </Select>
