@@ -58,7 +58,7 @@ export default function EventenPage() {
   const { syncContactpersonen } = useEventContactpersonen();
   const { syncOrganisaties } = useEventOrganisaties();
   const { opleidingen } = useOpleidingen();
-  const { eventOpleidingen } = useEventOpleidingen();
+  const { eventOpleidingen, setEventPrograms } = useEventOpleidingen();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -78,7 +78,7 @@ export default function EventenPage() {
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
 
-  const handleSave = useCallback(async (saved: Event, cpEntries?: { contact_id: string; rol: ContactpersoonRol }[], organisatieIds?: string[]) => {
+  const handleSave = useCallback(async (saved: Event, cpEntries?: { contact_id: string; rol: ContactpersoonRol }[], organisatieIds?: string[], opleidingIds?: string[]) => {
     try {
       const result = await upsertEvent.mutateAsync(saved);
       const eventId = (result as any)?.data?.id || saved.id;
@@ -87,9 +87,10 @@ export default function EventenPage() {
       }
       if (eventId) {
         await syncOrganisaties.mutateAsync({ eventId, organisatieIds: organisatieIds ?? [] });
+        await setEventPrograms.mutateAsync({ eventId, programIds: opleidingIds ?? [] });
       }
     } catch { toast.error("Fout bij opslaan."); }
-  }, [upsertEvent, syncContactpersonen, syncOrganisaties]);
+  }, [upsertEvent, syncContactpersonen, syncOrganisaties, setEventPrograms]);
 
   const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;
