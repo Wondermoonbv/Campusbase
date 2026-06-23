@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, type ChangeEvent, type FocusEvent } from 
 import { useScholen, useContacten } from "@/hooks/useScholen";
 import { useEventContactpersonen } from "@/hooks/useEventContactpersonen";
 import { useEventOrganisaties } from "@/hooks/useEventOrganisaties";
+import { useOpleidingen, useEventOpleidingen } from "@/hooks/useOpleidingen";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,7 +30,7 @@ interface ContactpersoonEntry {
 
 type TimeField = "start_time" | "end_time" | "setup_time" | "teardown_time";
 
-interface EventFormDialogProps { open: boolean; onOpenChange: (v: boolean) => void; event?: Event; onSave?: (event: Event, contactpersonen: ContactpersoonEntry[], organisatieIds: string[]) => void; }
+interface EventFormDialogProps { open: boolean; onOpenChange: (v: boolean) => void; event?: Event; onSave?: (event: Event, contactpersonen: ContactpersoonEntry[], organisatieIds: string[], opleidingIds: string[]) => void; }
 
 export function EventFormDialog({ open, onOpenChange, event, onSave }: EventFormDialogProps) {
   const isEdit = !!event;
@@ -37,11 +38,16 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
   const { contacten: allContacten } = useContacten();
   const { contactpersonen: existingCP } = useEventContactpersonen(event?.id);
   const { links: existingOrgLinks } = useEventOrganisaties(event?.id);
+  const { opleidingen: allOpleidingen } = useOpleidingen();
+  const { eventOpleidingen } = useEventOpleidingen();
   const [confirmOrgChange, setConfirmOrgChange] = useState<string | null>(null);
   const [timeInputVersion, setTimeInputVersion] = useState(0);
   const [selectedOrgIds, setSelectedOrgIds] = useState<string[]>([]);
   const [orgPickerOpen, setOrgPickerOpen] = useState(false);
   const [orgSearch, setOrgSearch] = useState("");
+  const [selectedOpleidingIds, setSelectedOpleidingIds] = useState<string[]>([]);
+  const [opleidingPickerOpen, setOpleidingPickerOpen] = useState(false);
+  const [opleidingSearch, setOpleidingSearch] = useState("");
 
   const [form, setForm] = useState({
     name: "", type: "jobbeurs" as string, date: "", start_time: "", end_time: "",
@@ -120,6 +126,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
         });
         setCpEntries([]);
         setSelectedOrgIds([]);
+        setSelectedOpleidingIds([]);
       }
     }
   }, [open, event]);
@@ -137,6 +144,15 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       setSelectedOrgIds(existingOrgLinks.map((l) => l.organisatie_id));
     }
   }, [open, event?.id, existingOrgLinks]);
+
+  // Load existing opleiding links when editing
+  useEffect(() => {
+    if (open && event) {
+      setSelectedOpleidingIds(
+        eventOpleidingen.filter((ep) => ep.event_id === event.id).map((ep) => ep.program_id)
+      );
+    }
+  }, [open, event?.id, eventOpleidingen]);
 
   // Derive "hoofdorganisator" from selection
   const orgById = useMemo(() => new Map(scholen.map((s) => [s.id, s])), [scholen]);
@@ -212,6 +228,45 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [allContacten, selectedOrgIds]);
 
+  // Opleidingen grouped by school; show only opleidingen of selected orgs, or all if none selected
+  const opleidingGroups = useMemo(() => {
+    const selectedSet = new Set(selectedOrgIds);
+    const filtered = selectedSet.size === 0
+      ? allOpleidingen
+      : allOpleidingen.filter((o) => o.organisatie_id && selectedSet.has(o.organisatie_id));
+    const search = opleidingSearch.trim().toLowerCase();
+    const matches = (s: string) => !search || s.toLowerCase().includes(search);
+    const byOrg = new Map<string, typeof allOpleidingen>();
+    for (const o of filtered) {
+      const key = o.organisatie_id || "_";
+      if (!byOrg.has(key)) byOrg.set(key, [] as any);
+      byOrg.get(key)!.push(o);
+    }
+    const groups: { orgId: string; orgName: string; items: typeof allOpleidingen }[] = [];
+    for (const [orgId, items] of byOrg.entries()) {
+      const orgName = orgById.get(orgId)?.name || "Onbekende organisatie";
+      const filteredItems = items
+        .filter((i) => matches(i.name) || matches(orgName))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      if (filteredItems.length === 0) continue;
+      groups.push({ orgId, orgName, items: filteredItems });
+    }
+    return groups.sort((a, b) => a.orgName.localeCompare(b.orgName));
+  }, [allOpleidingen, selectedOrgIds, opleidingSearch, orgById]);
+
+  const toggleOpleiding = (id: string) => {
+    setSelectedOpleidingIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const selectedOpleidingen = useMemo(
+    () => selectedOpleidingIds
+      .map((id) => allOpleidingen.find((o) => o.id === id))
+      .filter(Boolean) as typeof allOpleidingen,
+    [selectedOpleidingIds, allOpleidingen]
+  );
+
   const hasOrganisator = selectedOrgIds.length > 0;
   const hasEventTerPlaatse = cpEntries.some((e) => e.rol === "event_ter_plaatse");
   const hasDuplicates = cpEntries.some((e, i) =>
@@ -267,7 +322,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       parking_info: sanitized.parking_info || null,
       locker_code: sanitized.locker_code || null,
     } as Event;
-    onSave?.(saved, cpEntries.filter((e) => e.contact_id), selectedOrgIds);
+    onSave?.(saved, cpEntries.filter((e) => e.contact_id), selectedOrgIds, selectedOpleidingIds);
     toast.success(isEdit ? "Evenement bijgewerkt." : "Evenement toegevoegd.");
     onOpenChange(false);
   };
@@ -393,6 +448,66 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
                 <Select value={form.target_level} onValueChange={(v) => setForm({ ...form, target_level: v })}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{Object.entries(TARGET_LEVEL_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
               </div>
               <div><Label>Max. ambassadeurs</Label><Input type="number" min={0} placeholder="Geen limiet" value={form.max_ambassadeurs} onChange={(e) => setForm({ ...form, max_ambassadeurs: e.target.value })} /></div>
+            </div>
+            <div>
+              <Label>Opleidingen / studierichtingen</Label>
+              <Popover open={opleidingPickerOpen} onOpenChange={setOpleidingPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-between font-normal h-auto min-h-10 py-2"
+                  >
+                    <span className="flex flex-wrap gap-1 text-left">
+                      {selectedOpleidingen.length === 0 ? (
+                        <span className="text-muted-foreground">Selecteer opleidingen…</span>
+                      ) : selectedOpleidingen.map((o) => (
+                        <Badge key={o.id} variant="secondary" className="gap-1">
+                          {o.name}
+                          <X className="h-3 w-3 cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleOpleiding(o.id); }} />
+                        </Badge>
+                      ))}
+                    </span>
+                    <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <div className="p-2 border-b border-border">
+                    <Input
+                      placeholder="Zoeken…"
+                      value={opleidingSearch}
+                      onChange={(e) => setOpleidingSearch(e.target.value)}
+                      className="h-8"
+                    />
+                  </div>
+                  <div className="max-h-72 overflow-y-auto py-1">
+                    {opleidingGroups.length === 0 && (
+                      <div className="px-3 py-4 text-xs text-muted-foreground text-center">Geen opleidingen gevonden.</div>
+                    )}
+                    {opleidingGroups.map((g) => (
+                      <div key={g.orgId} className="py-1">
+                        <div className="px-3 py-1 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
+                          {g.orgName}
+                        </div>
+                        {g.items.map((o) => (
+                          <label key={o.id} className="flex items-center gap-2 pl-6 pr-3 py-1.5 hover:bg-muted/50 cursor-pointer text-sm">
+                            <Checkbox
+                              checked={selectedOpleidingIds.includes(o.id)}
+                              onCheckedChange={() => toggleOpleiding(o.id)}
+                            />
+                            <span className="truncate">{o.name}</span>
+                            {o.faculty && <span className="text-[10px] text-muted-foreground ml-auto">{o.faculty}</span>}
+                          </label>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              {selectedOrgIds.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-1">Geen organisatie geselecteerd — alle opleidingen worden getoond.</p>
+              )}
             </div>
           </FormSection>
 

@@ -30,7 +30,7 @@ export default function EventDetailPage() {
   const { evenementen, upsertEvent } = useEvenementen();
   const { scholen } = useScholen();
   const { opleidingen } = useOpleidingen();
-  const { eventOpleidingen } = useEventOpleidingen();
+  const { eventOpleidingen, setEventPrograms } = useEventOpleidingen();
   const { contactpersonen: eventContactpersonen, syncContactpersonen } = useEventContactpersonen(id);
   const { links: eventOrgLinks, syncOrganisaties } = useEventOrganisaties(id);
 
@@ -56,13 +56,14 @@ export default function EventDetailPage() {
     return (a.contact?.name || "").localeCompare(b.contact?.name || "");
   });
 
-  const handleFormSave = async (saved: Event, cpEntries: { contact_id: string; rol: ContactpersoonRol }[], organisatieIds: string[]) => {
+  const handleFormSave = async (saved: Event, cpEntries: { contact_id: string; rol: ContactpersoonRol }[], organisatieIds: string[], opleidingIds: string[]) => {
     try {
       const result = await upsertEvent.mutateAsync(saved);
       const eventId = (result as any)?.data?.id || saved.id || id;
       if (eventId) {
         await syncContactpersonen.mutateAsync({ eventId, items: cpEntries });
         await syncOrganisaties.mutateAsync({ eventId, organisatieIds });
+        await setEventPrograms.mutateAsync({ eventId, programIds: opleidingIds });
       }
     } catch { toast.error("Fout bij opslaan."); }
   };
