@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, type ChangeEvent, type FocusEvent } from 
 import { useScholen, useContacten } from "@/hooks/useScholen";
 import { useEventContactpersonen } from "@/hooks/useEventContactpersonen";
 import { useEventOrganisaties } from "@/hooks/useEventOrganisaties";
+import { useOpleidingen, useEventOpleidingen } from "@/hooks/useOpleidingen";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,7 +30,7 @@ interface ContactpersoonEntry {
 
 type TimeField = "start_time" | "end_time" | "setup_time" | "teardown_time";
 
-interface EventFormDialogProps { open: boolean; onOpenChange: (v: boolean) => void; event?: Event; onSave?: (event: Event, contactpersonen: ContactpersoonEntry[], organisatieIds: string[]) => void; }
+interface EventFormDialogProps { open: boolean; onOpenChange: (v: boolean) => void; event?: Event; onSave?: (event: Event, contactpersonen: ContactpersoonEntry[], organisatieIds: string[], opleidingIds: string[]) => void; }
 
 export function EventFormDialog({ open, onOpenChange, event, onSave }: EventFormDialogProps) {
   const isEdit = !!event;
@@ -37,11 +38,16 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
   const { contacten: allContacten } = useContacten();
   const { contactpersonen: existingCP } = useEventContactpersonen(event?.id);
   const { links: existingOrgLinks } = useEventOrganisaties(event?.id);
+  const { opleidingen: allOpleidingen } = useOpleidingen();
+  const { eventOpleidingen } = useEventOpleidingen();
   const [confirmOrgChange, setConfirmOrgChange] = useState<string | null>(null);
   const [timeInputVersion, setTimeInputVersion] = useState(0);
   const [selectedOrgIds, setSelectedOrgIds] = useState<string[]>([]);
   const [orgPickerOpen, setOrgPickerOpen] = useState(false);
   const [orgSearch, setOrgSearch] = useState("");
+  const [selectedOpleidingIds, setSelectedOpleidingIds] = useState<string[]>([]);
+  const [opleidingPickerOpen, setOpleidingPickerOpen] = useState(false);
+  const [opleidingSearch, setOpleidingSearch] = useState("");
 
   const [form, setForm] = useState({
     name: "", type: "jobbeurs" as string, date: "", start_time: "", end_time: "",
@@ -120,6 +126,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
         });
         setCpEntries([]);
         setSelectedOrgIds([]);
+        setSelectedOpleidingIds([]);
       }
     }
   }, [open, event]);
@@ -137,6 +144,15 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       setSelectedOrgIds(existingOrgLinks.map((l) => l.organisatie_id));
     }
   }, [open, event?.id, existingOrgLinks]);
+
+  // Load existing opleiding links when editing
+  useEffect(() => {
+    if (open && event) {
+      setSelectedOpleidingIds(
+        eventOpleidingen.filter((ep) => ep.event_id === event.id).map((ep) => ep.program_id)
+      );
+    }
+  }, [open, event?.id, eventOpleidingen]);
 
   // Derive "hoofdorganisator" from selection
   const orgById = useMemo(() => new Map(scholen.map((s) => [s.id, s])), [scholen]);
@@ -212,6 +228,45 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [allContacten, selectedOrgIds]);
 
+  // Opleidingen grouped by school; show only opleidingen of selected orgs, or all if none selected
+  const opleidingGroups = useMemo(() => {
+    const selectedSet = new Set(selectedOrgIds);
+    const filtered = selectedSet.size === 0
+      ? allOpleidingen
+      : allOpleidingen.filter((o) => o.organisatie_id && selectedSet.has(o.organisatie_id));
+    const search = opleidingSearch.trim().toLowerCase();
+    const matches = (s: string) => !search || s.toLowerCase().includes(search);
+    const byOrg = new Map<string, typeof allOpleidingen>();
+    for (const o of filtered) {
+      const key = o.organisatie_id || "_";
+      if (!byOrg.has(key)) byOrg.set(key, [] as any);
+      byOrg.get(key)!.push(o);
+    }
+    const groups: { orgId: string; orgName: string; items: typeof allOpleidingen }[] = [];
+    for (const [orgId, items] of byOrg.entries()) {
+      const orgName = orgById.get(orgId)?.name || "Onbekende organisatie";
+      const filteredItems = items
+        .filter((i) => matches(i.name) || matches(orgName))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      if (filteredItems.length === 0) continue;
+      groups.push({ orgId, orgName, items: filteredItems });
+    }
+    return groups.sort((a, b) => a.orgName.localeCompare(b.orgName));
+  }, [allOpleidingen, selectedOrgIds, opleidingSearch, orgById]);
+
+  const toggleOpleiding = (id: string) => {
+    setSelectedOpleidingIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const selectedOpleidingen = useMemo(
+    () => selectedOpleidingIds
+      .map((id) => allOpleidingen.find((o) => o.id === id))
+      .filter(Boolean) as typeof allOpleidingen,
+    [selectedOpleidingIds, allOpleidingen]
+  );
+
   const hasOrganisator = selectedOrgIds.length > 0;
   const hasEventTerPlaatse = cpEntries.some((e) => e.rol === "event_ter_plaatse");
   const hasDuplicates = cpEntries.some((e, i) =>
@@ -267,7 +322,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       parking_info: sanitized.parking_info || null,
       locker_code: sanitized.locker_code || null,
     } as Event;
-    onSave?.(saved, cpEntries.filter((e) => e.contact_id), selectedOrgIds);
+    onSave?.(saved, cpEntries.filter((e) => e.contact_id), selectedOrgIds, selectedOpleidingIds);
     toast.success(isEdit ? "Evenement bijgewerkt." : "Evenement toegevoegd.");
     onOpenChange(false);
   };
