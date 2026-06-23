@@ -449,6 +449,66 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
               </div>
               <div><Label>Max. ambassadeurs</Label><Input type="number" min={0} placeholder="Geen limiet" value={form.max_ambassadeurs} onChange={(e) => setForm({ ...form, max_ambassadeurs: e.target.value })} /></div>
             </div>
+            <div>
+              <Label>Opleidingen / studierichtingen</Label>
+              <Popover open={opleidingPickerOpen} onOpenChange={setOpleidingPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-between font-normal h-auto min-h-10 py-2"
+                  >
+                    <span className="flex flex-wrap gap-1 text-left">
+                      {selectedOpleidingen.length === 0 ? (
+                        <span className="text-muted-foreground">Selecteer opleidingen…</span>
+                      ) : selectedOpleidingen.map((o) => (
+                        <Badge key={o.id} variant="secondary" className="gap-1">
+                          {o.name}
+                          <X className="h-3 w-3 cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleOpleiding(o.id); }} />
+                        </Badge>
+                      ))}
+                    </span>
+                    <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <div className="p-2 border-b border-border">
+                    <Input
+                      placeholder="Zoeken…"
+                      value={opleidingSearch}
+                      onChange={(e) => setOpleidingSearch(e.target.value)}
+                      className="h-8"
+                    />
+                  </div>
+                  <div className="max-h-72 overflow-y-auto py-1">
+                    {opleidingGroups.length === 0 && (
+                      <div className="px-3 py-4 text-xs text-muted-foreground text-center">Geen opleidingen gevonden.</div>
+                    )}
+                    {opleidingGroups.map((g) => (
+                      <div key={g.orgId} className="py-1">
+                        <div className="px-3 py-1 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
+                          {g.orgName}
+                        </div>
+                        {g.items.map((o) => (
+                          <label key={o.id} className="flex items-center gap-2 pl-6 pr-3 py-1.5 hover:bg-muted/50 cursor-pointer text-sm">
+                            <Checkbox
+                              checked={selectedOpleidingIds.includes(o.id)}
+                              onCheckedChange={() => toggleOpleiding(o.id)}
+                            />
+                            <span className="truncate">{o.name}</span>
+                            {o.faculty && <span className="text-[10px] text-muted-foreground ml-auto">{o.faculty}</span>}
+                          </label>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              {selectedOrgIds.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-1">Geen organisatie geselecteerd — alle opleidingen worden getoond.</p>
+              )}
+            </div>
           </FormSection>
 
           {/* SECTIE 3 — Registratie & opvolging */}
