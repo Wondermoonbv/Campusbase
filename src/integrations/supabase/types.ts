@@ -909,49 +909,85 @@ export type Database = {
       }
       organisaties: {
         Row: {
+          bron: string
           city: string
           created_at: string | null
+          email: string | null
           id: string
+          instellingsnummer: string | null
           is_nationaal: boolean
+          kbo_nummer: string | null
           language: string
+          last_synced_at: string | null
+          latitude: number | null
+          longitude: number | null
           name: string
           notes: string | null
+          onderwijsniveau: string | null
           parent_id: string | null
+          postal_code: string | null
           province: string
           school_type: string
           status: string
+          street: string | null
+          taalstelsel: string | null
+          telefoon: string | null
           type: Database["public"]["Enums"]["organisatie_type"]
           verbonden_instelling_id: string | null
           website: string | null
         }
         Insert: {
+          bron?: string
           city: string
           created_at?: string | null
+          email?: string | null
           id?: string
+          instellingsnummer?: string | null
           is_nationaal?: boolean
+          kbo_nummer?: string | null
           language?: string
+          last_synced_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name: string
           notes?: string | null
+          onderwijsniveau?: string | null
           parent_id?: string | null
+          postal_code?: string | null
           province: string
           school_type?: string
           status?: string
+          street?: string | null
+          taalstelsel?: string | null
+          telefoon?: string | null
           type?: Database["public"]["Enums"]["organisatie_type"]
           verbonden_instelling_id?: string | null
           website?: string | null
         }
         Update: {
+          bron?: string
           city?: string
           created_at?: string | null
+          email?: string | null
           id?: string
+          instellingsnummer?: string | null
           is_nationaal?: boolean
+          kbo_nummer?: string | null
           language?: string
+          last_synced_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           notes?: string | null
+          onderwijsniveau?: string | null
           parent_id?: string | null
+          postal_code?: string | null
           province?: string
           school_type?: string
           status?: string
+          street?: string | null
+          taalstelsel?: string | null
+          telefoon?: string | null
           type?: Database["public"]["Enums"]["organisatie_type"]
           verbonden_instelling_id?: string | null
           website?: string | null
