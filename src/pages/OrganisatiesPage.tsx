@@ -33,7 +33,8 @@ const ORGANISATIE_TYPES: OrganisatieType[] = ["school", "studentenvereniging", "
 
 const SCHOOL_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "name", label: "Naam", required: true },
-  { key: "type", label: "Type", required: true, validate: (v) => ["universiteit", "hogeschool", "secundair"].includes(v.toLowerCase()) ? null : "Moet universiteit, hogeschool of secundair zijn" },
+  { key: "type", label: "Type", required: true, validate: (v) => ["school", "studentenvereniging", "werkgeversorganisatie", "overheid", "andere"].includes(v.toLowerCase()) ? null : "Moet school, studentenvereniging, werkgeversorganisatie, overheid of andere zijn" },
+  { key: "schooltype", label: "Schooltype", validate: (v) => !v || ["universiteit", "hogeschool", "secundair"].includes(v.toLowerCase()) ? null : "Moet universiteit, hogeschool of secundair zijn" },
   { key: "city", label: "Stad", required: true },
   { key: "province", label: "Provincie", required: true, validate: (v) => PROVINCES.includes(v) ? null : "Ongeldige provincie" },
   { key: "language", label: "Taal", required: true, validate: (v) => ["NL", "FR", "EN"].includes(v.toUpperCase()) ? null : "Moet NL, FR of EN zijn" },
@@ -314,8 +315,8 @@ export default function OrganisatiesPage() {
         onImport={async (rows) => {
           const buildPayload = (row: any, parent_id: string | null) => ({
             name: row.name,
-            type: "school" as any,
-            school_type: (row.type?.toLowerCase() || "universiteit") as any,
+            type: (row.type?.toLowerCase() || "school") as any,
+            school_type: (row.schooltype?.toLowerCase() || "") as any,
             city: row.city,
             province: row.province,
             language: (row.language?.toUpperCase() || "NL") as any,
