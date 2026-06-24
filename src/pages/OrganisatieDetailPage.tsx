@@ -66,6 +66,7 @@ export default function OrganisatieDetailPage() {
   const campuses = scholen.filter((s) => s.parent_id === org.id);
   const verbondenInstelling = org.verbonden_instelling_id ? scholen.find((s) => s.id === org.verbonden_instelling_id) : null;
   const isStudentenvereniging = org.type === "studentenvereniging";
+  const hasInstellingContact = !!org.email || !!org.telefoon || !!org.website;
 
   const handleSaveSchool = async (saved: School) => {
     try { await upsertSchool.mutateAsync(saved); } catch { toast.error("Fout bij opslaan."); }
