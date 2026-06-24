@@ -399,7 +399,7 @@ export default function OrganisatiesPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>{ORGANISATIE_TYPE_LABELS[org.type] || org.type}</TableCell>
+                    <TableCell>{org.type === "school" && org.school_type ? `${ORGANISATIE_TYPE_LABELS[org.type]} · ${capitalize(org.school_type)}` : ORGANISATIE_TYPE_LABELS[org.type] || org.type}</TableCell>
                     <TableCell>{org.city || "—"}</TableCell>
                     <TableCell className="hidden lg:table-cell">{org.province || "—"}</TableCell>
                     <TableCell>{org.language || "—"}</TableCell>
