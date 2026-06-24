@@ -89,11 +89,16 @@ export interface PagedOrgParams {
   sortKey: string;
   sortDir: "asc" | "desc";
   hierarchical: boolean;
+  niveau?: string;
+  schoolType?: string;
+  schoolbestuurNr?: string;
+  scholengemeenschapNr?: string;
 }
 
 export interface PagedOrgRow extends School {
   parent?: { id: string; name: string } | null;
   verbonden_instelling?: { id: string; name: string } | null;
+  childCount?: number;
 }
 
 export function useOrganisatiesPaged(p: PagedOrgParams) {
@@ -101,7 +106,7 @@ export function useOrganisatiesPaged(p: PagedOrgParams) {
     queryKey: ["organisaties-paged", p],
     queryFn: async () => {
       const select =
-        "id, name, type, school_type, province, city, website, language, notes, status, created_at, parent_id, is_nationaal, verbonden_instelling_id, parent:organisaties!parent_id(id,name), verbonden_instelling:organisaties!verbonden_instelling_id(id,name)";
+        "id, name, type, school_type, province, city, website, language, notes, status, created_at, parent_id, is_nationaal, verbonden_instelling_id, onderwijsniveau, schoolbestuur, schoolbestuur_nr, scholengemeenschap, scholengemeenschap_nr, parent:organisaties!parent_id(id,name), verbonden_instelling:organisaties!verbonden_instelling_id(id,name)";
       let q: any = supabase.from("organisaties").select(select, { count: "exact" });
       const term = p.search.trim();
       if (term) {
@@ -112,6 +117,10 @@ export function useOrganisatiesPaged(p: PagedOrgParams) {
       if (p.province !== "all") q = q.eq("province", p.province);
       if (p.language !== "all") q = q.eq("language", p.language);
       if (p.status !== "all") q = q.eq("status", p.status);
+      if (p.niveau && p.niveau !== "all") q = q.eq("onderwijsniveau", p.niveau);
+      if (p.schoolType && p.schoolType !== "all") q = q.eq("school_type", p.schoolType);
+      if (p.schoolbestuurNr) q = q.eq("schoolbestuur_nr", p.schoolbestuurNr);
+      if (p.scholengemeenschapNr) q = q.eq("scholengemeenschap_nr", p.scholengemeenschapNr);
       if (p.hierarchical) q = q.is("parent_id", null);
       q = q.order(p.sortKey, { ascending: p.sortDir === "asc" });
       const from = (p.page - 1) * p.pageSize;
@@ -133,10 +142,98 @@ export function useOrganisatiesPaged(p: PagedOrgParams) {
           if (!c.parent_id) return;
           (campusesByParent[c.parent_id] ??= []).push(c);
         });
+        rows.forEach((r) => { r.childCount = (campusesByParent[r.id] ?? []).length; });
+      } else if (rows.length > 0) {
+        // For flat/filter mode, compute child counts for top-level visible rows only.
+        const topIds = rows.filter((r) => !r.parent_id).map((r) => r.id);
+        if (topIds.length > 0) {
+          const { data: childRows } = await supabase
+            .from("organisaties")
+            .select("id, parent_id")
+            .in("parent_id", topIds)
+            .range(0, 9999);
+          const tally: Record<string, number> = {};
+          ((childRows ?? []) as any[]).forEach((c) => {
+            if (!c.parent_id) return;
+            tally[c.parent_id] = (tally[c.parent_id] ?? 0) + 1;
+          });
+          rows.forEach((r) => { if (!r.parent_id) r.childCount = tally[r.id] ?? 0; });
+        }
       }
       return { rows, campusesByParent, totalCount: count ?? 0 };
     },
     staleTime: 30 * 1000,
+  });
+}
+
+// Distinct school_type values (used for filter dropdown).
+export function useSchoolTypeOptions() {
+  return useQuery({
+    queryKey: ["school-type-options"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("organisaties")
+        .select("school_type")
+        .not("school_type", "is", null)
+        .neq("school_type", "")
+        .range(0, 9999);
+      const set = new Set<string>();
+      ((data ?? []) as any[]).forEach((r) => { if (r.school_type) set.add(r.school_type); });
+      return Array.from(set).sort((a, b) => a.localeCompare(b));
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// Server-side typeahead for schoolbestuur (SO only). Returns distinct {nr, name}.
+export function useSchoolbestuurSearch(term: string) {
+  return useQuery({
+    queryKey: ["schoolbestuur-search", term],
+    queryFn: async () => {
+      let q: any = supabase
+        .from("organisaties")
+        .select("schoolbestuur, schoolbestuur_nr")
+        .eq("onderwijsniveau", "SO")
+        .not("schoolbestuur_nr", "is", null);
+      const t = term.trim();
+      if (t) q = q.ilike("schoolbestuur", `%${t.replace(/[%,]/g, " ")}%`);
+      q = q.order("schoolbestuur", { ascending: true }).range(0, 499);
+      const { data } = await q;
+      const map = new Map<string, string>();
+      ((data ?? []) as any[]).forEach((r) => {
+        if (r.schoolbestuur_nr && !map.has(r.schoolbestuur_nr)) {
+          map.set(r.schoolbestuur_nr, r.schoolbestuur ?? "");
+        }
+      });
+      return Array.from(map.entries()).map(([nr, name]) => ({ nr, name }));
+    },
+    staleTime: 60 * 1000,
+  });
+}
+
+// Server-side typeahead for scholengemeenschap (SO only).
+export function useScholengemeenschapSearch(term: string) {
+  return useQuery({
+    queryKey: ["scholengemeenschap-search", term],
+    queryFn: async () => {
+      let q: any = supabase
+        .from("organisaties")
+        .select("scholengemeenschap, scholengemeenschap_nr")
+        .eq("onderwijsniveau", "SO")
+        .not("scholengemeenschap_nr", "is", null);
+      const t = term.trim();
+      if (t) q = q.ilike("scholengemeenschap", `%${t.replace(/[%,]/g, " ")}%`);
+      q = q.order("scholengemeenschap", { ascending: true }).range(0, 499);
+      const { data } = await q;
+      const map = new Map<string, string>();
+      ((data ?? []) as any[]).forEach((r) => {
+        if (r.scholengemeenschap_nr && !map.has(r.scholengemeenschap_nr)) {
+          map.set(r.scholengemeenschap_nr, r.scholengemeenschap ?? "");
+        }
+      });
+      return Array.from(map.entries()).map(([nr, name]) => ({ nr, name }));
+    },
+    staleTime: 60 * 1000,
   });
 }
 
