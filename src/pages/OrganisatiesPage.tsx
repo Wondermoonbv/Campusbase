@@ -20,7 +20,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Download, Pencil, Upload, Trash2, Building2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Download, Pencil, Upload, Trash2, Building2, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
@@ -63,6 +63,22 @@ function ListSkeleton() {
         </div>
       ))}
     </div>
+  );
+}
+
+function FilterChip({ label, onClear }: { label: string; onClear: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs">
+      <span className="truncate max-w-[220px]">{label}</span>
+      <button
+        type="button"
+        aria-label={`${label} verwijderen`}
+        onClick={onClear}
+        className="hover:text-foreground text-muted-foreground"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </span>
   );
 }
 
@@ -234,40 +250,68 @@ export default function OrganisatiesPage() {
         </div>
       </div>
 
-      <div className="surface-card p-3 sm:p-4 mb-4">
-        <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
-          <div className="relative flex-1 min-w-0 sm:min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Zoeken op naam, stad, contact..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 sm:h-9" />
-          </div>
-          <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3">
-            <Select value={filterProvince} onValueChange={setFilterProvince}><SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9"><SelectValue placeholder="Provincie" /></SelectTrigger><SelectContent><SelectItem value="all">Alle provincies</SelectItem>{PROVINCES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select>
-            <Select value={filterLanguage} onValueChange={setFilterLanguage}><SelectTrigger className="w-full sm:w-[120px] h-10 sm:h-9"><SelectValue placeholder="Taal" /></SelectTrigger><SelectContent><SelectItem value="all">Alle talen</SelectItem><SelectItem value="NL">NL</SelectItem><SelectItem value="FR">FR</SelectItem><SelectItem value="EN">EN</SelectItem></SelectContent></Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}><SelectTrigger className="w-full sm:w-[140px] h-10 sm:h-9"><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">Alle statussen</SelectItem><SelectItem value="actief">Actief</SelectItem><SelectItem value="inactief">Inactief</SelectItem><SelectItem value="prospect">Prospect</SelectItem></SelectContent></Select>
-            <Select value={filterNiveau} onValueChange={setFilterNiveau}><SelectTrigger className="w-full sm:w-[160px] h-10 sm:h-9"><SelectValue placeholder="Niveau" /></SelectTrigger><SelectContent><SelectItem value="all">Alle niveaus</SelectItem><SelectItem value="HO">Hoger onderwijs</SelectItem><SelectItem value="SO">Secundair</SelectItem></SelectContent></Select>
-            <Select value={filterSchoolType} onValueChange={setFilterSchoolType}><SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9"><SelectValue placeholder="Schooltype" /></SelectTrigger><SelectContent><SelectItem value="all">Alle schooltypes</SelectItem>{schoolTypeOptions.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select>
-            <SearchableComboFilter
-              className="w-full sm:w-[220px]"
-              value={filterSchoolbestuurNr}
-              selectedLabel={filterSchoolbestuurLabel}
-              placeholder="Schoolbestuur"
-              onSearchChange={setSchoolbestuurTerm}
-              options={schoolbestuurOptions}
-              isLoading={sbLoading}
-              onChange={(nr, name) => { setFilterSchoolbestuurNr(nr); setFilterSchoolbestuurLabel(name); }}
-            />
-            <SearchableComboFilter
-              className="w-full sm:w-[220px]"
-              value={filterScholengemNr}
-              selectedLabel={filterScholengemLabel}
-              placeholder="Scholengemeenschap"
-              onSearchChange={setScholengemTerm}
-              options={scholengemOptions}
-              isLoading={sgLoading}
-              onChange={(nr, name) => { setFilterScholengemNr(nr); setFilterScholengemLabel(name); }}
-            />
-          </div>
+      <div className="surface-card p-3 sm:p-4 mb-4 space-y-3">
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Zoeken op naam, stad, contact..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 sm:h-9" />
         </div>
+        <div className="flex flex-wrap gap-2">
+          <Select value={filterProvince} onValueChange={setFilterProvince}><SelectTrigger className="w-[180px] h-10 sm:h-9"><SelectValue placeholder="Provincie" /></SelectTrigger><SelectContent><SelectItem value="all">Alle provincies</SelectItem>{PROVINCES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select>
+          <Select value={filterLanguage} onValueChange={setFilterLanguage}><SelectTrigger className="w-[120px] h-10 sm:h-9"><SelectValue placeholder="Taal" /></SelectTrigger><SelectContent><SelectItem value="all">Alle talen</SelectItem><SelectItem value="NL">NL</SelectItem><SelectItem value="FR">FR</SelectItem><SelectItem value="EN">EN</SelectItem></SelectContent></Select>
+          <Select value={filterStatus} onValueChange={setFilterStatus}><SelectTrigger className="w-[140px] h-10 sm:h-9"><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">Alle statussen</SelectItem><SelectItem value="actief">Actief</SelectItem><SelectItem value="inactief">Inactief</SelectItem><SelectItem value="prospect">Prospect</SelectItem></SelectContent></Select>
+          <Select value={filterNiveau} onValueChange={setFilterNiveau}><SelectTrigger className="w-[160px] h-10 sm:h-9"><SelectValue placeholder="Niveau" /></SelectTrigger><SelectContent><SelectItem value="all">Alle niveaus</SelectItem><SelectItem value="HO">Hoger onderwijs</SelectItem><SelectItem value="SO">Secundair</SelectItem></SelectContent></Select>
+          <Select value={filterSchoolType} onValueChange={setFilterSchoolType}><SelectTrigger className="w-[180px] h-10 sm:h-9"><SelectValue placeholder="Schooltype" /></SelectTrigger><SelectContent><SelectItem value="all">Alle schooltypes</SelectItem>{schoolTypeOptions.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select>
+          <SearchableComboFilter
+            className="w-[220px]"
+            value={filterSchoolbestuurNr}
+            selectedLabel={filterSchoolbestuurLabel}
+            placeholder="Schoolbestuur"
+            onSearchChange={setSchoolbestuurTerm}
+            options={schoolbestuurOptions}
+            isLoading={sbLoading}
+            onChange={(nr, name) => { setFilterSchoolbestuurNr(nr); setFilterSchoolbestuurLabel(name); }}
+          />
+          <SearchableComboFilter
+            className="w-[220px]"
+            value={filterScholengemNr}
+            selectedLabel={filterScholengemLabel}
+            placeholder="Scholengemeenschap"
+            onSearchChange={setScholengemTerm}
+            options={scholengemOptions}
+            isLoading={sgLoading}
+            onChange={(nr, name) => { setFilterScholengemNr(nr); setFilterScholengemLabel(name); }}
+          />
+        </div>
+        {hasActiveFilter && (
+          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/60">
+            <span className="text-xs text-muted-foreground">Actieve filters:</span>
+            {search.trim() && <FilterChip label={`Zoeken: ${search.trim()}`} onClear={() => setSearch("")} />}
+            {filterProvince !== "all" && <FilterChip label={`Provincie: ${filterProvince}`} onClear={() => setFilterProvince("all")} />}
+            {filterLanguage !== "all" && <FilterChip label={`Taal: ${filterLanguage}`} onClear={() => setFilterLanguage("all")} />}
+            {filterStatus !== "all" && <FilterChip label={`Status: ${filterStatus}`} onClear={() => setFilterStatus("all")} />}
+            {filterNiveau !== "all" && <FilterChip label={`Niveau: ${filterNiveau === "HO" ? "Hoger onderwijs" : "Secundair"}`} onClear={() => setFilterNiveau("all")} />}
+            {filterSchoolType !== "all" && <FilterChip label={`Schooltype: ${filterSchoolType}`} onClear={() => setFilterSchoolType("all")} />}
+            {filterSchoolbestuurNr && <FilterChip label={`Schoolbestuur: ${filterSchoolbestuurLabel || filterSchoolbestuurNr}`} onClear={() => { setFilterSchoolbestuurNr(""); setFilterSchoolbestuurLabel(""); }} />}
+            {filterScholengemNr && <FilterChip label={`Scholengemeenschap: ${filterScholengemLabel || filterScholengemNr}`} onClear={() => { setFilterScholengemNr(""); setFilterScholengemLabel(""); }} />}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => {
+                setSearch("");
+                setFilterProvince("all");
+                setFilterLanguage("all");
+                setFilterStatus("all");
+                setFilterNiveau("all");
+                setFilterSchoolType("all");
+                setFilterSchoolbestuurNr(""); setFilterSchoolbestuurLabel("");
+                setFilterScholengemNr(""); setFilterScholengemLabel("");
+              }}
+            >
+              Wis alle filters
+            </Button>
+          </div>
+        )}
       </div>
 
       {isLoading || pagedLoading ? <ListSkeleton /> : totalCount === 0 && !hasActiveFilter ? (
