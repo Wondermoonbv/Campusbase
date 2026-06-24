@@ -29,6 +29,7 @@ import { SortableTableHead, useSort } from "@/components/ui/SortableTableHead";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
+import { capitalize } from "@/lib/utils";
 
 const ORGANISATIE_TYPE_LABELS: Record<OrganisatieType, string> = {
   school: "School",
