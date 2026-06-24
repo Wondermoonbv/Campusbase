@@ -2,7 +2,16 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useScholen, useContacten, useOrganisatieTypeCounts, useOrganisatiesPaged } from "@/hooks/useScholen";
+import {
+  useScholen,
+  useContacten,
+  useOrganisatieTypeCounts,
+  useOrganisatiesPaged,
+  useSchoolTypeOptions,
+  useSchoolbestuurSearch,
+  useScholengemeenschapSearch,
+} from "@/hooks/useScholen";
+import { SearchableComboFilter } from "@/components/organisaties/SearchableComboFilter";
 import { School, PROVINCES, OrganisatieType } from "@/types/crm";
 import { writeAuditLog } from "@/lib/audit";
 import { Input } from "@/components/ui/input";
@@ -66,6 +75,14 @@ export default function OrganisatiesPage() {
   const [filterProvince, setFilterProvince] = useState<string>("all");
   const [filterLanguage, setFilterLanguage] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>(searchParams.get("status") ?? "all");
+  const [filterNiveau, setFilterNiveau] = useState<string>("all");
+  const [filterSchoolType, setFilterSchoolType] = useState<string>("all");
+  const [filterSchoolbestuurNr, setFilterSchoolbestuurNr] = useState<string>("");
+  const [filterSchoolbestuurLabel, setFilterSchoolbestuurLabel] = useState<string>("");
+  const [filterScholengemNr, setFilterScholengemNr] = useState<string>("");
+  const [filterScholengemLabel, setFilterScholengemLabel] = useState<string>("");
+  const [schoolbestuurTerm, setSchoolbestuurTerm] = useState<string>("");
+  const [scholengemTerm, setScholengemTerm] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [editSchool, setEditSchool] = useState<School | undefined>();
@@ -95,11 +112,19 @@ export default function OrganisatiesPage() {
   const typeCounts = typeCountsData ?? { all: 0 };
 
   const hasActiveFilter = useMemo(() =>
-    search.trim().length > 0 || filterOrgType !== "all" || filterProvince !== "all" || filterLanguage !== "all" || filterStatus !== "all"
-  , [search, filterOrgType, filterProvince, filterLanguage, filterStatus]);
+    search.trim().length > 0
+    || filterOrgType !== "all"
+    || filterProvince !== "all"
+    || filterLanguage !== "all"
+    || filterStatus !== "all"
+    || filterNiveau !== "all"
+    || filterSchoolType !== "all"
+    || !!filterSchoolbestuurNr
+    || !!filterScholengemNr
+  , [search, filterOrgType, filterProvince, filterLanguage, filterStatus, filterNiveau, filterSchoolType, filterSchoolbestuurNr, filterScholengemNr]);
 
   // Reset to page 1 whenever filters or sort change
-  useEffect(() => { setPage(1); }, [search, filterOrgType, filterProvince, filterLanguage, filterStatus, sort.key, sort.direction]);
+  useEffect(() => { setPage(1); }, [search, filterOrgType, filterProvince, filterLanguage, filterStatus, filterNiveau, filterSchoolType, filterSchoolbestuurNr, filterScholengemNr, sort.key, sort.direction]);
 
   const { data: paged, isLoading: pagedLoading } = useOrganisatiesPaged({
     page,
@@ -112,7 +137,15 @@ export default function OrganisatiesPage() {
     sortKey: sort.key,
     sortDir: sort.direction,
     hierarchical: !hasActiveFilter,
+    niveau: filterNiveau,
+    schoolType: filterSchoolType,
+    schoolbestuurNr: filterSchoolbestuurNr,
+    scholengemeenschapNr: filterScholengemNr,
   });
+
+  const { data: schoolTypeOptions = [] } = useSchoolTypeOptions();
+  const { data: schoolbestuurOptions = [], isFetching: sbLoading } = useSchoolbestuurSearch(schoolbestuurTerm);
+  const { data: scholengemOptions = [], isFetching: sgLoading } = useScholengemeenschapSearch(scholengemTerm);
 
   const totalCount = paged?.totalCount ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -211,6 +244,28 @@ export default function OrganisatiesPage() {
             <Select value={filterProvince} onValueChange={setFilterProvince}><SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9"><SelectValue placeholder="Provincie" /></SelectTrigger><SelectContent><SelectItem value="all">Alle provincies</SelectItem>{PROVINCES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select>
             <Select value={filterLanguage} onValueChange={setFilterLanguage}><SelectTrigger className="w-full sm:w-[120px] h-10 sm:h-9"><SelectValue placeholder="Taal" /></SelectTrigger><SelectContent><SelectItem value="all">Alle talen</SelectItem><SelectItem value="NL">NL</SelectItem><SelectItem value="FR">FR</SelectItem><SelectItem value="EN">EN</SelectItem></SelectContent></Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}><SelectTrigger className="w-full sm:w-[140px] h-10 sm:h-9"><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">Alle statussen</SelectItem><SelectItem value="actief">Actief</SelectItem><SelectItem value="inactief">Inactief</SelectItem><SelectItem value="prospect">Prospect</SelectItem></SelectContent></Select>
+            <Select value={filterNiveau} onValueChange={setFilterNiveau}><SelectTrigger className="w-full sm:w-[160px] h-10 sm:h-9"><SelectValue placeholder="Niveau" /></SelectTrigger><SelectContent><SelectItem value="all">Alle niveaus</SelectItem><SelectItem value="HO">Hoger onderwijs</SelectItem><SelectItem value="SO">Secundair</SelectItem></SelectContent></Select>
+            <Select value={filterSchoolType} onValueChange={setFilterSchoolType}><SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9"><SelectValue placeholder="Schooltype" /></SelectTrigger><SelectContent><SelectItem value="all">Alle schooltypes</SelectItem>{schoolTypeOptions.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select>
+            <SearchableComboFilter
+              className="w-full sm:w-[220px]"
+              value={filterSchoolbestuurNr}
+              selectedLabel={filterSchoolbestuurLabel}
+              placeholder="Schoolbestuur"
+              onSearchChange={setSchoolbestuurTerm}
+              options={schoolbestuurOptions}
+              isLoading={sbLoading}
+              onChange={(nr, name) => { setFilterSchoolbestuurNr(nr); setFilterSchoolbestuurLabel(name); }}
+            />
+            <SearchableComboFilter
+              className="w-full sm:w-[220px]"
+              value={filterScholengemNr}
+              selectedLabel={filterScholengemLabel}
+              placeholder="Scholengemeenschap"
+              onSearchChange={setScholengemTerm}
+              options={scholengemOptions}
+              isLoading={sgLoading}
+              onChange={(nr, name) => { setFilterScholengemNr(nr); setFilterScholengemLabel(name); }}
+            />
           </div>
         </div>
       </div>
@@ -235,6 +290,12 @@ export default function OrganisatiesPage() {
                     )}
                     {org.type === "studentenvereniging" && verbondenName && (
                       <p className="text-xs text-muted-foreground mt-0.5">verbonden aan {verbondenName}</p>
+                    )}
+                    {org.schoolbestuur && (
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                        {org.schoolbestuur}
+                        {org.scholengemeenschap ? ` · ${org.scholengemeenschap}` : ""}
+                      </p>
                     )}
                     <p className="text-xs text-muted-foreground mt-0.5">{ORGANISATIE_TYPE_LABELS[org.type]} · {org.city || "—"} · {org.language || "—"}</p>
                   </div>
@@ -270,9 +331,11 @@ export default function OrganisatiesPage() {
                           {type === "campus" ? "↳ " : ""}{org.name}
                           {org.parent_id ? (
                             <Badge variant="secondary" className="text-[10px]">Campus</Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-[10px]">Hoofd</Badge>
-                          )}
+                          ) : (org.childCount ?? 0) > 0 ? (
+                            <Badge variant="outline" className="text-[10px]">
+                              Hoofd · {org.childCount} campus{org.childCount === 1 ? "" : "sen"}
+                            </Badge>
+                          ) : null}
                           {org.type === "studentenvereniging" && org.is_nationaal && (
                             <Badge variant="outline" className="text-[10px]">Nationaal</Badge>
                           )}
@@ -282,6 +345,12 @@ export default function OrganisatiesPage() {
                         )}
                         {org.type === "studentenvereniging" && verbondenName && (
                           <span className="text-xs text-muted-foreground mt-0.5">verbonden aan {verbondenName}</span>
+                        )}
+                        {org.schoolbestuur && (
+                          <span className="text-xs text-muted-foreground mt-0.5 truncate">
+                            {org.schoolbestuur}
+                            {org.scholengemeenschap ? ` · ${org.scholengemeenschap}` : ""}
+                          </span>
                         )}
                       </div>
                     </TableCell>
