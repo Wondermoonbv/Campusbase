@@ -29,6 +29,7 @@ import { SortableTableHead, useSort } from "@/components/ui/SortableTableHead";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
+import { capitalize } from "@/lib/utils";
 
 const ORGANISATIE_TYPE_LABELS: Record<OrganisatieType, string> = {
   school: "School",
@@ -260,7 +261,7 @@ export default function OrganisatiesPage() {
           <Select value={filterLanguage} onValueChange={setFilterLanguage}><SelectTrigger className="w-[120px] h-10 sm:h-9"><SelectValue placeholder="Taal" /></SelectTrigger><SelectContent><SelectItem value="all">Alle talen</SelectItem><SelectItem value="NL">NL</SelectItem><SelectItem value="FR">FR</SelectItem><SelectItem value="EN">EN</SelectItem></SelectContent></Select>
           <Select value={filterStatus} onValueChange={setFilterStatus}><SelectTrigger className="w-[140px] h-10 sm:h-9"><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">Alle statussen</SelectItem><SelectItem value="actief">Actief</SelectItem><SelectItem value="inactief">Inactief</SelectItem><SelectItem value="prospect">Prospect</SelectItem></SelectContent></Select>
           <Select value={filterNiveau} onValueChange={setFilterNiveau}><SelectTrigger className="w-[160px] h-10 sm:h-9"><SelectValue placeholder="Niveau" /></SelectTrigger><SelectContent><SelectItem value="all">Alle niveaus</SelectItem><SelectItem value="HO">Hoger onderwijs</SelectItem><SelectItem value="SO">Secundair</SelectItem></SelectContent></Select>
-          <Select value={filterSchoolType} onValueChange={setFilterSchoolType}><SelectTrigger className="w-[180px] h-10 sm:h-9"><SelectValue placeholder="Schooltype" /></SelectTrigger><SelectContent><SelectItem value="all">Alle schooltypes</SelectItem>{schoolTypeOptions.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select>
+          <Select value={filterSchoolType} onValueChange={setFilterSchoolType}><SelectTrigger className="w-[180px] h-10 sm:h-9"><SelectValue placeholder="Schooltype" /></SelectTrigger><SelectContent><SelectItem value="all">Alle schooltypes</SelectItem>{schoolTypeOptions.map((t) => <SelectItem key={t} value={t}>{capitalize(t)}</SelectItem>)}</SelectContent></Select>
           <SearchableComboFilter
             className="w-[220px]"
             value={filterSchoolbestuurNr}
@@ -290,7 +291,7 @@ export default function OrganisatiesPage() {
             {filterLanguage !== "all" && <FilterChip label={`Taal: ${filterLanguage}`} onClear={() => setFilterLanguage("all")} />}
             {filterStatus !== "all" && <FilterChip label={`Status: ${filterStatus}`} onClear={() => setFilterStatus("all")} />}
             {filterNiveau !== "all" && <FilterChip label={`Niveau: ${filterNiveau === "HO" ? "Hoger onderwijs" : "Secundair"}`} onClear={() => setFilterNiveau("all")} />}
-            {filterSchoolType !== "all" && <FilterChip label={`Schooltype: ${filterSchoolType}`} onClear={() => setFilterSchoolType("all")} />}
+            {filterSchoolType !== "all" && <FilterChip label={`Schooltype: ${capitalize(filterSchoolType)}`} onClear={() => setFilterSchoolType("all")} />}
             {filterSchoolbestuurNr && <FilterChip label={`Schoolbestuur: ${filterSchoolbestuurLabel || filterSchoolbestuurNr}`} onClear={() => { setFilterSchoolbestuurNr(""); setFilterSchoolbestuurLabel(""); }} />}
             {filterScholengemNr && <FilterChip label={`Scholengemeenschap: ${filterScholengemLabel || filterScholengemNr}`} onClear={() => { setFilterScholengemNr(""); setFilterScholengemLabel(""); }} />}
             <Button
@@ -341,7 +342,7 @@ export default function OrganisatiesPage() {
                         {org.scholengemeenschap ? ` · ${org.scholengemeenschap}` : ""}
                       </p>
                     )}
-                    <p className="text-xs text-muted-foreground mt-0.5">{ORGANISATIE_TYPE_LABELS[org.type]} · {org.city || "—"} · {org.language || "—"}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{org.type === "school" && org.school_type ? `${ORGANISATIE_TYPE_LABELS[org.type]} · ${capitalize(org.school_type)}` : ORGANISATIE_TYPE_LABELS[org.type]} · {org.city || "—"} · {org.language || "—"}</p>
                   </div>
                   <div className="flex items-center gap-1">
                     <StatusBadge status={org.status} />
@@ -398,7 +399,7 @@ export default function OrganisatiesPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>{ORGANISATIE_TYPE_LABELS[org.type] || org.type}</TableCell>
+                    <TableCell>{org.type === "school" && org.school_type ? `${ORGANISATIE_TYPE_LABELS[org.type]} · ${capitalize(org.school_type)}` : ORGANISATIE_TYPE_LABELS[org.type] || org.type}</TableCell>
                     <TableCell>{org.city || "—"}</TableCell>
                     <TableCell className="hidden lg:table-cell">{org.province || "—"}</TableCell>
                     <TableCell>{org.language || "—"}</TableCell>
