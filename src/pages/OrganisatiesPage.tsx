@@ -66,6 +66,22 @@ function ListSkeleton() {
   );
 }
 
+function FilterChip({ label, onClear }: { label: string; onClear: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs">
+      <span className="truncate max-w-[220px]">{label}</span>
+      <button
+        type="button"
+        aria-label={`${label} verwijderen`}
+        onClick={onClear}
+        className="hover:text-foreground text-muted-foreground"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </span>
+  );
+}
+
 export default function OrganisatiesPage() {
   const [searchParams] = useSearchParams();
   const { scholen, isLoading, upsertSchool, deleteSchool } = useScholen();
