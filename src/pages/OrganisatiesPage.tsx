@@ -244,6 +244,28 @@ export default function OrganisatiesPage() {
             <Select value={filterProvince} onValueChange={setFilterProvince}><SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9"><SelectValue placeholder="Provincie" /></SelectTrigger><SelectContent><SelectItem value="all">Alle provincies</SelectItem>{PROVINCES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select>
             <Select value={filterLanguage} onValueChange={setFilterLanguage}><SelectTrigger className="w-full sm:w-[120px] h-10 sm:h-9"><SelectValue placeholder="Taal" /></SelectTrigger><SelectContent><SelectItem value="all">Alle talen</SelectItem><SelectItem value="NL">NL</SelectItem><SelectItem value="FR">FR</SelectItem><SelectItem value="EN">EN</SelectItem></SelectContent></Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}><SelectTrigger className="w-full sm:w-[140px] h-10 sm:h-9"><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">Alle statussen</SelectItem><SelectItem value="actief">Actief</SelectItem><SelectItem value="inactief">Inactief</SelectItem><SelectItem value="prospect">Prospect</SelectItem></SelectContent></Select>
+            <Select value={filterNiveau} onValueChange={setFilterNiveau}><SelectTrigger className="w-full sm:w-[160px] h-10 sm:h-9"><SelectValue placeholder="Niveau" /></SelectTrigger><SelectContent><SelectItem value="all">Alle niveaus</SelectItem><SelectItem value="HO">Hoger onderwijs</SelectItem><SelectItem value="SO">Secundair</SelectItem></SelectContent></Select>
+            <Select value={filterSchoolType} onValueChange={setFilterSchoolType}><SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9"><SelectValue placeholder="Schooltype" /></SelectTrigger><SelectContent><SelectItem value="all">Alle schooltypes</SelectItem>{schoolTypeOptions.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select>
+            <SearchableComboFilter
+              className="w-full sm:w-[220px]"
+              value={filterSchoolbestuurNr}
+              selectedLabel={filterSchoolbestuurLabel}
+              placeholder="Schoolbestuur"
+              onSearchChange={setSchoolbestuurTerm}
+              options={schoolbestuurOptions}
+              isLoading={sbLoading}
+              onChange={(nr, name) => { setFilterSchoolbestuurNr(nr); setFilterSchoolbestuurLabel(name); }}
+            />
+            <SearchableComboFilter
+              className="w-full sm:w-[220px]"
+              value={filterScholengemNr}
+              selectedLabel={filterScholengemLabel}
+              placeholder="Scholengemeenschap"
+              onSearchChange={setScholengemTerm}
+              options={scholengemOptions}
+              isLoading={sgLoading}
+              onChange={(nr, name) => { setFilterScholengemNr(nr); setFilterScholengemLabel(name); }}
+            />
           </div>
         </div>
       </div>
