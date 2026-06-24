@@ -927,7 +927,11 @@ export type Database = {
           parent_id: string | null
           postal_code: string | null
           province: string
+          scholengemeenschap: string | null
+          scholengemeenschap_nr: string | null
           school_type: string
+          schoolbestuur: string | null
+          schoolbestuur_nr: string | null
           status: string
           street: string | null
           taalstelsel: string | null
@@ -955,7 +959,11 @@ export type Database = {
           parent_id?: string | null
           postal_code?: string | null
           province: string
+          scholengemeenschap?: string | null
+          scholengemeenschap_nr?: string | null
           school_type?: string
+          schoolbestuur?: string | null
+          schoolbestuur_nr?: string | null
           status?: string
           street?: string | null
           taalstelsel?: string | null
@@ -983,7 +991,11 @@ export type Database = {
           parent_id?: string | null
           postal_code?: string | null
           province?: string
+          scholengemeenschap?: string | null
+          scholengemeenschap_nr?: string | null
           school_type?: string
+          schoolbestuur?: string | null
+          schoolbestuur_nr?: string | null
           status?: string
           street?: string | null
           taalstelsel?: string | null
