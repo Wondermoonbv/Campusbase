@@ -101,7 +101,7 @@ export function useOrganisatiesPaged(p: PagedOrgParams) {
     queryKey: ["organisaties-paged", p],
     queryFn: async () => {
       const select =
-        "id, name, type, school_type, province, city, website, language, notes, status, created_at, parent_id, is_nationaal, verbonden_instelling_id, parent:parent_id(id,name), verbonden_instelling:verbonden_instelling_id(id,name)";
+        "id, name, type, school_type, province, city, website, language, notes, status, created_at, parent_id, is_nationaal, verbonden_instelling_id, parent:organisaties!parent_id(id,name), verbonden_instelling:organisaties!verbonden_instelling_id(id,name)";
       let q: any = supabase.from("organisaties").select(select, { count: "exact" });
       const term = p.search.trim();
       if (term) {
@@ -119,7 +119,7 @@ export function useOrganisatiesPaged(p: PagedOrgParams) {
       q = q.range(from, to);
       const { data, error, count } = await q;
       if (error) { console.error("Error fetching paged organisaties:", error); throw error; }
-      const rows = (data ?? []) as PagedOrgRow[];
+      const rows = (data ?? []) as unknown as PagedOrgRow[];
       const campusesByParent: Record<string, PagedOrgRow[]> = {};
       if (p.hierarchical && rows.length > 0) {
         const parentIds = rows.map((r) => r.id);
@@ -129,7 +129,7 @@ export function useOrganisatiesPaged(p: PagedOrgParams) {
           .in("parent_id", parentIds)
           .order("name", { ascending: true })
           .range(0, 9999);
-        ((campData ?? []) as PagedOrgRow[]).forEach((c) => {
+        ((campData ?? []) as unknown as PagedOrgRow[]).forEach((c) => {
           if (!c.parent_id) return;
           (campusesByParent[c.parent_id] ??= []).push(c);
         });
