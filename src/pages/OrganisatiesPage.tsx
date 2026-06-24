@@ -2,7 +2,16 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useScholen, useContacten, useOrganisatieTypeCounts, useOrganisatiesPaged } from "@/hooks/useScholen";
+import {
+  useScholen,
+  useContacten,
+  useOrganisatieTypeCounts,
+  useOrganisatiesPaged,
+  useSchoolTypeOptions,
+  useSchoolbestuurSearch,
+  useScholengemeenschapSearch,
+} from "@/hooks/useScholen";
+import { SearchableComboFilter } from "@/components/organisaties/SearchableComboFilter";
 import { School, PROVINCES, OrganisatieType } from "@/types/crm";
 import { writeAuditLog } from "@/lib/audit";
 import { Input } from "@/components/ui/input";
@@ -66,6 +75,14 @@ export default function OrganisatiesPage() {
   const [filterProvince, setFilterProvince] = useState<string>("all");
   const [filterLanguage, setFilterLanguage] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>(searchParams.get("status") ?? "all");
+  const [filterNiveau, setFilterNiveau] = useState<string>("all");
+  const [filterSchoolType, setFilterSchoolType] = useState<string>("all");
+  const [filterSchoolbestuurNr, setFilterSchoolbestuurNr] = useState<string>("");
+  const [filterSchoolbestuurLabel, setFilterSchoolbestuurLabel] = useState<string>("");
+  const [filterScholengemNr, setFilterScholengemNr] = useState<string>("");
+  const [filterScholengemLabel, setFilterScholengemLabel] = useState<string>("");
+  const [schoolbestuurTerm, setSchoolbestuurTerm] = useState<string>("");
+  const [scholengemTerm, setScholengemTerm] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [editSchool, setEditSchool] = useState<School | undefined>();
@@ -95,11 +112,19 @@ export default function OrganisatiesPage() {
   const typeCounts = typeCountsData ?? { all: 0 };
 
   const hasActiveFilter = useMemo(() =>
-    search.trim().length > 0 || filterOrgType !== "all" || filterProvince !== "all" || filterLanguage !== "all" || filterStatus !== "all"
-  , [search, filterOrgType, filterProvince, filterLanguage, filterStatus]);
+    search.trim().length > 0
+    || filterOrgType !== "all"
+    || filterProvince !== "all"
+    || filterLanguage !== "all"
+    || filterStatus !== "all"
+    || filterNiveau !== "all"
+    || filterSchoolType !== "all"
+    || !!filterSchoolbestuurNr
+    || !!filterScholengemNr
+  , [search, filterOrgType, filterProvince, filterLanguage, filterStatus, filterNiveau, filterSchoolType, filterSchoolbestuurNr, filterScholengemNr]);
 
   // Reset to page 1 whenever filters or sort change
-  useEffect(() => { setPage(1); }, [search, filterOrgType, filterProvince, filterLanguage, filterStatus, sort.key, sort.direction]);
+  useEffect(() => { setPage(1); }, [search, filterOrgType, filterProvince, filterLanguage, filterStatus, filterNiveau, filterSchoolType, filterSchoolbestuurNr, filterScholengemNr, sort.key, sort.direction]);
 
   const { data: paged, isLoading: pagedLoading } = useOrganisatiesPaged({
     page,
@@ -112,7 +137,15 @@ export default function OrganisatiesPage() {
     sortKey: sort.key,
     sortDir: sort.direction,
     hierarchical: !hasActiveFilter,
+    niveau: filterNiveau,
+    schoolType: filterSchoolType,
+    schoolbestuurNr: filterSchoolbestuurNr,
+    scholengemeenschapNr: filterScholengemNr,
   });
+
+  const { data: schoolTypeOptions = [] } = useSchoolTypeOptions();
+  const { data: schoolbestuurOptions = [], isFetching: sbLoading } = useSchoolbestuurSearch(schoolbestuurTerm);
+  const { data: scholengemOptions = [], isFetching: sgLoading } = useScholengemeenschapSearch(scholengemTerm);
 
   const totalCount = paged?.totalCount ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
