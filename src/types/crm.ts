@@ -19,6 +19,8 @@ export interface School {
   province: string;
   city: string;
   website: string;
+  email: string;
+  telefoon: string;
   language: Language;
   notes: string;
   status: SchoolStatus;

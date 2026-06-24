@@ -66,6 +66,7 @@ export default function OrganisatieDetailPage() {
   const campuses = scholen.filter((s) => s.parent_id === org.id);
   const verbondenInstelling = org.verbonden_instelling_id ? scholen.find((s) => s.id === org.verbonden_instelling_id) : null;
   const isStudentenvereniging = org.type === "studentenvereniging";
+  const hasInstellingContact = !!org.email || !!org.telefoon || !!org.website;
 
   const handleSaveSchool = async (saved: School) => {
     try { await upsertSchool.mutateAsync(saved); } catch { toast.error("Fout bij opslaan."); }
@@ -127,9 +128,6 @@ export default function OrganisatieDetailPage() {
             </div>
           )}
         </div>
-        <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-4 sm:gap-6 text-sm">
-          {org.website && <a href={org.website} target="_blank" rel="noopener" className="text-primary hover:underline inline-flex items-center gap-1"><ExternalLink className="h-3 w-3" /> Website</a>}
-        </div>
         {org.notes && <p className="mt-3 text-sm text-muted-foreground">{org.notes}</p>}
       </div>
 
@@ -160,6 +158,29 @@ export default function OrganisatieDetailPage() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {hasInstellingContact && (
+        <div className="surface-card p-4 sm:p-6 mb-4 sm:mb-6">
+          <h2 className="text-base sm:text-lg font-semibold mb-4">Contactgegevens instelling</h2>
+          <div className="flex flex-col gap-3">
+            {org.email && (
+              <a href={`mailto:${org.email}`} className="text-primary hover:underline inline-flex items-center gap-2 text-sm break-all">
+                <Mail className="h-4 w-4 shrink-0" /> {org.email}
+              </a>
+            )}
+            {org.telefoon && (
+              <a href={`tel:${org.telefoon}`} className="text-primary hover:underline inline-flex items-center gap-2 text-sm">
+                <Phone className="h-4 w-4 shrink-0" /> {org.telefoon}
+              </a>
+            )}
+            {org.website && (
+              <a href={org.website} target="_blank" rel="noopener" className="text-primary hover:underline inline-flex items-center gap-2 text-sm">
+                <ExternalLink className="h-4 w-4 shrink-0" /> {org.website}
+              </a>
+            )}
+          </div>
         </div>
       )}
 
