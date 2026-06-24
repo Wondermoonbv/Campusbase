@@ -51,10 +51,15 @@ export function SearchableComboFilter({
           </span>
           <span className="flex items-center gap-1 shrink-0">
             {value && (
-              <X
-                className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground"
-                onClick={(e) => { e.stopPropagation(); onChange("", ""); }}
-              />
+              <span
+                role="button"
+                aria-label="Filter wissen"
+                className="h-4 w-4 inline-flex items-center justify-center rounded hover:bg-muted"
+                onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onChange("", ""); }}
+              >
+                <X className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+              </span>
             )}
             <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
           </span>
