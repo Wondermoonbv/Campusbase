@@ -291,6 +291,12 @@ export default function OrganisatiesPage() {
                     {org.type === "studentenvereniging" && verbondenName && (
                       <p className="text-xs text-muted-foreground mt-0.5">verbonden aan {verbondenName}</p>
                     )}
+                    {org.schoolbestuur && (
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                        {org.schoolbestuur}
+                        {org.scholengemeenschap ? ` · ${org.scholengemeenschap}` : ""}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground mt-0.5">{ORGANISATIE_TYPE_LABELS[org.type]} · {org.city || "—"} · {org.language || "—"}</p>
                   </div>
                   <div className="flex items-center gap-1">
@@ -325,9 +331,11 @@ export default function OrganisatiesPage() {
                           {type === "campus" ? "↳ " : ""}{org.name}
                           {org.parent_id ? (
                             <Badge variant="secondary" className="text-[10px]">Campus</Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-[10px]">Hoofd</Badge>
-                          )}
+                          ) : (org.childCount ?? 0) > 0 ? (
+                            <Badge variant="outline" className="text-[10px]">
+                              Hoofd · {org.childCount} campus{org.childCount === 1 ? "" : "sen"}
+                            </Badge>
+                          ) : null}
                           {org.type === "studentenvereniging" && org.is_nationaal && (
                             <Badge variant="outline" className="text-[10px]">Nationaal</Badge>
                           )}
@@ -337,6 +345,12 @@ export default function OrganisatiesPage() {
                         )}
                         {org.type === "studentenvereniging" && verbondenName && (
                           <span className="text-xs text-muted-foreground mt-0.5">verbonden aan {verbondenName}</span>
+                        )}
+                        {org.schoolbestuur && (
+                          <span className="text-xs text-muted-foreground mt-0.5 truncate">
+                            {org.schoolbestuur}
+                            {org.scholengemeenschap ? ` · ${org.scholengemeenschap}` : ""}
+                          </span>
                         )}
                       </div>
                     </TableCell>
