@@ -27,6 +27,11 @@ export interface School {
   parent_id?: string | null;
   is_nationaal?: boolean;
   verbonden_instelling_id?: string | null;
+  onderwijsniveau?: string | null;
+  schoolbestuur?: string | null;
+  schoolbestuur_nr?: string | null;
+  scholengemeenschap?: string | null;
+  scholengemeenschap_nr?: string | null;
 }
 
 export interface EventOrganisatie {
