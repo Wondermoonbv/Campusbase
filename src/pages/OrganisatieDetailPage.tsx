@@ -127,9 +127,6 @@ export default function OrganisatieDetailPage() {
             </div>
           )}
         </div>
-        <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-4 sm:gap-6 text-sm">
-          {org.website && <a href={org.website} target="_blank" rel="noopener" className="text-primary hover:underline inline-flex items-center gap-1"><ExternalLink className="h-3 w-3" /> Website</a>}
-        </div>
         {org.notes && <p className="mt-3 text-sm text-muted-foreground">{org.notes}</p>}
       </div>
 
