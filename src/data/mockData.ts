@@ -2,8 +2,8 @@ import type { School, Contact, Program, Contract, Event, SchoolEventParticipatio
 
 // Mock data for development — will be replaced with Supabase queries
 export const mockSchools: School[] = [
-  { id: "1", name: "KU Leuven", type: "school", school_type: "universiteit", province: "Vlaams-Brabant", city: "Leuven", website: "https://kuleuven.be", language: "NL", notes: "Belangrijke partner voor engineering", status: "actief", created_at: "2026-01-15" },
-  { id: "2", name: "HOGENT", type: "school", school_type: "hogeschool", province: "Oost-Vlaanderen", city: "Gent", website: "https://hogent.be", language: "NL", notes: "", status: "actief", created_at: "2026-02-01" },
+  { id: "1", name: "KU Leuven", type: "school", school_type: "universiteit", province: "Vlaams-Brabant", city: "Leuven", website: "https://kuleuven.be", email: "", telefoon: "", language: "NL", notes: "Belangrijke partner voor engineering", status: "actief", created_at: "2026-01-15" },
+  { id: "2", name: "HOGENT", type: "school", school_type: "hogeschool", province: "Oost-Vlaanderen", city: "Gent", website: "https://hogent.be", email: "", telefoon: "", language: "NL", notes: "", status: "actief", created_at: "2026-02-01" },
 ];
 
 export const mockContacts: Contact[] = [
