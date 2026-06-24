@@ -20,7 +20,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Download, Pencil, Upload, Trash2, Building2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Download, Pencil, Upload, Trash2, Building2, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
