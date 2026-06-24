@@ -1,8 +1,8 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useScholen, useContacten } from "@/hooks/useScholen";
+import { useScholen, useContacten, useOrganisatieTypeCounts, useOrganisatiesPaged } from "@/hooks/useScholen";
 import { School, PROVINCES, OrganisatieType } from "@/types/crm";
 import { writeAuditLog } from "@/lib/audit";
 import { Input } from "@/components/ui/input";
@@ -11,12 +11,12 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Download, Pencil, Upload, Trash2, Building2 } from "lucide-react";
+import { Plus, Search, Download, Pencil, Upload, Trash2, Building2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
-import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
+import { SortableTableHead, useSort } from "@/components/ui/SortableTableHead";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
@@ -70,6 +70,8 @@ export default function OrganisatiesPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [editSchool, setEditSchool] = useState<School | undefined>();
   const [deleteTarget, setDeleteTarget] = useState<School | null>(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 50;
   const navigate = useNavigate();
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
@@ -89,33 +91,31 @@ export default function OrganisatiesPage() {
     setDeleteTarget(null);
   }, [deleteTarget, deleteSchool]);
 
-  const typeCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: scholen.length };
-    ORGANISATIE_TYPES.forEach(t => { counts[t] = scholen.filter(s => s.type === t).length; });
-    return counts;
-  }, [scholen]);
+  const { data: typeCountsData } = useOrganisatieTypeCounts();
+  const typeCounts = typeCountsData ?? { all: 0 };
 
-  const filtered = useMemo(() => {
-    return scholen.filter((s) => {
-      const orgContacts = contacten.filter(c => c.organisatie_id === s.id);
-      const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) ||
-        (s.city || "").toLowerCase().includes(search.toLowerCase()) ||
-        orgContacts.some(c => c.name.toLowerCase().includes(search.toLowerCase()));
-      const matchesType = filterOrgType === "all" || s.type === filterOrgType;
-      const matchesProvince = filterProvince === "all" || s.province === filterProvince;
-      const matchesLanguage = filterLanguage === "all" || s.language === filterLanguage;
-      const matchesStatus = filterStatus === "all" || s.status === filterStatus;
-      return matchesSearch && matchesType && matchesProvince && matchesLanguage && matchesStatus;
-    });
-  }, [scholen, contacten, search, filterOrgType, filterProvince, filterLanguage, filterStatus]);
+  const hasActiveFilter = useMemo(() =>
+    search.trim().length > 0 || filterOrgType !== "all" || filterProvince !== "all" || filterLanguage !== "all" || filterStatus !== "all"
+  , [search, filterOrgType, filterProvince, filterLanguage, filterStatus]);
 
-  const sorted = useMemo(() => sortItems(filtered, sort, (s, key) => {
-    switch (key) {
-      case "name": return s.name; case "type": return s.type; case "city": return s.city;
-      case "province": return s.province; case "language": return s.language; case "status": return s.status;
-      default: return s.name;
-    }
-  }), [filtered, sort]);
+  // Reset to page 1 whenever filters or sort change
+  useEffect(() => { setPage(1); }, [search, filterOrgType, filterProvince, filterLanguage, filterStatus, sort.key, sort.direction]);
+
+  const { data: paged, isLoading: pagedLoading } = useOrganisatiesPaged({
+    page,
+    pageSize: PAGE_SIZE,
+    search,
+    orgType: filterOrgType,
+    province: filterProvince,
+    language: filterLanguage,
+    status: filterStatus,
+    sortKey: sort.key,
+    sortDir: sort.direction,
+    hierarchical: !hasActiveFilter,
+  });
+
+  const totalCount = paged?.totalCount ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const contactMap = useMemo(() => {
     const map = new Map<string, typeof contacten[0]>();
@@ -123,40 +123,31 @@ export default function OrganisatiesPage() {
     return map;
   }, [contacten]);
 
-  const parentMap = useMemo(() => {
-    const map = new Map<string, string>();
-    scholen.forEach((s) => { map.set(s.id, s.name); });
-    return map;
-  }, [scholen]);
-
-  const hasActiveFilter = useMemo(() =>
-    search.trim().length > 0 || filterOrgType !== "all" || filterProvince !== "all" || filterLanguage !== "all" || filterStatus !== "all"
-  , [search, filterOrgType, filterProvince, filterLanguage, filterStatus]);
-
   const displayRows = useMemo(() => {
-    if (hasActiveFilter) return sorted.map((org) => ({ type: "flat" as const, org }));
-    const heads = sortItems(scholen.filter((s) => !s.parent_id), sort, (s, key) => {
-      switch (key) {
-        case "name": return s.name; case "type": return s.type; case "city": return s.city;
-        case "province": return s.province; case "language": return s.language; case "status": return s.status;
-        default: return s.name;
-      }
-    });
-    const rows: { type: "head" | "campus"; org: School }[] = [];
-    const headIds = new Set(heads.map((h) => h.id));
-    heads.forEach((head) => {
-      rows.push({ type: "head", org: head });
-      const campuses = scholen.filter((s) => s.parent_id === head.id).sort((a, b) => a.name.localeCompare(b.name));
-      campuses.forEach((c) => rows.push({ type: "campus", org: c }));
-    });
-    const orphans = scholen.filter((s) => s.parent_id && !headIds.has(s.parent_id)).sort((a, b) => a.name.localeCompare(b.name));
-    orphans.forEach((o) => rows.push({ type: "campus", org: o }));
+    const rows: { type: "head" | "campus" | "flat"; org: any; parentName?: string | null; verbondenName?: string | null }[] = [];
+    const pagedRows = paged?.rows ?? [];
+    if (hasActiveFilter) {
+      pagedRows.forEach((org: any) => rows.push({
+        type: "flat",
+        org,
+        parentName: org.parent?.name ?? null,
+        verbondenName: org.verbonden_instelling?.name ?? null,
+      }));
+    } else {
+      const campusesByParent = paged?.campusesByParent ?? {};
+      pagedRows.forEach((head: any) => {
+        rows.push({ type: "head", org: head, parentName: null, verbondenName: head.verbonden_instelling?.name ?? null });
+        (campusesByParent[head.id] ?? []).forEach((c: any) => {
+          rows.push({ type: "campus", org: c, parentName: head.name, verbondenName: c.verbonden_instelling?.name ?? null });
+        });
+      });
+    }
     return rows;
-  }, [hasActiveFilter, sorted, scholen, sort]);
+  }, [paged, hasActiveFilter]);
 
   const exportCSV = useCallback(() => {
     const headers = ["Naam", "Type", "Stad", "Provincie", "Taal", "Status", "Contact", "Email"];
-    const rows = sorted.map((s) => {
+    const rows = (paged?.rows ?? []).map((s: any) => {
       const contact = contactMap.get(s.id);
       return [s.name, ORGANISATIE_TYPE_LABELS[s.type] || s.type, s.city || "", s.province || "", s.language || "", s.status, contact?.name || "", contact?.email || ""];
     });
@@ -165,7 +156,18 @@ export default function OrganisatiesPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "organisaties_export.csv"; a.click();
     writeAuditLog({ action: "export", entity_type: "export", entity_id: "organisaties-csv", entity_name: "Organisaties export", changes: { row_count: rows.length, format: "csv" } });
-  }, [sorted, contactMap]);
+  }, [paged, contactMap]);
+
+  const rangeFrom = totalCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const rangeTo = Math.min(page * PAGE_SIZE, totalCount);
+  const pageNumbers = useMemo(() => {
+    const nums: number[] = [];
+    const max = totalPages;
+    const start = Math.max(1, page - 2);
+    const end = Math.min(max, start + 4);
+    for (let i = start; i <= end; i++) nums.push(i);
+    return nums;
+  }, [page, totalPages]);
 
   return (
     <div className="page-container animate-fade-in-up">
@@ -185,7 +187,7 @@ export default function OrganisatiesPage() {
             onClick={() => setFilterOrgType("all")}
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${filterOrgType === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
           >
-            Alle ({typeCounts.all})
+            Alle ({typeCounts.all ?? 0})
           </button>
           {ORGANISATIE_TYPES.map(t => (
             <button
@@ -213,12 +215,12 @@ export default function OrganisatiesPage() {
         </div>
       </div>
 
-      {isLoading ? <ListSkeleton /> : scholen.length === 0 ? (
+      {isLoading || pagedLoading ? <ListSkeleton /> : totalCount === 0 && !hasActiveFilter ? (
         <EmptyState icon={Building2} title="Nog geen organisaties toegevoegd" description="Voeg je eerste organisatie toe om te beginnen." actionLabel="Organisatie toevoegen" onAction={() => { setEditSchool(undefined); setDialogOpen(true); }} />
       ) : (
         <>
           <div className="block md:hidden space-y-2">
-            {displayRows.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen organisaties gevonden.</div> : displayRows.map(({ type, org }) => (
+            {displayRows.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen organisaties gevonden.</div> : displayRows.map(({ type, org, parentName, verbondenName }) => (
               <div key={org.id} className="surface-card p-4 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate(`/organisaties/${org.id}`)}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
@@ -228,11 +230,11 @@ export default function OrganisatiesPage() {
                         <Badge variant="outline" className="text-[10px]">Nationaal</Badge>
                       )}
                     </div>
-                    {org.parent_id && parentMap.get(org.parent_id) && (
-                      <p className="text-xs text-muted-foreground mt-0.5">onder {parentMap.get(org.parent_id)}</p>
+                    {parentName && (
+                      <p className="text-xs text-muted-foreground mt-0.5">onder {parentName}</p>
                     )}
-                    {org.type === "studentenvereniging" && org.verbonden_instelling_id && parentMap.get(org.verbonden_instelling_id) && (
-                      <p className="text-xs text-muted-foreground mt-0.5">verbonden aan {parentMap.get(org.verbonden_instelling_id)}</p>
+                    {org.type === "studentenvereniging" && verbondenName && (
+                      <p className="text-xs text-muted-foreground mt-0.5">verbonden aan {verbondenName}</p>
                     )}
                     <p className="text-xs text-muted-foreground mt-0.5">{ORGANISATIE_TYPE_LABELS[org.type]} · {org.city || "—"} · {org.language || "—"}</p>
                   </div>
@@ -244,7 +246,7 @@ export default function OrganisatiesPage() {
                 {contactMap.get(org.id) && <p className="text-xs text-muted-foreground mt-2">{contactMap.get(org.id)?.name}</p>}
               </div>
             ))}
-            <div className="text-xs text-muted-foreground px-1 pt-2">{sorted.length} organisatie{sorted.length !== 1 ? "s" : ""} gevonden</div>
+            <div className="text-xs text-muted-foreground px-1 pt-2">{rangeFrom}-{rangeTo} van {totalCount}</div>
           </div>
 
           <div className="surface-card overflow-hidden hidden md:block">
@@ -260,7 +262,7 @@ export default function OrganisatiesPage() {
                 <TableHead className="w-20" />
               </TableRow></TableHeader>
               <TableBody>
-                {displayRows.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen organisaties gevonden.</TableCell></TableRow> : displayRows.map(({ type, org }) => (
+                {displayRows.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen organisaties gevonden.</TableCell></TableRow> : displayRows.map(({ type, org, parentName, verbondenName }) => (
                   <TableRow key={org.id} className="cursor-pointer hover:bg-muted/30" onClick={() => navigate(`/organisaties/${org.id}`)}>
                     <TableCell className={`font-medium ${type === "campus" ? "pl-8" : ""}`}>
                       <div className="flex flex-col">
@@ -275,11 +277,11 @@ export default function OrganisatiesPage() {
                             <Badge variant="outline" className="text-[10px]">Nationaal</Badge>
                           )}
                         </span>
-                        {org.parent_id && parentMap.get(org.parent_id) && (
-                          <span className="text-xs text-muted-foreground mt-0.5">onder {parentMap.get(org.parent_id)}</span>
+                        {parentName && (
+                          <span className="text-xs text-muted-foreground mt-0.5">onder {parentName}</span>
                         )}
-                        {org.type === "studentenvereniging" && org.verbonden_instelling_id && parentMap.get(org.verbonden_instelling_id) && (
-                          <span className="text-xs text-muted-foreground mt-0.5">verbonden aan {parentMap.get(org.verbonden_instelling_id)}</span>
+                        {org.type === "studentenvereniging" && verbondenName && (
+                          <span className="text-xs text-muted-foreground mt-0.5">verbonden aan {verbondenName}</span>
                         )}
                       </div>
                     </TableCell>
@@ -299,8 +301,33 @@ export default function OrganisatiesPage() {
                 ))}
               </TableBody>
             </Table>
-            <div className="p-3 border-t border-border text-xs text-muted-foreground">{sorted.length} organisatie{sorted.length !== 1 ? "s" : ""} gevonden</div>
+            <div className="p-3 border-t border-border text-xs text-muted-foreground">{rangeFrom}-{rangeTo} van {totalCount} organisatie{totalCount !== 1 ? "s" : ""}</div>
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between gap-2 mt-4 flex-wrap">
+              <div className="text-xs text-muted-foreground">{rangeFrom}-{rangeTo} van {totalCount}</div>
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" className="h-8" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} aria-label="Vorige pagina"><ChevronLeft className="h-4 w-4" /></Button>
+                {pageNumbers[0] > 1 && (
+                  <>
+                    <Button variant="ghost" size="sm" className="h-8 min-w-8 px-2" onClick={() => setPage(1)}>1</Button>
+                    {pageNumbers[0] > 2 && <span className="px-1 text-muted-foreground">…</span>}
+                  </>
+                )}
+                {pageNumbers.map((n) => (
+                  <Button key={n} variant={n === page ? "default" : "ghost"} size="sm" className="h-8 min-w-8 px-2" onClick={() => setPage(n)}>{n}</Button>
+                ))}
+                {pageNumbers[pageNumbers.length - 1] < totalPages && (
+                  <>
+                    {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && <span className="px-1 text-muted-foreground">…</span>}
+                    <Button variant="ghost" size="sm" className="h-8 min-w-8 px-2" onClick={() => setPage(totalPages)}>{totalPages}</Button>
+                  </>
+                )}
+                <Button variant="outline" size="sm" className="h-8" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} aria-label="Volgende pagina"><ChevronRight className="h-4 w-4" /></Button>
+              </div>
+            </div>
+          )}
         </>
       )}
 
