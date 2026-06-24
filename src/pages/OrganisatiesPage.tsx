@@ -291,7 +291,7 @@ export default function OrganisatiesPage() {
             {filterLanguage !== "all" && <FilterChip label={`Taal: ${filterLanguage}`} onClear={() => setFilterLanguage("all")} />}
             {filterStatus !== "all" && <FilterChip label={`Status: ${filterStatus}`} onClear={() => setFilterStatus("all")} />}
             {filterNiveau !== "all" && <FilterChip label={`Niveau: ${filterNiveau === "HO" ? "Hoger onderwijs" : "Secundair"}`} onClear={() => setFilterNiveau("all")} />}
-            {filterSchoolType !== "all" && <FilterChip label={`Schooltype: ${filterSchoolType}`} onClear={() => setFilterSchoolType("all")} />}
+            {filterSchoolType !== "all" && <FilterChip label={`Schooltype: ${capitalize(filterSchoolType)}`} onClear={() => setFilterSchoolType("all")} />}
             {filterSchoolbestuurNr && <FilterChip label={`Schoolbestuur: ${filterSchoolbestuurLabel || filterSchoolbestuurNr}`} onClear={() => { setFilterSchoolbestuurNr(""); setFilterSchoolbestuurLabel(""); }} />}
             {filterScholengemNr && <FilterChip label={`Scholengemeenschap: ${filterScholengemLabel || filterScholengemNr}`} onClear={() => { setFilterScholengemNr(""); setFilterScholengemLabel(""); }} />}
             <Button
