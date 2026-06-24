@@ -342,7 +342,7 @@ export default function OrganisatiesPage() {
                         {org.scholengemeenschap ? ` · ${org.scholengemeenschap}` : ""}
                       </p>
                     )}
-                    <p className="text-xs text-muted-foreground mt-0.5">{ORGANISATIE_TYPE_LABELS[org.type]} · {org.city || "—"} · {org.language || "—"}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{org.type === "school" && org.school_type ? `${ORGANISATIE_TYPE_LABELS[org.type]} · ${capitalize(org.school_type)}` : ORGANISATIE_TYPE_LABELS[org.type]} · {org.city || "—"} · {org.language || "—"}</p>
                   </div>
                   <div className="flex items-center gap-1">
                     <StatusBadge status={org.status} />
