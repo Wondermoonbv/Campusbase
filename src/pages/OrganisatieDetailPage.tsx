@@ -161,6 +161,29 @@ export default function OrganisatieDetailPage() {
         </div>
       )}
 
+      {hasInstellingContact && (
+        <div className="surface-card p-4 sm:p-6 mb-4 sm:mb-6">
+          <h2 className="text-base sm:text-lg font-semibold mb-4">Contactgegevens instelling</h2>
+          <div className="flex flex-col gap-3">
+            {org.email && (
+              <a href={`mailto:${org.email}`} className="text-primary hover:underline inline-flex items-center gap-2 text-sm break-all">
+                <Mail className="h-4 w-4 shrink-0" /> {org.email}
+              </a>
+            )}
+            {org.telefoon && (
+              <a href={`tel:${org.telefoon}`} className="text-primary hover:underline inline-flex items-center gap-2 text-sm">
+                <Phone className="h-4 w-4 shrink-0" /> {org.telefoon}
+              </a>
+            )}
+            {org.website && (
+              <a href={org.website} target="_blank" rel="noopener" className="text-primary hover:underline inline-flex items-center gap-2 text-sm">
+                <ExternalLink className="h-4 w-4 shrink-0" /> {org.website}
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="surface-card p-4 sm:p-6 mb-4 sm:mb-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base sm:text-lg font-semibold">Contactpersonen ({contacten.length})</h2>
