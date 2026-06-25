@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useScholen, useContacten, useOrganisatieDetail } from "@/hooks/useScholen";
+import { useOpleidingen } from "@/hooks/useOpleidingen";
 import { useContracten } from "@/hooks/useContracten";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { StatusBadge } from "@/components/ui/StatusBadge";
