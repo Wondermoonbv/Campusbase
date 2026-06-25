@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, Fragment, useEffect } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useOpleidingen, useOpleidingenPaged, useEventOpleidingen } from "@/hooks/useOpleidingen";
+import { useOpleidingen, useOpleidingenPaged, useEventOpleidingen, useOpleidingFilterOptions } from "@/hooks/useOpleidingen";
 import { useScholen } from "@/hooks/useScholen";
 import { writeAuditLog } from "@/lib/audit";
 import { useEvenementen } from "@/hooks/useEvenementen";
@@ -11,8 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Download, Plus, ChevronDown, ChevronRight, Pencil, Trash2, Upload, BookOpen, ChevronLeft } from "lucide-react";
-import { FIELDS_OF_STUDY } from "@/types/crm";
+import { Search, Download, Plus, ChevronDown, ChevronRight, Pencil, Trash2, Upload, BookOpen, ChevronLeft, X } from "lucide-react";
+import { PROVINCES } from "@/types/crm";
 import type { Program } from "@/types/crm";
 import { ProgramFormDialog } from "@/components/programs/ProgramFormDialog";
 import { OrganisatieSelect } from "@/components/organisaties/OrganisatieSelect";
@@ -38,6 +38,17 @@ const OPLEIDING_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "student_count", label: "Studenten", validate: (v) => !v || !isNaN(Number(v)) ? null : "Moet een getal zijn" },
 ];
 
+function FilterChip({ label, onClear }: { label: string; onClear: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs">
+      <span className="truncate max-w-[220px]">{label}</span>
+      <button type="button" aria-label={`${label} verwijderen`} onClick={onClear} className="hover:text-foreground text-muted-foreground">
+        <X className="h-3 w-3" />
+      </button>
+    </span>
+  );
+}
+
 function ListSkeleton() {
   return (
     <div className="space-y-2">
@@ -61,6 +72,8 @@ export default function OpleidingenPage() {
   const [filterLevel, setFilterLevel] = useState("all");
   const [filterField, setFilterField] = useState("all");
   const [filterSchool, setFilterSchool] = useState("all");
+  const [filterProvince, setFilterProvince] = useState("all");
+  const [filterStem, setFilterStem] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProgram, setEditProgram] = useState<Program | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -73,7 +86,7 @@ export default function OpleidingenPage() {
   const [page, setPage] = useState(1);
 
   // Reset to page 1 whenever filters/search/sort change
-  useEffect(() => { setPage(1); }, [search, filterLevel, filterField, filterSchool, sort.key, sort.direction]);
+  useEffect(() => { setPage(1); }, [search, filterLevel, filterField, filterSchool, filterProvince, filterStem, sort.key, sort.direction]);
 
   const sortableKeys = new Set(["name", "study_level", "field_of_study", "student_count", "faculty"]);
   const sortKey = sortableKeys.has(sort.key) ? sort.key : "name";
@@ -85,9 +98,25 @@ export default function OpleidingenPage() {
     organisatieId: filterSchool,
     studyLevel: filterLevel,
     field: filterField,
+    province: filterProvince,
+    stemOnly: filterStem,
     sortKey,
     sortDir: sort.direction,
   });
+
+  const { data: filterOpts } = useOpleidingFilterOptions();
+  const studyLevelOptions = filterOpts?.studyLevels ?? [];
+  const fieldOptions = filterOpts?.fields ?? [];
+  const showFaculty = filterOpts?.anyFaculty ?? false;
+  const showStudents = filterOpts?.anyStudentCount ?? false;
+
+  const schoolName = filterSchool !== "all" ? scholen.find((s) => s.id === filterSchool)?.name ?? "School" : "";
+
+  const hasActiveFilter = search.trim().length > 0 || filterLevel !== "all" || filterField !== "all" || filterSchool !== "all" || filterProvince !== "all" || filterStem;
+
+  const clearAll = () => {
+    setSearch(""); setFilterLevel("all"); setFilterField("all"); setFilterSchool("all"); setFilterProvince("all"); setFilterStem(false);
+  };
 
   const rows = paged?.rows ?? [];
   const totalCount = paged?.totalCount ?? 0;
@@ -124,6 +153,7 @@ export default function OpleidingenPage() {
   const sorted = useMemo(() => rows.map((p: any) => ({
     ...p,
     school: p.organisatie ?? scholen.find((s) => s.id === p.organisatie_id),
+    parentName: p.organisatie?.parent?.name ?? null,
     linkedEvents: eventOpleidingen
       .filter((ep) => ep.program_id === p.id)
       .map((ep) => evenementen.find((e) => e.id === ep.event_id))
@@ -151,17 +181,32 @@ export default function OpleidingenPage() {
       </div>
 
       <div className="surface-card p-3 sm:p-4 mb-4">
-        <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
-          <div className="relative flex-1 min-w-0 sm:min-w-[200px]"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Zoeken op richting of studiedomein..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 sm:h-9" /></div>
-          <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3">
-            <OrganisatieSelect value={filterSchool} onChange={setFilterSchool} allOption allLabel="Alle scholen" allValue="all" placeholder="School" className="w-full sm:w-[180px] h-10 sm:h-9" />
-            <Select value={filterLevel} onValueChange={setFilterLevel}><SelectTrigger className="w-full sm:w-[150px] h-10 sm:h-9"><SelectValue placeholder="Niveau" /></SelectTrigger><SelectContent><SelectItem value="all">Alle niveaus</SelectItem><SelectItem value="bachelor">Bachelor</SelectItem><SelectItem value="master">Master</SelectItem><SelectItem value="graduaat">Graduaat</SelectItem></SelectContent></Select>
-            <Select value={filterField} onValueChange={setFilterField}><SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9 col-span-2 sm:col-span-1"><SelectValue placeholder="Studierichting" /></SelectTrigger><SelectContent><SelectItem value="all">Alle richtingen</SelectItem>{FIELDS_OF_STUDY.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent></Select>
+        <div className="space-y-3">
+          <div className="relative w-full"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Zoeken op richting of studiegebied..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 sm:h-9" /></div>
+          <div className="flex flex-wrap gap-2">
+            <OrganisatieSelect value={filterSchool} onChange={setFilterSchool} allOption allLabel="Alle scholen" allValue="all" placeholder="School" className="w-[200px] h-10 sm:h-9" />
+            <Select value={filterLevel} onValueChange={setFilterLevel}><SelectTrigger className="w-[160px] h-10 sm:h-9"><SelectValue placeholder="Graad" /></SelectTrigger><SelectContent><SelectItem value="all">Alle graden</SelectItem>{studyLevelOptions.map((l) => <SelectItem key={l} value={l} className="capitalize">{l}</SelectItem>)}</SelectContent></Select>
+            <Select value={filterField} onValueChange={setFilterField}><SelectTrigger className="w-[220px] h-10 sm:h-9"><SelectValue placeholder="Studiegebied" /></SelectTrigger><SelectContent><SelectItem value="all">Alle studiegebieden</SelectItem>{fieldOptions.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent></Select>
+            <Select value={filterProvince} onValueChange={setFilterProvince}><SelectTrigger className="w-[160px] h-10 sm:h-9"><SelectValue placeholder="Provincie" /></SelectTrigger><SelectContent><SelectItem value="all">Alle provincies</SelectItem>{PROVINCES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select>
+            <Button type="button" variant={filterStem ? "default" : "outline"} size="sm" className="h-10 sm:h-9" aria-pressed={filterStem} onClick={() => setFilterStem((v) => !v)}>STEM</Button>
           </div>
+          {hasActiveFilter && (
+            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/60">
+              <span className="text-xs text-muted-foreground">Actieve filters:</span>
+              {search.trim() && <FilterChip label={`Zoeken: ${search.trim()}`} onClear={() => setSearch("")} />}
+              {filterSchool !== "all" && <FilterChip label={`School: ${schoolName}`} onClear={() => setFilterSchool("all")} />}
+              {filterLevel !== "all" && <FilterChip label={`Graad: ${filterLevel}`} onClear={() => setFilterLevel("all")} />}
+              {filterField !== "all" && <FilterChip label={`Studiegebied: ${filterField}`} onClear={() => setFilterField("all")} />}
+              {filterProvince !== "all" && <FilterChip label={`Provincie: ${filterProvince}`} onClear={() => setFilterProvince("all")} />}
+              {filterStem && <FilterChip label="STEM" onClear={() => setFilterStem(false)} />}
+              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={clearAll}>Wis alle filters</Button>
+            </div>
+          )}
+          <div className="text-xs text-muted-foreground">{totalCount.toLocaleString("nl-BE")} opleiding{totalCount !== 1 ? "en" : ""}</div>
         </div>
       </div>
 
-      {isLoading ? <ListSkeleton /> : totalCount === 0 && !search && filterLevel === "all" && filterField === "all" && filterSchool === "all" ? (
+      {isLoading ? <ListSkeleton /> : totalCount === 0 && !hasActiveFilter ? (
         <EmptyState icon={BookOpen} title="Nog geen opleidingen toegevoegd" description="Voeg je eerste opleiding toe." actionLabel="Nieuwe opleiding" onAction={() => { setEditProgram(undefined); setDialogOpen(true); }} />
       ) : (
         <>
@@ -170,9 +215,14 @@ export default function OpleidingenPage() {
               <div key={p.id} className="surface-card overflow-hidden">
                 <div className="p-4 cursor-pointer active:scale-[0.99] transition-transform" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1"><p className="font-medium text-sm flex items-center gap-1.5 flex-wrap">{p.name}{p.is_stem && <Badge variant="secondary" className="text-[10px] bg-blue-100 text-blue-800 border-blue-200">STEM</Badge>}</p><Link to={`/organisaties/${p.organisatie_id}`} className="text-xs text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}<OrganisatieLabel organisatieId={p.organisatie_id} /></Link><p className="text-xs text-muted-foreground mt-0.5 capitalize">{p.study_level} · {p.field_of_study}</p></div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm flex items-center gap-1.5 flex-wrap">{p.name}{p.is_stem && <Badge variant="secondary" className="text-[10px] bg-blue-100 text-blue-800 border-blue-200">STEM</Badge>}</p>
+                      <Link to={`/organisaties/${p.organisatie_id}`} className="text-xs text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name ?? "—"}</Link>
+                      {p.parentName && <p className="text-[11px] text-muted-foreground">onder {p.parentName}</p>}
+                      <p className="text-xs text-muted-foreground mt-0.5 capitalize">{p.study_level} · {p.field_of_study}</p>
+                    </div>
                     <div className="flex items-center gap-1">
-                      <span className="text-sm font-medium tabular-nums">{p.student_count ?? "—"}</span>
+                      {showStudents && <span className="text-sm font-medium tabular-nums">{p.student_count ?? "—"}</span>}
                       {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(p); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
                     </div>
                   </div>
@@ -190,22 +240,25 @@ export default function OpleidingenPage() {
               <TableHead className="w-8"></TableHead>
               <SortableTableHead sortKey="name" currentSort={sort} onSort={toggleSort}>Opleiding</SortableTableHead>
               <TableHead>School</TableHead>
-              <SortableTableHead sortKey="faculty" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Faculteit</SortableTableHead>
-              <SortableTableHead sortKey="study_level" currentSort={sort} onSort={toggleSort}>Niveau</SortableTableHead>
-              <SortableTableHead sortKey="field_of_study" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Studierichting</SortableTableHead>
-              <SortableTableHead sortKey="student_count" currentSort={sort} onSort={toggleSort} className="text-right">Studenten</SortableTableHead>
+              {showFaculty && <SortableTableHead sortKey="faculty" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Faculteit</SortableTableHead>}
+              <SortableTableHead sortKey="study_level" currentSort={sort} onSort={toggleSort}>Graad</SortableTableHead>
+              <SortableTableHead sortKey="field_of_study" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Studiegebied</SortableTableHead>
+              {showStudents && <SortableTableHead sortKey="student_count" currentSort={sort} onSort={toggleSort} className="text-right">Studenten</SortableTableHead>}
               <TableHead className="w-20" />
             </TableRow></TableHeader>
-              <TableBody>{sorted.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen opleidingen gevonden.</TableCell></TableRow> : sorted.map((p) => (
+              <TableBody>{sorted.length === 0 ? <TableRow><TableCell colSpan={4 + (showFaculty ? 1 : 0) + (showStudents ? 1 : 0) + 2} className="text-center py-8 text-muted-foreground">Geen opleidingen gevonden.</TableCell></TableRow> : sorted.map((p) => (
                 <Fragment key={p.id}>
                   <TableRow className="hover:bg-muted/30 cursor-pointer" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
                     <TableCell className="px-2">{p.linkedEvents.length > 0 && (expandedId === p.id ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />)}</TableCell>
                     <TableCell className="font-medium"><div className="flex items-center gap-1.5 flex-wrap"><span>{p.name}</span>{p.is_stem && <Badge variant="secondary" className="text-[10px] bg-blue-100 text-blue-800 border-blue-200">STEM</Badge>}</div></TableCell>
-                    <TableCell><Link to={`/organisaties/${p.organisatie_id}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name}<OrganisatieLabel organisatieId={p.organisatie_id} /></Link></TableCell>
-                    <TableCell className="hidden lg:table-cell">{p.faculty}</TableCell>
+                    <TableCell>
+                      <Link to={`/organisaties/${p.organisatie_id}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name ?? "—"}</Link>
+                      {p.parentName && <div className="text-[11px] text-muted-foreground">onder {p.parentName}</div>}
+                    </TableCell>
+                    {showFaculty && <TableCell className="hidden lg:table-cell">{p.faculty}</TableCell>}
                     <TableCell className="capitalize">{p.study_level}</TableCell>
                     <TableCell className="hidden lg:table-cell">{p.field_of_study}</TableCell>
-                    <TableCell className="text-right tabular-nums">{p.student_count ?? "—"}</TableCell>
+                    {showStudents && <TableCell className="text-right tabular-nums">{p.student_count ?? "—"}</TableCell>}
                     <TableCell>
                       <div className="flex gap-0.5">
                         {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditProgram(p); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
@@ -214,7 +267,7 @@ export default function OpleidingenPage() {
                     </TableCell>
                   </TableRow>
                   {expandedId === p.id && p.linkedEvents.length > 0 && (
-                    <TableRow><TableCell colSpan={8} className="bg-muted/20 px-6 py-3"><p className="text-xs font-semibold text-muted-foreground mb-2">Gekoppelde evenementen</p><div className="flex flex-wrap gap-2">{p.linkedEvents.map((ev) => ev && <Link key={ev.id} to={`/evenementen/${ev.id}`} className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted/50 transition-colors"><span className="font-medium">{ev.name}</span><span className="text-muted-foreground">{new Date(ev.date).toLocaleDateString("nl-BE")}</span><StatusBadge status={ev.status} /></Link>)}</div></TableCell></TableRow>
+                    <TableRow><TableCell colSpan={4 + (showFaculty ? 1 : 0) + (showStudents ? 1 : 0) + 2} className="bg-muted/20 px-6 py-3"><p className="text-xs font-semibold text-muted-foreground mb-2">Gekoppelde evenementen</p><div className="flex flex-wrap gap-2">{p.linkedEvents.map((ev) => ev && <Link key={ev.id} to={`/evenementen/${ev.id}`} className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-muted/50 transition-colors"><span className="font-medium">{ev.name}</span><span className="text-muted-foreground">{new Date(ev.date).toLocaleDateString("nl-BE")}</span><StatusBadge status={ev.status} /></Link>)}</div></TableCell></TableRow>
                   )}
                 </Fragment>
               ))}</TableBody></Table>
