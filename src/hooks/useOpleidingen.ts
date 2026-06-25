@@ -49,22 +49,26 @@ export interface PagedOpleidingParams {
   pageSize: number;
   search: string;
   organisatieId: string; // "all" or uuid
-  studyLevel: string; // "all" | "bachelor" | "master" | "graduaat"
+  studyLevel: string; // "all" or value
   field: string; // "all" or value
+  province?: string; // "all" or value
+  stemOnly?: boolean;
   sortKey: string;
   sortDir: "asc" | "desc";
 }
 
 export interface PagedOpleidingRow extends Program {
-  organisatie?: { id: string; name: string; parent_id: string | null; parent?: { id: string; name: string } | null } | null;
+  organisatie?: { id: string; name: string; parent_id: string | null; province?: string | null; parent?: { id: string; name: string } | null } | null;
 }
 
 export function useOpleidingenPaged(p: PagedOpleidingParams) {
   return useQuery({
     queryKey: ["opleidingen-paged", p],
     queryFn: async () => {
+      const useInner = p.province && p.province !== "all";
+      const orgRel = useInner ? "organisaties!inner" : "organisaties!organisatie_id";
       const select =
-        "id, name, organisatie_id, faculty, field_of_study, study_level, student_count, is_stem, organisatie:organisaties!organisatie_id(id, name, parent_id, parent:organisaties!parent_id(id, name))";
+        `id, name, organisatie_id, faculty, field_of_study, study_level, student_count, is_stem, organisatie:${orgRel}(id, name, parent_id, province, parent:organisaties!parent_id(id, name))`;
       let q: any = supabase.from("opleidingen").select(select, { count: "exact" });
       const term = p.search.trim();
       if (term) {
@@ -74,6 +78,8 @@ export function useOpleidingenPaged(p: PagedOpleidingParams) {
       if (p.organisatieId && p.organisatieId !== "all") q = q.eq("organisatie_id", p.organisatieId);
       if (p.studyLevel && p.studyLevel !== "all") q = q.eq("study_level", p.studyLevel);
       if (p.field && p.field !== "all") q = q.eq("field_of_study", p.field);
+      if (p.stemOnly) q = q.eq("is_stem", true);
+      if (useInner) q = q.eq("organisaties.province", p.province);
       q = q.order(p.sortKey, { ascending: p.sortDir === "asc" });
       const from = (p.page - 1) * p.pageSize;
       const to = from + p.pageSize - 1;
@@ -83,6 +89,32 @@ export function useOpleidingenPaged(p: PagedOpleidingParams) {
       return { rows: (data ?? []) as unknown as PagedOpleidingRow[], totalCount: count ?? 0 };
     },
     staleTime: 30_000,
+  });
+}
+
+// Distinct values for filter dropdowns
+export function useOpleidingFilterOptions() {
+  return useQuery({
+    queryKey: ["opleiding-filter-options"],
+    queryFn: async () => {
+      const [levels, fields, hasFaculty, hasStudents] = await Promise.all([
+        supabase.from("opleidingen").select("study_level").not("study_level", "is", null).neq("study_level", "").range(0, 9999),
+        supabase.from("opleidingen").select("field_of_study").not("field_of_study", "is", null).neq("field_of_study", "").range(0, 9999),
+        supabase.from("opleidingen").select("id", { count: "exact", head: true }).not("faculty", "is", null).neq("faculty", ""),
+        supabase.from("opleidingen").select("id", { count: "exact", head: true }).not("student_count", "is", null),
+      ]);
+      const levelSet = new Set<string>();
+      ((levels.data ?? []) as any[]).forEach((r) => r.study_level && levelSet.add(r.study_level));
+      const fieldSet = new Set<string>();
+      ((fields.data ?? []) as any[]).forEach((r) => r.field_of_study && fieldSet.add(r.field_of_study));
+      return {
+        studyLevels: Array.from(levelSet).sort((a, b) => a.localeCompare(b)),
+        fields: Array.from(fieldSet).sort((a, b) => a.localeCompare(b)),
+        anyFaculty: (hasFaculty.count ?? 0) > 0,
+        anyStudentCount: (hasStudents.count ?? 0) > 0,
+      };
+    },
+    staleTime: 5 * 60 * 1000,
   });
 }
 
