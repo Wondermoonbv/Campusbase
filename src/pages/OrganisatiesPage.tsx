@@ -30,6 +30,7 @@ import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
 import { capitalize } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 const ORGANISATIE_TYPE_LABELS: Record<OrganisatieType, string> = {
   school: "School",
