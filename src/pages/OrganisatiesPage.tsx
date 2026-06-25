@@ -292,6 +292,18 @@ export default function OrganisatiesPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Zoeken op naam, stad, contact..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 sm:h-9" />
         </div>
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+          <Input
+            placeholder="Zoek op opleiding (richting of studiegebied)"
+            value={opleidingZoek}
+            onChange={(e) => setOpleidingZoek(e.target.value)}
+            className="pl-9 h-10 sm:h-9 border-primary/40 bg-primary/5 focus-visible:ring-primary"
+          />
+          {opleidingLoading && (
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">zoeken…</span>
+          )}
+        </div>
         <div className="flex flex-wrap gap-2">
           <Select value={filterProvince} onValueChange={setFilterProvince}><SelectTrigger className="w-[180px] h-10 sm:h-9"><SelectValue placeholder="Provincie" /></SelectTrigger><SelectContent><SelectItem value="all">Alle provincies</SelectItem>{PROVINCES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select>
           <Select value={filterLanguage} onValueChange={setFilterLanguage}><SelectTrigger className="w-[120px] h-10 sm:h-9"><SelectValue placeholder="Taal" /></SelectTrigger><SelectContent><SelectItem value="all">Alle talen</SelectItem><SelectItem value="NL">NL</SelectItem><SelectItem value="FR">FR</SelectItem><SelectItem value="EN">EN</SelectItem></SelectContent></Select>
@@ -341,6 +353,7 @@ export default function OrganisatiesPage() {
             {filterSchoolbestuurNr && <FilterChip label={`Schoolbestuur: ${filterSchoolbestuurLabel || filterSchoolbestuurNr}`} onClear={() => { setFilterSchoolbestuurNr(""); setFilterSchoolbestuurLabel(""); }} />}
             {filterScholengemNr && <FilterChip label={`Scholengemeenschap: ${filterScholengemLabel || filterScholengemNr}`} onClear={() => { setFilterScholengemNr(""); setFilterScholengemLabel(""); }} />}
             {filterStem && <FilterChip label="STEM" onClear={() => setFilterStem(false)} />}
+            {opleidingZoekDebounced && <FilterChip label={`Opleiding: ${opleidingZoekDebounced}`} onClear={() => { setOpleidingZoek(""); setOpleidingZoekDebounced(""); setOpleidingOrgIds(null); }} />}
             <Button
               variant="ghost"
               size="sm"
@@ -355,6 +368,7 @@ export default function OrganisatiesPage() {
                 setFilterSchoolbestuurNr(""); setFilterSchoolbestuurLabel("");
                 setFilterScholengemNr(""); setFilterScholengemLabel("");
                 setFilterStem(false);
+                setOpleidingZoek(""); setOpleidingZoekDebounced(""); setOpleidingOrgIds(null);
               }}
             >
               Wis alle filters
