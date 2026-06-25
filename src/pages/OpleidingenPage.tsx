@@ -167,8 +167,8 @@ export default function OpleidingenPage() {
   })), [rows, scholen, evenementen, eventOpleidingen]);
 
   const exportCSV = useCallback(() => {
-    const headers = ["Opleiding", "School", "Faculteit", "Niveau", "Studierichting", "Studenten"];
-    const rows = sorted.map((p) => [p.name, p.school?.name ?? "", p.faculty, p.study_level, p.field_of_study, p.student_count ?? ""]);
+    const headers = ["Opleiding", "Studiegebied", "Graad", "School", "Faculteit", "Studenten"];
+    const rows = sorted.map((p) => [p.name, formatStudiegebied(p.field_of_study), p.study_level, p.school?.name ?? "", p.faculty, p.student_count ?? ""]);
     const csv = [headers, ...rows].map((r) => r.join(";")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" }); const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "opleidingen_export.csv"; a.click();
