@@ -39,8 +39,8 @@ const OPLEIDING_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "name", label: "Naam", required: true },
   { key: "school_name", label: "School", required: true },
   { key: "faculty", label: "Faculteit" },
-  { key: "study_level", label: "Niveau", validate: (v) => !v || ["bachelor", "master", "graduaat"].includes(v.toLowerCase()) ? null : "Moet bachelor, master of graduaat zijn" },
-  { key: "field_of_study", label: "Studierichting" },
+  { key: "study_level", label: "Graad", validate: (v) => !v || ["bachelor", "master", "graduaat"].includes(v.toLowerCase()) ? null : "Moet bachelor, master of graduaat zijn" },
+  { key: "field_of_study", label: "Studiegebied" },
   { key: "student_count", label: "Studenten", validate: (v) => !v || !isNaN(Number(v)) ? null : "Moet een getal zijn" },
 ];
 
