@@ -39,8 +39,8 @@ const OPLEIDING_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "name", label: "Naam", required: true },
   { key: "school_name", label: "School", required: true },
   { key: "faculty", label: "Faculteit" },
-  { key: "study_level", label: "Niveau", validate: (v) => !v || ["bachelor", "master", "graduaat"].includes(v.toLowerCase()) ? null : "Moet bachelor, master of graduaat zijn" },
-  { key: "field_of_study", label: "Studierichting" },
+  { key: "study_level", label: "Graad", validate: (v) => !v || ["bachelor", "master", "graduaat"].includes(v.toLowerCase()) ? null : "Moet bachelor, master of graduaat zijn" },
+  { key: "field_of_study", label: "Studiegebied" },
   { key: "student_count", label: "Studenten", validate: (v) => !v || !isNaN(Number(v)) ? null : "Moet een getal zijn" },
 ];
 
@@ -167,8 +167,8 @@ export default function OpleidingenPage() {
   })), [rows, scholen, evenementen, eventOpleidingen]);
 
   const exportCSV = useCallback(() => {
-    const headers = ["Opleiding", "School", "Faculteit", "Niveau", "Studierichting", "Studenten"];
-    const rows = sorted.map((p) => [p.name, p.school?.name ?? "", p.faculty, p.study_level, p.field_of_study, p.student_count ?? ""]);
+    const headers = ["Opleiding", "Studiegebied", "Graad", "School", "Faculteit", "Studenten"];
+    const rows = sorted.map((p) => [p.name, formatStudiegebied(p.field_of_study), p.study_level, p.school?.name ?? "", p.faculty, p.student_count ?? ""]);
     const csv = [headers, ...rows].map((r) => r.join(";")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" }); const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "opleidingen_export.csv"; a.click();
@@ -223,9 +223,12 @@ export default function OpleidingenPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-sm flex items-center gap-1.5 flex-wrap">{p.name}{p.is_stem && <Badge variant="secondary" className="text-[10px] bg-blue-100 text-blue-800 border-blue-200">STEM</Badge>}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        <span className="font-medium text-foreground/80">{formatStudiegebied(p.field_of_study)}</span>
+                        {p.study_level && <> · <span className="capitalize">{p.study_level}</span></>}
+                      </p>
                       <Link to={`/organisaties/${p.organisatie_id}`} className="text-xs text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name ?? "—"}</Link>
                       {p.parentName && <p className="text-[11px] text-muted-foreground">onder {p.parentName}</p>}
-                      <p className="text-xs text-muted-foreground mt-0.5">{formatStudiegebied(p.field_of_study)} · <span className="capitalize">{p.study_level}</span></p>
                     </div>
                     <div className="flex items-center gap-1">
                       {showStudents && <span className="text-sm font-medium tabular-nums">{p.student_count ?? "—"}</span>}
