@@ -155,6 +155,7 @@ export interface RichtingRow {
   is_stem: boolean | null;
   aantal_scholen: number;
   graden: string[];
+  niveau: string | null;
 }
 
 export interface PagedRichtingParams {
@@ -163,6 +164,7 @@ export interface PagedRichtingParams {
   search: string;
   field: string; // "all" or value
   stemOnly?: boolean;
+  niveau?: string; // "all" | "SO" | "HO"
   sortKey: string;
   sortDir: "asc" | "desc";
 }
@@ -173,7 +175,7 @@ export function useRichtingenPaged(p: PagedRichtingParams) {
     queryFn: async () => {
       let q: any = (supabase as any)
         .from("opleidingen_per_richting")
-        .select("name, field_of_study, is_stem, aantal_scholen, graden", { count: "exact" });
+        .select("name, field_of_study, is_stem, aantal_scholen, graden, niveau", { count: "exact" });
       const term = p.search.trim();
       if (term) {
         const escaped = term.replace(/[%,]/g, " ");
@@ -181,6 +183,7 @@ export function useRichtingenPaged(p: PagedRichtingParams) {
       }
       if (p.field && p.field !== "all") q = q.eq("field_of_study", p.field);
       if (p.stemOnly) q = q.eq("is_stem", true);
+      if (p.niveau && p.niveau !== "all") q = q.eq("niveau", p.niveau);
       q = q.order(p.sortKey, { ascending: p.sortDir === "asc" });
       const from = (p.page - 1) * p.pageSize;
       const to = from + p.pageSize - 1;
@@ -204,7 +207,7 @@ export interface RichtingAanbieder {
 
 export function useRichtingAanbieders(naam: string | null, field: string | null, enabled: boolean) {
   return useQuery({
-    queryKey: ["richting-aanbieders", naam, field],
+    queryKey: ["richting-aanbieders", naam, field, (arguments as any)?.[3] ?? null],
     enabled: enabled && !!naam,
     queryFn: async () => {
       let q: any = supabase
