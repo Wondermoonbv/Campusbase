@@ -158,6 +158,27 @@ export interface RichtingRow {
   niveau: string | null;
 }
 
+export function useRichtingFieldOptions(niveau: string) {
+  return useQuery({
+    queryKey: ["richting-field-options", niveau],
+    queryFn: async () => {
+      let q: any = (supabase as any)
+        .from("opleidingen_per_richting")
+        .select("field_of_study")
+        .not("field_of_study", "is", null)
+        .neq("field_of_study", "")
+        .range(0, 9999);
+      if (niveau && niveau !== "all") q = q.eq("niveau", niveau);
+      const { data, error } = await q;
+      if (error) { console.error("Error fetching richting fields:", error); return [] as string[]; }
+      const set = new Set<string>();
+      ((data ?? []) as any[]).forEach((r) => r.field_of_study && set.add(r.field_of_study));
+      return Array.from(set).sort((a, b) => a.localeCompare(b));
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export interface PagedRichtingParams {
   page: number;
   pageSize: number;
