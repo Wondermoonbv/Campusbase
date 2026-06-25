@@ -1346,6 +1346,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      organisatie_ids_met_opleiding: {
+        Args: { zoek: string }
+        Returns: {
+          id: string
+        }[]
+      }
       reset_user_password: {
         Args: { new_password: string; target_email: string }
         Returns: Json
