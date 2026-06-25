@@ -94,6 +94,7 @@ export interface PagedOrgParams {
   schoolbestuurNr?: string;
   scholengemeenschapNr?: string;
   stemOnly?: boolean;
+  opleidingOrgIds?: string[] | null;
 }
 
 export interface PagedOrgRow extends School {
@@ -123,6 +124,12 @@ export function useOrganisatiesPaged(p: PagedOrgParams) {
       if (p.schoolbestuurNr) q = q.eq("schoolbestuur_nr", p.schoolbestuurNr);
       if (p.scholengemeenschapNr) q = q.eq("scholengemeenschap_nr", p.scholengemeenschapNr);
       if (p.stemOnly) q = q.eq("heeft_stem", true);
+      if (p.opleidingOrgIds) {
+        if (p.opleidingOrgIds.length === 0) {
+          return { rows: [], campusesByParent: {}, totalCount: 0 };
+        }
+        q = q.in("id", p.opleidingOrgIds);
+      }
       if (p.hierarchical) q = q.is("parent_id", null);
       q = q.order(p.sortKey, { ascending: p.sortDir === "asc" });
       const from = (p.page - 1) * p.pageSize;
