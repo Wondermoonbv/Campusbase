@@ -19,7 +19,7 @@ import { OrganisatieSelect } from "@/components/organisaties/OrganisatieSelect";
 import { OrganisatieLabel } from "@/components/organisaties/OrganisatieLabel";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
+import { SortableTableHead, useSort } from "@/components/ui/SortableTableHead";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
