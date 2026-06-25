@@ -344,6 +344,9 @@ export default function OrganisatiesPage() {
                       {org.type === "studentenvereniging" && org.is_nationaal && (
                         <Badge variant="outline" className="text-[10px]">Nationaal</Badge>
                       )}
+                      {org.heeft_stem && (
+                        <Badge variant="secondary" className="text-[10px]">STEM</Badge>
+                      )}
                     </div>
                     {parentName && (
                       <p className="text-xs text-muted-foreground mt-0.5">onder {parentName}</p>
@@ -398,6 +401,9 @@ export default function OrganisatiesPage() {
                           ) : null}
                           {org.type === "studentenvereniging" && org.is_nationaal && (
                             <Badge variant="outline" className="text-[10px]">Nationaal</Badge>
+                          )}
+                          {org.heeft_stem && (
+                            <Badge variant="secondary" className="text-[10px]">STEM</Badge>
                           )}
                         </span>
                         {parentName && (
