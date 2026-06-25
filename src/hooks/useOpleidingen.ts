@@ -36,6 +36,7 @@ export function useOpleidingen() {
     },
     onSuccess: ({ data, action, updates }) => {
       qc.invalidateQueries({ queryKey: ["opleidingen"] });
+      qc.invalidateQueries({ queryKey: ["opleidingen-paged"] });
       writeAuditLog({ action, entity_type: "opleiding", entity_id: data.id, entity_name: data.name, changes: updates });
     },
   });
