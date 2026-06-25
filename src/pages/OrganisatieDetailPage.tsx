@@ -20,6 +20,7 @@ import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
 import type { School, Contact, OrganisatieType } from "@/types/crm";
 import { ContactmomentenSection } from "@/components/contactmomenten/ContactmomentenSection";
+import { GraduationCap } from "lucide-react";
 
 const ORGANISATIE_TYPE_LABELS: Record<OrganisatieType, string> = {
   school: "School",
@@ -59,6 +60,12 @@ export default function OrganisatieDetailPage() {
   }
 
   const programs = opleidingen.filter((p) => p.organisatie_id === org.id);
+  const programsByGraad = programs.reduce<Record<string, typeof programs>>((acc, p) => {
+    const key = p.study_level || "Overig";
+    (acc[key] ??= []).push(p);
+    return acc;
+  }, {});
+  const graadKeys = Object.keys(programsByGraad).sort((a, b) => a.localeCompare(b, "nl"));
   const contracts = contracten.filter((c) => c.organisatie_id === org.id);
   const orgEvents = evenementen.filter((e) => e.organisator_id === org.id);
   const isHoofd = !org.parent_id;
@@ -216,6 +223,36 @@ export default function OrganisatieDetailPage() {
       </div>
 
       <ContactmomentenSection organisatieId={org.id} />
+
+      {programs.length > 0 && (
+        <div className="surface-card p-4 sm:p-6 mb-4 sm:mb-6">
+          <h2 className="text-base sm:text-lg font-semibold mb-4 flex items-center gap-2">
+            <GraduationCap className="h-4 w-4" /> Opleidingen ({programs.length})
+          </h2>
+          <div className="space-y-4">
+            {graadKeys.map((graad) => (
+              <div key={graad}>
+                <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">{graad}</h3>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {programsByGraad[graad].map((p) => (
+                    <div key={p.id} className="flex items-start justify-between gap-2 p-3 rounded-lg border border-border bg-muted/20">
+                      <div className="min-w-0">
+                        <div className="font-medium text-sm truncate">{p.name}</div>
+                        {p.field_of_study && (
+                          <div className="text-xs text-muted-foreground truncate">{p.field_of_study}</div>
+                        )}
+                      </div>
+                      {p.is_stem && (
+                        <Badge variant="secondary" className="text-[10px] shrink-0">STEM</Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <Tabs defaultValue={isSchool ? "programs" : "contracts"}>
         <TabsList className="w-full sm:w-auto overflow-x-auto">

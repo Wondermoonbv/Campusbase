@@ -864,31 +864,40 @@ export type Database = {
       }
       opleidingen: {
         Row: {
+          bron: string
           faculty: string | null
           field_of_study: string | null
           id: string
+          is_stem: boolean
           name: string
           organisatie_id: string
           student_count: number | null
           study_level: string
+          su_nummer: string | null
         }
         Insert: {
+          bron?: string
           faculty?: string | null
           field_of_study?: string | null
           id?: string
+          is_stem?: boolean
           name: string
           organisatie_id: string
           student_count?: number | null
           study_level?: string
+          su_nummer?: string | null
         }
         Update: {
+          bron?: string
           faculty?: string | null
           field_of_study?: string | null
           id?: string
+          is_stem?: boolean
           name?: string
           organisatie_id?: string
           student_count?: number | null
           study_level?: string
+          su_nummer?: string | null
         }
         Relationships: [
           {
@@ -913,6 +922,7 @@ export type Database = {
           city: string
           created_at: string | null
           email: string | null
+          heeft_stem: boolean
           id: string
           instellingsnummer: string | null
           is_nationaal: boolean
@@ -945,6 +955,7 @@ export type Database = {
           city: string
           created_at?: string | null
           email?: string | null
+          heeft_stem?: boolean
           id?: string
           instellingsnummer?: string | null
           is_nationaal?: boolean
@@ -977,6 +988,7 @@ export type Database = {
           city?: string
           created_at?: string | null
           email?: string | null
+          heeft_stem?: boolean
           id?: string
           instellingsnummer?: string | null
           is_nationaal?: boolean

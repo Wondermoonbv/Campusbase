@@ -98,6 +98,7 @@ export default function OrganisatiesPage() {
   const [filterSchoolbestuurLabel, setFilterSchoolbestuurLabel] = useState<string>("");
   const [filterScholengemNr, setFilterScholengemNr] = useState<string>("");
   const [filterScholengemLabel, setFilterScholengemLabel] = useState<string>("");
+  const [filterStem, setFilterStem] = useState<boolean>(false);
   const [schoolbestuurTerm, setSchoolbestuurTerm] = useState<string>("");
   const [scholengemTerm, setScholengemTerm] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -138,10 +139,11 @@ export default function OrganisatiesPage() {
     || filterSchoolType !== "all"
     || !!filterSchoolbestuurNr
     || !!filterScholengemNr
-  , [search, filterOrgType, filterProvince, filterLanguage, filterStatus, filterNiveau, filterSchoolType, filterSchoolbestuurNr, filterScholengemNr]);
+    || filterStem
+  , [search, filterOrgType, filterProvince, filterLanguage, filterStatus, filterNiveau, filterSchoolType, filterSchoolbestuurNr, filterScholengemNr, filterStem]);
 
   // Reset to page 1 whenever filters or sort change
-  useEffect(() => { setPage(1); }, [search, filterOrgType, filterProvince, filterLanguage, filterStatus, filterNiveau, filterSchoolType, filterSchoolbestuurNr, filterScholengemNr, sort.key, sort.direction]);
+  useEffect(() => { setPage(1); }, [search, filterOrgType, filterProvince, filterLanguage, filterStatus, filterNiveau, filterSchoolType, filterSchoolbestuurNr, filterScholengemNr, filterStem, sort.key, sort.direction]);
 
   const { data: paged, isLoading: pagedLoading } = useOrganisatiesPaged({
     page,
@@ -158,6 +160,7 @@ export default function OrganisatiesPage() {
     schoolType: filterSchoolType,
     schoolbestuurNr: filterSchoolbestuurNr,
     scholengemeenschapNr: filterScholengemNr,
+    stemOnly: filterStem,
   });
 
   const { data: schoolTypeOptions = [] } = useSchoolTypeOptions();
@@ -282,6 +285,16 @@ export default function OrganisatiesPage() {
             isLoading={sgLoading}
             onChange={(nr, name) => { setFilterScholengemNr(nr); setFilterScholengemLabel(name); }}
           />
+          <Button
+            type="button"
+            variant={filterStem ? "default" : "outline"}
+            size="sm"
+            className="h-10 sm:h-9"
+            aria-pressed={filterStem}
+            onClick={() => setFilterStem((v) => !v)}
+          >
+            STEM
+          </Button>
         </div>
         {hasActiveFilter && (
           <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/60">
@@ -294,6 +307,7 @@ export default function OrganisatiesPage() {
             {filterSchoolType !== "all" && <FilterChip label={`Schooltype: ${capitalize(filterSchoolType)}`} onClear={() => setFilterSchoolType("all")} />}
             {filterSchoolbestuurNr && <FilterChip label={`Schoolbestuur: ${filterSchoolbestuurLabel || filterSchoolbestuurNr}`} onClear={() => { setFilterSchoolbestuurNr(""); setFilterSchoolbestuurLabel(""); }} />}
             {filterScholengemNr && <FilterChip label={`Scholengemeenschap: ${filterScholengemLabel || filterScholengemNr}`} onClear={() => { setFilterScholengemNr(""); setFilterScholengemLabel(""); }} />}
+            {filterStem && <FilterChip label="STEM" onClear={() => setFilterStem(false)} />}
             <Button
               variant="ghost"
               size="sm"
@@ -307,6 +321,7 @@ export default function OrganisatiesPage() {
                 setFilterSchoolType("all");
                 setFilterSchoolbestuurNr(""); setFilterSchoolbestuurLabel("");
                 setFilterScholengemNr(""); setFilterScholengemLabel("");
+                setFilterStem(false);
               }}
             >
               Wis alle filters
@@ -328,6 +343,9 @@ export default function OrganisatiesPage() {
                       <p className={`font-medium text-sm truncate ${type === "campus" ? "pl-4" : ""}`}>{type === "campus" ? "↳ " : ""}{org.name}</p>
                       {org.type === "studentenvereniging" && org.is_nationaal && (
                         <Badge variant="outline" className="text-[10px]">Nationaal</Badge>
+                      )}
+                      {org.heeft_stem && (
+                        <Badge variant="secondary" className="text-[10px]">STEM</Badge>
                       )}
                     </div>
                     {parentName && (
@@ -383,6 +401,9 @@ export default function OrganisatiesPage() {
                           ) : null}
                           {org.type === "studentenvereniging" && org.is_nationaal && (
                             <Badge variant="outline" className="text-[10px]">Nationaal</Badge>
+                          )}
+                          {org.heeft_stem && (
+                            <Badge variant="secondary" className="text-[10px]">STEM</Badge>
                           )}
                         </span>
                         {parentName && (
