@@ -865,11 +865,13 @@ export type Database = {
       opleidingen: {
         Row: {
           bron: string
+          extern_id: string | null
           faculty: string | null
           field_of_study: string | null
           id: string
           is_stem: boolean
           name: string
+          onderwijstaal: string | null
           organisatie_id: string
           student_count: number | null
           study_level: string
@@ -877,11 +879,13 @@ export type Database = {
         }
         Insert: {
           bron?: string
+          extern_id?: string | null
           faculty?: string | null
           field_of_study?: string | null
           id?: string
           is_stem?: boolean
           name: string
+          onderwijstaal?: string | null
           organisatie_id: string
           student_count?: number | null
           study_level?: string
@@ -889,11 +893,13 @@ export type Database = {
         }
         Update: {
           bron?: string
+          extern_id?: string | null
           faculty?: string | null
           field_of_study?: string | null
           id?: string
           is_stem?: boolean
           name?: string
+          onderwijstaal?: string | null
           organisatie_id?: string
           student_count?: number | null
           study_level?: string

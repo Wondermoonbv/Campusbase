@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useScholen, useContacten } from "@/hooks/useScholen";
+import { useScholen, useContacten, useOrganisatieDetail } from "@/hooks/useScholen";
 import { useOpleidingen } from "@/hooks/useOpleidingen";
 import { useContracten } from "@/hooks/useContracten";
 import { useEvenementen } from "@/hooks/useEvenementen";
@@ -32,13 +32,14 @@ const ORGANISATIE_TYPE_LABELS: Record<OrganisatieType, string> = {
 
 export default function OrganisatieDetailPage() {
   const { id } = useParams();
-  const { scholen, upsertSchool } = useScholen();
+  const { upsertSchool } = useScholen();
+  const { data: detail, isLoading: detailLoading } = useOrganisatieDetail(id);
   const { contacten, upsertContact, deleteContact } = useContacten(id);
-  const { opleidingen, upsertOpleiding } = useOpleidingen();
+  const { upsertOpleiding } = useOpleidingen();
   const { contracten } = useContracten();
   const { evenementen } = useEvenementen();
 
-  const org = scholen.find((s) => s.id === id);
+  const org = detail?.org ?? null;
   const [editOpen, setEditOpen] = useState(false);
   const [campusDialogOpen, setCampusDialogOpen] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
@@ -51,6 +52,13 @@ export default function OrganisatieDetailPage() {
   const isSchool = org?.type === "school";
 
   if (!org) {
+    if (detailLoading) {
+      return (
+        <div className="page-container">
+          <p className="text-muted-foreground">Laden…</p>
+        </div>
+      );
+    }
     return (
       <div className="page-container">
         <p className="text-muted-foreground">Organisatie niet gevonden.</p>
@@ -59,7 +67,7 @@ export default function OrganisatieDetailPage() {
     );
   }
 
-  const programs = opleidingen.filter((p) => p.organisatie_id === org.id);
+  const programs = detail?.opleidingen ?? [];
   const programsByGraad = programs.reduce<Record<string, typeof programs>>((acc, p) => {
     const key = p.study_level || "Overig";
     (acc[key] ??= []).push(p);
@@ -69,9 +77,9 @@ export default function OrganisatieDetailPage() {
   const contracts = contracten.filter((c) => c.organisatie_id === org.id);
   const orgEvents = evenementen.filter((e) => e.organisator_id === org.id);
   const isHoofd = !org.parent_id;
-  const parentOrg = org.parent_id ? scholen.find((s) => s.id === org.parent_id) : null;
-  const campuses = scholen.filter((s) => s.parent_id === org.id);
-  const verbondenInstelling = org.verbonden_instelling_id ? scholen.find((s) => s.id === org.verbonden_instelling_id) : null;
+  const parentOrg = detail?.parent ?? null;
+  const campuses = detail?.campuses ?? [];
+  const verbondenInstelling = detail?.verbondenInstelling ?? null;
   const isStudentenvereniging = org.type === "studentenvereniging";
   const hasInstellingContact = !!org.email || !!org.telefoon || !!org.website;
 
