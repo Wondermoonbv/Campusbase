@@ -155,6 +155,28 @@ export interface RichtingRow {
   is_stem: boolean | null;
   aantal_scholen: number;
   graden: string[];
+  niveau: string | null;
+}
+
+export function useRichtingFieldOptions(niveau: string) {
+  return useQuery({
+    queryKey: ["richting-field-options", niveau],
+    queryFn: async () => {
+      let q: any = (supabase as any)
+        .from("opleidingen_per_richting")
+        .select("field_of_study")
+        .not("field_of_study", "is", null)
+        .neq("field_of_study", "")
+        .range(0, 9999);
+      if (niveau && niveau !== "all") q = q.eq("niveau", niveau);
+      const { data, error } = await q;
+      if (error) { console.error("Error fetching richting fields:", error); return [] as string[]; }
+      const set = new Set<string>();
+      ((data ?? []) as any[]).forEach((r) => r.field_of_study && set.add(r.field_of_study));
+      return Array.from(set).sort((a, b) => a.localeCompare(b));
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 }
 
 export interface PagedRichtingParams {
@@ -163,6 +185,7 @@ export interface PagedRichtingParams {
   search: string;
   field: string; // "all" or value
   stemOnly?: boolean;
+  niveau?: string; // "all" | "SO" | "HO"
   sortKey: string;
   sortDir: "asc" | "desc";
 }
@@ -173,7 +196,7 @@ export function useRichtingenPaged(p: PagedRichtingParams) {
     queryFn: async () => {
       let q: any = (supabase as any)
         .from("opleidingen_per_richting")
-        .select("name, field_of_study, is_stem, aantal_scholen, graden", { count: "exact" });
+        .select("name, field_of_study, is_stem, aantal_scholen, graden, niveau", { count: "exact" });
       const term = p.search.trim();
       if (term) {
         const escaped = term.replace(/[%,]/g, " ");
@@ -181,6 +204,7 @@ export function useRichtingenPaged(p: PagedRichtingParams) {
       }
       if (p.field && p.field !== "all") q = q.eq("field_of_study", p.field);
       if (p.stemOnly) q = q.eq("is_stem", true);
+      if (p.niveau && p.niveau !== "all") q = q.eq("niveau", p.niveau);
       q = q.order(p.sortKey, { ascending: p.sortDir === "asc" });
       const from = (p.page - 1) * p.pageSize;
       const to = from + p.pageSize - 1;
@@ -202,9 +226,9 @@ export interface RichtingAanbieder {
   organisatie?: { id: string; name: string; parent_id: string | null; parent?: { id: string; name: string } | null } | null;
 }
 
-export function useRichtingAanbieders(naam: string | null, field: string | null, enabled: boolean) {
+export function useRichtingAanbieders(naam: string | null, field: string | null, enabled: boolean, bron?: string | null) {
   return useQuery({
-    queryKey: ["richting-aanbieders", naam, field],
+    queryKey: ["richting-aanbieders", naam, field, bron ?? null],
     enabled: enabled && !!naam,
     queryFn: async () => {
       let q: any = supabase
@@ -212,6 +236,7 @@ export function useRichtingAanbieders(naam: string | null, field: string | null,
         .select("id, name, study_level, field_of_study, organisatie_id, organisatie:organisaties!organisatie_id(id, name, parent_id, parent:organisaties!parent_id(id, name))")
         .eq("name", naam!);
       if (field) q = q.eq("field_of_study", field);
+      if (bron) q = q.eq("bron", bron);
       q = q.order("study_level", { ascending: true }).limit(500);
       const { data, error } = await q;
       if (error) { console.error("Error fetching aanbieders:", error); throw error; }

@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, Fragment, useEffect } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useOpleidingen, useOpleidingFilterOptions, useRichtingenPaged, useRichtingAanbieders } from "@/hooks/useOpleidingen";
+import { useOpleidingen, useRichtingenPaged, useRichtingAanbieders, useRichtingFieldOptions } from "@/hooks/useOpleidingen";
 import { useScholen } from "@/hooks/useScholen";
 import { writeAuditLog } from "@/lib/audit";
 import { Input } from "@/components/ui/input";
@@ -61,8 +61,9 @@ function ListSkeleton() {
   );
 }
 
-function AanbiedersList({ naam, field }: { naam: string; field: string | null }) {
-  const { data, isLoading } = useRichtingAanbieders(naam, field, true);
+function AanbiedersList({ naam, field, niveau }: { naam: string; field: string | null; niveau: string | null }) {
+  const bron = niveau === "SO" ? "ahovoks" : niveau === "HO" ? "hor" : null;
+  const { data, isLoading } = useRichtingAanbieders(naam, field, true, bron);
   if (isLoading) return <div className="px-4 py-3 text-xs text-muted-foreground">Aanbieders laden…</div>;
   const rows = data ?? [];
   if (rows.length === 0) return <div className="px-4 py-3 text-xs text-muted-foreground">Geen aanbieders gevonden.</div>;
@@ -94,6 +95,7 @@ export default function OpleidingenPage() {
   const [search, setSearch] = useState("");
   const [filterField, setFilterField] = useState("all");
   const [filterStem, setFilterStem] = useState(false);
+  const [filterNiveau, setFilterNiveau] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProgram, setEditProgram] = useState<Program | undefined>();
   const [expandedName, setExpandedName] = useState<string | null>(null);
@@ -103,7 +105,10 @@ export default function OpleidingenPage() {
   const [page, setPage] = useState(1);
 
   // Reset to page 1 whenever filters/search/sort change
-  useEffect(() => { setPage(1); }, [search, filterField, filterStem, sort.key, sort.direction]);
+  useEffect(() => { setPage(1); }, [search, filterField, filterStem, filterNiveau, sort.key, sort.direction]);
+
+  // If currently selected field is not valid for chosen niveau, reset it
+  useEffect(() => { setFilterField("all"); }, [filterNiveau]);
 
   const sortableKeys = new Set(["name", "field_of_study", "aantal_scholen"]);
   const sortKey = sortableKeys.has(sort.key) ? sort.key : "name";
@@ -114,16 +119,16 @@ export default function OpleidingenPage() {
     search,
     field: filterField,
     stemOnly: filterStem,
+    niveau: filterNiveau,
     sortKey,
     sortDir: sort.direction,
   });
 
-  const { data: filterOpts } = useOpleidingFilterOptions();
-  const fieldOptions = filterOpts?.fields ?? [];
+  const { data: fieldOptions = [] } = useRichtingFieldOptions(filterNiveau);
 
-  const hasActiveFilter = search.trim().length > 0 || filterField !== "all" || filterStem;
+  const hasActiveFilter = search.trim().length > 0 || filterField !== "all" || filterStem || filterNiveau !== "all";
 
-  const clearAll = () => { setSearch(""); setFilterField("all"); setFilterStem(false); };
+  const clearAll = () => { setSearch(""); setFilterField("all"); setFilterStem(false); setFilterNiveau("all"); };
 
   const rows = paged?.rows ?? [];
   const totalCount = paged?.totalCount ?? 0;
@@ -193,6 +198,7 @@ export default function OpleidingenPage() {
         <div className="space-y-3">
           <div className="relative w-full"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Zoeken op richting of studiegebied..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 sm:h-9" /></div>
           <div className="flex flex-wrap gap-2">
+            <Select value={filterNiveau} onValueChange={setFilterNiveau}><SelectTrigger className="w-[180px] h-10 sm:h-9"><SelectValue placeholder="Niveau" /></SelectTrigger><SelectContent><SelectItem value="all">Alle niveaus</SelectItem><SelectItem value="SO">Secundair</SelectItem><SelectItem value="HO">Hoger onderwijs</SelectItem></SelectContent></Select>
             <Select value={filterField} onValueChange={setFilterField}><SelectTrigger className="w-[220px] h-10 sm:h-9"><SelectValue placeholder="Studiegebied" /></SelectTrigger><SelectContent><SelectItem value="all">Alle studiegebieden</SelectItem>{fieldOptions.map((f) => <SelectItem key={f} value={f}>{formatStudiegebied(f)}</SelectItem>)}</SelectContent></Select>
             <Button type="button" variant={filterStem ? "default" : "outline"} size="sm" className="h-10 sm:h-9" aria-pressed={filterStem} onClick={() => setFilterStem((v) => !v)}>STEM</Button>
           </div>
@@ -200,6 +206,7 @@ export default function OpleidingenPage() {
             <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/60">
               <span className="text-xs text-muted-foreground">Actieve filters:</span>
               {search.trim() && <FilterChip label={`Zoeken: ${search.trim()}`} onClear={() => setSearch("")} />}
+              {filterNiveau !== "all" && <FilterChip label={`Niveau: ${filterNiveau === "SO" ? "Secundair" : "Hoger onderwijs"}`} onClear={() => setFilterNiveau("all")} />}
               {filterField !== "all" && <FilterChip label={`Studiegebied: ${formatStudiegebied(filterField)}`} onClear={() => setFilterField("all")} />}
               {filterStem && <FilterChip label="STEM" onClear={() => setFilterStem(false)} />}
               <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={clearAll}>Wis alle filters</Button>
@@ -228,7 +235,7 @@ export default function OpleidingenPage() {
                       <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">× {r.aantal_scholen} scholen</span>
                     </div>
                   </div>
-                  {isOpen && <div className="border-t border-border"><AanbiedersList naam={r.name} field={r.field_of_study} /></div>}
+                  {isOpen && <div className="border-t border-border"><AanbiedersList naam={r.name} field={r.field_of_study} niveau={r.niveau} /></div>}
                 </div>
               );
             })}
@@ -255,7 +262,7 @@ export default function OpleidingenPage() {
                       <TableCell className="text-right tabular-nums text-sm text-muted-foreground">× {r.aantal_scholen} scholen</TableCell>
                     </TableRow>
                     {isOpen && (
-                      <TableRow><TableCell colSpan={5} className="bg-muted/20 p-0"><AanbiedersList naam={r.name} field={r.field_of_study} /></TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="bg-muted/20 p-0"><AanbiedersList naam={r.name} field={r.field_of_study} niveau={r.niveau} /></TableCell></TableRow>
                     )}
                   </Fragment>
                 );

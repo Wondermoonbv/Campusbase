@@ -1300,6 +1300,7 @@ export type Database = {
           graden: string[] | null
           is_stem: boolean | null
           name: string | null
+          niveau: string | null
         }
         Relationships: []
       }
