@@ -948,6 +948,7 @@ export type Database = {
           telefoon: string | null
           type: Database["public"]["Enums"]["organisatie_type"]
           verbonden_instelling_id: string | null
+          vestigingseenheidsnummer: string | null
           website: string | null
         }
         Insert: {
@@ -981,6 +982,7 @@ export type Database = {
           telefoon?: string | null
           type?: Database["public"]["Enums"]["organisatie_type"]
           verbonden_instelling_id?: string | null
+          vestigingseenheidsnummer?: string | null
           website?: string | null
         }
         Update: {
@@ -1014,6 +1016,7 @@ export type Database = {
           telefoon?: string | null
           type?: Database["public"]["Enums"]["organisatie_type"]
           verbonden_instelling_id?: string | null
+          vestigingseenheidsnummer?: string | null
           website?: string | null
         }
         Relationships: [
