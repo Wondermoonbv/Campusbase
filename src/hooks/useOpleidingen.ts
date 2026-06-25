@@ -205,9 +205,9 @@ export interface RichtingAanbieder {
   organisatie?: { id: string; name: string; parent_id: string | null; parent?: { id: string; name: string } | null } | null;
 }
 
-export function useRichtingAanbieders(naam: string | null, field: string | null, enabled: boolean) {
+export function useRichtingAanbieders(naam: string | null, field: string | null, enabled: boolean, bron?: string | null) {
   return useQuery({
-    queryKey: ["richting-aanbieders", naam, field, (arguments as any)?.[3] ?? null],
+    queryKey: ["richting-aanbieders", naam, field, bron ?? null],
     enabled: enabled && !!naam,
     queryFn: async () => {
       let q: any = supabase
@@ -215,6 +215,7 @@ export function useRichtingAanbieders(naam: string | null, field: string | null,
         .select("id, name, study_level, field_of_study, organisatie_id, organisatie:organisaties!organisatie_id(id, name, parent_id, parent:organisaties!parent_id(id, name))")
         .eq("name", naam!);
       if (field) q = q.eq("field_of_study", field);
+      if (bron) q = q.eq("bron", bron);
       q = q.order("study_level", { ascending: true }).limit(500);
       const { data, error } = await q;
       if (error) { console.error("Error fetching aanbieders:", error); throw error; }
