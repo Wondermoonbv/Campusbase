@@ -147,3 +147,76 @@ export function useEventOpleidingen() {
 
   return { eventOpleidingen, setEventPrograms };
 }
+
+// Grouped-by-richting view
+export interface RichtingRow {
+  name: string;
+  field_of_study: string | null;
+  is_stem: boolean | null;
+  aantal_scholen: number;
+  graden: string[];
+}
+
+export interface PagedRichtingParams {
+  page: number;
+  pageSize: number;
+  search: string;
+  field: string; // "all" or value
+  stemOnly?: boolean;
+  sortKey: string;
+  sortDir: "asc" | "desc";
+}
+
+export function useRichtingenPaged(p: PagedRichtingParams) {
+  return useQuery({
+    queryKey: ["richtingen-paged", p],
+    queryFn: async () => {
+      let q: any = (supabase as any)
+        .from("opleidingen_per_richting")
+        .select("name, field_of_study, is_stem, aantal_scholen, graden", { count: "exact" });
+      const term = p.search.trim();
+      if (term) {
+        const escaped = term.replace(/[%,]/g, " ");
+        q = q.or(`name.ilike.%${escaped}%,field_of_study.ilike.%${escaped}%`);
+      }
+      if (p.field && p.field !== "all") q = q.eq("field_of_study", p.field);
+      if (p.stemOnly) q = q.eq("is_stem", true);
+      q = q.order(p.sortKey, { ascending: p.sortDir === "asc" });
+      const from = (p.page - 1) * p.pageSize;
+      const to = from + p.pageSize - 1;
+      q = q.range(from, to);
+      const { data, error, count } = await q;
+      if (error) { console.error("Error fetching richtingen:", error); throw error; }
+      return { rows: (data ?? []) as RichtingRow[], totalCount: count ?? 0 };
+    },
+    staleTime: 30_000,
+  });
+}
+
+export interface RichtingAanbieder {
+  id: string;
+  name: string;
+  study_level: string | null;
+  field_of_study: string | null;
+  organisatie_id: string;
+  organisatie?: { id: string; name: string; parent_id: string | null; parent?: { id: string; name: string } | null } | null;
+}
+
+export function useRichtingAanbieders(naam: string | null, field: string | null, enabled: boolean) {
+  return useQuery({
+    queryKey: ["richting-aanbieders", naam, field],
+    enabled: enabled && !!naam,
+    queryFn: async () => {
+      let q: any = supabase
+        .from("opleidingen")
+        .select("id, name, study_level, field_of_study, organisatie_id, organisatie:organisaties!organisatie_id(id, name, parent_id, parent:organisaties!parent_id(id, name))")
+        .eq("name", naam!);
+      if (field) q = q.eq("field_of_study", field);
+      q = q.order("study_level", { ascending: true }).limit(500);
+      const { data, error } = await q;
+      if (error) { console.error("Error fetching aanbieders:", error); throw error; }
+      return (data ?? []) as RichtingAanbieder[];
+    },
+    staleTime: 30_000,
+  });
+}

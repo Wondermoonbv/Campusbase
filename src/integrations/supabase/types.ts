@@ -1287,6 +1287,16 @@ export type Database = {
           },
         ]
       }
+      opleidingen_per_richting: {
+        Row: {
+          aantal_scholen: number | null
+          field_of_study: string | null
+          graden: string[] | null
+          is_stem: boolean | null
+          name: string | null
+        }
+        Relationships: []
+      }
       organisaties_public: {
         Row: {
           city: string | null
