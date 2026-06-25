@@ -223,9 +223,12 @@ export default function OpleidingenPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-sm flex items-center gap-1.5 flex-wrap">{p.name}{p.is_stem && <Badge variant="secondary" className="text-[10px] bg-blue-100 text-blue-800 border-blue-200">STEM</Badge>}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        <span className="font-medium text-foreground/80">{formatStudiegebied(p.field_of_study)}</span>
+                        {p.study_level && <> · <span className="capitalize">{p.study_level}</span></>}
+                      </p>
                       <Link to={`/organisaties/${p.organisatie_id}`} className="text-xs text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name ?? "—"}</Link>
                       {p.parentName && <p className="text-[11px] text-muted-foreground">onder {p.parentName}</p>}
-                      <p className="text-xs text-muted-foreground mt-0.5">{formatStudiegebied(p.field_of_study)} · <span className="capitalize">{p.study_level}</span></p>
                     </div>
                     <div className="flex items-center gap-1">
                       {showStudents && <span className="text-sm font-medium tabular-nums">{p.student_count ?? "—"}</span>}
