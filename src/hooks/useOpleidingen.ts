@@ -11,7 +11,7 @@ export function useOpleidingen() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("opleidingen")
-        .select("id, name, organisatie_id, faculty, field_of_study, study_level, student_count")
+        .select("id, name, organisatie_id, faculty, field_of_study, study_level, student_count, is_stem")
         .order("name", { ascending: true });
       if (error) { console.error("Error fetching opleidingen:", error); return []; }
       return data as unknown as Program[];

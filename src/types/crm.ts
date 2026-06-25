@@ -34,6 +34,7 @@ export interface School {
   schoolbestuur_nr?: string | null;
   scholengemeenschap?: string | null;
   scholengemeenschap_nr?: string | null;
+  heeft_stem?: boolean | null;
 }
 
 export interface EventOrganisatie {
@@ -61,6 +62,7 @@ export interface Program {
   study_level: StudyLevel;
   field_of_study: string;
   student_count: number | null;
+  is_stem?: boolean | null;
   school?: School;
 }
 

@@ -11,7 +11,7 @@ export function useScholen() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("organisaties")
-        .select("id, name, type, school_type, province, city, website, email, telefoon, language, notes, status, created_at, parent_id, is_nationaal, verbonden_instelling_id")
+        .select("id, name, type, school_type, province, city, website, email, telefoon, language, notes, status, created_at, parent_id, is_nationaal, verbonden_instelling_id, heeft_stem")
         .range(0, 9999)
         .order("name", { ascending: true });
       if (error) { console.error("Error fetching organisaties:", error); return []; }
@@ -93,6 +93,7 @@ export interface PagedOrgParams {
   schoolType?: string;
   schoolbestuurNr?: string;
   scholengemeenschapNr?: string;
+  stemOnly?: boolean;
 }
 
 export interface PagedOrgRow extends School {
@@ -106,7 +107,7 @@ export function useOrganisatiesPaged(p: PagedOrgParams) {
     queryKey: ["organisaties-paged", p],
     queryFn: async () => {
       const select =
-        "id, name, type, school_type, province, city, website, language, notes, status, created_at, parent_id, is_nationaal, verbonden_instelling_id, onderwijsniveau, schoolbestuur, schoolbestuur_nr, scholengemeenschap, scholengemeenschap_nr, parent:organisaties!parent_id(id,name), verbonden_instelling:organisaties!verbonden_instelling_id(id,name)";
+        "id, name, type, school_type, province, city, website, language, notes, status, created_at, parent_id, is_nationaal, verbonden_instelling_id, onderwijsniveau, schoolbestuur, schoolbestuur_nr, scholengemeenschap, scholengemeenschap_nr, heeft_stem, parent:organisaties!parent_id(id,name), verbonden_instelling:organisaties!verbonden_instelling_id(id,name)";
       let q: any = supabase.from("organisaties").select(select, { count: "exact" });
       const term = p.search.trim();
       if (term) {
@@ -121,6 +122,7 @@ export function useOrganisatiesPaged(p: PagedOrgParams) {
       if (p.schoolType && p.schoolType !== "all") q = q.eq("school_type", p.schoolType);
       if (p.schoolbestuurNr) q = q.eq("schoolbestuur_nr", p.schoolbestuurNr);
       if (p.scholengemeenschapNr) q = q.eq("scholengemeenschap_nr", p.scholengemeenschapNr);
+      if (p.stemOnly) q = q.eq("heeft_stem", true);
       if (p.hierarchical) q = q.is("parent_id", null);
       q = q.order(p.sortKey, { ascending: p.sortDir === "asc" });
       const from = (p.page - 1) * p.pageSize;
