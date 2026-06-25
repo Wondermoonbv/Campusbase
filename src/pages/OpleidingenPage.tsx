@@ -192,7 +192,7 @@ export default function OpleidingenPage() {
           <div className="flex flex-wrap gap-2">
             <OrganisatieSelect value={filterSchool} onChange={setFilterSchool} allOption allLabel="Alle scholen" allValue="all" placeholder="School" className="w-[200px] h-10 sm:h-9" />
             <Select value={filterLevel} onValueChange={setFilterLevel}><SelectTrigger className="w-[160px] h-10 sm:h-9"><SelectValue placeholder="Graad" /></SelectTrigger><SelectContent><SelectItem value="all">Alle graden</SelectItem>{studyLevelOptions.map((l) => <SelectItem key={l} value={l} className="capitalize">{l}</SelectItem>)}</SelectContent></Select>
-            <Select value={filterField} onValueChange={setFilterField}><SelectTrigger className="w-[220px] h-10 sm:h-9"><SelectValue placeholder="Studiegebied" /></SelectTrigger><SelectContent><SelectItem value="all">Alle studiegebieden</SelectItem>{fieldOptions.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent></Select>
+            <Select value={filterField} onValueChange={setFilterField}><SelectTrigger className="w-[220px] h-10 sm:h-9"><SelectValue placeholder="Studiegebied" /></SelectTrigger><SelectContent><SelectItem value="all">Alle studiegebieden</SelectItem>{fieldOptions.map((f) => <SelectItem key={f} value={f}>{formatStudiegebied(f)}</SelectItem>)}</SelectContent></Select>
             <Select value={filterProvince} onValueChange={setFilterProvince}><SelectTrigger className="w-[160px] h-10 sm:h-9"><SelectValue placeholder="Provincie" /></SelectTrigger><SelectContent><SelectItem value="all">Alle provincies</SelectItem>{PROVINCES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select>
             <Button type="button" variant={filterStem ? "default" : "outline"} size="sm" className="h-10 sm:h-9" aria-pressed={filterStem} onClick={() => setFilterStem((v) => !v)}>STEM</Button>
           </div>
@@ -202,7 +202,7 @@ export default function OpleidingenPage() {
               {search.trim() && <FilterChip label={`Zoeken: ${search.trim()}`} onClear={() => setSearch("")} />}
               {filterSchool !== "all" && <FilterChip label={`School: ${schoolName}`} onClear={() => setFilterSchool("all")} />}
               {filterLevel !== "all" && <FilterChip label={`Graad: ${filterLevel}`} onClear={() => setFilterLevel("all")} />}
-              {filterField !== "all" && <FilterChip label={`Studiegebied: ${filterField}`} onClear={() => setFilterField("all")} />}
+              {filterField !== "all" && <FilterChip label={`Studiegebied: ${formatStudiegebied(filterField)}`} onClear={() => setFilterField("all")} />}
               {filterProvince !== "all" && <FilterChip label={`Provincie: ${filterProvince}`} onClear={() => setFilterProvince("all")} />}
               {filterStem && <FilterChip label="STEM" onClear={() => setFilterStem(false)} />}
               <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={clearAll}>Wis alle filters</Button>
