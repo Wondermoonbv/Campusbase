@@ -36,11 +36,54 @@ export function useOpleidingen() {
     },
     onSuccess: ({ data, action, updates }) => {
       qc.invalidateQueries({ queryKey: ["opleidingen"] });
+      qc.invalidateQueries({ queryKey: ["opleidingen-paged"] });
       writeAuditLog({ action, entity_type: "opleiding", entity_id: data.id, entity_name: data.name, changes: updates });
     },
   });
 
   return { opleidingen, isLoading, upsertOpleiding };
+}
+
+export interface PagedOpleidingParams {
+  page: number;
+  pageSize: number;
+  search: string;
+  organisatieId: string; // "all" or uuid
+  studyLevel: string; // "all" | "bachelor" | "master" | "graduaat"
+  field: string; // "all" or value
+  sortKey: string;
+  sortDir: "asc" | "desc";
+}
+
+export interface PagedOpleidingRow extends Program {
+  organisatie?: { id: string; name: string; parent_id: string | null; parent?: { id: string; name: string } | null } | null;
+}
+
+export function useOpleidingenPaged(p: PagedOpleidingParams) {
+  return useQuery({
+    queryKey: ["opleidingen-paged", p],
+    queryFn: async () => {
+      const select =
+        "id, name, organisatie_id, faculty, field_of_study, study_level, student_count, is_stem, organisatie:organisaties!organisatie_id(id, name, parent_id, parent:organisaties!parent_id(id, name))";
+      let q: any = supabase.from("opleidingen").select(select, { count: "exact" });
+      const term = p.search.trim();
+      if (term) {
+        const escaped = term.replace(/[%,]/g, " ");
+        q = q.or(`name.ilike.%${escaped}%,field_of_study.ilike.%${escaped}%`);
+      }
+      if (p.organisatieId && p.organisatieId !== "all") q = q.eq("organisatie_id", p.organisatieId);
+      if (p.studyLevel && p.studyLevel !== "all") q = q.eq("study_level", p.studyLevel);
+      if (p.field && p.field !== "all") q = q.eq("field_of_study", p.field);
+      q = q.order(p.sortKey, { ascending: p.sortDir === "asc" });
+      const from = (p.page - 1) * p.pageSize;
+      const to = from + p.pageSize - 1;
+      q = q.range(from, to);
+      const { data, error, count } = await q;
+      if (error) { console.error("Error fetching paged opleidingen:", error); throw error; }
+      return { rows: (data ?? []) as unknown as PagedOpleidingRow[], totalCount: count ?? 0 };
+    },
+    staleTime: 30_000,
+  });
 }
 
 export function useEventOpleidingen() {
