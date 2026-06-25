@@ -294,3 +294,51 @@ export function useContacten(schoolId?: string) {
 
   return { contacten, isLoading, upsertContact, deleteContact };
 }
+
+// Fetch a single organisatie directly by id (bypasses any list cap).
+// Also returns its parent (if any), campuses, verbonden_instelling and opleidingen.
+export function useOrganisatieDetail(id?: string) {
+  return useQuery({
+    enabled: !!id,
+    queryKey: ["organisatie-detail", id],
+    queryFn: async () => {
+      const { data: org, error } = await supabase
+        .from("organisaties")
+        .select("*")
+        .eq("id", id!)
+        .maybeSingle();
+      if (error) throw error;
+      if (!org) return { org: null, parent: null, campuses: [], verbondenInstelling: null, opleidingen: [] };
+
+      const [parentRes, campusesRes, verbondenRes, opleidingenRes] = await Promise.all([
+        org.parent_id
+          ? supabase.from("organisaties").select("id,name").eq("id", org.parent_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+        supabase
+          .from("organisaties")
+          .select("id, name, type, city, province, status, parent_id")
+          .eq("parent_id", id!)
+          .order("name", { ascending: true })
+          .range(0, 9999),
+        (org as any).verbonden_instelling_id
+          ? supabase.from("organisaties").select("id,name").eq("id", (org as any).verbonden_instelling_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+        supabase
+          .from("opleidingen")
+          .select("*")
+          .eq("organisatie_id", id!)
+          .order("name", { ascending: true })
+          .range(0, 9999),
+      ]);
+
+      return {
+        org: org as unknown as School,
+        parent: (parentRes.data ?? null) as { id: string; name: string } | null,
+        campuses: (campusesRes.data ?? []) as unknown as School[],
+        verbondenInstelling: (verbondenRes.data ?? null) as { id: string; name: string } | null,
+        opleidingen: (opleidingenRes.data ?? []) as any[],
+      };
+    },
+    staleTime: 30 * 1000,
+  });
+}
