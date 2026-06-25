@@ -29,6 +29,12 @@ import { Badge } from "@/components/ui/badge";
 
 const PAGE_SIZE = 50;
 
+function formatStudiegebied(value?: string | null): string {
+  if (!value) return "";
+  const lower = value.toLocaleLowerCase("nl-BE");
+  return lower.charAt(0).toLocaleUpperCase("nl-BE") + lower.slice(1);
+}
+
 const OPLEIDING_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "name", label: "Naam", required: true },
   { key: "school_name", label: "School", required: true },
@@ -186,7 +192,7 @@ export default function OpleidingenPage() {
           <div className="flex flex-wrap gap-2">
             <OrganisatieSelect value={filterSchool} onChange={setFilterSchool} allOption allLabel="Alle scholen" allValue="all" placeholder="School" className="w-[200px] h-10 sm:h-9" />
             <Select value={filterLevel} onValueChange={setFilterLevel}><SelectTrigger className="w-[160px] h-10 sm:h-9"><SelectValue placeholder="Graad" /></SelectTrigger><SelectContent><SelectItem value="all">Alle graden</SelectItem>{studyLevelOptions.map((l) => <SelectItem key={l} value={l} className="capitalize">{l}</SelectItem>)}</SelectContent></Select>
-            <Select value={filterField} onValueChange={setFilterField}><SelectTrigger className="w-[220px] h-10 sm:h-9"><SelectValue placeholder="Studiegebied" /></SelectTrigger><SelectContent><SelectItem value="all">Alle studiegebieden</SelectItem>{fieldOptions.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent></Select>
+            <Select value={filterField} onValueChange={setFilterField}><SelectTrigger className="w-[220px] h-10 sm:h-9"><SelectValue placeholder="Studiegebied" /></SelectTrigger><SelectContent><SelectItem value="all">Alle studiegebieden</SelectItem>{fieldOptions.map((f) => <SelectItem key={f} value={f}>{formatStudiegebied(f)}</SelectItem>)}</SelectContent></Select>
             <Select value={filterProvince} onValueChange={setFilterProvince}><SelectTrigger className="w-[160px] h-10 sm:h-9"><SelectValue placeholder="Provincie" /></SelectTrigger><SelectContent><SelectItem value="all">Alle provincies</SelectItem>{PROVINCES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select>
             <Button type="button" variant={filterStem ? "default" : "outline"} size="sm" className="h-10 sm:h-9" aria-pressed={filterStem} onClick={() => setFilterStem((v) => !v)}>STEM</Button>
           </div>
@@ -196,7 +202,7 @@ export default function OpleidingenPage() {
               {search.trim() && <FilterChip label={`Zoeken: ${search.trim()}`} onClear={() => setSearch("")} />}
               {filterSchool !== "all" && <FilterChip label={`School: ${schoolName}`} onClear={() => setFilterSchool("all")} />}
               {filterLevel !== "all" && <FilterChip label={`Graad: ${filterLevel}`} onClear={() => setFilterLevel("all")} />}
-              {filterField !== "all" && <FilterChip label={`Studiegebied: ${filterField}`} onClear={() => setFilterField("all")} />}
+              {filterField !== "all" && <FilterChip label={`Studiegebied: ${formatStudiegebied(filterField)}`} onClear={() => setFilterField("all")} />}
               {filterProvince !== "all" && <FilterChip label={`Provincie: ${filterProvince}`} onClear={() => setFilterProvince("all")} />}
               {filterStem && <FilterChip label="STEM" onClear={() => setFilterStem(false)} />}
               <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={clearAll}>Wis alle filters</Button>
@@ -219,7 +225,7 @@ export default function OpleidingenPage() {
                       <p className="font-medium text-sm flex items-center gap-1.5 flex-wrap">{p.name}{p.is_stem && <Badge variant="secondary" className="text-[10px] bg-blue-100 text-blue-800 border-blue-200">STEM</Badge>}</p>
                       <Link to={`/organisaties/${p.organisatie_id}`} className="text-xs text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name ?? "—"}</Link>
                       {p.parentName && <p className="text-[11px] text-muted-foreground">onder {p.parentName}</p>}
-                      <p className="text-xs text-muted-foreground mt-0.5 capitalize">{p.study_level} · {p.field_of_study}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{formatStudiegebied(p.field_of_study)} · <span className="capitalize">{p.study_level}</span></p>
                     </div>
                     <div className="flex items-center gap-1">
                       {showStudents && <span className="text-sm font-medium tabular-nums">{p.student_count ?? "—"}</span>}
@@ -239,10 +245,10 @@ export default function OpleidingenPage() {
             <Table><TableHeader><TableRow>
               <TableHead className="w-8"></TableHead>
               <SortableTableHead sortKey="name" currentSort={sort} onSort={toggleSort}>Opleiding</SortableTableHead>
+              <SortableTableHead sortKey="field_of_study" currentSort={sort} onSort={toggleSort}>Studiegebied</SortableTableHead>
+              <SortableTableHead sortKey="study_level" currentSort={sort} onSort={toggleSort}>Graad</SortableTableHead>
               <TableHead>School</TableHead>
               {showFaculty && <SortableTableHead sortKey="faculty" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Faculteit</SortableTableHead>}
-              <SortableTableHead sortKey="study_level" currentSort={sort} onSort={toggleSort}>Graad</SortableTableHead>
-              <SortableTableHead sortKey="field_of_study" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Studiegebied</SortableTableHead>
               {showStudents && <SortableTableHead sortKey="student_count" currentSort={sort} onSort={toggleSort} className="text-right">Studenten</SortableTableHead>}
               <TableHead className="w-20" />
             </TableRow></TableHeader>
@@ -251,13 +257,13 @@ export default function OpleidingenPage() {
                   <TableRow className="hover:bg-muted/30 cursor-pointer" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
                     <TableCell className="px-2">{p.linkedEvents.length > 0 && (expandedId === p.id ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />)}</TableCell>
                     <TableCell className="font-medium"><div className="flex items-center gap-1.5 flex-wrap"><span>{p.name}</span>{p.is_stem && <Badge variant="secondary" className="text-[10px] bg-blue-100 text-blue-800 border-blue-200">STEM</Badge>}</div></TableCell>
+                    <TableCell>{formatStudiegebied(p.field_of_study)}</TableCell>
+                    <TableCell className="capitalize">{p.study_level}</TableCell>
                     <TableCell>
                       <Link to={`/organisaties/${p.organisatie_id}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{p.school?.name ?? "—"}</Link>
                       {p.parentName && <div className="text-[11px] text-muted-foreground">onder {p.parentName}</div>}
                     </TableCell>
                     {showFaculty && <TableCell className="hidden lg:table-cell">{p.faculty}</TableCell>}
-                    <TableCell className="capitalize">{p.study_level}</TableCell>
-                    <TableCell className="hidden lg:table-cell">{p.field_of_study}</TableCell>
                     {showStudents && <TableCell className="text-right tabular-nums">{p.student_count ?? "—"}</TableCell>}
                     <TableCell>
                       <div className="flex gap-0.5">
