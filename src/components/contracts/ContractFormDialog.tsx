@@ -56,29 +56,12 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label>Organisatie *</Label>
-            <Select value={form.organisatie_id} onValueChange={(v) => update("organisatie_id", v)}>
-              <SelectTrigger><SelectValue placeholder="Kies een organisatie..." /></SelectTrigger>
-              <SelectContent>
-                {orgGroups.map(({ hoofd, campuses }) => (
-                  <div key={hoofd.id}>
-                    <SelectItem value={hoofd.id}>
-                      <span className="flex items-center gap-2">
-                        <span>{hoofd.name}</span>
-                        <span className="text-[10px] uppercase tracking-wide bg-muted text-muted-foreground px-1.5 py-0.5 rounded">{hoofd.type}</span>
-                      </span>
-                    </SelectItem>
-                    {campuses.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        <span className="flex items-center gap-2 pl-6">
-                          <span>↳ {c.name}</span>
-                          <span className="text-[10px] uppercase tracking-wide bg-muted text-muted-foreground px-1.5 py-0.5 rounded">{c.type}</span>
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </div>
-                ))}
-              </SelectContent>
-            </Select>
+            <OrganisatieSelect
+              value={form.organisatie_id}
+              onChange={(v) => update("organisatie_id", v)}
+              placeholder="Kies een organisatie..."
+              required
+            />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Type</Label><Select value={form.contract_type} onValueChange={(v) => update("contract_type", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="partnership">Partnership</SelectItem><SelectItem value="sponsoring">Sponsoring</SelectItem><SelectItem value="stage-overeenkomst">Stage-overeenkomst</SelectItem><SelectItem value="andere">Andere</SelectItem></SelectContent></Select></div>
