@@ -168,6 +168,20 @@ export default function ContractenPage() {
                       <TableCell>{new Date(c.end_date).toLocaleDateString("nl-BE")}</TableCell>
                       <TableCell className="hidden lg:table-cell">{c.renewal_date ? (<span className={new Date(c.renewal_date) < new Date() ? "text-amber-700 dark:text-amber-300 font-medium" : ""}>{new Date(c.renewal_date).toLocaleDateString("nl-BE")}{new Date(c.renewal_date) < new Date() && " ⚠"}</span>) : "—"}</TableCell>
                       <TableCell><StatusBadge status={c.status} /></TableCell>
+                      <TableCell>
+                        {c.invoice_status && (
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${invoiceStatusVariant(c.invoice_status)}`}>
+                            {INVOICE_STATUS_LABELS[c.invoice_status] || c.invoice_status}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {c.document_status && (
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${documentStatusVariant(c.document_status)}`}>
+                            {DOCUMENT_STATUS_LABELS[c.document_status] || c.document_status}
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
                       <TableCell>
                         <div className="flex gap-0.5 items-center justify-end">
