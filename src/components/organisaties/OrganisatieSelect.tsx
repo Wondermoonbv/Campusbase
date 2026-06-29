@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -9,9 +9,9 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useScholen } from "@/hooks/useScholen";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OrganisatieSelectProps {
   value: string;
@@ -29,6 +29,14 @@ interface OrganisatieSelectProps {
 
 const NONE_SENTINEL = "__none__";
 
+interface OrgRow {
+  id: string;
+  name: string;
+  type?: string;
+  parent_id: string | null;
+  parent?: { name: string } | null;
+}
+
 export function OrganisatieSelect({
   value,
   onChange,
@@ -42,34 +50,58 @@ export function OrganisatieSelect({
   disabled,
   className,
 }: OrganisatieSelectProps) {
-  const { scholen } = useScholen();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [results, setResults] = useState<OrgRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
 
-  const { orgGroups, byId, parentById } = useMemo(() => {
-    const sorted = [...scholen].sort((a, b) => a.name.localeCompare(b.name));
-    const hoofden = sorted.filter((s) => !s.parent_id);
-    const orphanCampuses = sorted.filter(
-      (s) => s.parent_id && !hoofden.some((h) => h.id === s.parent_id),
-    );
-    const groups = [
-      ...hoofden.map((h) => ({
-        hoofd: h,
-        campuses: sorted.filter((s) => s.parent_id === h.id),
-      })),
-      ...orphanCampuses.map((c) => ({ hoofd: c, campuses: [] })),
-    ];
-    const map: Record<string, (typeof sorted)[number]> = {};
-    sorted.forEach((s) => { map[s.id] = s; });
-    const parents: Record<string, string | undefined> = {};
-    sorted.forEach((s) => {
-      if (s.parent_id && map[s.parent_id]) parents[s.id] = map[s.parent_id].name;
-    });
-    return { orgGroups: groups, byId: map, parentById: parents };
-  }, [scholen]);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
-  const term = search.trim().toLowerCase();
-  const isSearching = term.length > 0;
+  // Resolve label for the current selection
+  useEffect(() => {
+    let cancelled = false;
+    if (!value || (allOption && value === allValue)) {
+      setSelectedLabel(null);
+      return;
+    }
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("organisaties")
+        .select("name")
+        .eq("id", value)
+        .maybeSingle();
+      if (!cancelled) setSelectedLabel(data?.name ?? null);
+    })();
+    return () => { cancelled = true; };
+  }, [value, allOption, allValue]);
+
+  // Server-side search
+  useEffect(() => {
+    if (!open || !debounced) {
+      setResults([]);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      const { data, error } = await (supabase as any)
+        .from("organisaties")
+        .select("id, name, type, parent_id, parent:organisaties!parent_id(name)")
+        .ilike("name", `%${debounced}%`)
+        .order("name")
+        .limit(50);
+      if (!cancelled) {
+        setResults(error ? [] : ((data as OrgRow[]) || []));
+        setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [open, debounced]);
 
   const handleSelect = (v: string) => {
     if (allowNone && v === NONE_SENTINEL) onChange("");
@@ -81,8 +113,7 @@ export function OrganisatieSelect({
   const selectedLabel = (() => {
     if (allOption && value === allValue) return allLabel;
     if (allowNone && value === "") return null;
-    const s = value ? byId[value] : undefined;
-    return s ? s.name : null;
+    return value ? selectedLabel : null;
   })();
 
   const TypeBadge = ({ type }: { type: string }) => (
@@ -90,13 +121,6 @@ export function OrganisatieSelect({
       {type}
     </span>
   );
-
-  const flatMatches = useMemo(() => {
-    if (!isSearching) return [];
-    return Object.values(byId)
-      .filter((s) => s.name.toLowerCase().includes(term))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [term, isSearching, byId]);
 
   return (
     <Popover open={open} onOpenChange={(o) => { if (!disabled) setOpen(o); if (!o) setSearch(""); }}>
@@ -109,8 +133,8 @@ export function OrganisatieSelect({
           disabled={disabled}
           className={cn("w-full justify-between font-normal", className)}
         >
-          <span className={cn("truncate text-left", !selectedLabel && "text-muted-foreground")}>
-            {selectedLabel ?? placeholder}
+          <span className={cn("truncate text-left", !triggerLabel && "text-muted-foreground")}>
+            {triggerLabel ?? placeholder}
           </span>
           <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground ml-2" />
         </Button>
@@ -123,9 +147,7 @@ export function OrganisatieSelect({
             onValueChange={setSearch}
           />
           <CommandList className="max-h-72 overflow-y-auto">
-            <CommandEmpty>Geen resultaten</CommandEmpty>
-
-            {!isSearching && (allOption || allowNone) && (
+            {(allOption || allowNone) && (
               <CommandGroup>
                 {allOption && (
                   <CommandItem value={`__all__${allValue}`} onSelect={() => handleSelect(allValue)}>
@@ -142,47 +164,39 @@ export function OrganisatieSelect({
               </CommandGroup>
             )}
 
-            {isSearching ? (
+            {!debounced ? (
+              <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+                Typ om te zoeken
+              </div>
+            ) : loading ? (
+              <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" /> Laden...
+              </div>
+            ) : results.length === 0 ? (
+              <CommandEmpty>Geen resultaten</CommandEmpty>
+            ) : (
               <CommandGroup>
-                {flatMatches.map((s) => (
+                {results.map((s) => (
                   <CommandItem key={s.id} value={s.id} onSelect={() => handleSelect(s.id)}>
                     <Check className={cn("mr-2 h-4 w-4 shrink-0", value === s.id ? "opacity-100" : "opacity-0")} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="truncate">{s.name}</span>
-                        <TypeBadge type={s.type} />
+                        {s.type && <TypeBadge type={s.type} />}
                       </div>
-                      {parentById[s.id] && (
+                      {s.parent_id && s.parent?.name && (
                         <div className="text-xs text-muted-foreground truncate">
-                          onder {parentById[s.id]}
+                          onder {s.parent.name}
                         </div>
                       )}
                     </div>
                   </CommandItem>
                 ))}
-              </CommandGroup>
-            ) : (
-              <CommandGroup>
-                {orgGroups.map(({ hoofd, campuses }) => (
-                  <div key={hoofd.id}>
-                    <CommandItem value={hoofd.id} onSelect={() => handleSelect(hoofd.id)}>
-                      <Check className={cn("mr-2 h-4 w-4 shrink-0", value === hoofd.id ? "opacity-100" : "opacity-0")} />
-                      <span className="flex items-center gap-2 flex-1 min-w-0">
-                        <span className="truncate">{hoofd.name}</span>
-                        <TypeBadge type={hoofd.type} />
-                      </span>
-                    </CommandItem>
-                    {campuses.map((c) => (
-                      <CommandItem key={c.id} value={c.id} onSelect={() => handleSelect(c.id)}>
-                        <Check className={cn("mr-2 h-4 w-4 shrink-0", value === c.id ? "opacity-100" : "opacity-0")} />
-                        <span className="flex items-center gap-2 flex-1 min-w-0 pl-4">
-                          <span className="truncate">↳ {c.name}</span>
-                          <TypeBadge type={c.type} />
-                        </span>
-                      </CommandItem>
-                    ))}
+                {results.length === 50 && (
+                  <div className="px-3 py-2 text-xs text-muted-foreground text-center border-t border-border">
+                    Verfijn je zoekopdracht voor meer resultaten
                   </div>
-                ))}
+                )}
               </CommandGroup>
             )}
           </CommandList>
