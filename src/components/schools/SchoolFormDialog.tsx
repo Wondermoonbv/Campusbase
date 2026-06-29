@@ -130,6 +130,7 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave, defaultPa
               onValueChange={(v) => update("parent_id", v)}
               options={parentOptions.map((p) => ({ value: p.id, label: p.name }))}
               placeholder="Geen — dit is een hoofdorganisatie"
+              searchInputPlaceholder="Zoek organisatie..."
               allowNone
               noneLabel="Geen — hoofdorganisatie"
             />
