@@ -965,6 +965,7 @@ export type Database = {
           verbonden_instelling_id: string | null
           vestigingseenheidsnummer: string | null
           website: string | null
+          zoektermen: string | null
         }
         Insert: {
           bron?: string
@@ -999,6 +1000,7 @@ export type Database = {
           verbonden_instelling_id?: string | null
           vestigingseenheidsnummer?: string | null
           website?: string | null
+          zoektermen?: string | null
         }
         Update: {
           bron?: string
@@ -1033,6 +1035,7 @@ export type Database = {
           verbonden_instelling_id?: string | null
           vestigingseenheidsnummer?: string | null
           website?: string | null
+          zoektermen?: string | null
         }
         Relationships: [
           {
@@ -1413,6 +1416,7 @@ export type Database = {
           verbonden_instelling_id: string | null
           vestigingseenheidsnummer: string | null
           website: string | null
+          zoektermen: string | null
         }[]
         SetofOptions: {
           from: "*"
