@@ -242,6 +242,13 @@ export default function EventenPage() {
                     )}
                   </TableCell>
                   <TableCell>
+                    {ev.invoice_status && (
+                      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${invoiceStatusVariant(ev.invoice_status)}`}>
+                        {INVOICE_STATUS_LABELS[ev.invoice_status] || ev.invoice_status}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <div className="flex gap-0.5">
                       {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${ev.name} bewerken`} onClick={(e) => { e.stopPropagation(); navigate(`/evenementen/${ev.id}`); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
                       {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`${ev.name} verwijderen`} onClick={(e) => { e.stopPropagation(); setDeleteTarget(ev); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
