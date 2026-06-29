@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FileText, Upload, X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OrganisatieSelect } from "@/components/organisaties/OrganisatieSelect";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import type { Contract } from "@/types/crm";
