@@ -122,6 +122,7 @@ export interface Event {
   booth_number?: string | null;
   parking_info?: string | null;
   locker_code?: string | null;
+  invoice_status?: "open" | "verzonden" | "betaald";
 }
 
 export interface EventContactpersoon {
