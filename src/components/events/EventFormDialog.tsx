@@ -111,6 +111,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           booth_number: event.booth_number || "",
           parking_info: event.parking_info || "",
           locker_code: event.locker_code || "",
+          invoice_status: event.invoice_status || "open",
         });
       } else {
         setForm({
@@ -124,6 +125,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           region: "", event_language: "", target_level: "", registration_type: "",
           follow_up_status: "to_do",
           booth_number: "", parking_info: "", locker_code: "",
+          invoice_status: "open",
         });
         setCpEntries([]);
         setSelectedOrgIds([]);
