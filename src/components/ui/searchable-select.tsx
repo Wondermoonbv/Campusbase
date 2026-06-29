@@ -33,6 +33,7 @@ interface SearchableSelectProps {
 }
 
 const NONE_SENTINEL = "__none__";
+const MAX_RENDERED = 50;
 
 export function SearchableSelect({
   value,
@@ -56,6 +57,9 @@ export function SearchableSelect({
     () => (term ? options.filter((o) => o.label.toLowerCase().includes(term)) : options),
     [term, options],
   );
+
+  const visibleOptions = useMemo(() => filtered.slice(0, MAX_RENDERED), [filtered]);
+  const hasMore = filtered.length > MAX_RENDERED;
 
   const selectedLabel = (() => {
     if (allOption && value === allValue) return allLabel;
@@ -109,12 +113,22 @@ export function SearchableSelect({
               </CommandGroup>
             )}
             <CommandGroup>
-              {filtered.map((o) => (
+              {visibleOptions.map((o) => (
                 <CommandItem key={o.value} value={o.value} onSelect={() => handleSelect(o.value)}>
                   <Check className={cn("mr-2 h-4 w-4 shrink-0", value === o.value ? "opacity-100" : "opacity-0")} />
                   <span className="truncate">{o.label}</span>
                 </CommandItem>
               ))}
+              {hasMore && (
+                <div
+                  className="px-2 py-1.5 text-sm text-muted-foreground select-none"
+                  aria-hidden="true"
+                >
+                  {term
+                    ? "Verfijn je zoekopdracht voor meer resultaten."
+                    : `Typ om te zoeken (${options.length} opties).`}
+                </div>
+              )}
             </CommandGroup>
           </CommandList>
         </Command>
