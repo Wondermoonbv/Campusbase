@@ -324,6 +324,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       booth_number: sanitized.booth_number || null,
       parking_info: sanitized.parking_info || null,
       locker_code: sanitized.locker_code || null,
+      invoice_status: sanitized.invoice_status || "open",
     } as Event;
     onSave?.(saved, cpEntries.filter((e) => e.contact_id), selectedOrgIds, selectedOpleidingIds);
     toast.success(isEdit ? "Evenement bijgewerkt." : "Evenement toegevoegd.");
