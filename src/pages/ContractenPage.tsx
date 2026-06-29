@@ -125,6 +125,16 @@ export default function ContractenPage() {
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <StatusBadge status={c.status} />
+                        {c.invoice_status && (
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${invoiceStatusVariant(c.invoice_status)}`}>
+                            {INVOICE_STATUS_LABELS[c.invoice_status] || c.invoice_status}
+                          </span>
+                        )}
+                        {c.document_status && (
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${documentStatusVariant(c.document_status)}`}>
+                            {DOCUMENT_STATUS_LABELS[c.document_status] || c.document_status}
+                          </span>
+                        )}
                         {c.value && <span className="text-xs font-medium tabular-nums">€{c.value.toLocaleString("nl-BE")}</span>}
                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
                       </div>
