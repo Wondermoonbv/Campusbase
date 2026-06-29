@@ -104,8 +104,7 @@ export default function OrganisatiesPage() {
   const [scholengemTerm, setScholengemTerm] = useState<string>("");
   const [opleidingZoek, setOpleidingZoek] = useState<string>("");
   const [opleidingZoekDebounced, setOpleidingZoekDebounced] = useState<string>("");
-  const [opleidingOrgIds, setOpleidingOrgIds] = useState<string[] | null>(null);
-  const [opleidingLoading, setOpleidingLoading] = useState(false);
+  const opleidingLoading = opleidingZoek.trim() !== opleidingZoekDebounced;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [editSchool, setEditSchool] = useState<School | undefined>();
@@ -149,33 +148,13 @@ export default function OrganisatiesPage() {
   , [search, filterOrgType, filterProvince, filterLanguage, filterStatus, filterNiveau, filterSchoolType, filterSchoolbestuurNr, filterScholengemNr, filterStem, opleidingZoekDebounced]);
 
   // Reset to page 1 whenever filters or sort change
-  useEffect(() => { setPage(1); }, [search, filterOrgType, filterProvince, filterLanguage, filterStatus, filterNiveau, filterSchoolType, filterSchoolbestuurNr, filterScholengemNr, filterStem, opleidingOrgIds, sort.key, sort.direction]);
+  useEffect(() => { setPage(1); }, [search, filterOrgType, filterProvince, filterLanguage, filterStatus, filterNiveau, filterSchoolType, filterSchoolbestuurNr, filterScholengemNr, filterStem, opleidingZoekDebounced, sort.key, sort.direction]);
 
   // Debounce opleiding-zoek
   useEffect(() => {
     const t = setTimeout(() => setOpleidingZoekDebounced(opleidingZoek.trim()), 300);
     return () => clearTimeout(t);
   }, [opleidingZoek]);
-
-  // Run RPC when debounced term changes
-  useEffect(() => {
-    const term = opleidingZoekDebounced;
-    if (!term) { setOpleidingOrgIds(null); setOpleidingLoading(false); return; }
-    let cancelled = false;
-    setOpleidingLoading(true);
-    (async () => {
-      const { data, error } = await supabase.rpc("organisatie_ids_met_opleiding", { zoek: term });
-      if (cancelled) return;
-      if (error) {
-        console.error("organisatie_ids_met_opleiding RPC fout:", error);
-        setOpleidingOrgIds([]);
-      } else {
-        setOpleidingOrgIds(((data ?? []) as any[]).map((r) => r.id));
-      }
-      setOpleidingLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, [opleidingZoekDebounced]);
 
   const { data: paged, isLoading: pagedLoading } = useOrganisatiesPaged({
     page,
@@ -193,7 +172,7 @@ export default function OrganisatiesPage() {
     schoolbestuurNr: filterSchoolbestuurNr,
     scholengemeenschapNr: filterScholengemNr,
     stemOnly: filterStem,
-    opleidingOrgIds,
+    opleidingTerm: opleidingZoekDebounced,
   });
 
   const { data: schoolTypeOptions = [] } = useSchoolTypeOptions();
@@ -353,7 +332,7 @@ export default function OrganisatiesPage() {
             {filterSchoolbestuurNr && <FilterChip label={`Schoolbestuur: ${filterSchoolbestuurLabel || filterSchoolbestuurNr}`} onClear={() => { setFilterSchoolbestuurNr(""); setFilterSchoolbestuurLabel(""); }} />}
             {filterScholengemNr && <FilterChip label={`Scholengemeenschap: ${filterScholengemLabel || filterScholengemNr}`} onClear={() => { setFilterScholengemNr(""); setFilterScholengemLabel(""); }} />}
             {filterStem && <FilterChip label="STEM" onClear={() => setFilterStem(false)} />}
-            {opleidingZoekDebounced && <FilterChip label={`Opleiding: ${opleidingZoekDebounced}`} onClear={() => { setOpleidingZoek(""); setOpleidingZoekDebounced(""); setOpleidingOrgIds(null); }} />}
+            {opleidingZoekDebounced && <FilterChip label={`Opleiding: ${opleidingZoekDebounced}`} onClear={() => { setOpleidingZoek(""); setOpleidingZoekDebounced(""); }} />}
             <Button
               variant="ghost"
               size="sm"
