@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { OrganisatieSelect } from "@/components/organisaties/OrganisatieSelect";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useProfiles } from "@/hooks/useProfiles";
 import { toast } from "sonner";
 import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
@@ -79,7 +80,17 @@ export function TaskFormDialog({ open, onOpenChange, defaultSchoolId, defaultEve
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><Label>School</Label><OrganisatieSelect value={organisatieId} onChange={setOrganisatieId} placeholder="Optioneel" allowNone noneLabel="Geen" /></div>
-            <div><Label>Evenement</Label><Select value={eventId} onValueChange={setEventId}><SelectTrigger><SelectValue placeholder="Optioneel" /></SelectTrigger><SelectContent><SelectItem value="none">Geen</SelectItem>{evenementen.map((ev) => <SelectItem key={ev.id} value={ev.id}>{ev.name}</SelectItem>)}</SelectContent></Select></div>
+            <div>
+              <Label>Evenement</Label>
+              <SearchableSelect
+                value={eventId}
+                onValueChange={setEventId}
+                options={evenementen.map((ev) => ({ value: ev.id, label: ev.name }))}
+                placeholder="Optioneel"
+                allowNone
+                noneLabel="Geen"
+              />
+            </div>
           </div>
           <DialogFooter><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuleren</Button><Button type="submit" disabled={!title || !assignedTo || !dueDate}>{isEditing ? "Opslaan" : "Aanmaken"}</Button></DialogFooter>
         </form>
