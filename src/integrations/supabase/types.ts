@@ -353,9 +353,11 @@ export type Database = {
         Row: {
           contract_type: string
           description: string | null
+          document_status: string | null
           document_url: string | null
           end_date: string
           id: string
+          invoice_status: string
           notes: string | null
           organisatie_id: string
           renewal_date: string | null
@@ -366,9 +368,11 @@ export type Database = {
         Insert: {
           contract_type?: string
           description?: string | null
+          document_status?: string | null
           document_url?: string | null
           end_date: string
           id?: string
+          invoice_status?: string
           notes?: string | null
           organisatie_id: string
           renewal_date?: string | null
@@ -379,9 +383,11 @@ export type Database = {
         Update: {
           contract_type?: string
           description?: string | null
+          document_status?: string | null
           document_url?: string | null
           end_date?: string
           id?: string
+          invoice_status?: string
           notes?: string | null
           organisatie_id?: string
           renewal_date?: string | null
@@ -422,6 +428,7 @@ export type Database = {
             | Database["public"]["Enums"]["follow_up_status_enum"]
             | null
           id: string
+          invoice_status: string
           location: string | null
           locker_code: string | null
           max_ambassadeurs: number | null
@@ -460,6 +467,7 @@ export type Database = {
             | Database["public"]["Enums"]["follow_up_status_enum"]
             | null
           id?: string
+          invoice_status?: string
           location?: string | null
           locker_code?: string | null
           max_ambassadeurs?: number | null
@@ -498,6 +506,7 @@ export type Database = {
             | Database["public"]["Enums"]["follow_up_status_enum"]
             | null
           id?: string
+          invoice_status?: string
           location?: string | null
           locker_code?: string | null
           max_ambassadeurs?: number | null
