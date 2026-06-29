@@ -91,8 +91,8 @@ export function OrganisatieSelect({
     (async () => {
       const { data, error } = await (supabase as any)
         .from("organisaties")
-        .select("id, name, type, parent_id, parent:organisaties!parent_id(name)")
-        .ilike("name", `%${debounced}%`)
+        .select("id, name, type, parent_id, zoektermen, parent:organisaties!parent_id(name)")
+        .or(`name.ilike.%${debounced}%,zoektermen.ilike.%${debounced}%`)
         .order("name")
         .limit(50);
       if (!cancelled) {

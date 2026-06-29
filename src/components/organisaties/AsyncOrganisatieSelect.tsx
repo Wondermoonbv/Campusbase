@@ -93,8 +93,8 @@ export function AsyncOrganisatieSelect({
     (async () => {
       let q = (supabase as any)
         .from("organisaties")
-        .select("id, name, parent_id, parent:organisaties!parent_id(name)")
-        .ilike("name", `%${debounced}%`)
+        .select("id, name, parent_id, zoektermen, parent:organisaties!parent_id(name)")
+        .or(`name.ilike.%${debounced}%,zoektermen.ilike.%${debounced}%`)
         .order("name")
         .limit(50);
       if (onlyHoofd) q = q.is("parent_id", null);
