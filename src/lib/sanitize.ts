@@ -56,6 +56,7 @@ export const MAX_LENGTHS = {
   name: 200,
   description: 2000,
   notes: 2000,
+  zoektermen: 500,
   email: 255,
   phone: 50,
   url: 500,

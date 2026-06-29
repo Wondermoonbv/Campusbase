@@ -35,6 +35,7 @@ export interface School {
   scholengemeenschap?: string | null;
   scholengemeenschap_nr?: string | null;
   heeft_stem?: boolean | null;
+  zoektermen?: string | null;
 }
 
 export interface EventOrganisatie {

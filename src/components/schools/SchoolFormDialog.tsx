@@ -41,14 +41,15 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave, defaultPa
     parent_id: "" as string,
     is_nationaal: false,
     verbonden_instelling_id: "" as string,
+    zoektermen: "" as string,
   });
 
   useEffect(() => {
     if (open) {
       if (school) {
-        setForm({ name: school.name, type: school.type || "school", school_type: school.school_type, province: school.province, city: school.city, website: school.website || "", language: school.language, notes: school.notes || "", status: school.status, parent_id: school.parent_id || "", is_nationaal: !!school.is_nationaal, verbonden_instelling_id: school.verbonden_instelling_id || "" });
+        setForm({ name: school.name, type: school.type || "school", school_type: school.school_type, province: school.province, city: school.city, website: school.website || "", language: school.language, notes: school.notes || "", status: school.status, parent_id: school.parent_id || "", is_nationaal: !!school.is_nationaal, verbonden_instelling_id: school.verbonden_instelling_id || "", zoektermen: school?.zoektermen || "" });
       } else {
-        setForm({ name: "", type: "school", school_type: "universiteit", province: "", city: "", website: "", language: "NL", notes: "", status: "prospect", parent_id: defaultParentId || "", is_nationaal: false, verbonden_instelling_id: "" });
+        setForm({ name: "", type: "school", school_type: "universiteit", province: "", city: "", website: "", language: "NL", notes: "", status: "prospect", parent_id: defaultParentId || "", is_nationaal: false, verbonden_instelling_id: "", zoektermen: "" });
       }
     }
   }, [open, school, defaultParentId]);
@@ -79,6 +80,7 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave, defaultPa
       website: sanitized.website,
       language: isSchoolType ? sanitized.language as School["language"] : "NL",
       notes: sanitized.notes,
+      zoektermen: sanitized.zoektermen || null,
       status: sanitized.status as School["status"],
       parent_id: sanitized.parent_id && sanitized.parent_id !== "none" ? sanitized.parent_id : null,
       is_nationaal: isStudentenvereniging ? !!form.is_nationaal : false,
@@ -156,6 +158,11 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave, defaultPa
           <div>
             <div className="flex items-center justify-between"><Label>Notities</Label><CharacterCounter current={form.notes.length} max={MAX_LENGTHS.notes} /></div>
             <Textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} rows={3} maxLength={MAX_LENGTHS.notes} />
+          </div>
+          <div>
+            <div className="flex items-center justify-between"><Label>Zoektermen / afkortingen</Label><CharacterCounter current={form.zoektermen.length} max={MAX_LENGTHS.zoektermen} /></div>
+            <Input value={form.zoektermen} onChange={(e) => update("zoektermen", e.target.value)} placeholder="bv. VTI, HoGent" maxLength={MAX_LENGTHS.zoektermen} />
+            <p className="text-xs text-muted-foreground mt-1">Komma-gescheiden, bv. VTI, HoGent</p>
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuleren</Button>
