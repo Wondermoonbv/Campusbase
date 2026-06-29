@@ -6,8 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FileText, Upload, X } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useScholen } from "@/hooks/useScholen";
+import { OrganisatieSelect } from "@/components/organisaties/OrganisatieSelect";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import type { Contract } from "@/types/crm";
 import { toast } from "sonner";
@@ -19,7 +18,6 @@ interface ContractFormDialogProps { open: boolean; onOpenChange: (open: boolean)
 
 export function ContractFormDialog({ open, onOpenChange, contract, onSave }: ContractFormDialogProps) {
   const isEdit = !!contract;
-  const { scholen } = useScholen();
   const { evenementen } = useEvenementen();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ organisatie_id: "", contract_type: "partnership" as string, start_date: "", end_date: "", renewal_date: "", status: "in onderhandeling" as string, value: "", description: "", document_url: "", notes: "", linked_event_ids: [] as string[], file: null as File | null });
@@ -49,14 +47,6 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
 
   const relevantEvents = form.organisatie_id ? evenementen.filter((e) => e.organisator_id === form.organisatie_id || !e.organisator_id) : evenementen;
 
-  const orgGroups = useMemo(() => {
-    const sorted = [...scholen].sort((a, b) => a.name.localeCompare(b.name));
-    const hoofden = sorted.filter((s) => !s.parent_id);
-    return hoofden.map((h) => ({
-      hoofd: h,
-      campuses: sorted.filter((s) => s.parent_id === h.id),
-    }));
-  }, [scholen]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
