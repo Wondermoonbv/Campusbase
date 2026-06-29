@@ -525,6 +525,14 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
                 <Select value={form.follow_up_status} onValueChange={(v) => setForm({ ...form, follow_up_status: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(FOLLOW_UP_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
               </div>
               <div className="sm:col-span-2"><Label>Budget (€)</Label><Input type="number" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} /></div>
+              <div><Label>Factuurstatus</Label>
+                <Select value={form.invoice_status} onValueChange={(v) => setForm({ ...form, invoice_status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(INVOICE_STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </FormSection>
 
@@ -662,15 +670,6 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
                 maxLength={MAX_LENGTHS.shortText}
                 placeholder="bv. Locker: 840 / iPad: 8400"
               />
-            </div>
-            <div>
-              <Label>Factuurstatus</Label>
-              <Select value={form.invoice_status} onValueChange={(v) => setForm({ ...form, invoice_status: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(INVOICE_STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-                </SelectContent>
-              </Select>
             </div>
             <p className="text-xs text-muted-foreground">Deze info wordt mee verstuurd in de bevestigings- en herinneringsmail naar ambassadeurs.</p>
           </FormSection>
