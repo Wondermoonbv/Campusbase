@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import type { School, Contact, OrganisatieType } from "@/types/crm";
 import { ContactmomentenSection } from "@/components/contactmomenten/ContactmomentenSection";
 import { GraduationCap } from "lucide-react";
+import { INVOICE_STATUS_LABELS, invoiceStatusVariant, DOCUMENT_STATUS_LABELS, documentStatusVariant } from "@/lib/event-labels";
 
 const ORGANISATIE_TYPE_LABELS: Record<OrganisatieType, string> = {
   school: "School",
@@ -291,7 +292,7 @@ export default function OrganisatieDetailPage() {
             <div className="hidden md:block">
               <Table><TableHeader><TableRow><TableHead>Type</TableHead><TableHead>Start</TableHead><TableHead>Einde</TableHead><TableHead>Status</TableHead><TableHead>Waarde</TableHead></TableRow></TableHeader>
                 <TableBody>{contracts.length === 0 ? <TableRow><TableCell colSpan={5} className="text-center py-6 text-muted-foreground">Geen contracten gekoppeld.</TableCell></TableRow> : contracts.map((c) => (
-                  <TableRow key={c.id}><TableCell className="capitalize font-medium">{c.contract_type}</TableCell><TableCell>{new Date(c.start_date).toLocaleDateString("nl-BE")}</TableCell><TableCell>{new Date(c.end_date).toLocaleDateString("nl-BE")}</TableCell><TableCell><StatusBadge status={c.status} /></TableCell><TableCell className="tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell></TableRow>
+                  <TableRow key={c.id}><TableCell className="capitalize font-medium">{c.contract_type}</TableCell><TableCell>{new Date(c.start_date).toLocaleDateString("nl-BE")}</TableCell><TableCell>{new Date(c.end_date).toLocaleDateString("nl-BE")}</TableCell><TableCell className="flex flex-wrap gap-1 items-center"><StatusBadge status={c.status} />{c.invoice_status && <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${invoiceStatusVariant(c.invoice_status)}`}>{INVOICE_STATUS_LABELS[c.invoice_status] || c.invoice_status}</span>}{c.document_status && <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${documentStatusVariant(c.document_status)}`}>{DOCUMENT_STATUS_LABELS[c.document_status] || c.document_status}</span>}</TableCell><TableCell className="tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell></TableRow>
                 ))}</TableBody></Table>
             </div>
           </div>
