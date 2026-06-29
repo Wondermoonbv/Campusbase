@@ -89,7 +89,7 @@ export function SearchableSelect({
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[--radix-popover-trigger-width] min-w-[240px]" align="start">
         <Command shouldFilter={false}>
-          <CommandInput placeholder="Zoeken..." value={search} onValueChange={setSearch} />
+          <CommandInput placeholder={searchInputPlaceholder} value={search} onValueChange={setSearch} />
           <CommandList className="max-h-72 overflow-y-auto">
             <CommandEmpty>Geen resultaten</CommandEmpty>
             {!term && (allOption || allowNone) && (
