@@ -21,14 +21,14 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
   const isEdit = !!contract;
   const { evenementen } = useEvenementen();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [form, setForm] = useState({ organisatie_id: "", contract_type: "partnership" as string, start_date: "", end_date: "", renewal_date: "", status: "in onderhandeling" as string, value: "", description: "", document_url: "", notes: "", linked_event_ids: [] as string[], file: null as File | null });
+  const [form, setForm] = useState({ organisatie_id: "", contract_type: "partnership" as string, start_date: "", end_date: "", renewal_date: "", status: "in onderhandeling" as string, value: "", description: "", document_url: "", notes: "", linked_event_ids: [] as string[], file: null as File | null, invoice_status: "open" as string, document_status: "" as string });
 
   useEffect(() => {
     if (open) {
       if (contract) {
-        setForm({ organisatie_id: contract.organisatie_id, contract_type: contract.contract_type, start_date: contract.start_date, end_date: contract.end_date, renewal_date: contract.renewal_date, status: contract.status, value: contract.value?.toString() || "", description: contract.description || "", document_url: contract.document_url || "", notes: contract.notes || "", linked_event_ids: contract.linked_event_ids || [], file: null });
+        setForm({ organisatie_id: contract.organisatie_id, contract_type: contract.contract_type, start_date: contract.start_date, end_date: contract.end_date, renewal_date: contract.renewal_date, status: contract.status, value: contract.value?.toString() || "", description: contract.description || "", document_url: contract.document_url || "", notes: contract.notes || "", linked_event_ids: contract.linked_event_ids || [], file: null, invoice_status: contract.invoice_status || "open", document_status: contract.document_status || "" });
       } else {
-        setForm({ organisatie_id: "", contract_type: "partnership", start_date: "", end_date: "", renewal_date: "", status: "in onderhandeling", value: "", description: "", document_url: "", notes: "", linked_event_ids: [], file: null });
+        setForm({ organisatie_id: "", contract_type: "partnership", start_date: "", end_date: "", renewal_date: "", status: "in onderhandeling", value: "", description: "", document_url: "", notes: "", linked_event_ids: [], file: null, invoice_status: "open", document_status: "" });
       }
     }
   }, [open, contract]);
