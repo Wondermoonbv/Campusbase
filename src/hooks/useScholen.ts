@@ -94,7 +94,7 @@ export interface PagedOrgParams {
   schoolbestuurNr?: string;
   scholengemeenschapNr?: string;
   stemOnly?: boolean;
-  opleidingOrgIds?: string[] | null;
+  opleidingTerm?: string;
 }
 
 export interface PagedOrgRow extends School {
@@ -109,7 +109,10 @@ export function useOrganisatiesPaged(p: PagedOrgParams) {
     queryFn: async () => {
       const select =
         "id, name, type, school_type, province, city, website, language, notes, status, created_at, parent_id, is_nationaal, verbonden_instelling_id, onderwijsniveau, schoolbestuur, schoolbestuur_nr, scholengemeenschap, scholengemeenschap_nr, heeft_stem, parent:organisaties!parent_id(id,name), verbonden_instelling:organisaties!verbonden_instelling_id(id,name)";
-      let q: any = supabase.from("organisaties").select(select, { count: "exact" });
+      const opleidingTerm = (p.opleidingTerm ?? "").trim();
+      let q: any = opleidingTerm
+        ? (supabase.rpc as any)("organisaties_met_opleiding", { zoek: opleidingTerm }).select(select, { count: "exact" })
+        : supabase.from("organisaties").select(select, { count: "exact" });
       const term = p.search.trim();
       if (term) {
         const escaped = term.replace(/[%,]/g, " ");
@@ -124,12 +127,6 @@ export function useOrganisatiesPaged(p: PagedOrgParams) {
       if (p.schoolbestuurNr) q = q.eq("schoolbestuur_nr", p.schoolbestuurNr);
       if (p.scholengemeenschapNr) q = q.eq("scholengemeenschap_nr", p.scholengemeenschapNr);
       if (p.stemOnly) q = q.eq("heeft_stem", true);
-      if (p.opleidingOrgIds) {
-        if (p.opleidingOrgIds.length === 0) {
-          return { rows: [], campusesByParent: {}, totalCount: 0 };
-        }
-        q = q.in("id", p.opleidingOrgIds);
-      }
       if (p.hierarchical) q = q.is("parent_id", null);
       q = q.order(p.sortKey, { ascending: p.sortDir === "asc" });
       const from = (p.page - 1) * p.pageSize;
