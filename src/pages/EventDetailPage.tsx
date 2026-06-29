@@ -21,7 +21,7 @@ import { EventFormDialog } from "@/components/events/EventFormDialog";
 import { AttachmentsSection } from "@/components/shared/AttachmentsSection";
 import { EventCommunicationSection } from "@/components/events/EventCommunicationSection";
 import { Paperclip } from "lucide-react";
-import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, CONTACTPERSOON_ROL_LABELS, contactpersoonRolVariant, followUpVariant } from "@/lib/event-labels";
+import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, CONTACTPERSOON_ROL_LABELS, contactpersoonRolVariant, followUpVariant, INVOICE_STATUS_LABELS, invoiceStatusVariant } from "@/lib/event-labels";
 
 export default function EventDetailPage() {
   const { id } = useParams();
