@@ -153,6 +153,8 @@ export default function ContractenPage() {
               <SortableTableHead sortKey="end" currentSort={sort} onSort={toggleSort}>Einde</SortableTableHead>
               <SortableTableHead sortKey="renewal" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Vernieuwingsdatum</SortableTableHead>
               <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
+              <TableHead>Factuur</TableHead>
+              <TableHead>Ondertekening</TableHead>
               <SortableTableHead sortKey="value" currentSort={sort} onSort={toggleSort} className="text-right">Waarde</SortableTableHead>
               <TableHead className="w-24" />
             </TableRow></TableHeader>
