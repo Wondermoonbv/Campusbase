@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FileText, Upload, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useScholen } from "@/hooks/useScholen";
+import { OrganisatieSelect } from "@/components/organisaties/OrganisatieSelect";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import type { Contract } from "@/types/crm";
 import { toast } from "sonner";
@@ -19,7 +19,6 @@ interface ContractFormDialogProps { open: boolean; onOpenChange: (open: boolean)
 
 export function ContractFormDialog({ open, onOpenChange, contract, onSave }: ContractFormDialogProps) {
   const isEdit = !!contract;
-  const { scholen } = useScholen();
   const { evenementen } = useEvenementen();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ organisatie_id: "", contract_type: "partnership" as string, start_date: "", end_date: "", renewal_date: "", status: "in onderhandeling" as string, value: "", description: "", document_url: "", notes: "", linked_event_ids: [] as string[], file: null as File | null });
@@ -49,14 +48,6 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
 
   const relevantEvents = form.organisatie_id ? evenementen.filter((e) => e.organisator_id === form.organisatie_id || !e.organisator_id) : evenementen;
 
-  const orgGroups = useMemo(() => {
-    const sorted = [...scholen].sort((a, b) => a.name.localeCompare(b.name));
-    const hoofden = sorted.filter((s) => !s.parent_id);
-    return hoofden.map((h) => ({
-      hoofd: h,
-      campuses: sorted.filter((s) => s.parent_id === h.id),
-    }));
-  }, [scholen]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -65,29 +56,12 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label>Organisatie *</Label>
-            <Select value={form.organisatie_id} onValueChange={(v) => update("organisatie_id", v)}>
-              <SelectTrigger><SelectValue placeholder="Kies een organisatie..." /></SelectTrigger>
-              <SelectContent>
-                {orgGroups.map(({ hoofd, campuses }) => (
-                  <div key={hoofd.id}>
-                    <SelectItem value={hoofd.id}>
-                      <span className="flex items-center gap-2">
-                        <span>{hoofd.name}</span>
-                        <span className="text-[10px] uppercase tracking-wide bg-muted text-muted-foreground px-1.5 py-0.5 rounded">{hoofd.type}</span>
-                      </span>
-                    </SelectItem>
-                    {campuses.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        <span className="flex items-center gap-2 pl-6">
-                          <span>↳ {c.name}</span>
-                          <span className="text-[10px] uppercase tracking-wide bg-muted text-muted-foreground px-1.5 py-0.5 rounded">{c.type}</span>
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </div>
-                ))}
-              </SelectContent>
-            </Select>
+            <OrganisatieSelect
+              value={form.organisatie_id}
+              onChange={(v) => update("organisatie_id", v)}
+              placeholder="Kies een organisatie..."
+              required
+            />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Type</Label><Select value={form.contract_type} onValueChange={(v) => update("contract_type", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="partnership">Partnership</SelectItem><SelectItem value="sponsoring">Sponsoring</SelectItem><SelectItem value="stage-overeenkomst">Stage-overeenkomst</SelectItem><SelectItem value="andere">Andere</SelectItem></SelectContent></Select></div>
