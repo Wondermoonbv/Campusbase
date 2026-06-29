@@ -22,6 +22,7 @@ interface SearchableSelectProps {
   onValueChange: (value: string) => void;
   options: SearchableSelectOption[];
   placeholder?: string;
+  searchInputPlaceholder?: string;
   allowNone?: boolean;
   noneLabel?: string;
   allOption?: boolean;
@@ -38,6 +39,7 @@ export function SearchableSelect({
   onValueChange,
   options,
   placeholder = "Selecteer...",
+  searchInputPlaceholder = "Zoeken...",
   allowNone = false,
   noneLabel = "Geen",
   allOption = false,
@@ -87,7 +89,7 @@ export function SearchableSelect({
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[--radix-popover-trigger-width] min-w-[240px]" align="start">
         <Command shouldFilter={false}>
-          <CommandInput placeholder="Zoeken..." value={search} onValueChange={setSearch} />
+          <CommandInput placeholder={searchInputPlaceholder} value={search} onValueChange={setSearch} />
           <CommandList className="max-h-72 overflow-y-auto">
             <CommandEmpty>Geen resultaten</CommandEmpty>
             {!term && (allOption || allowNone) && (
