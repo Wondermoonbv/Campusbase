@@ -655,13 +655,13 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
               />
             </div>
             <div>
-              <Label>Locker & iPad code</Label>
-              <Input
-                value={form.locker_code}
-                onChange={(e) => setForm({ ...form, locker_code: e.target.value })}
-                maxLength={MAX_LENGTHS.shortText}
-                placeholder="bv. Locker: 840 / iPad: 8400"
-              />
+              <Label>Factuurstatus</Label>
+              <Select value={form.invoice_status} onValueChange={(v) => setForm({ ...form, invoice_status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(INVOICE_STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <p className="text-xs text-muted-foreground">Deze info wordt mee verstuurd in de bevestigings- en herinneringsmail naar ambassadeurs.</p>
           </FormSection>
