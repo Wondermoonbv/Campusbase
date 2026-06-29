@@ -225,6 +225,7 @@ export default function EventenPage() {
               <SortableTableHead sortKey="location" currentSort={sort} onSort={toggleSort}>Locatie</SortableTableHead>
               <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
               <SortableTableHead sortKey="follow_up" currentSort={sort} onSort={toggleSort}>Follow-up</SortableTableHead>
+              <TableHead>Factuur</TableHead>
               <TableHead className="w-20" />
             </TableRow></TableHeader>
               <TableBody>{sorted.map((ev) => (
