@@ -108,7 +108,7 @@ export function useOrganisatiesPaged(p: PagedOrgParams) {
     queryKey: ["organisaties-paged", p],
     queryFn: async () => {
       const select =
-        "id, name, type, school_type, province, city, website, language, notes, status, created_at, parent_id, is_nationaal, verbonden_instelling_id, onderwijsniveau, schoolbestuur, schoolbestuur_nr, scholengemeenschap, scholengemeenschap_nr, heeft_stem, parent:organisaties!parent_id(id,name), verbonden_instelling:organisaties!verbonden_instelling_id(id,name)";
+        "id, name, type, school_type, province, city, zoektermen, website, language, notes, status, created_at, parent_id, is_nationaal, verbonden_instelling_id, onderwijsniveau, schoolbestuur, schoolbestuur_nr, scholengemeenschap, scholengemeenschap_nr, heeft_stem, parent:organisaties!parent_id(id,name), verbonden_instelling:organisaties!verbonden_instelling_id(id,name)";
       const opleidingTerm = (p.opleidingTerm ?? "").trim();
       let q: any = opleidingTerm
         ? (supabase.rpc as any)("organisaties_met_opleiding", { zoek: opleidingTerm }).select(select, { count: "exact" })
@@ -116,7 +116,7 @@ export function useOrganisatiesPaged(p: PagedOrgParams) {
       const term = p.search.trim();
       if (term) {
         const escaped = term.replace(/[%,]/g, " ");
-        q = q.or(`name.ilike.%${escaped}%,city.ilike.%${escaped}%`);
+        q = q.or(`name.ilike.%${escaped}%,city.ilike.%${escaped}%,zoektermen.ilike.%${escaped}%`);
       }
       if (p.orgType !== "all") q = q.eq("type", p.orgType);
       if (p.province !== "all") q = q.eq("province", p.province);
