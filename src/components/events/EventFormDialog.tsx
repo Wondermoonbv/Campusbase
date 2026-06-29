@@ -655,6 +655,25 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
               />
             </div>
             <div>
+              <Label>Parkeerinformatie</Label>
+              <Textarea
+                rows={2}
+                value={form.parking_info}
+                onChange={(e) => setForm({ ...form, parking_info: e.target.value })}
+                maxLength={MAX_LENGTHS.notes}
+                placeholder="bv. Parking PA3, 1 ticket voorzien aan de stand"
+              />
+            </div>
+            <div>
+              <Label>Locker & iPad code</Label>
+              <Input
+                value={form.locker_code}
+                onChange={(e) => setForm({ ...form, locker_code: e.target.value })}
+                maxLength={MAX_LENGTHS.shortText}
+                placeholder="bv. Locker: 840 / iPad: 8400"
+              />
+            </div>
+            <div>
               <Label>Factuurstatus</Label>
               <Select value={form.invoice_status} onValueChange={(v) => setForm({ ...form, invoice_status: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
