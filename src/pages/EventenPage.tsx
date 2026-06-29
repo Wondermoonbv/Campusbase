@@ -24,7 +24,7 @@ import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableT
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
-import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, followUpVariant } from "@/lib/event-labels";
+import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, followUpVariant, INVOICE_STATUS_LABELS, invoiceStatusVariant } from "@/lib/event-labels";
 
 const EVENT_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "name", label: "Naam", required: true },
@@ -198,11 +198,16 @@ export default function EventenPage() {
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm truncate">{ev.name}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">{new Date(ev.date).toLocaleDateString("nl-BE")} · {ev.location || "—"}</p>
-                    <div className="flex items-center gap-1.5 mt-1">
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                       <StatusBadge status={ev.status} />
                       {ev.follow_up_status && (
                         <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${followUpVariant(ev.follow_up_status)}`}>
                           {FOLLOW_UP_LABELS[ev.follow_up_status] || ev.follow_up_status}
+                        </span>
+                      )}
+                      {ev.invoice_status && (
+                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${invoiceStatusVariant(ev.invoice_status)}`}>
+                          {INVOICE_STATUS_LABELS[ev.invoice_status] || ev.invoice_status}
                         </span>
                       )}
                     </div>
@@ -220,6 +225,7 @@ export default function EventenPage() {
               <SortableTableHead sortKey="location" currentSort={sort} onSort={toggleSort}>Locatie</SortableTableHead>
               <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
               <SortableTableHead sortKey="follow_up" currentSort={sort} onSort={toggleSort}>Follow-up</SortableTableHead>
+              <TableHead>Factuur</TableHead>
               <TableHead className="w-20" />
             </TableRow></TableHeader>
               <TableBody>{sorted.map((ev) => (
@@ -232,6 +238,13 @@ export default function EventenPage() {
                     {ev.follow_up_status && (
                       <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${followUpVariant(ev.follow_up_status)}`}>
                         {FOLLOW_UP_LABELS[ev.follow_up_status] || ev.follow_up_status}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {ev.invoice_status && (
+                      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${invoiceStatusVariant(ev.invoice_status)}`}>
+                        {INVOICE_STATUS_LABELS[ev.invoice_status] || ev.invoice_status}
                       </span>
                     )}
                   </TableCell>

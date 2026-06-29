@@ -19,7 +19,7 @@ import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
 import { FormSection } from "@/components/events/FormSection";
 import { AttachmentsSection } from "@/components/shared/AttachmentsSection";
-import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, CONTACTPERSOON_ROL_LABELS } from "@/lib/event-labels";
+import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, CONTACTPERSOON_ROL_LABELS, INVOICE_STATUS_LABELS } from "@/lib/event-labels";
 import type { Event, ContactpersoonRol } from "@/types/crm";
 import { Trash2, Plus, AlertTriangle, ChevronsUpDown, X, Building2 } from "lucide-react";
 
@@ -59,6 +59,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
     region: "" as string, event_language: "" as string, target_level: "" as string,
     registration_type: "" as string, follow_up_status: "to_do" as string,
     booth_number: "", parking_info: "", locker_code: "",
+    invoice_status: "open" as string,
   });
 
   const [cpEntries, setCpEntries] = useState<ContactpersoonEntry[]>([]);
@@ -110,6 +111,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           booth_number: event.booth_number || "",
           parking_info: event.parking_info || "",
           locker_code: event.locker_code || "",
+          invoice_status: event.invoice_status || "open",
         });
       } else {
         setForm({
@@ -123,6 +125,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           region: "", event_language: "", target_level: "", registration_type: "",
           follow_up_status: "to_do",
           booth_number: "", parking_info: "", locker_code: "",
+          invoice_status: "open",
         });
         setCpEntries([]);
         setSelectedOrgIds([]);
@@ -321,6 +324,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       booth_number: sanitized.booth_number || null,
       parking_info: sanitized.parking_info || null,
       locker_code: sanitized.locker_code || null,
+      invoice_status: sanitized.invoice_status || "open",
     } as Event;
     onSave?.(saved, cpEntries.filter((e) => e.contact_id), selectedOrgIds, selectedOpleidingIds);
     toast.success(isEdit ? "Evenement bijgewerkt." : "Evenement toegevoegd.");
@@ -658,6 +662,15 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
                 maxLength={MAX_LENGTHS.shortText}
                 placeholder="bv. Locker: 840 / iPad: 8400"
               />
+            </div>
+            <div>
+              <Label>Factuurstatus</Label>
+              <Select value={form.invoice_status} onValueChange={(v) => setForm({ ...form, invoice_status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(INVOICE_STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <p className="text-xs text-muted-foreground">Deze info wordt mee verstuurd in de bevestigings- en herinneringsmail naar ambassadeurs.</p>
           </FormSection>

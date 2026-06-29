@@ -21,7 +21,7 @@ import { EventFormDialog } from "@/components/events/EventFormDialog";
 import { AttachmentsSection } from "@/components/shared/AttachmentsSection";
 import { EventCommunicationSection } from "@/components/events/EventCommunicationSection";
 import { Paperclip } from "lucide-react";
-import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, CONTACTPERSOON_ROL_LABELS, contactpersoonRolVariant, followUpVariant } from "@/lib/event-labels";
+import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, ORGANISATIE_TYPE_LABELS, CONTACTPERSOON_ROL_LABELS, contactpersoonRolVariant, followUpVariant, INVOICE_STATUS_LABELS, invoiceStatusVariant } from "@/lib/event-labels";
 
 export default function EventDetailPage() {
   const { id } = useParams();
@@ -83,6 +83,11 @@ export default function EventDetailPage() {
           {event.follow_up_status && (
             <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${followUpVariant(event.follow_up_status)}`}>
               {FOLLOW_UP_LABELS[event.follow_up_status] || event.follow_up_status}
+            </span>
+          )}
+          {event.invoice_status && (
+            <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${invoiceStatusVariant(event.invoice_status)}`}>
+              {INVOICE_STATUS_LABELS[event.invoice_status] || event.invoice_status}
             </span>
           )}
         </div>
