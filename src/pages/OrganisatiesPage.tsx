@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 import { SchoolFormDialog } from "@/components/schools/SchoolFormDialog";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SortableTableHead, useSort } from "@/components/ui/SortableTableHead";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
