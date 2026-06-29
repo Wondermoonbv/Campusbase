@@ -1369,6 +1369,49 @@ export type Database = {
           id: string
         }[]
       }
+      organisaties_met_opleiding: {
+        Args: { zoek: string }
+        Returns: {
+          bron: string
+          city: string
+          created_at: string | null
+          email: string | null
+          heeft_stem: boolean
+          id: string
+          instellingsnummer: string | null
+          is_nationaal: boolean
+          kbo_nummer: string | null
+          language: string
+          last_synced_at: string | null
+          latitude: number | null
+          longitude: number | null
+          name: string
+          notes: string | null
+          onderwijsniveau: string | null
+          parent_id: string | null
+          postal_code: string | null
+          province: string
+          scholengemeenschap: string | null
+          scholengemeenschap_nr: string | null
+          school_type: string
+          schoolbestuur: string | null
+          schoolbestuur_nr: string | null
+          status: string
+          street: string | null
+          taalstelsel: string | null
+          telefoon: string | null
+          type: Database["public"]["Enums"]["organisatie_type"]
+          verbonden_instelling_id: string | null
+          vestigingseenheidsnummer: string | null
+          website: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "organisaties"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       reset_user_password: {
         Args: { new_password: string; target_email: string }
         Returns: Json
