@@ -39,6 +39,7 @@ export function SearchableSelect({
   onValueChange,
   options,
   placeholder = "Selecteer...",
+  searchInputPlaceholder = "Zoeken...",
   allowNone = false,
   noneLabel = "Geen",
   allOption = false,
