@@ -67,6 +67,10 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
             <div><Label>Type</Label><Select value={form.contract_type} onValueChange={(v) => update("contract_type", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="partnership">Partnership</SelectItem><SelectItem value="sponsoring">Sponsoring</SelectItem><SelectItem value="stage-overeenkomst">Stage-overeenkomst</SelectItem><SelectItem value="andere">Andere</SelectItem></SelectContent></Select></div>
             <div><Label>Status</Label><Select value={form.status} onValueChange={(v) => update("status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="in onderhandeling">In onderhandeling</SelectItem><SelectItem value="actief">Actief</SelectItem><SelectItem value="verlopen">Verlopen</SelectItem></SelectContent></Select></div>
           </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div><Label>Factuurstatus</Label><Select value={form.invoice_status} onValueChange={(v) => update("invoice_status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="open">Open</SelectItem><SelectItem value="verzonden">Verzonden</SelectItem><SelectItem value="betaald">Betaald</SelectItem></SelectContent></Select></div>
+            <div><Label>Ondertekening</Label><Select value={form.document_status} onValueChange={(v) => update("document_status", v)}><SelectTrigger><SelectValue placeholder="—" /></SelectTrigger><SelectContent><SelectItem value="">—</SelectItem><SelectItem value="opgemaakt">Opgemaakt</SelectItem><SelectItem value="getekend">Getekend</SelectItem><SelectItem value="tegengetekend">Tegengetekend</SelectItem></SelectContent></Select></div>
+          </div>
           <div>
             <div className="flex items-center justify-between"><Label>Beschrijving</Label><CharacterCounter current={form.description.length} max={MAX_LENGTHS.description} /></div>
             <Textarea value={form.description} onChange={(e) => update("description", e.target.value)} rows={3} maxLength={MAX_LENGTHS.description} />
