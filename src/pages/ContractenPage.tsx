@@ -17,6 +17,7 @@ import { handleDeleteError } from "@/lib/delete-helpers";
 import type { Contract } from "@/types/crm";
 import { toast } from "sonner";
 import { writeAuditLog } from "@/lib/audit";
+import { INVOICE_STATUS_LABELS, invoiceStatusVariant, DOCUMENT_STATUS_LABELS, documentStatusVariant } from "@/lib/event-labels";
 
 function getExpiryColor(endDate: string) {
   const now = new Date(); const end = new Date(endDate);
@@ -124,6 +125,16 @@ export default function ContractenPage() {
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <StatusBadge status={c.status} />
+                        {c.invoice_status && (
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${invoiceStatusVariant(c.invoice_status)}`}>
+                            {INVOICE_STATUS_LABELS[c.invoice_status] || c.invoice_status}
+                          </span>
+                        )}
+                        {c.document_status && (
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${documentStatusVariant(c.document_status)}`}>
+                            {DOCUMENT_STATUS_LABELS[c.document_status] || c.document_status}
+                          </span>
+                        )}
                         {c.value && <span className="text-xs font-medium tabular-nums">€{c.value.toLocaleString("nl-BE")}</span>}
                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
                       </div>
@@ -142,6 +153,8 @@ export default function ContractenPage() {
               <SortableTableHead sortKey="end" currentSort={sort} onSort={toggleSort}>Einde</SortableTableHead>
               <SortableTableHead sortKey="renewal" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Vernieuwingsdatum</SortableTableHead>
               <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
+              <TableHead>Factuur</TableHead>
+              <TableHead>Ondertekening</TableHead>
               <SortableTableHead sortKey="value" currentSort={sort} onSort={toggleSort} className="text-right">Waarde</SortableTableHead>
               <TableHead className="w-24" />
             </TableRow></TableHeader>
@@ -155,6 +168,20 @@ export default function ContractenPage() {
                       <TableCell>{new Date(c.end_date).toLocaleDateString("nl-BE")}</TableCell>
                       <TableCell className="hidden lg:table-cell">{c.renewal_date ? (<span className={new Date(c.renewal_date) < new Date() ? "text-amber-700 dark:text-amber-300 font-medium" : ""}>{new Date(c.renewal_date).toLocaleDateString("nl-BE")}{new Date(c.renewal_date) < new Date() && " ⚠"}</span>) : "—"}</TableCell>
                       <TableCell><StatusBadge status={c.status} /></TableCell>
+                      <TableCell>
+                        {c.invoice_status && (
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${invoiceStatusVariant(c.invoice_status)}`}>
+                            {INVOICE_STATUS_LABELS[c.invoice_status] || c.invoice_status}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {c.document_status && (
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${documentStatusVariant(c.document_status)}`}>
+                            {DOCUMENT_STATUS_LABELS[c.document_status] || c.document_status}
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
                       <TableCell>
                         <div className="flex gap-0.5 items-center justify-end">

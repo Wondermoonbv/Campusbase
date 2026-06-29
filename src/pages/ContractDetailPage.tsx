@@ -13,6 +13,7 @@ import { AttachmentsSection } from "@/components/shared/AttachmentsSection";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { ArrowLeft, Pencil, Trash2, Calendar, ExternalLink, FileText, CalendarDays } from "lucide-react";
+import { INVOICE_STATUS_LABELS, invoiceStatusVariant, DOCUMENT_STATUS_LABELS, documentStatusVariant } from "@/lib/event-labels";
 import { toast } from "sonner";
 import type { Contract } from "@/types/crm";
 
@@ -126,6 +127,16 @@ export default function ContractDetailPage() {
                 {lifecycle.label}
               </span>
               <StatusBadge status={contract.status} />
+              {contract.invoice_status && (
+                <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${invoiceStatusVariant(contract.invoice_status)}`}>
+                  {INVOICE_STATUS_LABELS[contract.invoice_status] || contract.invoice_status}
+                </span>
+              )}
+              {contract.document_status && (
+                <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${documentStatusVariant(contract.document_status)}`}>
+                  {DOCUMENT_STATUS_LABELS[contract.document_status] || contract.document_status}
+                </span>
+              )}
             </div>
           </div>
           {canEdit && (
