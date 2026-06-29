@@ -110,7 +110,7 @@ export function OrganisatieSelect({
     setSearch("");
   };
 
-  const selectedLabel = (() => {
+  const triggerLabel = (() => {
     if (allOption && value === allValue) return allLabel;
     if (allowNone && value === "") return null;
     return value ? selectedLabel : null;
