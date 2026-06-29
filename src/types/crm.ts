@@ -80,7 +80,7 @@ export interface Contract {
   description: string;
   school?: School;
   linked_event_ids?: string[];
-  invoice_status?: "open" | "verzonden" | "betaald";
+  invoice_status?: "open" | "ontvangen" | "betaald";
   document_status?: "opgemaakt" | "getekend" | "tegengetekend" | null;
 }
 
@@ -124,7 +124,7 @@ export interface Event {
   booth_number?: string | null;
   parking_info?: string | null;
   locker_code?: string | null;
-  invoice_status?: "open" | "verzonden" | "betaald";
+  invoice_status?: "open" | "ontvangen" | "betaald";
 }
 
 export interface EventContactpersoon {

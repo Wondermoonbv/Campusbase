@@ -2,13 +2,13 @@
 
 export const INVOICE_STATUS_LABELS: Record<string, string> = {
   open: "Open",
-  verzonden: "Verzonden",
+  ontvangen: "Ontvangen",
   betaald: "Betaald",
 };
 
 export const INVOICE_STATUS_VARIANTS: Record<string, string> = {
-  open: "bg-gray-100 text-gray-600 border-gray-200",
-  verzonden: "bg-orange-100 text-orange-800 border-orange-200",
+  open: "bg-orange-100 text-orange-800 border-orange-200",
+  ontvangen: "bg-orange-100 text-orange-800 border-orange-200",
   betaald: "bg-emerald-100 text-emerald-800 border-emerald-200",
 };
 
