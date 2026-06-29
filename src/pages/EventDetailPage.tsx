@@ -85,6 +85,11 @@ export default function EventDetailPage() {
               {FOLLOW_UP_LABELS[event.follow_up_status] || event.follow_up_status}
             </span>
           )}
+          {event.invoice_status && (
+            <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${invoiceStatusVariant(event.invoice_status)}`}>
+              {INVOICE_STATUS_LABELS[event.invoice_status] || event.invoice_status}
+            </span>
+          )}
         </div>
         {canEdit && (
           <div className="flex gap-2">
