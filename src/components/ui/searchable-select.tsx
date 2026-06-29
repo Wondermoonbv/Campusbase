@@ -22,6 +22,7 @@ interface SearchableSelectProps {
   onValueChange: (value: string) => void;
   options: SearchableSelectOption[];
   placeholder?: string;
+  searchInputPlaceholder?: string;
   allowNone?: boolean;
   noneLabel?: string;
   allOption?: boolean;
