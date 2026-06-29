@@ -14,9 +14,8 @@ import type { School, OrganisatieType } from "@/types/crm";
 import { toast } from "sonner";
 import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
-import { useScholen } from "@/hooks/useScholen";
 import { Switch } from "@/components/ui/switch";
-import { SearchableSelect } from "@/components/ui/searchable-select";
+import { AsyncOrganisatieSelect } from "@/components/organisaties/AsyncOrganisatieSelect";
 
 const ORGANISATIE_TYPE_OPTIONS: { value: OrganisatieType; label: string }[] = [
   { value: "school", label: "School" },
@@ -36,7 +35,6 @@ interface SchoolFormDialogProps {
 
 export function SchoolFormDialog({ open, onOpenChange, school, onSave, defaultParentId }: SchoolFormDialogProps) {
   const isEdit = !!school;
-  const { scholen } = useScholen();
   const [form, setForm] = useState({
     name: "", type: "school" as OrganisatieType, school_type: "universiteit" as string, province: "", city: "",
     website: "", language: "NL" as string, notes: "", status: "prospect" as string,
@@ -59,10 +57,6 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave, defaultPa
 
   const isSchoolType = form.type === "school";
   const isStudentenvereniging = form.type === "studentenvereniging";
-  const schoolOptions = scholen.filter((s) => s.type === "school" && s.id !== school?.id);
-
-  // Eligible parents: hoofdorganisaties (parent_id IS NULL) and not self
-  const parentOptions = scholen.filter((s) => !s.parent_id && s.id !== school?.id);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,12 +119,12 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave, defaultPa
           <div><Label>Status</Label><Select value={form.status} onValueChange={(v) => update("status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="actief">Actief</SelectItem><SelectItem value="inactief">Inactief</SelectItem><SelectItem value="prospect">Prospect</SelectItem></SelectContent></Select></div>
           <div>
             <Label>Hoofdorganisatie</Label>
-            <SearchableSelect
+            <AsyncOrganisatieSelect
               value={form.parent_id}
               onValueChange={(v) => update("parent_id", v)}
-              options={parentOptions.map((p) => ({ value: p.id, label: p.name }))}
+              onlyHoofd
+              excludeId={school?.id}
               placeholder="Geen — dit is een hoofdorganisatie"
-              searchInputPlaceholder="Zoek organisatie..."
               allowNone
               noneLabel="Geen — hoofdorganisatie"
             />
@@ -147,10 +141,10 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave, defaultPa
               </div>
               <div>
                 <Label>Verbonden hogeschool/universiteit</Label>
-                <SearchableSelect
+                <AsyncOrganisatieSelect
                   value={form.verbonden_instelling_id}
                   onValueChange={(v) => update("verbonden_instelling_id", v)}
-                  options={schoolOptions.map((s) => ({ value: s.id, label: s.name }))}
+                  excludeId={school?.id}
                   placeholder="Geen — niet verbonden"
                   allowNone
                   noneLabel="Geen — niet verbonden"
