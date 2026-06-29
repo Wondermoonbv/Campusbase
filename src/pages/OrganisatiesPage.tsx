@@ -347,7 +347,7 @@ export default function OrganisatiesPage() {
                 setFilterSchoolbestuurNr(""); setFilterSchoolbestuurLabel("");
                 setFilterScholengemNr(""); setFilterScholengemLabel("");
                 setFilterStem(false);
-                setOpleidingZoek(""); setOpleidingZoekDebounced(""); setOpleidingOrgIds(null);
+                setOpleidingZoek(""); setOpleidingZoekDebounced("");
               }}
             >
               Wis alle filters
