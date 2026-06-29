@@ -69,7 +69,7 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Factuurstatus</Label><Select value={form.invoice_status} onValueChange={(v) => update("invoice_status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="open">Open</SelectItem><SelectItem value="ontvangen">Ontvangen</SelectItem><SelectItem value="betaald">Betaald</SelectItem></SelectContent></Select></div>
-            <div><Label>Ondertekening</Label><Select value={form.document_status} onValueChange={(v) => update("document_status", v)}><SelectTrigger><SelectValue placeholder="—" /></SelectTrigger><SelectContent><SelectItem value="">—</SelectItem><SelectItem value="opgemaakt">Opgemaakt</SelectItem><SelectItem value="getekend">Getekend</SelectItem><SelectItem value="tegengetekend">Tegengetekend</SelectItem></SelectContent></Select></div>
+            <div><Label>Ondertekening</Label><Select value={form.document_status || "geen"} onValueChange={(v) => update("document_status", v === "geen" ? "" : v)}><SelectTrigger><SelectValue placeholder="—" /></SelectTrigger><SelectContent><SelectItem value="geen">—</SelectItem><SelectItem value="opgemaakt">Opgemaakt</SelectItem><SelectItem value="getekend">Getekend</SelectItem><SelectItem value="tegengetekend">Tegengetekend</SelectItem></SelectContent></Select></div>
           </div>
           <div>
             <div className="flex items-center justify-between"><Label>Beschrijving</Label><CharacterCounter current={form.description.length} max={MAX_LENGTHS.description} /></div>
