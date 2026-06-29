@@ -8,6 +8,7 @@ import { writeAuditLog } from "@/lib/audit";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Download, Plus, ChevronDown, ChevronRight, Upload, BookOpen, ChevronLeft, X } from "lucide-react";
@@ -199,7 +200,17 @@ export default function OpleidingenPage() {
           <div className="relative w-full"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Zoeken op richting of studiegebied..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 sm:h-9" /></div>
           <div className="flex flex-wrap gap-2">
             <Select value={filterNiveau} onValueChange={setFilterNiveau}><SelectTrigger className="w-[180px] h-10 sm:h-9"><SelectValue placeholder="Niveau" /></SelectTrigger><SelectContent><SelectItem value="all">Alle niveaus</SelectItem><SelectItem value="SO">Secundair</SelectItem><SelectItem value="HO">Hoger onderwijs</SelectItem></SelectContent></Select>
-            <Select value={filterField} onValueChange={setFilterField}><SelectTrigger className="w-[220px] h-10 sm:h-9"><SelectValue placeholder="Studiegebied" /></SelectTrigger><SelectContent><SelectItem value="all">Alle studiegebieden</SelectItem>{fieldOptions.map((f) => <SelectItem key={f} value={f}>{formatStudiegebied(f)}</SelectItem>)}</SelectContent></Select>
+            <div className="w-[220px]">
+              <SearchableSelect
+                value={filterField}
+                onValueChange={setFilterField}
+                options={fieldOptions.map((f) => ({ value: f, label: formatStudiegebied(f) }))}
+                placeholder="Studiegebied"
+                allOption
+                allLabel="Alle studiegebieden"
+                allValue="all"
+              />
+            </div>
             <Button type="button" variant={filterStem ? "default" : "outline"} size="sm" className="h-10 sm:h-9" aria-pressed={filterStem} onClick={() => setFilterStem((v) => !v)}>STEM</Button>
           </div>
           {hasActiveFilter && (

@@ -16,6 +16,7 @@ import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
 import { useScholen } from "@/hooks/useScholen";
 import { Switch } from "@/components/ui/switch";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 const ORGANISATIE_TYPE_OPTIONS: { value: OrganisatieType; label: string }[] = [
   { value: "school", label: "School" },
@@ -124,13 +125,14 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave, defaultPa
           <div><Label>Status</Label><Select value={form.status} onValueChange={(v) => update("status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="actief">Actief</SelectItem><SelectItem value="inactief">Inactief</SelectItem><SelectItem value="prospect">Prospect</SelectItem></SelectContent></Select></div>
           <div>
             <Label>Hoofdorganisatie</Label>
-            <Select value={form.parent_id || "none"} onValueChange={(v) => update("parent_id", v === "none" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder="Geen — dit is een hoofdorganisatie" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Geen — hoofdorganisatie</SelectItem>
-                {parentOptions.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={form.parent_id}
+              onValueChange={(v) => update("parent_id", v)}
+              options={parentOptions.map((p) => ({ value: p.id, label: p.name }))}
+              placeholder="Geen — dit is een hoofdorganisatie"
+              allowNone
+              noneLabel="Geen — hoofdorganisatie"
+            />
             <p className="text-xs text-muted-foreground mt-1">Laat leeg om zelf een hoofdorganisatie te zijn. Vul in om een campus / suborganisatie te maken.</p>
           </div>
           {isStudentenvereniging && (
@@ -144,13 +146,14 @@ export function SchoolFormDialog({ open, onOpenChange, school, onSave, defaultPa
               </div>
               <div>
                 <Label>Verbonden hogeschool/universiteit</Label>
-                <Select value={form.verbonden_instelling_id || "none"} onValueChange={(v) => update("verbonden_instelling_id", v === "none" ? "" : v)}>
-                  <SelectTrigger><SelectValue placeholder="Geen — niet verbonden" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Geen — niet verbonden</SelectItem>
-                    {schoolOptions.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  value={form.verbonden_instelling_id}
+                  onValueChange={(v) => update("verbonden_instelling_id", v)}
+                  options={schoolOptions.map((s) => ({ value: s.id, label: s.name }))}
+                  placeholder="Geen — niet verbonden"
+                  allowNone
+                  noneLabel="Geen — niet verbonden"
+                />
                 <p className="text-xs text-muted-foreground mt-1">Optioneel. Koppel de vereniging aan een hogeschool of universiteit.</p>
               </div>
             </>
