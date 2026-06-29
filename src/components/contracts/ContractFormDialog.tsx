@@ -40,7 +40,7 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
     e.preventDefault();
     if (!form.organisatie_id || !form.start_date || !form.end_date) { toast.error("Vul organisatie, startdatum en einddatum in."); return; }
     const sanitized = sanitizeFormData(form);
-    const saved: Contract = { ...(contract?.id ? { id: contract.id } : {}), organisatie_id: sanitized.organisatie_id, contract_type: sanitized.contract_type as Contract["contract_type"], start_date: sanitized.start_date, end_date: sanitized.end_date, renewal_date: sanitized.renewal_date, status: sanitized.status as Contract["status"], value: sanitized.value ? Number(sanitized.value) : null, description: sanitized.description, document_url: sanitized.document_url, notes: sanitized.notes, linked_event_ids: form.linked_event_ids } as Contract;
+    const saved: Contract = { ...(contract?.id ? { id: contract.id } : {}), organisatie_id: sanitized.organisatie_id, contract_type: sanitized.contract_type as Contract["contract_type"], start_date: sanitized.start_date, end_date: sanitized.end_date, renewal_date: sanitized.renewal_date, status: sanitized.status as Contract["status"], value: sanitized.value ? Number(sanitized.value) : null, description: sanitized.description, document_url: sanitized.document_url, notes: sanitized.notes, linked_event_ids: form.linked_event_ids, invoice_status: sanitized.invoice_status || "open", document_status: sanitized.document_status || null } as Contract;
     onSave?.(saved);
     toast.success(isEdit ? "Contract bijgewerkt." : "Contract toegevoegd.");
     onOpenChange(false);
