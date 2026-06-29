@@ -288,7 +288,17 @@ export default function OrganisatiesPage() {
           <Select value={filterLanguage} onValueChange={setFilterLanguage}><SelectTrigger className="w-[120px] h-10 sm:h-9"><SelectValue placeholder="Taal" /></SelectTrigger><SelectContent><SelectItem value="all">Alle talen</SelectItem><SelectItem value="NL">NL</SelectItem><SelectItem value="FR">FR</SelectItem><SelectItem value="EN">EN</SelectItem></SelectContent></Select>
           <Select value={filterStatus} onValueChange={setFilterStatus}><SelectTrigger className="w-[140px] h-10 sm:h-9"><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">Alle statussen</SelectItem><SelectItem value="actief">Actief</SelectItem><SelectItem value="inactief">Inactief</SelectItem><SelectItem value="prospect">Prospect</SelectItem></SelectContent></Select>
           <Select value={filterNiveau} onValueChange={setFilterNiveau}><SelectTrigger className="w-[160px] h-10 sm:h-9"><SelectValue placeholder="Niveau" /></SelectTrigger><SelectContent><SelectItem value="all">Alle niveaus</SelectItem><SelectItem value="HO">Hoger onderwijs</SelectItem><SelectItem value="SO">Secundair</SelectItem></SelectContent></Select>
-          <Select value={filterSchoolType} onValueChange={setFilterSchoolType}><SelectTrigger className="w-[180px] h-10 sm:h-9"><SelectValue placeholder="Schooltype" /></SelectTrigger><SelectContent><SelectItem value="all">Alle schooltypes</SelectItem>{schoolTypeOptions.map((t) => <SelectItem key={t} value={t}>{capitalize(t)}</SelectItem>)}</SelectContent></Select>
+          <div className="w-[180px]">
+            <SearchableSelect
+              value={filterSchoolType}
+              onValueChange={setFilterSchoolType}
+              options={schoolTypeOptions.map((t) => ({ value: t, label: capitalize(t) }))}
+              placeholder="Schooltype"
+              allOption
+              allLabel="Alle schooltypes"
+              allValue="all"
+            />
+          </div>
           <SearchableComboFilter
             className="w-[220px]"
             value={filterSchoolbestuurNr}
