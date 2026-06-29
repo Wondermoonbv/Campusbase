@@ -80,6 +80,8 @@ export interface Contract {
   description: string;
   school?: School;
   linked_event_ids?: string[];
+  invoice_status?: "open" | "verzonden" | "betaald";
+  document_status?: "opgemaakt" | "getekend" | "tegengetekend" | null;
 }
 
 export type Regio = 'brussel' | 'antwerpen' | 'vlaams_brabant' | 'west_vlaanderen' | 'limburg' | 'oost_vlaanderen' | 'waals_brabant' | 'henegouwen';
