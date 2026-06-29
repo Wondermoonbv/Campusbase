@@ -14,9 +14,7 @@ import type { School, OrganisatieType } from "@/types/crm";
 import { toast } from "sonner";
 import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
-import { useScholen } from "@/hooks/useScholen";
 import { Switch } from "@/components/ui/switch";
-import { SearchableSelect } from "@/components/ui/searchable-select";
 import { AsyncOrganisatieSelect } from "@/components/organisaties/AsyncOrganisatieSelect";
 
 const ORGANISATIE_TYPE_OPTIONS: { value: OrganisatieType; label: string }[] = [
@@ -37,7 +35,6 @@ interface SchoolFormDialogProps {
 
 export function SchoolFormDialog({ open, onOpenChange, school, onSave, defaultParentId }: SchoolFormDialogProps) {
   const isEdit = !!school;
-  const { scholen } = useScholen();
   const [form, setForm] = useState({
     name: "", type: "school" as OrganisatieType, school_type: "universiteit" as string, province: "", city: "",
     website: "", language: "NL" as string, notes: "", status: "prospect" as string,
