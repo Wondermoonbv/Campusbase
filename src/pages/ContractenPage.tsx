@@ -16,6 +16,7 @@ import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import type { Contract } from "@/types/crm";
 import { toast } from "sonner";
+import { writeAuditLog } from "@/lib/audit";
 import { INVOICE_STATUS_LABELS, invoiceStatusVariant, DOCUMENT_STATUS_LABELS, documentStatusVariant } from "@/lib/event-labels";
 
 function getExpiryColor(endDate: string) {
