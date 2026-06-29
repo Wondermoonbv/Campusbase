@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import type { School, Contact, OrganisatieType } from "@/types/crm";
 import { ContactmomentenSection } from "@/components/contactmomenten/ContactmomentenSection";
 import { GraduationCap } from "lucide-react";
+import { INVOICE_STATUS_LABELS, invoiceStatusVariant, DOCUMENT_STATUS_LABELS, documentStatusVariant } from "@/lib/event-labels";
 
 const ORGANISATIE_TYPE_LABELS: Record<OrganisatieType, string> = {
   school: "School",
