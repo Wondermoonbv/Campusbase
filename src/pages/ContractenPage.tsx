@@ -146,6 +146,44 @@ export default function ContractenPage() {
         <EmptyState icon={FileText} title="Nog geen contracten toegevoegd" description="Voeg je eerste contract toe." actionLabel="Contract toevoegen" onAction={() => { setEditContract(undefined); setDialogOpen(true); }} />
       ) : (
         <>
+          <div className="flex flex-wrap items-center gap-2 mb-3 sm:mb-4">
+            <span className="text-sm text-muted-foreground">Status:</span>
+            <Button
+              variant={statusFilter === "" ? "default" : "outline"}
+              size="sm"
+              className="h-8 text-xs"
+              onClick={() => setStatusFilter("")}
+            >
+              Alle
+              {statusFilter === "" && <X className="h-3 w-3 ml-1" onClick={(e) => { e.stopPropagation(); }} />}
+            </Button>
+            {availableStatuses.map((status) => (
+              <Button
+                key={status}
+                variant={statusFilter === status ? "default" : "outline"}
+                size="sm"
+                className="h-8 text-xs"
+                onClick={() => setStatusFilter(status)}
+              >
+                {formatStatusLabel(status)}
+              </Button>
+            ))}
+            {statusFilter && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setStatusFilter("")}
+              >
+                <X className="h-3 w-3 mr-1" /> Wis filter
+              </Button>
+            )}
+          </div>
+
+          {baseList.length === 0 ? (
+            <EmptyState icon={FileText} title="Geen contracten gevonden" description="Probeer een andere statusfilter." />
+          ) : (
+          <>
           <div className="block md:hidden space-y-2">
             {sorted.map((c) => {
               const school = c.school ?? schoolMap.get(c.organisatie_id);
