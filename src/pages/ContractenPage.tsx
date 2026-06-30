@@ -4,6 +4,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useContracten } from "@/hooks/useContracten";
 import { useScholen } from "@/hooks/useScholen";
+import { useProfiles } from "@/hooks/useProfiles";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -63,6 +64,7 @@ export default function ContractenPage() {
   const filterExpiring = searchParams.get("expiring") === "90";
   const { contracten, isLoading, upsertContract, deleteContract } = useContracten();
   const { scholen } = useScholen();
+  const { profiles } = useProfiles();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editContract, setEditContract] = useState<Contract | undefined>();
   const [deleteTarget, setDeleteTarget] = useState<Contract | null>(null);
@@ -85,6 +87,7 @@ export default function ContractenPage() {
   }, [deleteTarget, deleteContract]);
 
   const schoolMap = useMemo(() => new Map(scholen.map((s) => [s.id, s])), [scholen]);
+  const profileMap = useMemo(() => new Map(profiles.map((p) => [p.id, p.full_name])), [profiles]);
 
   const baseList = useMemo(() => {
     let list = [...contracten];
@@ -169,6 +172,7 @@ export default function ContractenPage() {
               <SortableTableHead sortKey="end" currentSort={sort} onSort={toggleSort}>Einde</SortableTableHead>
               <SortableTableHead sortKey="renewal" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Vernieuwingsdatum</SortableTableHead>
               <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
+              <TableHead>Verantwoordelijke</TableHead>
               <TableHead>Factuur</TableHead>
               <TableHead>Ondertekening</TableHead>
               <SortableTableHead sortKey="value" currentSort={sort} onSort={toggleSort} className="text-right">Waarde</SortableTableHead>
@@ -184,6 +188,13 @@ export default function ContractenPage() {
                       <TableCell>{new Date(c.end_date).toLocaleDateString("nl-BE")}</TableCell>
                       <TableCell className="hidden lg:table-cell">{c.renewal_date ? (<span className={new Date(c.renewal_date) < new Date() ? "text-amber-700 dark:text-amber-300 font-medium" : ""}>{new Date(c.renewal_date).toLocaleDateString("nl-BE")}{new Date(c.renewal_date) < new Date() && " ⚠"}</span>) : "—"}</TableCell>
                       <TableCell><StatusBadge status={c.status} /></TableCell>
+                      <TableCell>
+                        {c.verantwoordelijke_id ? (
+                          <span title={profileMap.get(c.verantwoordelijke_id) ?? ""} className="text-sm">
+                            {(profileMap.get(c.verantwoordelijke_id) ?? "—").split(" ")[0]}
+                          </span>
+                        ) : <span className="text-muted-foreground">—</span>}
+                      </TableCell>
                       <TableCell>
                         {c.invoice_status && (
                           <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${invoiceStatusVariant(c.invoice_status)}`}>
