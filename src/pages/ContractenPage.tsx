@@ -14,10 +14,26 @@ import { OrganisatieLabel } from "@/components/organisaties/OrganisatieLabel";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
-import type { Contract } from "@/types/crm";
+import type { Contract, School } from "@/types/crm";
 import { toast } from "sonner";
 import { writeAuditLog } from "@/lib/audit";
-import { INVOICE_STATUS_LABELS, invoiceStatusVariant, DOCUMENT_STATUS_LABELS, documentStatusVariant } from "@/lib/event-labels";
+import { INVOICE_STATUS_LABELS, invoiceStatusVariant, DOCUMENT_STATUS_LABELS, documentStatusVariant, ORGANISATIE_TYPE_LABELS } from "@/lib/event-labels";
+import { Badge } from "@/components/ui/badge";
+
+function OrganisatieCell({ school }: { school?: School }) {
+  if (!school) return <span className="text-muted-foreground">—</span>;
+  return (
+    <div className="flex flex-col">
+      <span className="inline-flex items-center gap-1.5 flex-wrap">
+        {school.name}
+        {school.parent_id && <Badge variant="secondary" className="text-[10px]">Campus</Badge>}
+        <Badge variant="outline" className="text-[10px]">{ORGANISATIE_TYPE_LABELS[school.type] || school.type}</Badge>
+      </span>
+      <OrganisatieLabel organisatie={school} />
+    </div>
+  );
+}
+
 
 function getExpiryColor(endDate: string) {
   const now = new Date(); const end = new Date(endDate);
