@@ -22,7 +22,14 @@ import { REGION_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS } from "@/
 import { DeliverablesReportCards } from "@/components/rapportage/DeliverablesReports";
 
 const CHART_COLORS = ["#0E6575", "#ef7c14", "#007BAF", "#0C8129", "#CD2E15", "#434f54", "#6366f1", "#ec4899"];
-type PeriodPreset = "week" | "month" | "quarter" | "year" | "custom";
+type PeriodPreset = "week" | "month" | "quarter" | "academic" | "custom";
+
+function getAcademicYear(now: Date): [Date, Date] {
+  const y = now.getFullYear();
+  const m = now.getMonth(); // 0-11
+  const startYear = m >= 8 ? y : y - 1;
+  return [new Date(startYear, 8, 1), new Date(startYear + 1, 7, 31, 23, 59, 59, 999)];
+}
 
 function getRange(preset: PeriodPreset, customFrom?: Date, customTo?: Date): [Date, Date] {
   const now = new Date();
@@ -30,7 +37,7 @@ function getRange(preset: PeriodPreset, customFrom?: Date, customTo?: Date): [Da
     case "week": return [startOfWeek(now, { weekStartsOn: 1 }), endOfWeek(now, { weekStartsOn: 1 })];
     case "month": return [startOfMonth(now), endOfMonth(now)];
     case "quarter": return [startOfQuarter(now), endOfQuarter(now)];
-    case "year": return [startOfYear(now), endOfYear(now)];
+    case "academic": return getAcademicYear(now);
     case "custom": return [customFrom ?? startOfYear(now), customTo ?? endOfYear(now)];
   }
 }
@@ -67,7 +74,7 @@ export default function RapportagePage() {
   const { evenementen } = useEvenementen();
   const { contracten } = useContracten();
   const { links: eventOrgLinks } = useEventOrganisaties();
-  const [preset, setPreset] = useState<PeriodPreset>("year");
+  const [preset, setPreset] = useState<PeriodPreset>("academic");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
   const [eventGrouping, setEventGrouping] = useState<"week" | "month">("month");
@@ -149,7 +156,7 @@ export default function RapportagePage() {
       <div className="surface-card p-3 sm:p-4 mb-4 sm:mb-6">
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <span className="text-sm font-medium text-muted-foreground w-full sm:w-auto">Periode:</span>
-          <div className="flex flex-wrap gap-1.5 sm:gap-2">{(["week", "month", "quarter", "year", "custom"] as PeriodPreset[]).map((p) => { const labels: Record<PeriodPreset, string> = { week: "Week", month: "Maand", quarter: "Kwartaal", year: "Jaar", custom: "Aangepast" }; return <Button key={p} variant={preset === p ? "default" : "outline"} size="sm" className="h-9 sm:h-8 text-xs sm:text-sm" onClick={() => setPreset(p)}>{labels[p]}</Button>; })}</div>
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">{(["week", "month", "quarter", "academic", "custom"] as PeriodPreset[]).map((p) => { const labels: Record<PeriodPreset, string> = { week: "Week", month: "Maand", quarter: "Kwartaal", academic: "Academiejaar", custom: "Aangepast" }; return <Button key={p} variant={preset === p ? "default" : "outline"} size="sm" className="h-9 sm:h-8 text-xs sm:text-sm" onClick={() => setPreset(p)}>{labels[p]}</Button>; })}</div>
           {preset === "custom" && (
             <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-2">
               <Popover><PopoverTrigger asChild><Button variant="outline" size="sm" className={cn("justify-start text-left font-normal h-9 sm:h-8", !customFrom && "text-muted-foreground")}><CalendarIcon className="mr-1 h-3.5 w-3.5" />{customFrom ? format(customFrom, "dd/MM/yyyy") : "Van"}</Button></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={customFrom} onSelect={setCustomFrom} className={cn("p-3 pointer-events-auto")} /></PopoverContent></Popover>
@@ -157,7 +164,7 @@ export default function RapportagePage() {
               <Popover><PopoverTrigger asChild><Button variant="outline" size="sm" className={cn("justify-start text-left font-normal h-9 sm:h-8", !customTo && "text-muted-foreground")}><CalendarIcon className="mr-1 h-3.5 w-3.5" />{customTo ? format(customTo, "dd/MM/yyyy") : "Tot"}</Button></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={customTo} onSelect={setCustomTo} className={cn("p-3 pointer-events-auto")} /></PopoverContent></Popover>
             </div>
           )}
-          <span className="text-xs text-muted-foreground w-full sm:w-auto sm:ml-auto">{format(rangeStart, "dd/MM/yyyy")} — {format(rangeEnd, "dd/MM/yyyy")}</span>
+          <span className="text-xs text-muted-foreground w-full sm:w-auto sm:ml-auto">{preset === "academic" ? `Academiejaar ${rangeStart.getFullYear()}-${rangeEnd.getFullYear()}` : `${format(rangeStart, "dd/MM/yyyy")} — ${format(rangeEnd, "dd/MM/yyyy")}`}</span>
         </div>
       </div>
 
