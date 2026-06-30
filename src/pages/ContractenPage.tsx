@@ -76,6 +76,7 @@ export default function ContractenPage() {
   const [deleteTarget, setDeleteTarget] = useState<Contract | null>(null);
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("school");
+  const [statusFilter, setStatusFilter] = useState<string>("");
 
   const handleSave = useCallback(async (saved: Contract) => {
     try { await upsertContract.mutateAsync(saved); } catch { toast.error("Fout bij opslaan."); }
@@ -95,14 +96,23 @@ export default function ContractenPage() {
   const schoolMap = useMemo(() => new Map(scholen.map((s) => [s.id, s])), [scholen]);
   const profileMap = useMemo(() => new Map(profiles.map((p) => [p.id, p.full_name])), [profiles]);
 
+  const availableStatuses = useMemo(() => {
+    const set = new Set<string>();
+    contracten.forEach((c) => { if (c.status) set.add(c.status); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [contracten]);
+
   const baseList = useMemo(() => {
     let list = [...contracten];
     if (filterExpiring) {
       const now = new Date(); const in90 = new Date(now.getTime() + 90 * 86400000);
       list = list.filter((c) => { const d = new Date(c.end_date); return d >= now && d <= in90 && c.status === "actief"; });
     }
+    if (statusFilter) {
+      list = list.filter((c) => c.status === statusFilter);
+    }
     return list;
-  }, [contracten, filterExpiring]);
+  }, [contracten, filterExpiring, statusFilter]);
 
   const sorted = useMemo(() => sortItems(baseList, sort, (c, key) => {
     switch (key) {
