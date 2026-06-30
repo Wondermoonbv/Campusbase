@@ -14,7 +14,8 @@ import { AttachmentsSection } from "@/components/shared/AttachmentsSection";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { ArrowLeft, Pencil, Trash2, Calendar, ExternalLink, FileText, CalendarDays } from "lucide-react";
-import { INVOICE_STATUS_LABELS, invoiceStatusVariant, DOCUMENT_STATUS_LABELS, documentStatusVariant } from "@/lib/event-labels";
+import { INVOICE_STATUS_LABELS, invoiceStatusVariant, DOCUMENT_STATUS_LABELS, documentStatusVariant, ORGANISATIE_TYPE_LABELS } from "@/lib/event-labels";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import type { Contract } from "@/types/crm";
 
