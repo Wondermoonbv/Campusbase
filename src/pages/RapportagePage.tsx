@@ -19,6 +19,7 @@ import { nl } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { writeAuditLog } from "@/lib/audit";
 import { REGION_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS } from "@/lib/event-labels";
+import { DeliverablesReportCards } from "@/components/rapportage/DeliverablesReports";
 
 const CHART_COLORS = ["#0E6575", "#ef7c14", "#007BAF", "#0C8129", "#CD2E15", "#434f54", "#6366f1", "#ec4899"];
 type PeriodPreset = "week" | "month" | "quarter" | "year" | "custom";
@@ -215,9 +216,7 @@ export default function RapportagePage() {
                 <div className="divide-y divide-border">{expiringContracts.map((c) => { const school = scholen.find((s) => s.id === c.organisatie_id); return (<div key={c.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1"><div><p className="text-sm font-medium">{school?.name} — <span className="capitalize">{c.contract_type}</span></p><p className="text-xs text-muted-foreground">Vervalt: {new Date(c.end_date).toLocaleDateString("nl-BE")} · Waarde: {c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</p></div></div>); })}</div>
               )}
             </div>
-            <div className="lg:col-span-2 h-24 sm:h-32 border-2 border-dashed border-border rounded-md flex items-center justify-center text-sm text-muted-foreground">
-              Ruimte voor toekomstige rapportagekaarten
-            </div>
+            <DeliverablesReportCards rangeStart={rangeStart} rangeEnd={rangeEnd} />
           </div>
         </TabsContent>
 
