@@ -116,11 +116,26 @@ export default function RapportagePage() {
   const eventsByType = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { c[e.type] = (c[e.type] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })); }, [filteredEvents]);
   const eventsByOrganisator = useMemo(() => {
     const counts: Record<string, number> = {};
+    let noOrganisatorCount = 0;
     filteredEvents.forEach((e) => {
-      const name = e.organisator_id ? (eventOrganisatorNames[e.id] || "Onbekend") : "Onbekend";
-      counts[name] = (counts[name] || 0) + 1;
+      if (!e.organisator_id) {
+        noOrganisatorCount++;
+        return;
+      }
+      const name = eventOrganisatorNames[e.id];
+      if (name) {
+        counts[name] = (counts[name] || 0) + 1;
+      } else {
+        noOrganisatorCount++;
+      }
     });
-    return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+    const allSorted = Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+    return {
+      full: allSorted,
+      chart: allSorted.filter((d) => d.value > 1),
+      singleEventOrganisatorenCount: allSorted.filter((d) => d.value === 1).length,
+      noOrganisatorCount,
+    };
   }, [filteredEvents, eventOrganisatorNames]);
   const budgetByType = useMemo(() => { const s: Record<string, number> = {}; filteredEvents.forEach((e) => { s[e.type] = (s[e.type] || 0) + (e.budget ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredEvents]);
   const budgetBySchool = useMemo(() => {
@@ -183,8 +198,13 @@ export default function RapportagePage() {
             <ChartCard title="Evenementen per type" data={eventsByType} chartId="events-type">
               <ResponsiveContainer width="100%" height={250}><PieChart><Pie data={eventsByType} cx="50%" cy="50%" innerRadius={40} outerRadius={75} dataKey="value" nameKey="name" label>{eventsByType.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip /><Legend wrapperStyle={{ fontSize: 12 }} /></PieChart></ResponsiveContainer>
             </ChartCard>
-            <ChartCard title="Evenementen per organisator" data={eventsByOrganisator} chartId="events-organisator">
-              <ResponsiveContainer width="100%" height={250}><BarChart data={eventsByOrganisator} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} /><YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 9 }} /><Tooltip /><Bar dataKey="value" fill="#007BAF" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
+            <ChartCard title="Evenementen per organisator" data={eventsByOrganisator.full} chartId="events-organisator">
+              <ResponsiveContainer width="100%" height={250}><BarChart data={eventsByOrganisator.chart} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} /><YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 9 }} /><Tooltip /><Bar dataKey="value" fill="#007BAF" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
+              {(eventsByOrganisator.singleEventOrganisatorenCount > 0 || eventsByOrganisator.noOrganisatorCount > 0) && (
+                <p className="text-xs text-muted-foreground mt-3">
+                  Plus {eventsByOrganisator.singleEventOrganisatorenCount} organisatoren met elk 1 event, en {eventsByOrganisator.noOrganisatorCount} events zonder organisator.
+                </p>
+              )}
             </ChartCard>
             <ChartCard title="Evenementen per regio" data={eventsByRegio} chartId="events-regio">
               <ResponsiveContainer width="100%" height={250}><BarChart data={eventsByRegio} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} /><YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 9 }} /><Tooltip /><Bar dataKey="value" fill="#0C8129" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
