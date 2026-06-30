@@ -23,6 +23,15 @@ import { REGION_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS } from "@/
 import { DeliverablesReportCards } from "@/components/rapportage/DeliverablesReports";
 
 const CHART_COLORS = ["#0E6575", "#ef7c14", "#007BAF", "#0C8129", "#CD2E15", "#434f54", "#6366f1", "#ec4899"];
+
+const ORGANISATIE_TYPE_LABELS: Record<string, string> = {
+  school: "School",
+  studentenvereniging: "Studentenvereniging",
+  werkgeversorganisatie: "Werkgeversorganisatie",
+  overheid: "Overheid",
+  andere: "Andere",
+};
+
 type PeriodPreset = "week" | "month" | "quarter" | "academic" | "custom";
 
 function getAcademicYear(now: Date): [Date, Date] {
@@ -74,17 +83,17 @@ export default function RapportagePage() {
   const { evenementen } = useEvenementen();
   const { contracten } = useContracten();
 
-  // Server-side join om organisator-namen op te halen zonder client-side 1000-rij-cap
-  const { data: eventOrganisatorNames = {} } = useQuery({
-    queryKey: ["rapportage_event_organisator_names"],
+  // Server-side join om organisator-metadata (naam + type) op te halen zonder client-side 1000-rij-cap
+  const { data: eventOrganisatorInfo = {} } = useQuery({
+    queryKey: ["rapportage_event_organisator_info"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("evenementen")
-        .select("id, organisator_id, organisaties!evenementen_school_id_fkey(name)")
+        .select("id, organisator_id, organisaties!evenementen_school_id_fkey(name, type)")
         .range(0, 9999);
-      if (error) { console.error(error); return {} as Record<string, string>; }
-      const map: Record<string, string> = {};
-      (data as any[]).forEach((row) => { if (row.id) map[row.id] = row.organisaties?.name ?? ""; });
+      if (error) { console.error(error); return {} as Record<string, { name?: string; type?: string }>; }
+      const map: Record<string, { name?: string; type?: string }> = {};
+      (data as any[]).forEach((row) => { if (row.id) map[row.id] = { name: row.organisaties?.name, type: row.organisaties?.type }; });
       return map;
     },
     staleTime: 30_000,
@@ -122,7 +131,7 @@ export default function RapportagePage() {
         noOrganisatorCount++;
         return;
       }
-      const name = eventOrganisatorNames[e.id];
+      const name = eventOrganisatorInfo[e.id]?.name;
       if (name) {
         counts[name] = (counts[name] || 0) + 1;
       } else {
@@ -136,7 +145,20 @@ export default function RapportagePage() {
       singleEventOrganisatorenCount: allSorted.filter((d) => d.value === 1).length,
       noOrganisatorCount,
     };
-  }, [filteredEvents, eventOrganisatorNames]);
+  }, [filteredEvents, eventOrganisatorInfo]);
+  const eventsByOrganisatieType = useMemo(() => {
+    const counts: Record<string, number> = {};
+    filteredEvents.forEach((e) => {
+      if (!e.organisator_id) {
+        counts["Onbekend"] = (counts["Onbekend"] || 0) + 1;
+        return;
+      }
+      const type = eventOrganisatorInfo[e.id]?.type;
+      const label = type ? (ORGANISATIE_TYPE_LABELS[type] || type) : "Onbekend";
+      counts[label] = (counts[label] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [filteredEvents, eventOrganisatorInfo]);
   const budgetByType = useMemo(() => { const s: Record<string, number> = {}; filteredEvents.forEach((e) => { s[e.type] = (s[e.type] || 0) + (e.budget ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredEvents]);
   const budgetBySchool = useMemo(() => {
     const s: Record<string, number> = {};
@@ -205,6 +227,9 @@ export default function RapportagePage() {
                   Plus {eventsByOrganisator.singleEventOrganisatorenCount} organisatoren met elk 1 event, en {eventsByOrganisator.noOrganisatorCount} events zonder organisator.
                 </p>
               )}
+            </ChartCard>
+            <ChartCard title="Evenementen per organisatietype" data={eventsByOrganisatieType} chartId="events-organisatie-type">
+              <ResponsiveContainer width="100%" height={250}><BarChart data={eventsByOrganisatieType} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} /><YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 9 }} /><Tooltip /><Bar dataKey="value" fill="#ef7c14" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
             </ChartCard>
             <ChartCard title="Evenementen per regio" data={eventsByRegio} chartId="events-regio">
               <ResponsiveContainer width="100%" height={250}><BarChart data={eventsByRegio} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} /><YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 9 }} /><Tooltip /><Bar dataKey="value" fill="#0C8129" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
