@@ -22,6 +22,11 @@ import { INVOICE_STATUS_LABELS, invoiceStatusVariant, DOCUMENT_STATUS_LABELS, do
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+function formatStatusLabel(status: string) {
+  if (!status) return "Onbekend";
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
 function OrganisatieCell({ school }: { school?: School }) {
   if (!school) return <span className="text-muted-foreground">—</span>;
   return (
