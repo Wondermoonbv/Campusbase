@@ -10,6 +10,7 @@ import {
   PieChart, Pie, Cell, Legend,
 } from "recharts";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Download, GraduationCap, CalendarDays, Wallet, Users } from "lucide-react";
@@ -69,6 +70,7 @@ export default function RapportagePage() {
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
   const [eventGrouping, setEventGrouping] = useState<"week" | "month">("month");
+  const [activeTab, setActiveTab] = useState("events");
 
   const [rangeStart, rangeEnd] = getRange(preset, customFrom, customTo);
   const inRange = useCallback((dateStr: string) => { const d = new Date(dateStr); return isWithinInterval(d, { start: rangeStart, end: rangeEnd }); }, [rangeStart, rangeEnd]);
@@ -142,6 +144,7 @@ export default function RapportagePage() {
   return (
     <div className="page-container animate-fade-in-up">
       <h1 className="mb-4">Rapportage</h1>
+
       <div className="surface-card p-3 sm:p-4 mb-4 sm:mb-6">
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <span className="text-sm font-medium text-muted-foreground w-full sm:w-auto">Periode:</span>
@@ -163,47 +166,66 @@ export default function RapportagePage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <ChartCard title="Evenementen per periode" data={eventsTimeline} chartId="events-timeline">
-          <div className="flex gap-1 mb-3"><Button variant={eventGrouping === "week" ? "default" : "outline"} size="sm" className="h-7 text-xs" onClick={() => setEventGrouping("week")}>Week</Button><Button variant={eventGrouping === "month" ? "default" : "outline"} size="sm" className="h-7 text-xs" onClick={() => setEventGrouping("month")}>Maand</Button></div>
-          <ResponsiveContainer width="100%" height={220}><BarChart data={eventsTimeline}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="name" tick={{ fontSize: 10 }} /><YAxis allowDecimals={false} tick={{ fontSize: 10 }} width={30} /><Tooltip /><Bar dataKey="value" fill="#0E6575" radius={[2, 2, 0, 0]} /></BarChart></ResponsiveContainer>
-        </ChartCard>
-        <ChartCard title="Evenementen per type" data={eventsByType} chartId="events-type">
-          <ResponsiveContainer width="100%" height={250}><PieChart><Pie data={eventsByType} cx="50%" cy="50%" innerRadius={40} outerRadius={75} dataKey="value" nameKey="name" label>{eventsByType.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip /><Legend wrapperStyle={{ fontSize: 12 }} /></PieChart></ResponsiveContainer>
-        </ChartCard>
-        <ChartCard title="Evenementen per hoofdorganisatie" data={eventsBySchool} chartId="events-school">
-          <ResponsiveContainer width="100%" height={250}><BarChart data={eventsBySchool} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} /><YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 9 }} /><Tooltip /><Bar dataKey="value" fill="#007BAF" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
-        </ChartCard>
-        <ChartCard title="Budget per type event (€)" data={budgetByType} chartId="budget-type">
-          <ResponsiveContainer width="100%" height={250}><BarChart data={budgetByType}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="name" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 10 }} width={50} tickFormatter={(v) => `€${v.toLocaleString()}`} /><Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} /><Bar dataKey="value" fill="#ef7c14" radius={[2, 2, 0, 0]} /></BarChart></ResponsiveContainer>
-        </ChartCard>
-        <ChartCard title="Contractwaarde per hoofdorganisatie (€)" data={budgetBySchool} chartId="budget-school">
-          <ResponsiveContainer width="100%" height={250}><BarChart data={budgetBySchool} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={(v) => `€${v.toLocaleString()}`} /><YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 9 }} /><Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} /><Bar dataKey="value" fill="#0E6575" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
-        </ChartCard>
-        <ChartCard title="Contractwaarde per type (€)" data={contractsByType} chartId="contracts-type">
-          <div className="mb-3 text-sm text-muted-foreground">Totaal actieve contractwaarde: <span className="font-semibold text-foreground">€{totalContractValue.toLocaleString("nl-BE")}</span></div>
-          <ResponsiveContainer width="100%" height={220}><PieChart><Pie data={contractsByType} cx="50%" cy="50%" innerRadius={40} outerRadius={75} dataKey="value" nameKey="name" label={({ name, value }) => `${name}: €${value.toLocaleString()}`}>{contractsByType.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} /><Legend wrapperStyle={{ fontSize: 12 }} /></PieChart></ResponsiveContainer>
-        </ChartCard>
-        <div className="surface-card p-4 sm:p-5 lg:col-span-2">
-          <h2 className="text-sm sm:text-base font-semibold mb-4">Contracten die vervallen in deze periode ({expiringContracts.length})</h2>
-          {expiringContracts.length === 0 ? <p className="text-sm text-muted-foreground">Geen contracten vervallen in de geselecteerde periode.</p> : (
-            <div className="divide-y divide-border">{expiringContracts.map((c) => { const school = scholen.find((s) => s.id === c.organisatie_id); return (<div key={c.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1"><div><p className="text-sm font-medium">{school?.name} — <span className="capitalize">{c.contract_type}</span></p><p className="text-xs text-muted-foreground">Vervalt: {new Date(c.end_date).toLocaleDateString("nl-BE")} · Waarde: {c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</p></div></div>); })}</div>
-          )}
-        </div>
-        <ChartCard title="Evenementen per regio" data={eventsByRegio} chartId="events-regio">
-          <ResponsiveContainer width="100%" height={250}><BarChart data={eventsByRegio} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} /><YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 9 }} /><Tooltip /><Bar dataKey="value" fill="#0C8129" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
-        </ChartCard>
-        <ChartCard title="Evenementen per doelgroepniveau" data={eventsByDoelgroep} chartId="events-doelgroep">
-          <ResponsiveContainer width="100%" height={250}><PieChart><Pie data={eventsByDoelgroep} cx="50%" cy="50%" innerRadius={40} outerRadius={75} dataKey="value" nameKey="name" label>{eventsByDoelgroep.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip /><Legend wrapperStyle={{ fontSize: 12 }} /></PieChart></ResponsiveContainer>
-        </ChartCard>
-        <ChartCard title="Evenementen per registratietype" data={eventsByRegistratie} chartId="events-registratie">
-          <ResponsiveContainer width="100%" height={250}><PieChart><Pie data={eventsByRegistratie} cx="50%" cy="50%" innerRadius={40} outerRadius={75} dataKey="value" nameKey="name" label>{eventsByRegistratie.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip /><Legend wrapperStyle={{ fontSize: 12 }} /></PieChart></ResponsiveContainer>
-        </ChartCard>
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="mb-4 sm:mb-6">
+          <TabsTrigger value="events">Evenementen</TabsTrigger>
+          <TabsTrigger value="contracts">Contracten & tegenprestaties</TabsTrigger>
+          <TabsTrigger value="ambassadors">Ambassadeurs & feedback</TabsTrigger>
+        </TabsList>
 
+        <TabsContent value="events" className="mt-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <ChartCard title="Evenementen per periode" data={eventsTimeline} chartId="events-timeline">
+              <div className="flex gap-1 mb-3"><Button variant={eventGrouping === "week" ? "default" : "outline"} size="sm" className="h-7 text-xs" onClick={() => setEventGrouping("week")}>Week</Button><Button variant={eventGrouping === "month" ? "default" : "outline"} size="sm" className="h-7 text-xs" onClick={() => setEventGrouping("month")}>Maand</Button></div>
+              <ResponsiveContainer width="100%" height={220}><BarChart data={eventsTimeline}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="name" tick={{ fontSize: 10 }} /><YAxis allowDecimals={false} tick={{ fontSize: 10 }} width={30} /><Tooltip /><Bar dataKey="value" fill="#0E6575" radius={[2, 2, 0, 0]} /></BarChart></ResponsiveContainer>
+            </ChartCard>
+            <ChartCard title="Evenementen per type" data={eventsByType} chartId="events-type">
+              <ResponsiveContainer width="100%" height={250}><PieChart><Pie data={eventsByType} cx="50%" cy="50%" innerRadius={40} outerRadius={75} dataKey="value" nameKey="name" label>{eventsByType.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip /><Legend wrapperStyle={{ fontSize: 12 }} /></PieChart></ResponsiveContainer>
+            </ChartCard>
+            <ChartCard title="Evenementen per hoofdorganisatie" data={eventsBySchool} chartId="events-school">
+              <ResponsiveContainer width="100%" height={250}><BarChart data={eventsBySchool} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} /><YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 9 }} /><Tooltip /><Bar dataKey="value" fill="#007BAF" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
+            </ChartCard>
+            <ChartCard title="Evenementen per regio" data={eventsByRegio} chartId="events-regio">
+              <ResponsiveContainer width="100%" height={250}><BarChart data={eventsByRegio} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} /><YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 9 }} /><Tooltip /><Bar dataKey="value" fill="#0C8129" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
+            </ChartCard>
+            <ChartCard title="Evenementen per doelgroepniveau" data={eventsByDoelgroep} chartId="events-doelgroep">
+              <ResponsiveContainer width="100%" height={250}><PieChart><Pie data={eventsByDoelgroep} cx="50%" cy="50%" innerRadius={40} outerRadius={75} dataKey="value" nameKey="name" label>{eventsByDoelgroep.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip /><Legend wrapperStyle={{ fontSize: 12 }} /></PieChart></ResponsiveContainer>
+            </ChartCard>
+            <ChartCard title="Evenementen per registratietype" data={eventsByRegistratie} chartId="events-registratie">
+              <ResponsiveContainer width="100%" height={250}><PieChart><Pie data={eventsByRegistratie} cx="50%" cy="50%" innerRadius={40} outerRadius={75} dataKey="value" nameKey="name" label>{eventsByRegistratie.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip /><Legend wrapperStyle={{ fontSize: 12 }} /></PieChart></ResponsiveContainer>
+            </ChartCard>
+          </div>
+        </TabsContent>
 
-      <AmbassadeurPrestaties />
-      <EventFeedbackOverzicht />
+        <TabsContent value="contracts" className="mt-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <ChartCard title="Contractwaarde per hoofdorganisatie (€)" data={budgetBySchool} chartId="budget-school">
+              <ResponsiveContainer width="100%" height={250}><BarChart data={budgetBySchool} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={(v) => `€${v.toLocaleString()}`} /><YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 9 }} /><Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} /><Bar dataKey="value" fill="#0E6575" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
+            </ChartCard>
+            <ChartCard title="Contractwaarde per type (€)" data={contractsByType} chartId="contracts-type">
+              <div className="mb-3 text-sm text-muted-foreground">Totaal actieve contractwaarde: <span className="font-semibold text-foreground">€{totalContractValue.toLocaleString("nl-BE")}</span></div>
+              <ResponsiveContainer width="100%" height={220}><PieChart><Pie data={contractsByType} cx="50%" cy="50%" innerRadius={40} outerRadius={75} dataKey="value" nameKey="name" label={({ name, value }) => `${name}: €${value.toLocaleString()}`}>{contractsByType.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} /><Legend wrapperStyle={{ fontSize: 12 }} /></PieChart></ResponsiveContainer>
+            </ChartCard>
+            <ChartCard title="Budget per type event (€)" data={budgetByType} chartId="budget-type">
+              <ResponsiveContainer width="100%" height={250}><BarChart data={budgetByType}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="name" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 10 }} width={50} tickFormatter={(v) => `€${v.toLocaleString()}`} /><Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} /><Bar dataKey="value" fill="#ef7c14" radius={[2, 2, 0, 0]} /></BarChart></ResponsiveContainer>
+            </ChartCard>
+            <div className="surface-card p-4 sm:p-5">
+              <h2 className="text-sm sm:text-base font-semibold mb-4">Contracten die vervallen in deze periode ({expiringContracts.length})</h2>
+              {expiringContracts.length === 0 ? <p className="text-sm text-muted-foreground">Geen contracten vervallen in de geselecteerde periode.</p> : (
+                <div className="divide-y divide-border">{expiringContracts.map((c) => { const school = scholen.find((s) => s.id === c.organisatie_id); return (<div key={c.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1"><div><p className="text-sm font-medium">{school?.name} — <span className="capitalize">{c.contract_type}</span></p><p className="text-xs text-muted-foreground">Vervalt: {new Date(c.end_date).toLocaleDateString("nl-BE")} · Waarde: {c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</p></div></div>); })}</div>
+              )}
+            </div>
+            <div className="lg:col-span-2 h-24 sm:h-32 border-2 border-dashed border-border rounded-md flex items-center justify-center text-sm text-muted-foreground">
+              Ruimte voor toekomstige rapportagekaarten
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="ambassadors" className="mt-0 space-y-4 sm:space-y-6">
+          <AmbassadeurPrestaties />
+          <EventFeedbackOverzicht />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
