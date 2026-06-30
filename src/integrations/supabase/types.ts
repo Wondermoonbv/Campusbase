@@ -312,6 +312,75 @@ export type Database = {
           },
         ]
       }
+      contract_deliverables: {
+        Row: {
+          aantal: number | null
+          contract_id: string
+          created_at: string
+          deadline: string | null
+          evaluatie: string | null
+          geleverd_op: string | null
+          geschatte_waarde: number | null
+          id: string
+          kanaal: string | null
+          notities: string | null
+          omschrijving: string | null
+          status: string
+          type: string
+          updated_at: string
+          waarde_score: number | null
+        }
+        Insert: {
+          aantal?: number | null
+          contract_id: string
+          created_at?: string
+          deadline?: string | null
+          evaluatie?: string | null
+          geleverd_op?: string | null
+          geschatte_waarde?: number | null
+          id?: string
+          kanaal?: string | null
+          notities?: string | null
+          omschrijving?: string | null
+          status?: string
+          type: string
+          updated_at?: string
+          waarde_score?: number | null
+        }
+        Update: {
+          aantal?: number | null
+          contract_id?: string
+          created_at?: string
+          deadline?: string | null
+          evaluatie?: string | null
+          geleverd_op?: string | null
+          geschatte_waarde?: number | null
+          id?: string
+          kanaal?: string | null
+          notities?: string | null
+          omschrijving?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          waarde_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_deliverables_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracten"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_deliverables_type_fkey"
+            columns: ["type"]
+            isOneToOne: false
+            referencedRelation: "deliverable_types"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       contract_evenementen: {
         Row: {
           contract_id: string
@@ -411,6 +480,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      deliverable_types: {
+        Row: {
+          actief: boolean
+          created_at: string
+          label: string
+          slug: string
+          volgorde: number
+        }
+        Insert: {
+          actief?: boolean
+          created_at?: string
+          label: string
+          slug: string
+          volgorde?: number
+        }
+        Update: {
+          actief?: boolean
+          created_at?: string
+          label?: string
+          slug?: string
+          volgorde?: number
+        }
+        Relationships: []
       }
       evenementen: {
         Row: {
