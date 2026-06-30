@@ -251,6 +251,22 @@ export default function EventenPage() {
         <EmptyState icon={Calendar} title="Geen evenementen gevonden" description="Voeg je eerste evenement toe om te beginnen." actionLabel="Evenement toevoegen" onAction={() => { setEditEvent(undefined); setDialogOpen(true); }} />
       ) : view === "list" ? (
         <>
+          {canEdit && selectedIds.size > 0 && (
+            <div className="surface-card p-3 mb-3 flex flex-col sm:flex-row sm:items-center gap-3 border-primary/40">
+              <div className="text-sm font-medium">{selectedIds.size} event{selectedIds.size !== 1 ? "s" : ""} geselecteerd</div>
+              <div className="flex flex-wrap gap-2 sm:ml-auto items-center">
+                <Select value="" onValueChange={(v) => { const opt = BULK_STATUS_OPTIONS.find(o => o.value === v); if (opt) setBulkAction({ field: "status", value: opt.value, label: opt.label }); }}>
+                  <SelectTrigger className="w-[220px] h-9"><SelectValue placeholder="Status wijzigen naar ..." /></SelectTrigger>
+                  <SelectContent>{BULK_STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                </Select>
+                <Select value="" onValueChange={(v) => { const opt = BULK_INVOICE_OPTIONS.find(o => o.value === v); if (opt) setBulkAction({ field: "invoice_status", value: opt.value, label: opt.label }); }}>
+                  <SelectTrigger className="w-[240px] h-9"><SelectValue placeholder="Factuurstatus wijzigen naar ..." /></SelectTrigger>
+                  <SelectContent>{BULK_INVOICE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                </Select>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>Selectie wissen</Button>
+              </div>
+            </div>
+          )}
           <div className="block md:hidden space-y-2">
             {sorted.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen evenementen gevonden.</div> : sorted.map((ev) => (
               <div key={ev.id} className="surface-card p-4 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate(`/evenementen/${ev.id}`)}>
