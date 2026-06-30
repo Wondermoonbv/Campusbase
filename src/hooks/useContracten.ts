@@ -13,7 +13,7 @@ export function useContracten() {
       const { data, error } = await supabase
         .from("contracten")
         .select(`
-          id, contract_type, organisatie_id, start_date, end_date, renewal_date, value, status, invoice_status, document_status, description, notes, document_url,
+          id, contract_type, organisatie_id, start_date, end_date, renewal_date, value, status, invoice_status, document_status, description, notes, document_url, verantwoordelijke_id,
           contract_evenementen (event_id),
           organisaties:organisatie_id (id, name, type, parent_id, parent:parent_id (id, name))
         `)
