@@ -183,105 +183,105 @@ export default function ContractenPage() {
           {baseList.length === 0 ? (
             <EmptyState icon={FileText} title="Geen contracten gevonden" description="Probeer een andere statusfilter." />
           ) : (
-          <>
-          <div className="block md:hidden space-y-2">
-            {sorted.map((c) => {
-              const school = c.school ?? schoolMap.get(c.organisatie_id);
-              return (
-                <div key={c.id} className={`surface-card overflow-hidden ${getExpiryColor(c.end_date)}`}>
-                  <button type="button" className="w-full text-left p-4 active:scale-[0.99] transition-transform" onClick={() => navigate(`/contracten/${c.id}`)}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <OrganisatieCell school={school} />
-                        <p className="text-xs text-muted-foreground mt-0.5 capitalize">{c.contract_type}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{new Date(c.start_date).toLocaleDateString("nl-BE")} → {new Date(c.end_date).toLocaleDateString("nl-BE")}</p>
-                      </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <StatusBadge status={c.status} />
-                        {c.invoice_status && (
-                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${invoiceStatusVariant(c.invoice_status)}`}>
-                            {INVOICE_STATUS_LABELS[c.invoice_status] || c.invoice_status}
-                          </span>
-                        )}
-                        {c.document_status && (
-                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${documentStatusVariant(c.document_status)}`}>
-                            {DOCUMENT_STATUS_LABELS[c.document_status] || c.document_status}
-                          </span>
-                        )}
-                        {c.value && <span className="text-xs font-medium tabular-nums">€{c.value.toLocaleString("nl-BE")}</span>}
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="surface-card overflow-hidden hidden md:block">
-            <Table><TableHeader><TableRow>
-              <SortableTableHead sortKey="school" currentSort={sort} onSort={toggleSort}>Organisatie</SortableTableHead>
-              <SortableTableHead sortKey="type" currentSort={sort} onSort={toggleSort}>Type</SortableTableHead>
-              <SortableTableHead sortKey="start" currentSort={sort} onSort={toggleSort}>Start</SortableTableHead>
-              <SortableTableHead sortKey="end" currentSort={sort} onSort={toggleSort}>Einde</SortableTableHead>
-              <SortableTableHead sortKey="renewal" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Vernieuwingsdatum</SortableTableHead>
-              <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
-              <TableHead>Verantwoordelijke</TableHead>
-              <TableHead>Factuur</TableHead>
-              <TableHead>Ondertekening</TableHead>
-              <SortableTableHead sortKey="value" currentSort={sort} onSort={toggleSort} className="text-right">Waarde</SortableTableHead>
-              <TableHead className="w-24" />
-            </TableRow></TableHeader>
-              <TableBody>{sorted.map((c) => {
-                const school = c.school ?? schoolMap.get(c.organisatie_id);
-                return (
-                    <TableRow key={c.id} className={`hover:bg-muted/30 cursor-pointer ${getExpiryColor(c.end_date)}`} onClick={() => navigate(`/contracten/${c.id}`)}>
-                      <TableCell className="font-medium"><OrganisatieCell school={school} /></TableCell>
-                      <TableCell className="capitalize">{c.contract_type}</TableCell>
-                      <TableCell>{new Date(c.start_date).toLocaleDateString("nl-BE")}</TableCell>
-                      <TableCell>{new Date(c.end_date).toLocaleDateString("nl-BE")}</TableCell>
-                      <TableCell className="hidden lg:table-cell">{c.renewal_date ? (<span className={new Date(c.renewal_date) < new Date() ? "text-amber-700 dark:text-amber-300 font-medium" : ""}>{new Date(c.renewal_date).toLocaleDateString("nl-BE")}{new Date(c.renewal_date) < new Date() && " ⚠"}</span>) : "—"}</TableCell>
-                      <TableCell><StatusBadge status={c.status} /></TableCell>
-                      <TableCell>
-                        {c.verantwoordelijke_id ? (
-                          <span title={profileMap.get(c.verantwoordelijke_id) ?? ""} className="text-sm">
-                            {(profileMap.get(c.verantwoordelijke_id) ?? "—").split(" ")[0]}
-                          </span>
-                        ) : <span className="text-muted-foreground">—</span>}
-                      </TableCell>
-                      <TableCell>
-                        {c.invoice_status && (
-                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${invoiceStatusVariant(c.invoice_status)}`}>
-                            {INVOICE_STATUS_LABELS[c.invoice_status] || c.invoice_status}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {c.document_status && (
-                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${documentStatusVariant(c.document_status)}`}>
-                            {DOCUMENT_STATUS_LABELS[c.document_status] || c.document_status}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-0.5 items-center justify-end">
-                          {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Contract bewerken" onClick={(e) => { e.stopPropagation(); setEditContract(c); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
-                          {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Contract verwijderen" onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
-                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            <>
+              <div className="block md:hidden space-y-2">
+                {sorted.map((c) => {
+                  const school = c.school ?? schoolMap.get(c.organisatie_id);
+                  return (
+                    <div key={c.id} className={`surface-card overflow-hidden ${getExpiryColor(c.end_date)}`}>
+                      <button type="button" className="w-full text-left p-4 active:scale-[0.99] transition-transform" onClick={() => navigate(`/contracten/${c.id}`)}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <OrganisatieCell school={school} />
+                            <p className="text-xs text-muted-foreground mt-0.5 capitalize">{c.contract_type}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{new Date(c.start_date).toLocaleDateString("nl-BE")} → {new Date(c.end_date).toLocaleDateString("nl-BE")}</p>
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
+                            <StatusBadge status={c.status} />
+                            {c.invoice_status && (
+                              <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${invoiceStatusVariant(c.invoice_status)}`}>
+                                {INVOICE_STATUS_LABELS[c.invoice_status] || c.invoice_status}
+                              </span>
+                            )}
+                            {c.document_status && (
+                              <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${documentStatusVariant(c.document_status)}`}>
+                                {DOCUMENT_STATUS_LABELS[c.document_status] || c.document_status}
+                              </span>
+                            )}
+                            {c.value && <span className="text-xs font-medium tabular-nums">€{c.value.toLocaleString("nl-BE")}</span>}
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          </div>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                );
-              })}</TableBody></Table>
-            <div className="p-3 border-t border-border text-xs text-muted-foreground flex flex-wrap gap-4">
-              <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-success" /> Meer dan 90 dagen</span>
-              <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-accent" /> Binnen 90 dagen</span>
-              <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-destructive" /> Verlopen</span>
-            </div>
-          </div>
-        </>
-      )}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="surface-card overflow-hidden hidden md:block">
+                <Table><TableHeader><TableRow>
+                  <SortableTableHead sortKey="school" currentSort={sort} onSort={toggleSort}>Organisatie</SortableTableHead>
+                  <SortableTableHead sortKey="type" currentSort={sort} onSort={toggleSort}>Type</SortableTableHead>
+                  <SortableTableHead sortKey="start" currentSort={sort} onSort={toggleSort}>Start</SortableTableHead>
+                  <SortableTableHead sortKey="end" currentSort={sort} onSort={toggleSort}>Einde</SortableTableHead>
+                  <SortableTableHead sortKey="renewal" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Vernieuwingsdatum</SortableTableHead>
+                  <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
+                  <TableHead>Verantwoordelijke</TableHead>
+                  <TableHead>Factuur</TableHead>
+                  <TableHead>Ondertekening</TableHead>
+                  <SortableTableHead sortKey="value" currentSort={sort} onSort={toggleSort} className="text-right">Waarde</SortableTableHead>
+                  <TableHead className="w-24" />
+                </TableRow></TableHeader>
+                  <TableBody>{sorted.map((c) => {
+                    const school = c.school ?? schoolMap.get(c.organisatie_id);
+                    return (
+                        <TableRow key={c.id} className={`hover:bg-muted/30 cursor-pointer ${getExpiryColor(c.end_date)}`} onClick={() => navigate(`/contracten/${c.id}`)}>
+                          <TableCell className="font-medium"><OrganisatieCell school={school} /></TableCell>
+                          <TableCell className="capitalize">{c.contract_type}</TableCell>
+                          <TableCell>{new Date(c.start_date).toLocaleDateString("nl-BE")}</TableCell>
+                          <TableCell>{new Date(c.end_date).toLocaleDateString("nl-BE")}</TableCell>
+                          <TableCell className="hidden lg:table-cell">{c.renewal_date ? (<span className={new Date(c.renewal_date) < new Date() ? "text-amber-700 dark:text-amber-300 font-medium" : ""}>{new Date(c.renewal_date).toLocaleDateString("nl-BE")}{new Date(c.renewal_date) < new Date() && " ⚠"}</span>) : "—"}</TableCell>
+                          <TableCell><StatusBadge status={c.status} /></TableCell>
+                          <TableCell>
+                            {c.verantwoordelijke_id ? (
+                              <span title={profileMap.get(c.verantwoordelijke_id) ?? ""} className="text-sm">
+                                {(profileMap.get(c.verantwoordelijke_id) ?? "—").split(" ")[0]}
+                              </span>
+                            ) : <span className="text-muted-foreground">—</span>}
+                          </TableCell>
+                          <TableCell>
+                            {c.invoice_status && (
+                              <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${invoiceStatusVariant(c.invoice_status)}`}>
+                                {INVOICE_STATUS_LABELS[c.invoice_status] || c.invoice_status}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {c.document_status && (
+                              <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${documentStatusVariant(c.document_status)}`}>
+                                {DOCUMENT_STATUS_LABELS[c.document_status] || c.document_status}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-0.5 items-center justify-end">
+                              {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Contract bewerken" onClick={(e) => { e.stopPropagation(); setEditContract(c); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
+                              {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Contract verwijderen" onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                    );
+                  })}</TableBody></Table>
+                <div className="p-3 border-t border-border text-xs text-muted-foreground flex flex-wrap gap-4">
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-success" /> Meer dan 90 dagen</span>
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-accent" /> Binnen 90 dagen</span>
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-destructive" /> Verlopen</span>
+                </div>
+              </div>
+            </>
+          )}
 
       <ContractFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditContract(undefined); }} contract={editContract} onSave={handleSave} />
       <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget ? (schoolMap.get(deleteTarget.organisatie_id)?.name ?? "contract") : ""} isLoading={deleteContract.isPending} />
