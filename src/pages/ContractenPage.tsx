@@ -8,7 +8,7 @@ import { useProfiles } from "@/hooks/useProfiles";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, Plus, ChevronRight, Pencil, Trash2, FileText } from "lucide-react";
+import { Download, Plus, ChevronRight, Pencil, Trash2, FileText, X } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContractFormDialog } from "@/components/contracts/ContractFormDialog";
 import { OrganisatieLabel } from "@/components/organisaties/OrganisatieLabel";
@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { writeAuditLog } from "@/lib/audit";
 import { INVOICE_STATUS_LABELS, invoiceStatusVariant, DOCUMENT_STATUS_LABELS, documentStatusVariant, ORGANISATIE_TYPE_LABELS } from "@/lib/event-labels";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 function OrganisatieCell({ school }: { school?: School }) {
   if (!school) return <span className="text-muted-foreground">—</span>;
