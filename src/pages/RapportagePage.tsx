@@ -98,35 +98,15 @@ export default function RapportagePage() {
   }, [filteredEvents, eventGrouping]);
 
   const eventsByType = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { c[e.type] = (c[e.type] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })); }, [filteredEvents]);
-  const eventsBySchool = useMemo(() => {
+  const eventsByOrganisator = useMemo(() => {
     const orgById = new Map(scholen.map((s) => [s.id, s]));
-    const linksByEvent = new Map<string, string[]>();
-    eventOrgLinks.forEach((l) => {
-      const arr = linksByEvent.get(l.event_id) ?? [];
-      arr.push(l.organisatie_id);
-      linksByEvent.set(l.event_id, arr);
-    });
     const counts: Record<string, number> = {};
     filteredEvents.forEach((e) => {
-      const orgIds = linksByEvent.get(e.id) ?? [];
-      const headIds = new Set<string>();
-      orgIds.forEach((oid) => {
-        const org = orgById.get(oid);
-        if (!org) return;
-        headIds.add(org.parent_id ?? org.id);
-      });
-      if (headIds.size === 0) {
-        const name = e.organisator_id ? (orgById.get(e.organisator_id)?.name ?? "Onbekend") : "Multi-school";
-        counts[name] = (counts[name] || 0) + 1;
-        return;
-      }
-      headIds.forEach((hid) => {
-        const name = orgById.get(hid)?.name ?? "Onbekend";
-        counts[name] = (counts[name] || 0) + 1;
-      });
+      const name = e.organisator_id ? (orgById.get(e.organisator_id)?.name ?? "Onbekend") : "Onbekend";
+      counts[name] = (counts[name] || 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
-  }, [filteredEvents, scholen, eventOrgLinks]);
+  }, [filteredEvents, scholen]);
   const budgetByType = useMemo(() => { const s: Record<string, number> = {}; filteredEvents.forEach((e) => { s[e.type] = (s[e.type] || 0) + (e.budget ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredEvents]);
   const budgetBySchool = useMemo(() => {
     const orgById = new Map(scholen.map((s) => [s.id, s]));
