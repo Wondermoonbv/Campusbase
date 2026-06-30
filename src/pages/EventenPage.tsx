@@ -382,6 +382,22 @@ export default function EventenPage() {
         }}
       />
       <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget?.name ?? ""} isLoading={deleteEvent.isPending} />
+      <AlertDialog open={!!bulkAction} onOpenChange={(o) => { if (!o && !bulkPending) setBulkAction(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bulkwijziging bevestigen</AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkAction && (
+                <>Je staat op het punt de {bulkAction.field === "status" ? "status" : "factuurstatus"} van {selectedIds.size} event{selectedIds.size !== 1 ? "s" : ""} op '{bulkAction.label.toLowerCase()}' te zetten. Doorgaan?</>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkPending}>Annuleren</AlertDialogCancel>
+            <AlertDialogAction onClick={(e) => { e.preventDefault(); applyBulk(); }} disabled={bulkPending}>{bulkPending ? "Bezig..." : "Doorgaan"}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
