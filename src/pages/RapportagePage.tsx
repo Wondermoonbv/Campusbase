@@ -116,11 +116,26 @@ export default function RapportagePage() {
   const eventsByType = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { c[e.type] = (c[e.type] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })); }, [filteredEvents]);
   const eventsByOrganisator = useMemo(() => {
     const counts: Record<string, number> = {};
+    let noOrganisatorCount = 0;
     filteredEvents.forEach((e) => {
-      const name = e.organisator_id ? (eventOrganisatorNames[e.id] || "Onbekend") : "Onbekend";
-      counts[name] = (counts[name] || 0) + 1;
+      if (!e.organisator_id) {
+        noOrganisatorCount++;
+        return;
+      }
+      const name = eventOrganisatorNames[e.id];
+      if (name) {
+        counts[name] = (counts[name] || 0) + 1;
+      } else {
+        noOrganisatorCount++;
+      }
     });
-    return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+    const allSorted = Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+    return {
+      full: allSorted,
+      chart: allSorted.filter((d) => d.value > 1),
+      singleEventOrganisatorenCount: allSorted.filter((d) => d.value === 1).length,
+      noOrganisatorCount,
+    };
   }, [filteredEvents, eventOrganisatorNames]);
   const budgetByType = useMemo(() => { const s: Record<string, number> = {}; filteredEvents.forEach((e) => { s[e.type] = (s[e.type] || 0) + (e.budget ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredEvents]);
   const budgetBySchool = useMemo(() => {
