@@ -41,6 +41,30 @@ function useAllDeliverables() {
   });
 }
 
+interface ContractWithOrg {
+  id: string;
+  value: number | null;
+  organisatie_id: string | null;
+  start_date: string;
+  end_date: string;
+  organisaties: { name: string; type: string; parent_id: string | null; parent: { name: string } | null } | null;
+}
+
+function useContractsWithOrg() {
+  return useQuery({
+    queryKey: ["rapportage_contracts_with_org"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contracten")
+        .select("id, value, organisatie_id, start_date, end_date, organisaties:organisatie_id (name, type, parent_id, parent:parent_id (name))")
+        .range(0, 9999);
+      if (error) throw error;
+      return (data ?? []) as unknown as ContractWithOrg[];
+    },
+  });
+}
+
 function exportCsv(filename: string, rows: Record<string, any>[]) {
   if (rows.length === 0) return;
   const headers = Object.keys(rows[0]);
@@ -78,28 +102,28 @@ function fmtDate(d?: string | null) {
   return new Date(d).toLocaleDateString("nl-BE", { day: "numeric", month: "short", year: "numeric" });
 }
 
-function OrgRef({ organisatieId, contractId }: { organisatieId: string | null | undefined; contractId: string }) {
-  const { scholen } = useScholen();
-  const org = organisatieId ? scholen.find((s) => s.id === organisatieId) : null;
+function OrgRef({ contract, contractId }: { contract: ContractWithOrg | undefined; contractId: string }) {
+  const org = contract?.organisaties ?? null;
+  const name = org?.name ?? "Onbekende organisatie";
   return (
     <Link to={`/contracten/${contractId}`} className="hover:underline">
       <span className="inline-flex items-center gap-1.5 flex-wrap">
-        <span className="font-medium">{org?.name ?? "—"}</span>
+        <span className="font-medium">{name}</span>
         {org?.parent_id && <Badge variant="secondary" className="text-[10px]">Campus</Badge>}
         {org && <Badge variant="outline" className="text-[10px]">{ORGANISATIE_TYPE_LABELS[org.type] || org.type}</Badge>}
       </span>
-      <OrganisatieLabel organisatie={org ?? null} />
+      {org?.parent?.name && (
+        <span className="text-xs text-muted-foreground block mt-0.5">onder {org.parent.name}</span>
+      )}
     </Link>
   );
 }
 
 export function DeliverablesReportCards({ rangeStart, rangeEnd }: { rangeStart: Date; rangeEnd: Date }) {
   const { data: all = [], isLoading } = useAllDeliverables();
-  const { contracten } = useContracten();
-  const { scholen } = useScholen();
+  const { data: contracten = [] } = useContractsWithOrg();
 
   const contractById = useMemo(() => new Map(contracten.map((c) => [c.id, c])), [contracten]);
-  const orgById = useMemo(() => new Map(scholen.map((s) => [s.id, s])), [scholen]);
 
   // ===== Kaart A — Open tegenprestaties (globaal, geen periode-filter) =====
   const open = useMemo(() => all.filter((d) => d.status === "te leveren"), [all]);
@@ -130,11 +154,11 @@ export function DeliverablesReportCards({ rangeStart, rangeEnd }: { rangeStart: 
   const exportOpen = () => {
     const rows = open.map((d) => {
       const c = contractById.get(d.contract_id);
-      const org = c ? orgById.get(c.organisatie_id) : null;
+      const org = c?.organisaties ?? null;
       return {
         type: d.deliverable_types?.label ?? d.type,
         omschrijving: d.omschrijving ?? "",
-        organisatie: org?.name ?? "",
+        organisatie: org?.name ?? "Onbekende organisatie",
         deadline: d.deadline ?? "",
         over_datum: d.deadline && d.deadline < today ? "ja" : "nee",
       };
@@ -178,9 +202,9 @@ export function DeliverablesReportCards({ rangeStart, rangeEnd }: { rangeStart: 
 
   const exportBudget = () => {
     const rows = budgetRows.map((r) => {
-      const org = orgById.get(r.contract.organisatie_id);
+      const org = r.contract.organisaties;
       return {
-        organisatie: org?.name ?? "",
+        organisatie: org?.name ?? "Onbekende organisatie",
         contractwaarde: r.contract.value ?? "",
         geleverde_waarde: r.sumValue ?? "",
         dekking: `${r.withValue}/${r.total}`,
@@ -244,7 +268,7 @@ export function DeliverablesReportCards({ rangeStart, rangeEnd }: { rangeStart: 
                       <li key={d.id} className="py-2 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1.5">
                         <div className="min-w-0 flex-1">
                           {d.omschrijving && <p className="text-sm">{d.omschrijving}</p>}
-                          {c && <OrgRef organisatieId={c.organisatie_id} contractId={c.id} />}
+                          <OrgRef contract={c} contractId={d.contract_id} />
                         </div>
                         <div className={`text-xs shrink-0 ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
                           {d.deadline ? fmtDate(d.deadline) : <span className="opacity-60">Geen deadline</span>}
@@ -266,7 +290,7 @@ export function DeliverablesReportCards({ rangeStart, rangeEnd }: { rangeStart: 
           <ul className="divide-y divide-border max-h-[420px] overflow-y-auto pr-1">
             {budgetRows.map((r) => (
               <li key={r.contract.id} className="py-2.5">
-                <OrgRef organisatieId={r.contract.organisatie_id} contractId={r.contract.id} />
+                <OrgRef contract={r.contract} contractId={r.contract.id} />
                 <div className="mt-1 text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5 tabular-nums">
                   <span>Contractwaarde: <span className="text-foreground font-medium">{r.contract.value != null ? `€${r.contract.value.toLocaleString("nl-BE")}` : "—"}</span></span>
                   <span>Geleverde waarde: {r.sumValue == null ? <span className="italic">geen waarde toegekend</span> : <span className="text-foreground font-medium">€{r.sumValue.toLocaleString("nl-BE")}</span>}</span>
