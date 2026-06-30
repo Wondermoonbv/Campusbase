@@ -23,6 +23,15 @@ import { REGION_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS } from "@/
 import { DeliverablesReportCards } from "@/components/rapportage/DeliverablesReports";
 
 const CHART_COLORS = ["#0E6575", "#ef7c14", "#007BAF", "#0C8129", "#CD2E15", "#434f54", "#6366f1", "#ec4899"];
+
+const ORGANISATIE_TYPE_LABELS: Record<string, string> = {
+  school: "School",
+  studentenvereniging: "Studentenvereniging",
+  werkgeversorganisatie: "Werkgeversorganisatie",
+  overheid: "Overheid",
+  andere: "Andere",
+};
+
 type PeriodPreset = "week" | "month" | "quarter" | "academic" | "custom";
 
 function getAcademicYear(now: Date): [Date, Date] {
