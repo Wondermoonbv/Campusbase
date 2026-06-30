@@ -433,6 +433,7 @@ export type Database = {
           start_date: string
           status: string
           value: number | null
+          verantwoordelijke_id: string | null
         }
         Insert: {
           contract_type?: string
@@ -448,6 +449,7 @@ export type Database = {
           start_date: string
           status?: string
           value?: number | null
+          verantwoordelijke_id?: string | null
         }
         Update: {
           contract_type?: string
@@ -463,6 +465,7 @@ export type Database = {
           start_date?: string
           status?: string
           value?: number | null
+          verantwoordelijke_id?: string | null
         }
         Relationships: [
           {
@@ -477,6 +480,13 @@ export type Database = {
             columns: ["organisatie_id"]
             isOneToOne: false
             referencedRelation: "organisaties_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracten_verantwoordelijke_id_fkey"
+            columns: ["verantwoordelijke_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
