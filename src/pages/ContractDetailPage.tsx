@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ContractFormDialog } from "@/components/contracts/ContractFormDialog";
+import { ContractDeliverablesSection } from "@/components/contracts/ContractDeliverablesSection";
 import { OrganisatieLabel } from "@/components/organisaties/OrganisatieLabel";
 import { AttachmentsSection } from "@/components/shared/AttachmentsSection";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
@@ -238,6 +239,9 @@ export default function ContractDetailPage() {
           </ul>
         )}
       </section>
+
+      {/* TEGENPRESTATIES */}
+      <ContractDeliverablesSection contractId={contract.id} />
 
       <ContractFormDialog
         open={editOpen}
