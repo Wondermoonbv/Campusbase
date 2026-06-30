@@ -120,7 +120,16 @@ export default function ContractDetailPage() {
         </div>
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div className="min-w-0 space-y-2">
-            <h1 className="text-xl sm:text-2xl font-semibold truncate">{school?.name ?? "—"}<OrganisatieLabel organisatieId={school?.id} /></h1>
+            <h1 className="text-xl sm:text-2xl font-semibold truncate inline-flex items-center gap-1.5 flex-wrap">
+              {school ? (
+                <>
+                  {school.name}
+                  {school.parent_id && <Badge variant="secondary" className="text-[10px]">Campus</Badge>}
+                  <Badge variant="outline" className="text-[10px]">{ORGANISATIE_TYPE_LABELS[school.type] || school.type}</Badge>
+                </>
+              ) : "—"}
+            </h1>
+            <OrganisatieLabel organisatie={school} />
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium capitalize">
                 {contract.contract_type}
