@@ -83,6 +83,22 @@ export default function RapportagePage() {
   const { evenementen } = useEvenementen();
   const { contracten } = useContracten();
 
+  // Server-side fetch van alle contract_deliverables met hun contract-looptijd,
+  // zodat de tab-tegels niet afhangen van een client-side contractenlijst die door
+  // de 1000-rij-cap kan worden afgekapt.
+  const { data: deliverablesWithContract = [] } = useQuery({
+    queryKey: ["rapportage_deliverables_with_contract"],
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contract_deliverables")
+        .select("id, status, contracten!inner(start_date, end_date)")
+        .range(0, 9999);
+      if (error) { console.error(error); return [] as any[]; }
+      return (data ?? []) as any[];
+    },
+  });
+
   // Server-side join om organisator-metadata (naam + type) op te halen zonder client-side 1000-rij-cap
   const { data: eventOrganisatorInfo = {} } = useQuery({
     queryKey: ["rapportage_event_organisator_info"],
@@ -115,6 +131,24 @@ export default function RapportagePage() {
   const totalEvents = filteredEvents.length;
   const totalBudget = filteredEvents.reduce((s, e) => s + (e.budget ?? 0), 0);
   const activeSchoolIds = new Set(filteredEvents.map((e) => e.organisator_id).filter(Boolean));
+
+  // Tab "Contracten & tegenprestaties" — KPI's
+  const contractsTotalValue = useMemo(
+    () => filteredContracts.reduce((s, c) => s + (c.value ?? 0), 0),
+    [filteredContracts],
+  );
+  const contractsCount = filteredContracts.length;
+  const filteredDeliverables = useMemo(() => {
+    return (deliverablesWithContract as any[]).filter((d) => {
+      const c = d.contracten;
+      if (!c?.start_date || !c?.end_date) return false;
+      const start = new Date(c.start_date);
+      const end = new Date(c.end_date);
+      return start <= rangeEnd && end >= rangeStart;
+    });
+  }, [deliverablesWithContract, rangeStart, rangeEnd]);
+  const deliveredCount = useMemo(() => filteredDeliverables.filter((d) => d.status === "geleverd").length, [filteredDeliverables]);
+  const openDeliverablesCount = useMemo(() => filteredDeliverables.filter((d) => d.status === "te leveren").length, [filteredDeliverables]);
 
   const eventsTimeline = useMemo(() => {
     const groups: Record<string, number> = {};
@@ -199,7 +233,20 @@ export default function RapportagePage() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        {[{ icon: CalendarDays, label: "Totaal events", value: totalEvents }, { icon: Wallet, label: "Totaal budget", value: `€${totalBudget.toLocaleString("nl-BE")}` }, { icon: GraduationCap, label: "Actieve scholen", value: activeSchoolIds.size }, { icon: Users, label: "Studenten bereikt", value: 0 }].map((kpi) => (
+        {(activeTab === "contracts"
+          ? [
+              { icon: Wallet, label: "Totaal contractwaarde", value: `€${contractsTotalValue.toLocaleString("nl-BE")}` },
+              { icon: CalendarDays, label: "Aantal contracten", value: contractsCount },
+              { icon: GraduationCap, label: "Geleverde tegenprestaties", value: deliveredCount },
+              { icon: Users, label: "Openstaande tegenprestaties", value: openDeliverablesCount },
+            ]
+          : [
+              { icon: CalendarDays, label: "Totaal events", value: totalEvents },
+              { icon: Wallet, label: "Totaal budget", value: `€${totalBudget.toLocaleString("nl-BE")}` },
+              { icon: GraduationCap, label: "Actieve scholen", value: activeSchoolIds.size },
+              { icon: Users, label: "Studenten bereikt", value: 0 },
+            ]
+        ).map((kpi) => (
           <div key={kpi.label} className="surface-card p-3 sm:p-4 flex items-start gap-2 sm:gap-3"><div className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded bg-primary/10"><kpi.icon className="h-4 w-4 text-primary" /></div><div className="min-w-0"><p className="text-xs text-muted-foreground truncate">{kpi.label}</p><p className="text-lg sm:text-xl font-semibold tabular-nums">{kpi.value}</p></div></div>
         ))}
       </div>
