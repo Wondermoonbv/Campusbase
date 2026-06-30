@@ -4,7 +4,7 @@ import { AmbassadeurPrestaties } from "@/components/rapportage/AmbassadeurPresta
 import { EventFeedbackOverzicht } from "@/components/rapportage/EventFeedbackOverzicht";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { useContracten } from "@/hooks/useContracten";
-import { useEventOrganisaties } from "@/hooks/useEventOrganisaties";
+
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -73,7 +73,6 @@ export default function RapportagePage() {
   const { scholen } = useScholen();
   const { evenementen } = useEvenementen();
   const { contracten } = useContracten();
-  const { links: eventOrgLinks } = useEventOrganisaties();
   const [preset, setPreset] = useState<PeriodPreset>("academic");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
