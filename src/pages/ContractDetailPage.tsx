@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useContracten } from "@/hooks/useContracten";
 import { useScholen } from "@/hooks/useScholen";
 import { useEvenementen } from "@/hooks/useEvenementen";
+import { useProfiles } from "@/hooks/useProfiles";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -52,6 +53,7 @@ export default function ContractDetailPage() {
   const { contracten, isLoading, upsertContract, deleteContract } = useContracten();
   const { scholen } = useScholen();
   const { evenementen } = useEvenementen();
+  const { resolveAssignee } = useProfiles();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -185,6 +187,10 @@ export default function ContractDetailPage() {
             {renewalHint && (
               <p className="text-xs text-muted-foreground mt-0.5">{renewalHint}</p>
             )}
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Verantwoordelijke (Elia)</p>
+            <p className="text-sm font-medium mt-1">{contract.verantwoordelijke_id ? resolveAssignee(contract.verantwoordelijke_id) : "—"}</p>
           </div>
         </div>
         {contract.value != null && (
