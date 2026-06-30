@@ -531,6 +531,7 @@ export type Database = {
             | Database["public"]["Enums"]["follow_up_status_enum"]
             | null
           id: string
+          import_metadata: Json | null
           invoice_status: string
           location: string | null
           locker_code: string | null
@@ -570,6 +571,7 @@ export type Database = {
             | Database["public"]["Enums"]["follow_up_status_enum"]
             | null
           id?: string
+          import_metadata?: Json | null
           invoice_status?: string
           location?: string | null
           locker_code?: string | null
@@ -609,6 +611,7 @@ export type Database = {
             | Database["public"]["Enums"]["follow_up_status_enum"]
             | null
           id?: string
+          import_metadata?: Json | null
           invoice_status?: string
           location?: string | null
           locker_code?: string | null
@@ -1558,8 +1561,17 @@ export type Database = {
         | "oost_vlaanderen"
         | "waals_brabant"
         | "henegouwen"
+        | "luik"
+        | "luxemburg"
+        | "namen"
       registration_type_enum: "partnership" | "ad_hoc"
-      target_level_enum: "bachelor" | "master" | "beide" | "graduaat"
+      target_level_enum:
+        | "bachelor"
+        | "master"
+        | "beide"
+        | "graduaat"
+        | "a2"
+        | "experienced"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1707,9 +1719,19 @@ export const Constants = {
         "oost_vlaanderen",
         "waals_brabant",
         "henegouwen",
+        "luik",
+        "luxemburg",
+        "namen",
       ],
       registration_type_enum: ["partnership", "ad_hoc"],
-      target_level_enum: ["bachelor", "master", "beide", "graduaat"],
+      target_level_enum: [
+        "bachelor",
+        "master",
+        "beide",
+        "graduaat",
+        "a2",
+        "experienced",
+      ],
     },
   },
 } as const
