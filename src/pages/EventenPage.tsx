@@ -296,6 +296,15 @@ export default function EventenPage() {
           </div>
           <div className="surface-card overflow-hidden hidden md:block">
             <Table><TableHeader><TableRow>
+              {canEdit && (
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={allVisibleSelected ? true : (someVisibleSelected ? "indeterminate" : false)}
+                    onCheckedChange={(c) => toggleAllVisible(!!c)}
+                    aria-label="Selecteer alle zichtbare events"
+                  />
+                </TableHead>
+              )}
               <SortableTableHead sortKey="name" currentSort={sort} onSort={toggleSort}>Evenement</SortableTableHead>
               <SortableTableHead sortKey="date" currentSort={sort} onSort={toggleSort}>Datum</SortableTableHead>
               <SortableTableHead sortKey="location" currentSort={sort} onSort={toggleSort}>Locatie</SortableTableHead>
@@ -306,6 +315,15 @@ export default function EventenPage() {
             </TableRow></TableHeader>
               <TableBody>{sorted.map((ev) => (
                 <TableRow key={ev.id} className="hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/evenementen/${ev.id}`)}>
+                  {canEdit && (
+                    <TableCell onClick={(e) => e.stopPropagation()} className="w-10">
+                      <Checkbox
+                        checked={selectedIds.has(ev.id)}
+                        onCheckedChange={(c) => toggleOne(ev.id, !!c)}
+                        aria-label={`${ev.name} selecteren`}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell className="font-medium">{ev.name}</TableCell>
                   <TableCell className="tabular-nums">{new Date(ev.date).toLocaleDateString("nl-BE")}</TableCell>
                   <TableCell>{ev.location || "—"}</TableCell>
