@@ -1,5 +1,6 @@
 import { useMemo, useState, useCallback, useRef } from "react";
-import { useScholen } from "@/hooks/useScholen";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { AmbassadeurPrestaties } from "@/components/rapportage/AmbassadeurPrestaties";
 import { EventFeedbackOverzicht } from "@/components/rapportage/EventFeedbackOverzicht";
 import { useEvenementen } from "@/hooks/useEvenementen";
@@ -70,9 +71,25 @@ function ChartCard({ title, children, data, chartId }: { title: string; children
 }
 
 export default function RapportagePage() {
-  const { scholen } = useScholen();
   const { evenementen } = useEvenementen();
   const { contracten } = useContracten();
+
+  // Server-side join om organisator-namen op te halen zonder client-side 1000-rij-cap
+  const { data: eventOrganisatorNames = {} } = useQuery({
+    queryKey: ["rapportage_event_organisator_names"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("evenementen")
+        .select("id, organisator_id, organisaties!evenementen_school_id_fkey(name)")
+        .range(0, 9999);
+      if (error) { console.error(error); return {} as Record<string, string>; }
+      const map: Record<string, string> = {};
+      (data as any[]).forEach((row) => { if (row.id) map[row.id] = row.organisaties?.name ?? ""; });
+      return map;
+    },
+    staleTime: 30_000,
+  });
+
   const [preset, setPreset] = useState<PeriodPreset>("academic");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
@@ -98,28 +115,25 @@ export default function RapportagePage() {
 
   const eventsByType = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { c[e.type] = (c[e.type] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })); }, [filteredEvents]);
   const eventsByOrganisator = useMemo(() => {
-    const orgById = new Map(scholen.map((s) => [s.id, s]));
     const counts: Record<string, number> = {};
     filteredEvents.forEach((e) => {
-      const name = e.organisator_id ? (orgById.get(e.organisator_id)?.name ?? "Onbekend") : "Onbekend";
+      const name = e.organisator_id ? (eventOrganisatorNames[e.id] || "Onbekend") : "Onbekend";
       counts[name] = (counts[name] || 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
-  }, [filteredEvents, scholen]);
+  }, [filteredEvents, eventOrganisatorNames]);
   const budgetByType = useMemo(() => { const s: Record<string, number> = {}; filteredEvents.forEach((e) => { s[e.type] = (s[e.type] || 0) + (e.budget ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredEvents]);
   const budgetBySchool = useMemo(() => {
-    const orgById = new Map(scholen.map((s) => [s.id, s]));
     const s: Record<string, number> = {};
     filteredContracts
       .filter((c) => c.status === "actief")
       .forEach((c) => {
-        const org = orgById.get(c.organisatie_id);
-        const headId = org?.parent_id ?? c.organisatie_id;
-        const name = orgById.get(headId)?.name ?? "Onbekend";
+        // Gebruik de server-side embedded organisatie (incl. parent) uit de contracten-query
+        const name = c.school?.parent?.name ?? c.school?.name ?? "Onbekend";
         s[name] = (s[name] || 0) + (c.value ?? 0);
       });
     return Object.entries(s).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
-  }, [filteredContracts, scholen]);
+  }, [filteredContracts]);
   const contractsByType = useMemo(() => { const s: Record<string, number> = {}; filteredContracts.forEach((c) => { s[c.contract_type] = (s[c.contract_type] || 0) + (c.value ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredContracts]);
   const totalContractValue = filteredContracts.filter((c) => c.status === "actief").reduce((s, c) => s + (c.value ?? 0), 0);
 
@@ -199,7 +213,7 @@ export default function RapportagePage() {
             <div className="surface-card p-4 sm:p-5">
               <h2 className="text-sm sm:text-base font-semibold mb-4">Contracten die vervallen in deze periode ({expiringContracts.length})</h2>
               {expiringContracts.length === 0 ? <p className="text-sm text-muted-foreground">Geen contracten vervallen in de geselecteerde periode.</p> : (
-                <div className="divide-y divide-border">{expiringContracts.map((c) => { const school = scholen.find((s) => s.id === c.organisatie_id); return (<div key={c.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1"><div><p className="text-sm font-medium">{school?.name} — <span className="capitalize">{c.contract_type}</span></p><p className="text-xs text-muted-foreground">Vervalt: {new Date(c.end_date).toLocaleDateString("nl-BE")} · Waarde: {c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</p></div></div>); })}</div>
+                <div className="divide-y divide-border">{expiringContracts.map((c) => (<div key={c.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1"><div><p className="text-sm font-medium">{c.school?.name ?? "—"} — <span className="capitalize">{c.contract_type}</span></p><p className="text-xs text-muted-foreground">Vervalt: {new Date(c.end_date).toLocaleDateString("nl-BE")} · Waarde: {c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</p></div></div>))}</div>
               )}
             </div>
             <DeliverablesReportCards rangeStart={rangeStart} rangeEnd={rangeEnd} />
