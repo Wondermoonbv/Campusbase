@@ -25,6 +25,22 @@ import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
 import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, followUpVariant, INVOICE_STATUS_LABELS, invoiceStatusVariant } from "@/lib/event-labels";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+
+const BULK_STATUS_OPTIONS = [
+  { value: "gepland", label: "Gepland" },
+  { value: "bevestigd", label: "Bevestigd" },
+  { value: "afgelopen", label: "Afgelopen" },
+  { value: "geannuleerd", label: "Geannuleerd" },
+];
+const BULK_INVOICE_OPTIONS = [
+  { value: "open", label: "Open" },
+  { value: "ontvangen", label: "Ontvangen" },
+  { value: "betaald", label: "Betaald" },
+];
 
 const EVENT_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "name", label: "Naam", required: true },
@@ -77,6 +93,39 @@ export default function EventenPage() {
   const [deleteTarget, setDeleteTarget] = useState<Event | null>(null);
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
+  const qc = useQueryClient();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<{ field: "status" | "invoice_status"; value: string; label: string } | null>(null);
+  const [bulkPending, setBulkPending] = useState(false);
+
+  const toggleOne = useCallback((id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id); else next.delete(id);
+      return next;
+    });
+  }, []);
+
+  const applyBulk = useCallback(async () => {
+    if (!bulkAction || selectedIds.size === 0) return;
+    setBulkPending(true);
+    try {
+      const ids = Array.from(selectedIds);
+      const { error } = await supabase
+        .from("evenementen")
+        .update({ [bulkAction.field]: bulkAction.value } as any)
+        .in("id", ids);
+      if (error) throw error;
+      toast.success(`${ids.length} event${ids.length !== 1 ? "s" : ""} bijgewerkt`);
+      setSelectedIds(new Set());
+      setBulkAction(null);
+      qc.invalidateQueries({ queryKey: ["evenementen"] });
+    } catch (e: any) {
+      toast.error(e?.message || "Bulkwijziging mislukt");
+    } finally {
+      setBulkPending(false);
+    }
+  }, [bulkAction, selectedIds, qc]);
 
   const handleSave = useCallback(async (saved: Event, cpEntries?: { contact_id: string; rol: ContactpersoonRol }[], organisatieIds?: string[], opleidingIds?: string[]) => {
     try {
@@ -130,6 +179,17 @@ export default function EventenPage() {
   const sorted = useMemo(() => sortItems(filtered, sort, (e, key) => {
     switch (key) { case "name": return e.name; case "date": return new Date(e.date).getTime(); case "location": return e.location; case "status": return e.status; case "follow_up": return e.follow_up_status || ""; default: return e.name; }
   }), [filtered, sort]);
+
+  const allVisibleSelected = sorted.length > 0 && sorted.every((e) => selectedIds.has(e.id));
+  const someVisibleSelected = sorted.some((e) => selectedIds.has(e.id));
+  const toggleAllVisible = (checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) sorted.forEach((e) => next.add(e.id));
+      else sorted.forEach((e) => next.delete(e.id));
+      return next;
+    });
+  };
 
   const exportCSV = useCallback(() => {
     const headers = ["Naam", "Type", "Datum", "Locatie", "Status", "Budget", "Follow-up"];
@@ -191,6 +251,22 @@ export default function EventenPage() {
         <EmptyState icon={Calendar} title="Geen evenementen gevonden" description="Voeg je eerste evenement toe om te beginnen." actionLabel="Evenement toevoegen" onAction={() => { setEditEvent(undefined); setDialogOpen(true); }} />
       ) : view === "list" ? (
         <>
+          {canEdit && selectedIds.size > 0 && (
+            <div className="surface-card p-3 mb-3 flex flex-col sm:flex-row sm:items-center gap-3 border-primary/40">
+              <div className="text-sm font-medium">{selectedIds.size} event{selectedIds.size !== 1 ? "s" : ""} geselecteerd</div>
+              <div className="flex flex-wrap gap-2 sm:ml-auto items-center">
+                <Select value="" onValueChange={(v) => { const opt = BULK_STATUS_OPTIONS.find(o => o.value === v); if (opt) setBulkAction({ field: "status", value: opt.value, label: opt.label }); }}>
+                  <SelectTrigger className="w-[220px] h-9"><SelectValue placeholder="Status wijzigen naar ..." /></SelectTrigger>
+                  <SelectContent>{BULK_STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                </Select>
+                <Select value="" onValueChange={(v) => { const opt = BULK_INVOICE_OPTIONS.find(o => o.value === v); if (opt) setBulkAction({ field: "invoice_status", value: opt.value, label: opt.label }); }}>
+                  <SelectTrigger className="w-[240px] h-9"><SelectValue placeholder="Factuurstatus wijzigen naar ..." /></SelectTrigger>
+                  <SelectContent>{BULK_INVOICE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                </Select>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>Selectie wissen</Button>
+              </div>
+            </div>
+          )}
           <div className="block md:hidden space-y-2">
             {sorted.length === 0 ? <div className="surface-card p-6 text-center text-sm text-muted-foreground">Geen evenementen gevonden.</div> : sorted.map((ev) => (
               <div key={ev.id} className="surface-card p-4 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate(`/evenementen/${ev.id}`)}>
@@ -220,6 +296,15 @@ export default function EventenPage() {
           </div>
           <div className="surface-card overflow-hidden hidden md:block">
             <Table><TableHeader><TableRow>
+              {canEdit && (
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={allVisibleSelected ? true : (someVisibleSelected ? "indeterminate" : false)}
+                    onCheckedChange={(c) => toggleAllVisible(!!c)}
+                    aria-label="Selecteer alle zichtbare events"
+                  />
+                </TableHead>
+              )}
               <SortableTableHead sortKey="name" currentSort={sort} onSort={toggleSort}>Evenement</SortableTableHead>
               <SortableTableHead sortKey="date" currentSort={sort} onSort={toggleSort}>Datum</SortableTableHead>
               <SortableTableHead sortKey="location" currentSort={sort} onSort={toggleSort}>Locatie</SortableTableHead>
@@ -230,6 +315,15 @@ export default function EventenPage() {
             </TableRow></TableHeader>
               <TableBody>{sorted.map((ev) => (
                 <TableRow key={ev.id} className="hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/evenementen/${ev.id}`)}>
+                  {canEdit && (
+                    <TableCell onClick={(e) => e.stopPropagation()} className="w-10">
+                      <Checkbox
+                        checked={selectedIds.has(ev.id)}
+                        onCheckedChange={(c) => toggleOne(ev.id, !!c)}
+                        aria-label={`${ev.name} selecteren`}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell className="font-medium">{ev.name}</TableCell>
                   <TableCell className="tabular-nums">{new Date(ev.date).toLocaleDateString("nl-BE")}</TableCell>
                   <TableCell>{ev.location || "—"}</TableCell>
@@ -288,6 +382,22 @@ export default function EventenPage() {
         }}
       />
       <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget?.name ?? ""} isLoading={deleteEvent.isPending} />
+      <AlertDialog open={!!bulkAction} onOpenChange={(o) => { if (!o && !bulkPending) setBulkAction(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bulkwijziging bevestigen</AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkAction && (
+                <>Je staat op het punt de {bulkAction.field === "status" ? "status" : "factuurstatus"} van {selectedIds.size} event{selectedIds.size !== 1 ? "s" : ""} op '{bulkAction.label.toLowerCase()}' te zetten. Doorgaan?</>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkPending}>Annuleren</AlertDialogCancel>
+            <AlertDialogAction onClick={(e) => { e.preventDefault(); applyBulk(); }} disabled={bulkPending}>{bulkPending ? "Bezig..." : "Doorgaan"}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
