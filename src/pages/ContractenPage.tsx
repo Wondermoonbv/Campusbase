@@ -282,6 +282,8 @@ export default function ContractenPage() {
               </div>
             </>
           )}
+        </>
+      )}
 
       <ContractFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditContract(undefined); }} contract={editContract} onSave={handleSave} />
       <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget ? (schoolMap.get(deleteTarget.organisatie_id)?.name ?? "contract") : ""} isLoading={deleteContract.isPending} />
