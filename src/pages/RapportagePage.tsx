@@ -232,6 +232,16 @@ export default function RapportagePage() {
         </div>
       </div>
 
+      <div className="surface-card p-3 sm:p-4 mb-4 sm:mb-6 flex items-start gap-2 sm:gap-3">
+        <div className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded bg-primary/10">
+          <Wallet className="h-4 w-4 text-primary" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground truncate">Totale investering</p>
+          <p className="text-lg sm:text-xl font-semibold tabular-nums">€{(totalBudget + contractsTotalValue).toLocaleString("nl-BE")}</p>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         {(activeTab === "contracts"
           ? [
