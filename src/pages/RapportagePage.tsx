@@ -131,7 +131,7 @@ export default function RapportagePage() {
         noOrganisatorCount++;
         return;
       }
-      const name = eventOrganisatorNames[e.id];
+      const name = eventOrganisatorInfo[e.id]?.name;
       if (name) {
         counts[name] = (counts[name] || 0) + 1;
       } else {
@@ -145,7 +145,20 @@ export default function RapportagePage() {
       singleEventOrganisatorenCount: allSorted.filter((d) => d.value === 1).length,
       noOrganisatorCount,
     };
-  }, [filteredEvents, eventOrganisatorNames]);
+  }, [filteredEvents, eventOrganisatorInfo]);
+  const eventsByOrganisatieType = useMemo(() => {
+    const counts: Record<string, number> = {};
+    filteredEvents.forEach((e) => {
+      if (!e.organisator_id) {
+        counts["Onbekend"] = (counts["Onbekend"] || 0) + 1;
+        return;
+      }
+      const type = eventOrganisatorInfo[e.id]?.type;
+      const label = type ? (ORGANISATIE_TYPE_LABELS[type] || type) : "Onbekend";
+      counts[label] = (counts[label] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [filteredEvents, eventOrganisatorInfo]);
   const budgetByType = useMemo(() => { const s: Record<string, number> = {}; filteredEvents.forEach((e) => { s[e.type] = (s[e.type] || 0) + (e.budget ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredEvents]);
   const budgetBySchool = useMemo(() => {
     const s: Record<string, number> = {};
