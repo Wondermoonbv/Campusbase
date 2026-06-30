@@ -56,7 +56,7 @@ export default function ContractDetailPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const contract = useMemo(() => contracten.find((c) => c.id === id), [contracten, id]);
-  const school = contract ? scholen.find((s) => s.id === contract.organisatie_id) : null;
+  const school = contract?.school ?? (contract ? scholen.find((s) => s.id === contract.organisatie_id) : null);
   const linkedEvents = useMemo(() => {
     if (!contract) return [];
     return (contract.linked_event_ids || [])
