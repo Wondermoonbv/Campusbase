@@ -426,6 +426,7 @@ export type Database = {
           document_url: string | null
           end_date: string
           id: string
+          import_metadata: Json | null
           invoice_status: string
           notes: string | null
           organisatie_id: string
@@ -442,6 +443,7 @@ export type Database = {
           document_url?: string | null
           end_date: string
           id?: string
+          import_metadata?: Json | null
           invoice_status?: string
           notes?: string | null
           organisatie_id: string
@@ -458,6 +460,7 @@ export type Database = {
           document_url?: string | null
           end_date?: string
           id?: string
+          import_metadata?: Json | null
           invoice_status?: string
           notes?: string | null
           organisatie_id?: string
