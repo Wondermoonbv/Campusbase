@@ -228,6 +228,9 @@ export default function RapportagePage() {
                 </p>
               )}
             </ChartCard>
+            <ChartCard title="Evenementen per organisatietype" data={eventsByOrganisatieType} chartId="events-organisatie-type">
+              <ResponsiveContainer width="100%" height={250}><BarChart data={eventsByOrganisatieType} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} /><YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 9 }} /><Tooltip /><Bar dataKey="value" fill="#ef7c14" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
+            </ChartCard>
             <ChartCard title="Evenementen per regio" data={eventsByRegio} chartId="events-regio">
               <ResponsiveContainer width="100%" height={250}><BarChart data={eventsByRegio} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} /><YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 9 }} /><Tooltip /><Bar dataKey="value" fill="#0C8129" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
             </ChartCard>
