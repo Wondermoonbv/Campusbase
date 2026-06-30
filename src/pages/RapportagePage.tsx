@@ -83,17 +83,17 @@ export default function RapportagePage() {
   const { evenementen } = useEvenementen();
   const { contracten } = useContracten();
 
-  // Server-side join om organisator-namen op te halen zonder client-side 1000-rij-cap
-  const { data: eventOrganisatorNames = {} } = useQuery({
-    queryKey: ["rapportage_event_organisator_names"],
+  // Server-side join om organisator-metadata (naam + type) op te halen zonder client-side 1000-rij-cap
+  const { data: eventOrganisatorInfo = {} } = useQuery({
+    queryKey: ["rapportage_event_organisator_info"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("evenementen")
-        .select("id, organisator_id, organisaties!evenementen_school_id_fkey(name)")
+        .select("id, organisator_id, organisaties!evenementen_school_id_fkey(name, type)")
         .range(0, 9999);
-      if (error) { console.error(error); return {} as Record<string, string>; }
-      const map: Record<string, string> = {};
-      (data as any[]).forEach((row) => { if (row.id) map[row.id] = row.organisaties?.name ?? ""; });
+      if (error) { console.error(error); return {} as Record<string, { name?: string; type?: string }>; }
+      const map: Record<string, { name?: string; type?: string }> = {};
+      (data as any[]).forEach((row) => { if (row.id) map[row.id] = { name: row.organisaties?.name, type: row.organisaties?.type }; });
       return map;
     },
     staleTime: 30_000,
