@@ -21,6 +21,28 @@ import { writeAuditLog } from "@/lib/audit";
 import { INVOICE_STATUS_LABELS, invoiceStatusVariant, DOCUMENT_STATUS_LABELS, documentStatusVariant, ORGANISATIE_TYPE_LABELS } from "@/lib/event-labels";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+
+const BULK_STATUS_OPTIONS = [
+  { value: "in onderhandeling", label: "In onderhandeling" },
+  { value: "actief", label: "Actief" },
+  { value: "afgelopen", label: "Afgelopen" },
+];
+const BULK_INVOICE_OPTIONS = [
+  { value: "open", label: "Open" },
+  { value: "ontvangen", label: "Ontvangen" },
+  { value: "betaald", label: "Betaald" },
+];
+const BULK_DOCUMENT_OPTIONS = [
+  { value: "opgemaakt", label: "Opgemaakt" },
+  { value: "getekend", label: "Getekend" },
+  { value: "tegengetekend", label: "Tegengetekend" },
+  { value: "__null__", label: "Leegmaken" },
+];
 
 function formatStatusLabel(status: string) {
   if (!status) return "Onbekend";
@@ -77,6 +99,35 @@ export default function ContractenPage() {
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("school");
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const qc = useQueryClient();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<{ field: "status" | "invoice_status" | "document_status"; value: string | null; label: string; fieldLabel: string } | null>(null);
+  const [bulkPending, setBulkPending] = useState(false);
+
+  const toggleOne = useCallback((id: string, checked: boolean) => {
+    setSelectedIds((prev) => { const next = new Set(prev); if (checked) next.add(id); else next.delete(id); return next; });
+  }, []);
+
+  const applyBulk = useCallback(async () => {
+    if (!bulkAction || selectedIds.size === 0) return;
+    setBulkPending(true);
+    try {
+      const ids = Array.from(selectedIds);
+      const { error } = await supabase
+        .from("contracten")
+        .update({ [bulkAction.field]: bulkAction.value } as any)
+        .in("id", ids);
+      if (error) throw error;
+      toast.success(`${ids.length} contract${ids.length !== 1 ? "en" : ""} bijgewerkt`);
+      setSelectedIds(new Set());
+      setBulkAction(null);
+      qc.invalidateQueries({ queryKey: ["contracten"] });
+    } catch (e: any) {
+      toast.error(e?.message || "Bulkwijziging mislukt");
+    } finally {
+      setBulkPending(false);
+    }
+  }, [bulkAction, selectedIds, qc]);
 
   const handleSave = useCallback(async (saved: Contract) => {
     try { await upsertContract.mutateAsync(saved); } catch { toast.error("Fout bij opslaan."); }
@@ -123,6 +174,17 @@ export default function ContractenPage() {
       default: return schoolMap.get(c.organisatie_id)?.name ?? "";
     }
   }), [baseList, sort, schoolMap]);
+
+  const allVisibleSelected = sorted.length > 0 && sorted.every((c) => selectedIds.has(c.id));
+  const someVisibleSelected = sorted.some((c) => selectedIds.has(c.id));
+  const toggleAllVisible = (checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) sorted.forEach((c) => next.add(c.id));
+      else sorted.forEach((c) => next.delete(c.id));
+      return next;
+    });
+  };
 
   const exportCSV = useCallback(() => {
     const headers = ["Organisatie", "Type", "Start", "Einde", "Vernieuwing", "Status", "Waarde", "Beschrijving"];
@@ -184,6 +246,26 @@ export default function ContractenPage() {
             <EmptyState icon={FileText} title="Geen contracten gevonden" description="Probeer een andere statusfilter." />
           ) : (
             <>
+              {canEdit && selectedIds.size > 0 && (
+                <div className="surface-card p-3 mb-3 flex flex-col sm:flex-row sm:items-center gap-3 border-primary/40">
+                  <div className="text-sm font-medium">{selectedIds.size} contract{selectedIds.size !== 1 ? "en" : ""} geselecteerd</div>
+                  <div className="flex flex-wrap gap-2 sm:ml-auto items-center">
+                    <Select value="" onValueChange={(v) => { const o = BULK_STATUS_OPTIONS.find(x => x.value === v); if (o) setBulkAction({ field: "status", value: o.value, label: o.label, fieldLabel: "status" }); }}>
+                      <SelectTrigger className="w-[220px] h-9"><SelectValue placeholder="Status wijzigen naar ..." /></SelectTrigger>
+                      <SelectContent>{BULK_STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <Select value="" onValueChange={(v) => { const o = BULK_INVOICE_OPTIONS.find(x => x.value === v); if (o) setBulkAction({ field: "invoice_status", value: o.value, label: o.label, fieldLabel: "factuurstatus" }); }}>
+                      <SelectTrigger className="w-[240px] h-9"><SelectValue placeholder="Factuurstatus wijzigen naar ..." /></SelectTrigger>
+                      <SelectContent>{BULK_INVOICE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <Select value="" onValueChange={(v) => { const o = BULK_DOCUMENT_OPTIONS.find(x => x.value === v); if (o) setBulkAction({ field: "document_status", value: o.value === "__null__" ? null : o.value, label: o.label, fieldLabel: "documentstatus" }); }}>
+                      <SelectTrigger className="w-[240px] h-9"><SelectValue placeholder="Documentstatus wijzigen naar ..." /></SelectTrigger>
+                      <SelectContent>{BULK_DOCUMENT_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>Selectie wissen</Button>
+                  </div>
+                </div>
+              )}
               <div className="block md:hidden space-y-2">
                 {sorted.map((c) => {
                   const school = c.school ?? schoolMap.get(c.organisatie_id);
@@ -220,6 +302,15 @@ export default function ContractenPage() {
 
               <div className="surface-card overflow-hidden hidden md:block">
                 <Table><TableHeader><TableRow>
+                  {canEdit && (
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={allVisibleSelected ? true : (someVisibleSelected ? "indeterminate" : false)}
+                        onCheckedChange={(c) => toggleAllVisible(!!c)}
+                        aria-label="Selecteer alle zichtbare contracten"
+                      />
+                    </TableHead>
+                  )}
                   <SortableTableHead sortKey="school" currentSort={sort} onSort={toggleSort}>Organisatie</SortableTableHead>
                   <SortableTableHead sortKey="type" currentSort={sort} onSort={toggleSort}>Type</SortableTableHead>
                   <SortableTableHead sortKey="start" currentSort={sort} onSort={toggleSort}>Start</SortableTableHead>
@@ -236,6 +327,15 @@ export default function ContractenPage() {
                     const school = c.school ?? schoolMap.get(c.organisatie_id);
                     return (
                         <TableRow key={c.id} className={`hover:bg-muted/30 cursor-pointer ${getExpiryColor(c.end_date)}`} onClick={() => navigate(`/contracten/${c.id}`)}>
+                          {canEdit && (
+                            <TableCell onClick={(e) => e.stopPropagation()} className="w-10">
+                              <Checkbox
+                                checked={selectedIds.has(c.id)}
+                                onCheckedChange={(v) => toggleOne(c.id, !!v)}
+                                aria-label="Contract selecteren"
+                              />
+                            </TableCell>
+                          )}
                           <TableCell className="font-medium"><OrganisatieCell school={school} /></TableCell>
                           <TableCell className="capitalize">{c.contract_type}</TableCell>
                           <TableCell>{new Date(c.start_date).toLocaleDateString("nl-BE")}</TableCell>
@@ -287,6 +387,22 @@ export default function ContractenPage() {
 
       <ContractFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditContract(undefined); }} contract={editContract} onSave={handleSave} />
       <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget ? (schoolMap.get(deleteTarget.organisatie_id)?.name ?? "contract") : ""} isLoading={deleteContract.isPending} />
+      <AlertDialog open={!!bulkAction} onOpenChange={(o) => { if (!o && !bulkPending) setBulkAction(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bulkwijziging bevestigen</AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkAction && (
+                <>Je staat op het punt {selectedIds.size} contract{selectedIds.size !== 1 ? "en" : ""} op {bulkAction.fieldLabel} '{bulkAction.label.toLowerCase()}' te zetten. Doorgaan?</>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkPending}>Annuleren</AlertDialogCancel>
+            <AlertDialogAction onClick={(e) => { e.preventDefault(); applyBulk(); }} disabled={bulkPending}>{bulkPending ? "Bezig..." : "Doorgaan"}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
