@@ -4,7 +4,7 @@ import { AmbassadeurPrestaties } from "@/components/rapportage/AmbassadeurPresta
 import { EventFeedbackOverzicht } from "@/components/rapportage/EventFeedbackOverzicht";
 import { useEvenementen } from "@/hooks/useEvenementen";
 import { useContracten } from "@/hooks/useContracten";
-import { useEventOrganisaties } from "@/hooks/useEventOrganisaties";
+
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -73,7 +73,6 @@ export default function RapportagePage() {
   const { scholen } = useScholen();
   const { evenementen } = useEvenementen();
   const { contracten } = useContracten();
-  const { links: eventOrgLinks } = useEventOrganisaties();
   const [preset, setPreset] = useState<PeriodPreset>("academic");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
@@ -98,35 +97,15 @@ export default function RapportagePage() {
   }, [filteredEvents, eventGrouping]);
 
   const eventsByType = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { c[e.type] = (c[e.type] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })); }, [filteredEvents]);
-  const eventsBySchool = useMemo(() => {
+  const eventsByOrganisator = useMemo(() => {
     const orgById = new Map(scholen.map((s) => [s.id, s]));
-    const linksByEvent = new Map<string, string[]>();
-    eventOrgLinks.forEach((l) => {
-      const arr = linksByEvent.get(l.event_id) ?? [];
-      arr.push(l.organisatie_id);
-      linksByEvent.set(l.event_id, arr);
-    });
     const counts: Record<string, number> = {};
     filteredEvents.forEach((e) => {
-      const orgIds = linksByEvent.get(e.id) ?? [];
-      const headIds = new Set<string>();
-      orgIds.forEach((oid) => {
-        const org = orgById.get(oid);
-        if (!org) return;
-        headIds.add(org.parent_id ?? org.id);
-      });
-      if (headIds.size === 0) {
-        const name = e.organisator_id ? (orgById.get(e.organisator_id)?.name ?? "Onbekend") : "Multi-school";
-        counts[name] = (counts[name] || 0) + 1;
-        return;
-      }
-      headIds.forEach((hid) => {
-        const name = orgById.get(hid)?.name ?? "Onbekend";
-        counts[name] = (counts[name] || 0) + 1;
-      });
+      const name = e.organisator_id ? (orgById.get(e.organisator_id)?.name ?? "Onbekend") : "Onbekend";
+      counts[name] = (counts[name] || 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
-  }, [filteredEvents, scholen, eventOrgLinks]);
+  }, [filteredEvents, scholen]);
   const budgetByType = useMemo(() => { const s: Record<string, number> = {}; filteredEvents.forEach((e) => { s[e.type] = (s[e.type] || 0) + (e.budget ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredEvents]);
   const budgetBySchool = useMemo(() => {
     const orgById = new Map(scholen.map((s) => [s.id, s]));
@@ -190,8 +169,8 @@ export default function RapportagePage() {
             <ChartCard title="Evenementen per type" data={eventsByType} chartId="events-type">
               <ResponsiveContainer width="100%" height={250}><PieChart><Pie data={eventsByType} cx="50%" cy="50%" innerRadius={40} outerRadius={75} dataKey="value" nameKey="name" label>{eventsByType.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip /><Legend wrapperStyle={{ fontSize: 12 }} /></PieChart></ResponsiveContainer>
             </ChartCard>
-            <ChartCard title="Evenementen per hoofdorganisatie" data={eventsBySchool} chartId="events-school">
-              <ResponsiveContainer width="100%" height={250}><BarChart data={eventsBySchool} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} /><YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 9 }} /><Tooltip /><Bar dataKey="value" fill="#007BAF" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
+            <ChartCard title="Evenementen per organisator" data={eventsByOrganisator} chartId="events-organisator">
+              <ResponsiveContainer width="100%" height={250}><BarChart data={eventsByOrganisator} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} /><YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 9 }} /><Tooltip /><Bar dataKey="value" fill="#007BAF" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
             </ChartCard>
             <ChartCard title="Evenementen per regio" data={eventsByRegio} chartId="events-regio">
               <ResponsiveContainer width="100%" height={250}><BarChart data={eventsByRegio} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} /><YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 9 }} /><Tooltip /><Bar dataKey="value" fill="#0C8129" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
