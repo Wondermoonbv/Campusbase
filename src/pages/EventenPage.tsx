@@ -25,6 +25,22 @@ import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { toast } from "sonner";
 import { REGION_LABELS, EVENT_LANGUAGE_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS, FOLLOW_UP_LABELS, followUpVariant, INVOICE_STATUS_LABELS, invoiceStatusVariant } from "@/lib/event-labels";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+
+const BULK_STATUS_OPTIONS = [
+  { value: "gepland", label: "Gepland" },
+  { value: "bevestigd", label: "Bevestigd" },
+  { value: "afgelopen", label: "Afgelopen" },
+  { value: "geannuleerd", label: "Geannuleerd" },
+];
+const BULK_INVOICE_OPTIONS = [
+  { value: "open", label: "Open" },
+  { value: "ontvangen", label: "Ontvangen" },
+  { value: "betaald", label: "Betaald" },
+];
 
 const EVENT_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "name", label: "Naam", required: true },
@@ -77,6 +93,39 @@ export default function EventenPage() {
   const [deleteTarget, setDeleteTarget] = useState<Event | null>(null);
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("name");
+  const qc = useQueryClient();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<{ field: "status" | "invoice_status"; value: string; label: string } | null>(null);
+  const [bulkPending, setBulkPending] = useState(false);
+
+  const toggleOne = useCallback((id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id); else next.delete(id);
+      return next;
+    });
+  }, []);
+
+  const applyBulk = useCallback(async () => {
+    if (!bulkAction || selectedIds.size === 0) return;
+    setBulkPending(true);
+    try {
+      const ids = Array.from(selectedIds);
+      const { error } = await supabase
+        .from("evenementen")
+        .update({ [bulkAction.field]: bulkAction.value } as any)
+        .in("id", ids);
+      if (error) throw error;
+      toast.success(`${ids.length} event${ids.length !== 1 ? "s" : ""} bijgewerkt`);
+      setSelectedIds(new Set());
+      setBulkAction(null);
+      qc.invalidateQueries({ queryKey: ["evenementen"] });
+    } catch (e: any) {
+      toast.error(e?.message || "Bulkwijziging mislukt");
+    } finally {
+      setBulkPending(false);
+    }
+  }, [bulkAction, selectedIds, qc]);
 
   const handleSave = useCallback(async (saved: Event, cpEntries?: { contact_id: string; rol: ContactpersoonRol }[], organisatieIds?: string[], opleidingIds?: string[]) => {
     try {
@@ -130,6 +179,17 @@ export default function EventenPage() {
   const sorted = useMemo(() => sortItems(filtered, sort, (e, key) => {
     switch (key) { case "name": return e.name; case "date": return new Date(e.date).getTime(); case "location": return e.location; case "status": return e.status; case "follow_up": return e.follow_up_status || ""; default: return e.name; }
   }), [filtered, sort]);
+
+  const allVisibleSelected = sorted.length > 0 && sorted.every((e) => selectedIds.has(e.id));
+  const someVisibleSelected = sorted.some((e) => selectedIds.has(e.id));
+  const toggleAllVisible = (checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) sorted.forEach((e) => next.add(e.id));
+      else sorted.forEach((e) => next.delete(e.id));
+      return next;
+    });
+  };
 
   const exportCSV = useCallback(() => {
     const headers = ["Naam", "Type", "Datum", "Locatie", "Status", "Budget", "Follow-up"];
