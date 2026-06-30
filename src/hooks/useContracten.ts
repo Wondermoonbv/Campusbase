@@ -12,7 +12,11 @@ export function useContracten() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contracten")
-        .select("id, contract_type, organisatie_id, start_date, end_date, renewal_date, value, status, invoice_status, document_status, description, notes, document_url, contract_evenementen(event_id)")
+        .select(`
+          id, contract_type, organisatie_id, start_date, end_date, renewal_date, value, status, invoice_status, document_status, description, notes, document_url,
+          contract_evenementen (event_id),
+          organisaties:organisatie_id (id, name, type, parent_id, parent:parent_id (id, name))
+        `)
         .order("end_date", { ascending: true });
       if (error) { console.error("Error fetching contracten:", error); return []; }
       return (data as any[]).map((c) => ({
@@ -22,6 +26,13 @@ export function useContracten() {
         document_status: c.document_status ?? null,
         linked_event_ids: (c.contract_evenementen ?? []).map((ce: any) => ce.event_id),
         contract_evenementen: undefined,
+        organisaties: undefined,
+        school: c.organisaties
+          ? {
+              ...c.organisaties,
+              parent: c.organisaties.parent ?? null,
+            }
+          : undefined,
       })) as Contract[];
     },
   });

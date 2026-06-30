@@ -27,6 +27,7 @@ export interface School {
   created_at: string;
   contacts?: Contact[];
   parent_id?: string | null;
+  parent?: { id: string; name: string } | null;
   is_nationaal?: boolean;
   verbonden_instelling_id?: string | null;
   onderwijsniveau?: string | null;

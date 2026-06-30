@@ -14,7 +14,8 @@ import { AttachmentsSection } from "@/components/shared/AttachmentsSection";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
 import { ArrowLeft, Pencil, Trash2, Calendar, ExternalLink, FileText, CalendarDays } from "lucide-react";
-import { INVOICE_STATUS_LABELS, invoiceStatusVariant, DOCUMENT_STATUS_LABELS, documentStatusVariant } from "@/lib/event-labels";
+import { INVOICE_STATUS_LABELS, invoiceStatusVariant, DOCUMENT_STATUS_LABELS, documentStatusVariant, ORGANISATIE_TYPE_LABELS } from "@/lib/event-labels";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import type { Contract } from "@/types/crm";
 
@@ -55,7 +56,7 @@ export default function ContractDetailPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const contract = useMemo(() => contracten.find((c) => c.id === id), [contracten, id]);
-  const school = contract ? scholen.find((s) => s.id === contract.organisatie_id) : null;
+  const school = contract?.school ?? (contract ? scholen.find((s) => s.id === contract.organisatie_id) : null);
   const linkedEvents = useMemo(() => {
     if (!contract) return [];
     return (contract.linked_event_ids || [])
@@ -119,7 +120,16 @@ export default function ContractDetailPage() {
         </div>
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div className="min-w-0 space-y-2">
-            <h1 className="text-xl sm:text-2xl font-semibold truncate">{school?.name ?? "—"}<OrganisatieLabel organisatieId={school?.id} /></h1>
+            <h1 className="text-xl sm:text-2xl font-semibold truncate inline-flex items-center gap-1.5 flex-wrap">
+              {school ? (
+                <>
+                  {school.name}
+                  {school.parent_id && <Badge variant="secondary" className="text-[10px]">Campus</Badge>}
+                  <Badge variant="outline" className="text-[10px]">{ORGANISATIE_TYPE_LABELS[school.type] || school.type}</Badge>
+                </>
+              ) : "—"}
+            </h1>
+            <OrganisatieLabel organisatie={school} />
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium capitalize">
                 {contract.contract_type}

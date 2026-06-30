@@ -14,10 +14,26 @@ import { OrganisatieLabel } from "@/components/organisaties/OrganisatieLabel";
 import { SortableTableHead, useSort, sortItems } from "@/components/ui/SortableTableHead";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { handleDeleteError } from "@/lib/delete-helpers";
-import type { Contract } from "@/types/crm";
+import type { Contract, School } from "@/types/crm";
 import { toast } from "sonner";
 import { writeAuditLog } from "@/lib/audit";
-import { INVOICE_STATUS_LABELS, invoiceStatusVariant, DOCUMENT_STATUS_LABELS, documentStatusVariant } from "@/lib/event-labels";
+import { INVOICE_STATUS_LABELS, invoiceStatusVariant, DOCUMENT_STATUS_LABELS, documentStatusVariant, ORGANISATIE_TYPE_LABELS } from "@/lib/event-labels";
+import { Badge } from "@/components/ui/badge";
+
+function OrganisatieCell({ school }: { school?: School }) {
+  if (!school) return <span className="text-muted-foreground">—</span>;
+  return (
+    <div className="flex flex-col">
+      <span className="inline-flex items-center gap-1.5 flex-wrap">
+        {school.name}
+        {school.parent_id && <Badge variant="secondary" className="text-[10px]">Campus</Badge>}
+        <Badge variant="outline" className="text-[10px]">{ORGANISATIE_TYPE_LABELS[school.type] || school.type}</Badge>
+      </span>
+      <OrganisatieLabel organisatie={school} />
+    </div>
+  );
+}
+
 
 function getExpiryColor(endDate: string) {
   const now = new Date(); const end = new Date(endDate);
@@ -113,13 +129,13 @@ export default function ContractenPage() {
         <>
           <div className="block md:hidden space-y-2">
             {sorted.map((c) => {
-              const school = schoolMap.get(c.organisatie_id);
+              const school = c.school ?? schoolMap.get(c.organisatie_id);
               return (
                 <div key={c.id} className={`surface-card overflow-hidden ${getExpiryColor(c.end_date)}`}>
                   <button type="button" className="w-full text-left p-4 active:scale-[0.99] transition-transform" onClick={() => navigate(`/contracten/${c.id}`)}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm">{school?.name ?? "—"}<OrganisatieLabel organisatieId={school?.id} /></p>
+                        <OrganisatieCell school={school} />
                         <p className="text-xs text-muted-foreground mt-0.5 capitalize">{c.contract_type}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">{new Date(c.start_date).toLocaleDateString("nl-BE")} → {new Date(c.end_date).toLocaleDateString("nl-BE")}</p>
                       </div>
@@ -159,10 +175,10 @@ export default function ContractenPage() {
               <TableHead className="w-24" />
             </TableRow></TableHeader>
               <TableBody>{sorted.map((c) => {
-                const school = schoolMap.get(c.organisatie_id);
+                const school = c.school ?? schoolMap.get(c.organisatie_id);
                 return (
                     <TableRow key={c.id} className={`hover:bg-muted/30 cursor-pointer ${getExpiryColor(c.end_date)}`} onClick={() => navigate(`/contracten/${c.id}`)}>
-                      <TableCell className="font-medium">{school?.name ?? "—"}<OrganisatieLabel organisatieId={school?.id} /></TableCell>
+                      <TableCell className="font-medium"><OrganisatieCell school={school} /></TableCell>
                       <TableCell className="capitalize">{c.contract_type}</TableCell>
                       <TableCell>{new Date(c.start_date).toLocaleDateString("nl-BE")}</TableCell>
                       <TableCell>{new Date(c.end_date).toLocaleDateString("nl-BE")}</TableCell>
