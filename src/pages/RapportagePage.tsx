@@ -20,7 +20,7 @@ import { nl } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { writeAuditLog } from "@/lib/audit";
 import { REGION_LABELS, TARGET_LEVEL_LABELS, REGISTRATION_TYPE_LABELS } from "@/lib/event-labels";
-import { DeliverablesReportCards } from "@/components/rapportage/DeliverablesReports";
+import { OpenDeliverablesCard, BudgetVsValueCard, RatingByTypeCard } from "@/components/rapportage/DeliverablesReports";
 
 const CHART_COLORS = ["#0E6575", "#ef7c14", "#007BAF", "#0C8129", "#CD2E15", "#434f54", "#6366f1", "#ec4899"];
 
@@ -194,19 +194,16 @@ export default function RapportagePage() {
     return Object.entries(counts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
   }, [filteredEvents, eventOrganisatorInfo]);
   const budgetByType = useMemo(() => { const s: Record<string, number> = {}; filteredEvents.forEach((e) => { s[e.type] = (s[e.type] || 0) + (e.budget ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredEvents]);
-  const budgetBySchool = useMemo(() => {
+  const contractValueByOrgType = useMemo(() => {
     const s: Record<string, number> = {};
-    filteredContracts
-      .filter((c) => c.status === "actief")
-      .forEach((c) => {
-        // Gebruik de server-side embedded organisatie (incl. parent) uit de contracten-query
-        const name = c.school?.parent?.name ?? c.school?.name ?? "Onbekend";
-        s[name] = (s[name] || 0) + (c.value ?? 0);
-      });
+    filteredContracts.forEach((c) => {
+      const t = c.school?.type;
+      const label = t ? (ORGANISATIE_TYPE_LABELS[t] || t) : "Onbekend";
+      s[label] = (s[label] || 0) + (c.value ?? 0);
+    });
     return Object.entries(s).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
   }, [filteredContracts]);
   const contractsByType = useMemo(() => { const s: Record<string, number> = {}; filteredContracts.forEach((c) => { s[c.contract_type] = (s[c.contract_type] || 0) + (c.value ?? 0); }); return Object.entries(s).map(([name, value]) => ({ name, value })); }, [filteredContracts]);
-  const totalContractValue = filteredContracts.filter((c) => c.status === "actief").reduce((s, c) => s + (c.value ?? 0), 0);
 
   const eventsByRegio = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { const key = e.region ? (REGION_LABELS[e.region] || e.region) : "Onbekend"; c[key] = (c[key] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents]);
   const eventsByDoelgroep = useMemo(() => { const c: Record<string, number> = {}; filteredEvents.forEach((e) => { const key = e.target_level ? (TARGET_LEVEL_LABELS[e.target_level] || e.target_level) : "Onbekend"; c[key] = (c[key] || 0) + 1; }); return Object.entries(c).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value); }, [filteredEvents]);
@@ -297,28 +294,33 @@ export default function RapportagePage() {
             <ChartCard title="Evenementen per registratietype" data={eventsByRegistratie} chartId="events-registratie">
               <ResponsiveContainer width="100%" height={250}><PieChart><Pie data={eventsByRegistratie} cx="50%" cy="50%" innerRadius={40} outerRadius={75} dataKey="value" nameKey="name" label>{eventsByRegistratie.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip /><Legend wrapperStyle={{ fontSize: 12 }} /></PieChart></ResponsiveContainer>
             </ChartCard>
+            <ChartCard title="Budget per type event (€)" data={budgetByType} chartId="budget-type">
+              <ResponsiveContainer width="100%" height={250}><BarChart data={budgetByType}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="name" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 10 }} width={50} tickFormatter={(v) => `€${v.toLocaleString()}`} /><Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} /><Bar dataKey="value" fill="#ef7c14" radius={[2, 2, 0, 0]} /></BarChart></ResponsiveContainer>
+            </ChartCard>
           </div>
         </TabsContent>
 
         <TabsContent value="contracts" className="mt-0">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            <ChartCard title="Contractwaarde per hoofdorganisatie (€)" data={budgetBySchool} chartId="budget-school">
-              <ResponsiveContainer width="100%" height={250}><BarChart data={budgetBySchool} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={(v) => `€${v.toLocaleString()}`} /><YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 9 }} /><Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} /><Bar dataKey="value" fill="#0E6575" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
-            </ChartCard>
-            <ChartCard title="Contractwaarde per type (€)" data={contractsByType} chartId="contracts-type">
-              <div className="mb-3 text-sm text-muted-foreground">Totaal actieve contractwaarde: <span className="font-semibold text-foreground">€{totalContractValue.toLocaleString("nl-BE")}</span></div>
-              <ResponsiveContainer width="100%" height={220}><PieChart><Pie data={contractsByType} cx="50%" cy="50%" innerRadius={40} outerRadius={75} dataKey="value" nameKey="name" label={({ name, value }) => `${name}: €${value.toLocaleString()}`}>{contractsByType.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} /><Legend wrapperStyle={{ fontSize: 12 }} /></PieChart></ResponsiveContainer>
-            </ChartCard>
-            <ChartCard title="Budget per type event (€)" data={budgetByType} chartId="budget-type">
-              <ResponsiveContainer width="100%" height={250}><BarChart data={budgetByType}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="name" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 10 }} width={50} tickFormatter={(v) => `€${v.toLocaleString()}`} /><Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} /><Bar dataKey="value" fill="#ef7c14" radius={[2, 2, 0, 0]} /></BarChart></ResponsiveContainer>
-            </ChartCard>
+            {/* BLOK 1 — OPVOLGING */}
+            <OpenDeliverablesCard />
             <div className="surface-card p-4 sm:p-5">
               <h2 className="text-sm sm:text-base font-semibold mb-4">Contracten die vervallen in deze periode ({expiringContracts.length})</h2>
               {expiringContracts.length === 0 ? <p className="text-sm text-muted-foreground">Geen contracten vervallen in de geselecteerde periode.</p> : (
                 <div className="divide-y divide-border">{expiringContracts.map((c) => (<div key={c.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1"><div><p className="text-sm font-medium">{c.school?.name ?? "—"} — <span className="capitalize">{c.contract_type}</span></p><p className="text-xs text-muted-foreground">Vervalt: {new Date(c.end_date).toLocaleDateString("nl-BE")} · Waarde: {c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</p></div></div>))}</div>
               )}
             </div>
-            <DeliverablesReportCards rangeStart={rangeStart} rangeEnd={rangeEnd} />
+
+            {/* BLOK 2 — WAARDE */}
+            <ChartCard title="Contractwaarde per organisatietype (€)" data={contractValueByOrgType} chartId="contract-org-type">
+              <ResponsiveContainer width="100%" height={250}><BarChart data={contractValueByOrgType} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={(v) => `€${v.toLocaleString()}`} /><YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 10 }} /><Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} /><Bar dataKey="value" fill="#0E6575" radius={[0, 2, 2, 0]} /></BarChart></ResponsiveContainer>
+            </ChartCard>
+            <ChartCard title="Contractwaarde per type (€)" data={contractsByType} chartId="contracts-type">
+              <div className="mb-3 text-sm text-muted-foreground">Totale contractwaarde in deze periode: <span className="font-semibold text-foreground">€{contractsTotalValue.toLocaleString("nl-BE")}</span></div>
+              <ResponsiveContainer width="100%" height={220}><PieChart><Pie data={contractsByType} cx="50%" cy="50%" innerRadius={40} outerRadius={75} dataKey="value" nameKey="name" label={({ name, value }) => `${name}: €${value.toLocaleString()}`}>{contractsByType.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip formatter={(v: number) => `€${v.toLocaleString("nl-BE")}`} /><Legend wrapperStyle={{ fontSize: 12 }} /></PieChart></ResponsiveContainer>
+            </ChartCard>
+            <BudgetVsValueCard rangeStart={rangeStart} rangeEnd={rangeEnd} />
+            <RatingByTypeCard rangeStart={rangeStart} rangeEnd={rangeEnd} />
           </div>
         </TabsContent>
 
