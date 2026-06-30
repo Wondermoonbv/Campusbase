@@ -9,6 +9,7 @@ import { FileText, Upload, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OrganisatieSelect } from "@/components/organisaties/OrganisatieSelect";
 import { useEvenementen } from "@/hooks/useEvenementen";
+import { useProfiles } from "@/hooks/useProfiles";
 import type { Contract } from "@/types/crm";
 import { toast } from "sonner";
 import { sanitizeFormData, MAX_LENGTHS } from "@/lib/sanitize";
@@ -20,15 +21,16 @@ interface ContractFormDialogProps { open: boolean; onOpenChange: (open: boolean)
 export function ContractFormDialog({ open, onOpenChange, contract, onSave }: ContractFormDialogProps) {
   const isEdit = !!contract;
   const { evenementen } = useEvenementen();
+  const { profiles } = useProfiles();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [form, setForm] = useState({ organisatie_id: "", contract_type: "partnership" as string, start_date: "", end_date: "", renewal_date: "", status: "in onderhandeling" as string, value: "", description: "", document_url: "", notes: "", linked_event_ids: [] as string[], file: null as File | null, invoice_status: "open" as string, document_status: "" as string });
+  const [form, setForm] = useState({ organisatie_id: "", contract_type: "partnership" as string, start_date: "", end_date: "", renewal_date: "", status: "in onderhandeling" as string, value: "", description: "", document_url: "", notes: "", linked_event_ids: [] as string[], file: null as File | null, invoice_status: "open" as string, document_status: "" as string, verantwoordelijke_id: "" as string });
 
   useEffect(() => {
     if (open) {
       if (contract) {
-        setForm({ organisatie_id: contract.organisatie_id, contract_type: contract.contract_type, start_date: contract.start_date, end_date: contract.end_date, renewal_date: contract.renewal_date, status: contract.status, value: contract.value?.toString() || "", description: contract.description || "", document_url: contract.document_url || "", notes: contract.notes || "", linked_event_ids: contract.linked_event_ids || [], file: null, invoice_status: contract.invoice_status || "open", document_status: contract.document_status || "" });
+        setForm({ organisatie_id: contract.organisatie_id, contract_type: contract.contract_type, start_date: contract.start_date, end_date: contract.end_date, renewal_date: contract.renewal_date, status: contract.status, value: contract.value?.toString() || "", description: contract.description || "", document_url: contract.document_url || "", notes: contract.notes || "", linked_event_ids: contract.linked_event_ids || [], file: null, invoice_status: contract.invoice_status || "open", document_status: contract.document_status || "", verantwoordelijke_id: contract.verantwoordelijke_id || "" });
       } else {
-        setForm({ organisatie_id: "", contract_type: "partnership", start_date: "", end_date: "", renewal_date: "", status: "in onderhandeling", value: "", description: "", document_url: "", notes: "", linked_event_ids: [], file: null, invoice_status: "open", document_status: "" });
+        setForm({ organisatie_id: "", contract_type: "partnership", start_date: "", end_date: "", renewal_date: "", status: "in onderhandeling", value: "", description: "", document_url: "", notes: "", linked_event_ids: [], file: null, invoice_status: "open", document_status: "", verantwoordelijke_id: "" });
       }
     }
   }, [open, contract]);
@@ -40,7 +42,7 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
     e.preventDefault();
     if (!form.organisatie_id || !form.start_date || !form.end_date) { toast.error("Vul organisatie, startdatum en einddatum in."); return; }
     const sanitized = sanitizeFormData(form);
-    const saved: Contract = { ...(contract?.id ? { id: contract.id } : {}), organisatie_id: sanitized.organisatie_id, contract_type: sanitized.contract_type as Contract["contract_type"], start_date: sanitized.start_date, end_date: sanitized.end_date, renewal_date: sanitized.renewal_date, status: sanitized.status as Contract["status"], value: sanitized.value ? Number(sanitized.value) : null, description: sanitized.description, document_url: sanitized.document_url, notes: sanitized.notes, linked_event_ids: form.linked_event_ids, invoice_status: sanitized.invoice_status || "open", document_status: sanitized.document_status || null } as Contract;
+    const saved: Contract = { ...(contract?.id ? { id: contract.id } : {}), organisatie_id: sanitized.organisatie_id, contract_type: sanitized.contract_type as Contract["contract_type"], start_date: sanitized.start_date, end_date: sanitized.end_date, renewal_date: sanitized.renewal_date, status: sanitized.status as Contract["status"], value: sanitized.value ? Number(sanitized.value) : null, description: sanitized.description, document_url: sanitized.document_url, notes: sanitized.notes, linked_event_ids: form.linked_event_ids, invoice_status: sanitized.invoice_status || "open", document_status: sanitized.document_status || null, verantwoordelijke_id: form.verantwoordelijke_id || null } as Contract;
     onSave?.(saved);
     toast.success(isEdit ? "Contract bijgewerkt." : "Contract toegevoegd.");
     onOpenChange(false);
@@ -66,6 +68,16 @@ export function ContractFormDialog({ open, onOpenChange, contract, onSave }: Con
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Type</Label><Select value={form.contract_type} onValueChange={(v) => update("contract_type", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="partnership">Partnership</SelectItem><SelectItem value="sponsoring">Sponsoring</SelectItem><SelectItem value="stage-overeenkomst">Stage-overeenkomst</SelectItem><SelectItem value="andere">Andere</SelectItem></SelectContent></Select></div>
             <div><Label>Status</Label><Select value={form.status} onValueChange={(v) => update("status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="in onderhandeling">In onderhandeling</SelectItem><SelectItem value="actief">Actief</SelectItem><SelectItem value="verlopen">Verlopen</SelectItem></SelectContent></Select></div>
+          </div>
+          <div>
+            <Label>Verantwoordelijke (Elia)</Label>
+            <Select value={form.verantwoordelijke_id || "geen"} onValueChange={(v) => update("verantwoordelijke_id", v === "geen" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="geen">—</SelectItem>
+                {profiles.map((p) => (<SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Factuurstatus</Label><Select value={form.invoice_status} onValueChange={(v) => update("invoice_status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="open">Open</SelectItem><SelectItem value="ontvangen">Ontvangen</SelectItem><SelectItem value="betaald">Betaald</SelectItem></SelectContent></Select></div>

@@ -84,6 +84,7 @@ export interface Contract {
   linked_event_ids?: string[];
   invoice_status?: "open" | "ontvangen" | "betaald";
   document_status?: "opgemaakt" | "getekend" | "tegengetekend" | null;
+  verantwoordelijke_id?: string | null;
 }
 
 export type Regio = 'brussel' | 'antwerpen' | 'vlaams_brabant' | 'west_vlaanderen' | 'limburg' | 'oost_vlaanderen' | 'waals_brabant' | 'henegouwen';
