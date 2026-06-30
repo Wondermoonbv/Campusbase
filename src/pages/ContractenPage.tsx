@@ -387,6 +387,22 @@ export default function ContractenPage() {
 
       <ContractFormDialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditContract(undefined); }} contract={editContract} onSave={handleSave} />
       <DeleteConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} itemName={deleteTarget ? (schoolMap.get(deleteTarget.organisatie_id)?.name ?? "contract") : ""} isLoading={deleteContract.isPending} />
+      <AlertDialog open={!!bulkAction} onOpenChange={(o) => { if (!o && !bulkPending) setBulkAction(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bulkwijziging bevestigen</AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkAction && (
+                <>Je staat op het punt {selectedIds.size} contract{selectedIds.size !== 1 ? "en" : ""} op {bulkAction.fieldLabel} '{bulkAction.label.toLowerCase()}' te zetten. Doorgaan?</>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkPending}>Annuleren</AlertDialogCancel>
+            <AlertDialogAction onClick={(e) => { e.preventDefault(); applyBulk(); }} disabled={bulkPending}>{bulkPending ? "Bezig..." : "Doorgaan"}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
