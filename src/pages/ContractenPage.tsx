@@ -175,10 +175,10 @@ export default function ContractenPage() {
               <TableHead className="w-24" />
             </TableRow></TableHeader>
               <TableBody>{sorted.map((c) => {
-                const school = schoolMap.get(c.organisatie_id);
+                const school = c.school ?? schoolMap.get(c.organisatie_id);
                 return (
                     <TableRow key={c.id} className={`hover:bg-muted/30 cursor-pointer ${getExpiryColor(c.end_date)}`} onClick={() => navigate(`/contracten/${c.id}`)}>
-                      <TableCell className="font-medium">{school?.name ?? "—"}<OrganisatieLabel organisatieId={school?.id} /></TableCell>
+                      <TableCell className="font-medium"><OrganisatieCell school={school} /></TableCell>
                       <TableCell className="capitalize">{c.contract_type}</TableCell>
                       <TableCell>{new Date(c.start_date).toLocaleDateString("nl-BE")}</TableCell>
                       <TableCell>{new Date(c.end_date).toLocaleDateString("nl-BE")}</TableCell>
