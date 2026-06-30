@@ -18,7 +18,7 @@ function statusClass(status: string, deadline: string | null) {
   return "bg-muted text-foreground border-border";
 }
 
-export function ContractDeliverablesSection({ contractId }: { contractId: string }) {
+export function ContractDeliverablesSection({ contractId, contractValue }: { contractId: string; contractValue?: number | null }) {
   const { canEdit } = useAuth();
   const { data: deliverables = [], isLoading, upsert, remove } = useContractDeliverables(contractId);
   const { data: types = [] } = useDeliverableTypes();
@@ -33,6 +33,16 @@ export function ContractDeliverablesSection({ contractId }: { contractId: string
   }, [types]);
 
   const today = new Date().toISOString().slice(0, 10);
+
+  const summary = useMemo(() => {
+    const total = deliverables.length;
+    const delivered = deliverables.filter((d) => d.status === "geleverd").length;
+    const open = deliverables.filter((d) => d.status === "te leveren");
+    const overdue = open.filter((d) => d.deadline && d.deadline < today).length;
+    const withValue = deliverables.filter((d) => d.geschatte_waarde != null);
+    const sumValue = withValue.reduce((s, d) => s + (d.geschatte_waarde ?? 0), 0);
+    return { total, delivered, openCount: open.length, overdue, withValueCount: withValue.length, sumValue };
+  }, [deliverables, today]);
 
   const openCreate = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (d: ContractDeliverable) => { setEditing(d); setDialogOpen(true); };
@@ -70,6 +80,24 @@ export function ContractDeliverablesSection({ contractId }: { contractId: string
       ) : deliverables.length === 0 ? (
         <p className="text-sm text-muted-foreground italic">Nog geen tegenprestaties gedefinieerd.</p>
       ) : (
+        <>
+          <div className="rounded-md border border-border bg-muted/30 p-3 text-xs sm:text-sm grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+            <div><span className="text-muted-foreground">Totaal:</span> <span className="font-semibold tabular-nums">{summary.total}</span></div>
+            <div><span className="text-muted-foreground">Geleverd:</span> <span className="font-semibold tabular-nums">{summary.delivered}</span></div>
+            <div><span className="text-muted-foreground">Open:</span> <span className="font-semibold tabular-nums">{summary.openCount}</span>{summary.overdue > 0 && <span className="text-destructive"> (waarvan {summary.overdue} over datum)</span>}</div>
+            <div>
+              <span className="text-muted-foreground">Geleverde waarde:</span>{" "}
+              {summary.withValueCount === 0 ? (
+                <span className="italic text-muted-foreground">geen waarde toegekend</span>
+              ) : (
+                <span className="font-semibold tabular-nums">€{summary.sumValue.toLocaleString("nl-BE")}</span>
+              )}
+              {contractValue != null && (
+                <span className="text-muted-foreground"> / contract €{contractValue.toLocaleString("nl-BE")}</span>
+              )}
+              <span className="text-muted-foreground"> · {summary.withValueCount}/{summary.total} ingevuld</span>
+            </div>
+          </div>
         <ul className="divide-y divide-border">
           {deliverables.map((d) => {
             const overdue = d.deadline && d.status === "te leveren" && d.deadline < today;
@@ -122,6 +150,7 @@ export function ContractDeliverablesSection({ contractId }: { contractId: string
             );
           })}
         </ul>
+        </>
       )}
 
       <ContractDeliverableDialog

@@ -257,7 +257,7 @@ export default function ContractDetailPage() {
       </section>
 
       {/* TEGENPRESTATIES */}
-      <ContractDeliverablesSection contractId={contract.id} />
+      <ContractDeliverablesSection contractId={contract.id} contractValue={contract.value} />
 
       <ContractFormDialog
         open={editOpen}
