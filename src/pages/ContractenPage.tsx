@@ -8,7 +8,7 @@ import { useProfiles } from "@/hooks/useProfiles";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, Plus, ChevronRight, Pencil, Trash2, FileText } from "lucide-react";
+import { Download, Plus, ChevronRight, Pencil, Trash2, FileText, X } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContractFormDialog } from "@/components/contracts/ContractFormDialog";
 import { OrganisatieLabel } from "@/components/organisaties/OrganisatieLabel";
@@ -20,6 +20,12 @@ import { toast } from "sonner";
 import { writeAuditLog } from "@/lib/audit";
 import { INVOICE_STATUS_LABELS, invoiceStatusVariant, DOCUMENT_STATUS_LABELS, documentStatusVariant, ORGANISATIE_TYPE_LABELS } from "@/lib/event-labels";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+
+function formatStatusLabel(status: string) {
+  if (!status) return "Onbekend";
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}
 
 function OrganisatieCell({ school }: { school?: School }) {
   if (!school) return <span className="text-muted-foreground">—</span>;
@@ -70,6 +76,7 @@ export default function ContractenPage() {
   const [deleteTarget, setDeleteTarget] = useState<Contract | null>(null);
   const { canEdit } = useAuth();
   const { sort, toggleSort } = useSort("school");
+  const [statusFilter, setStatusFilter] = useState<string>("");
 
   const handleSave = useCallback(async (saved: Contract) => {
     try { await upsertContract.mutateAsync(saved); } catch { toast.error("Fout bij opslaan."); }
@@ -89,14 +96,23 @@ export default function ContractenPage() {
   const schoolMap = useMemo(() => new Map(scholen.map((s) => [s.id, s])), [scholen]);
   const profileMap = useMemo(() => new Map(profiles.map((p) => [p.id, p.full_name])), [profiles]);
 
+  const availableStatuses = useMemo(() => {
+    const set = new Set<string>();
+    contracten.forEach((c) => { if (c.status) set.add(c.status); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [contracten]);
+
   const baseList = useMemo(() => {
     let list = [...contracten];
     if (filterExpiring) {
       const now = new Date(); const in90 = new Date(now.getTime() + 90 * 86400000);
       list = list.filter((c) => { const d = new Date(c.end_date); return d >= now && d <= in90 && c.status === "actief"; });
     }
+    if (statusFilter) {
+      list = list.filter((c) => c.status === statusFilter);
+    }
     return list;
-  }, [contracten, filterExpiring]);
+  }, [contracten, filterExpiring, statusFilter]);
 
   const sorted = useMemo(() => sortItems(baseList, sort, (c, key) => {
     switch (key) {
@@ -130,102 +146,142 @@ export default function ContractenPage() {
         <EmptyState icon={FileText} title="Nog geen contracten toegevoegd" description="Voeg je eerste contract toe." actionLabel="Contract toevoegen" onAction={() => { setEditContract(undefined); setDialogOpen(true); }} />
       ) : (
         <>
-          <div className="block md:hidden space-y-2">
-            {sorted.map((c) => {
-              const school = c.school ?? schoolMap.get(c.organisatie_id);
-              return (
-                <div key={c.id} className={`surface-card overflow-hidden ${getExpiryColor(c.end_date)}`}>
-                  <button type="button" className="w-full text-left p-4 active:scale-[0.99] transition-transform" onClick={() => navigate(`/contracten/${c.id}`)}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <OrganisatieCell school={school} />
-                        <p className="text-xs text-muted-foreground mt-0.5 capitalize">{c.contract_type}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{new Date(c.start_date).toLocaleDateString("nl-BE")} → {new Date(c.end_date).toLocaleDateString("nl-BE")}</p>
-                      </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <StatusBadge status={c.status} />
-                        {c.invoice_status && (
-                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${invoiceStatusVariant(c.invoice_status)}`}>
-                            {INVOICE_STATUS_LABELS[c.invoice_status] || c.invoice_status}
-                          </span>
-                        )}
-                        {c.document_status && (
-                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${documentStatusVariant(c.document_status)}`}>
-                            {DOCUMENT_STATUS_LABELS[c.document_status] || c.document_status}
-                          </span>
-                        )}
-                        {c.value && <span className="text-xs font-medium tabular-nums">€{c.value.toLocaleString("nl-BE")}</span>}
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              );
-            })}
+          <div className="flex flex-wrap items-center gap-2 mb-3 sm:mb-4">
+            <span className="text-sm text-muted-foreground">Status:</span>
+            <Button
+              variant={statusFilter === "" ? "default" : "outline"}
+              size="sm"
+              className="h-8 text-xs"
+              onClick={() => setStatusFilter("")}
+            >
+              Alle
+              {statusFilter === "" && <X className="h-3 w-3 ml-1" onClick={(e) => { e.stopPropagation(); }} />}
+            </Button>
+            {availableStatuses.map((status) => (
+              <Button
+                key={status}
+                variant={statusFilter === status ? "default" : "outline"}
+                size="sm"
+                className="h-8 text-xs"
+                onClick={() => setStatusFilter(status)}
+              >
+                {formatStatusLabel(status)}
+              </Button>
+            ))}
+            {statusFilter && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setStatusFilter("")}
+              >
+                <X className="h-3 w-3 mr-1" /> Wis filter
+              </Button>
+            )}
           </div>
 
-          <div className="surface-card overflow-hidden hidden md:block">
-            <Table><TableHeader><TableRow>
-              <SortableTableHead sortKey="school" currentSort={sort} onSort={toggleSort}>Organisatie</SortableTableHead>
-              <SortableTableHead sortKey="type" currentSort={sort} onSort={toggleSort}>Type</SortableTableHead>
-              <SortableTableHead sortKey="start" currentSort={sort} onSort={toggleSort}>Start</SortableTableHead>
-              <SortableTableHead sortKey="end" currentSort={sort} onSort={toggleSort}>Einde</SortableTableHead>
-              <SortableTableHead sortKey="renewal" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Vernieuwingsdatum</SortableTableHead>
-              <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
-              <TableHead>Verantwoordelijke</TableHead>
-              <TableHead>Factuur</TableHead>
-              <TableHead>Ondertekening</TableHead>
-              <SortableTableHead sortKey="value" currentSort={sort} onSort={toggleSort} className="text-right">Waarde</SortableTableHead>
-              <TableHead className="w-24" />
-            </TableRow></TableHeader>
-              <TableBody>{sorted.map((c) => {
-                const school = c.school ?? schoolMap.get(c.organisatie_id);
-                return (
-                    <TableRow key={c.id} className={`hover:bg-muted/30 cursor-pointer ${getExpiryColor(c.end_date)}`} onClick={() => navigate(`/contracten/${c.id}`)}>
-                      <TableCell className="font-medium"><OrganisatieCell school={school} /></TableCell>
-                      <TableCell className="capitalize">{c.contract_type}</TableCell>
-                      <TableCell>{new Date(c.start_date).toLocaleDateString("nl-BE")}</TableCell>
-                      <TableCell>{new Date(c.end_date).toLocaleDateString("nl-BE")}</TableCell>
-                      <TableCell className="hidden lg:table-cell">{c.renewal_date ? (<span className={new Date(c.renewal_date) < new Date() ? "text-amber-700 dark:text-amber-300 font-medium" : ""}>{new Date(c.renewal_date).toLocaleDateString("nl-BE")}{new Date(c.renewal_date) < new Date() && " ⚠"}</span>) : "—"}</TableCell>
-                      <TableCell><StatusBadge status={c.status} /></TableCell>
-                      <TableCell>
-                        {c.verantwoordelijke_id ? (
-                          <span title={profileMap.get(c.verantwoordelijke_id) ?? ""} className="text-sm">
-                            {(profileMap.get(c.verantwoordelijke_id) ?? "—").split(" ")[0]}
-                          </span>
-                        ) : <span className="text-muted-foreground">—</span>}
-                      </TableCell>
-                      <TableCell>
-                        {c.invoice_status && (
-                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${invoiceStatusVariant(c.invoice_status)}`}>
-                            {INVOICE_STATUS_LABELS[c.invoice_status] || c.invoice_status}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {c.document_status && (
-                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${documentStatusVariant(c.document_status)}`}>
-                            {DOCUMENT_STATUS_LABELS[c.document_status] || c.document_status}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-0.5 items-center justify-end">
-                          {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Contract bewerken" onClick={(e) => { e.stopPropagation(); setEditContract(c); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
-                          {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Contract verwijderen" onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
-                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          {baseList.length === 0 ? (
+            <EmptyState icon={FileText} title="Geen contracten gevonden" description="Probeer een andere statusfilter." />
+          ) : (
+            <>
+              <div className="block md:hidden space-y-2">
+                {sorted.map((c) => {
+                  const school = c.school ?? schoolMap.get(c.organisatie_id);
+                  return (
+                    <div key={c.id} className={`surface-card overflow-hidden ${getExpiryColor(c.end_date)}`}>
+                      <button type="button" className="w-full text-left p-4 active:scale-[0.99] transition-transform" onClick={() => navigate(`/contracten/${c.id}`)}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <OrganisatieCell school={school} />
+                            <p className="text-xs text-muted-foreground mt-0.5 capitalize">{c.contract_type}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{new Date(c.start_date).toLocaleDateString("nl-BE")} → {new Date(c.end_date).toLocaleDateString("nl-BE")}</p>
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
+                            <StatusBadge status={c.status} />
+                            {c.invoice_status && (
+                              <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${invoiceStatusVariant(c.invoice_status)}`}>
+                                {INVOICE_STATUS_LABELS[c.invoice_status] || c.invoice_status}
+                              </span>
+                            )}
+                            {c.document_status && (
+                              <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${documentStatusVariant(c.document_status)}`}>
+                                {DOCUMENT_STATUS_LABELS[c.document_status] || c.document_status}
+                              </span>
+                            )}
+                            {c.value && <span className="text-xs font-medium tabular-nums">€{c.value.toLocaleString("nl-BE")}</span>}
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          </div>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                );
-              })}</TableBody></Table>
-            <div className="p-3 border-t border-border text-xs text-muted-foreground flex flex-wrap gap-4">
-              <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-success" /> Meer dan 90 dagen</span>
-              <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-accent" /> Binnen 90 dagen</span>
-              <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-destructive" /> Verlopen</span>
-            </div>
-          </div>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="surface-card overflow-hidden hidden md:block">
+                <Table><TableHeader><TableRow>
+                  <SortableTableHead sortKey="school" currentSort={sort} onSort={toggleSort}>Organisatie</SortableTableHead>
+                  <SortableTableHead sortKey="type" currentSort={sort} onSort={toggleSort}>Type</SortableTableHead>
+                  <SortableTableHead sortKey="start" currentSort={sort} onSort={toggleSort}>Start</SortableTableHead>
+                  <SortableTableHead sortKey="end" currentSort={sort} onSort={toggleSort}>Einde</SortableTableHead>
+                  <SortableTableHead sortKey="renewal" currentSort={sort} onSort={toggleSort} className="hidden lg:table-cell">Vernieuwingsdatum</SortableTableHead>
+                  <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
+                  <TableHead>Verantwoordelijke</TableHead>
+                  <TableHead>Factuur</TableHead>
+                  <TableHead>Ondertekening</TableHead>
+                  <SortableTableHead sortKey="value" currentSort={sort} onSort={toggleSort} className="text-right">Waarde</SortableTableHead>
+                  <TableHead className="w-24" />
+                </TableRow></TableHeader>
+                  <TableBody>{sorted.map((c) => {
+                    const school = c.school ?? schoolMap.get(c.organisatie_id);
+                    return (
+                        <TableRow key={c.id} className={`hover:bg-muted/30 cursor-pointer ${getExpiryColor(c.end_date)}`} onClick={() => navigate(`/contracten/${c.id}`)}>
+                          <TableCell className="font-medium"><OrganisatieCell school={school} /></TableCell>
+                          <TableCell className="capitalize">{c.contract_type}</TableCell>
+                          <TableCell>{new Date(c.start_date).toLocaleDateString("nl-BE")}</TableCell>
+                          <TableCell>{new Date(c.end_date).toLocaleDateString("nl-BE")}</TableCell>
+                          <TableCell className="hidden lg:table-cell">{c.renewal_date ? (<span className={new Date(c.renewal_date) < new Date() ? "text-amber-700 dark:text-amber-300 font-medium" : ""}>{new Date(c.renewal_date).toLocaleDateString("nl-BE")}{new Date(c.renewal_date) < new Date() && " ⚠"}</span>) : "—"}</TableCell>
+                          <TableCell><StatusBadge status={c.status} /></TableCell>
+                          <TableCell>
+                            {c.verantwoordelijke_id ? (
+                              <span title={profileMap.get(c.verantwoordelijke_id) ?? ""} className="text-sm">
+                                {(profileMap.get(c.verantwoordelijke_id) ?? "—").split(" ")[0]}
+                              </span>
+                            ) : <span className="text-muted-foreground">—</span>}
+                          </TableCell>
+                          <TableCell>
+                            {c.invoice_status && (
+                              <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${invoiceStatusVariant(c.invoice_status)}`}>
+                                {INVOICE_STATUS_LABELS[c.invoice_status] || c.invoice_status}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {c.document_status && (
+                              <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${documentStatusVariant(c.document_status)}`}>
+                                {DOCUMENT_STATUS_LABELS[c.document_status] || c.document_status}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">{c.value ? `€${c.value.toLocaleString("nl-BE")}` : "—"}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-0.5 items-center justify-end">
+                              {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Contract bewerken" onClick={(e) => { e.stopPropagation(); setEditContract(c); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>}
+                              {canEdit && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Contract verwijderen" onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>}
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                    );
+                  })}</TableBody></Table>
+                <div className="p-3 border-t border-border text-xs text-muted-foreground flex flex-wrap gap-4">
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-success" /> Meer dan 90 dagen</span>
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-accent" /> Binnen 90 dagen</span>
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-destructive" /> Verlopen</span>
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
 
