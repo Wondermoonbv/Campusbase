@@ -7,7 +7,7 @@ import { useEvenementen } from "@/hooks/useEvenementen";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ExternalLink, Mail, Phone, Edit, Plus, Linkedin, User, CheckSquare, Trash2, Building2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Mail, Phone, Edit, Plus, Linkedin, User, CheckSquare, Trash2, Building2, MapPin } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState } from "react";
@@ -199,6 +199,32 @@ export default function OrganisatieDetailPage() {
           </div>
         </div>
       )}
+
+      <div className="surface-card p-4 sm:p-6 mb-4 sm:mb-6">
+        <h2 className="text-base sm:text-lg font-semibold mb-4 flex items-center gap-2">
+          <MapPin className="h-4 w-4" /> Adres
+        </h2>
+        {(() => {
+          const street = org.street?.trim();
+          const cityLine = [org.postal_code, org.city].filter(Boolean).join(" ");
+          const province = org.province?.trim();
+          if (!street && !cityLine && !province) {
+            return <p className="text-sm text-muted-foreground">Geen adresgegevens</p>;
+          }
+          return (
+            <div className="space-y-0.5 text-sm">
+              {street && <div>{street}</div>}
+              {cityLine && (
+                <div>
+                  {cityLine}
+                  {province && <span className="text-muted-foreground">, {province}</span>}
+                </div>
+              )}
+              {!cityLine && province && <div className="text-muted-foreground">{province}</div>}
+            </div>
+          );
+        })()}
+      </div>
 
       <div className="surface-card p-4 sm:p-6 mb-4 sm:mb-6">
         <div className="flex items-center justify-between mb-4">
