@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { writeAuditLog } from "@/lib/audit";
 import { ORGANISATIE_TYPE_LABELS } from "@/lib/event-labels";
 import { Badge } from "@/components/ui/badge";
+import { ArrowRight } from "lucide-react";
 
 interface DeliverableRow {
   id: string;
