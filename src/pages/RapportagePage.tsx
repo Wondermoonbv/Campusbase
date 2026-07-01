@@ -303,7 +303,7 @@ export default function RapportagePage() {
         <TabsContent value="contracts" className="mt-0">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* BLOK 1 — OPVOLGING */}
-            <OpenDeliverablesCard />
+            <OpenDeliverablesCard rangeStart={rangeStart} rangeEnd={rangeEnd} />
             <div className="surface-card p-4 sm:p-5">
               <h2 className="text-sm sm:text-base font-semibold mb-4">Contracten die vervallen in deze periode ({expiringContracts.length})</h2>
               {expiringContracts.length === 0 ? <p className="text-sm text-muted-foreground">Geen contracten vervallen in de geselecteerde periode.</p> : (

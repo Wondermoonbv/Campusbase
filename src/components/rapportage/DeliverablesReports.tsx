@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { writeAuditLog } from "@/lib/audit";
 import { ORGANISATIE_TYPE_LABELS } from "@/lib/event-labels";
 import { Badge } from "@/components/ui/badge";
+import { ArrowRight } from "lucide-react";
 
 interface DeliverableRow {
   id: string;
@@ -115,110 +116,75 @@ function OrgRef({ contract, contractId }: { contract: ContractWithOrg | undefine
   );
 }
 
-// ===== Kaart: Open tegenprestaties — gegroepeerd per partner (organisatie) =====
-export function OpenDeliverablesCard() {
-  const { data: all = [], isLoading } = useAllDeliverables();
-  const { data: contracten = [] } = useContractsWithOrg();
-  const contractById = useMemo(() => new Map(contracten.map((c) => [c.id, c])), [contracten]);
+// ===== Kaart: Open tegenprestaties — compact overzicht open vs totaal =====
+export function OpenDeliverablesCard({ rangeStart, rangeEnd }: { rangeStart: Date; rangeEnd: Date }) {
+  const { data: all = [], isLoading } = useQuery({
+    queryKey: ["rapportage_deliverables_with_contract"],
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contract_deliverables")
+        .select("id, status, contracten!inner(start_date, end_date)")
+        .range(0, 9999);
+      if (error) { console.error(error); return [] as any[]; }
+      return (data ?? []) as any[];
+    },
+  });
 
-  const open = useMemo(() => all.filter((d) => d.status === "te leveren"), [all]);
-  const today = new Date().toISOString().slice(0, 10);
-  const overdueCount = open.filter((d) => d.deadline && d.deadline < today).length;
-
-  const grouped = useMemo(() => {
-    const groups = new Map<string, { key: string; name: string; type: string | null; parentName: string | null; isCampus: boolean; contractId: string; rows: DeliverableRow[] }>();
-    open.forEach((d) => {
-      const c = contractById.get(d.contract_id);
-      const org = c?.organisaties ?? null;
-      const key = c?.organisatie_id ?? `__unknown_${d.contract_id}`;
-      const name = org?.name ?? "Onbekende organisatie";
-      if (!groups.has(key)) {
-        groups.set(key, {
-          key,
-          name,
-          type: org?.type ?? null,
-          parentName: org?.parent?.name ?? null,
-          isCampus: !!org?.parent_id,
-          contractId: d.contract_id,
-          rows: [],
-        });
-      }
-      groups.get(key)!.rows.push(d);
+  const inScope = useMemo(() => {
+    return (all as any[]).filter((d) => {
+      const c = d.contracten;
+      if (!c?.start_date || !c?.end_date) return false;
+      const start = new Date(c.start_date);
+      const end = new Date(c.end_date);
+      return start <= rangeEnd && end >= rangeStart;
     });
-    const arr = Array.from(groups.values());
-    arr.forEach((g) =>
-      g.rows.sort((a, b) => {
-        if (!a.deadline && !b.deadline) return 0;
-        if (!a.deadline) return 1;
-        if (!b.deadline) return -1;
-        return a.deadline.localeCompare(b.deadline);
-      })
-    );
-    arr.sort((a, b) => (b.rows.length - a.rows.length) || a.name.localeCompare(b.name));
-    return arr;
-  }, [open, contractById]);
+  }, [all, rangeStart, rangeEnd]);
 
-  const onExport = () => {
-    const rows = open.map((d) => {
-      const c = contractById.get(d.contract_id);
-      const org = c?.organisaties ?? null;
-      return {
-        organisatie: org?.name ?? "Onbekende organisatie",
-        organisatie_type: org?.type ? (ORGANISATIE_TYPE_LABELS[org.type] || org.type) : "",
-        type: d.deliverable_types?.label ?? d.type,
-        omschrijving: d.omschrijving ?? "",
-        deadline: d.deadline ?? "",
-        over_datum: d.deadline && d.deadline < today ? "ja" : "nee",
-      };
-    });
-    exportCsv("open-tegenprestaties", rows);
-  };
+  const total = inScope.length;
+  const open = inScope.filter((d) => d.status === "te leveren").length;
+  const delivered = inScope.filter((d) => d.status === "geleverd").length;
+  const deliveredPct = total > 0 ? Math.round((delivered / total) * 100) : 0;
+  const openPct = total > 0 ? Math.round((open / total) * 100) : 0;
 
   return (
-    <CardShell title={`Open tegenprestaties (${open.length}${overdueCount > 0 ? `, ${overdueCount} over datum` : ""})`} onExport={onExport}>
-      {isLoading ? (
-        <p className="text-sm text-muted-foreground">Laden...</p>
-      ) : grouped.length === 0 ? (
-        <p className="text-sm text-muted-foreground italic">Geen open tegenprestaties.</p>
-      ) : (
-        <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
-          {grouped.map((g) => (
-            <div key={g.key}>
-              <Link to={`/contracten/${g.contractId}`} className="hover:underline">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-sm font-semibold">{g.name}</span>
-                  {g.isCampus && <Badge variant="secondary" className="text-[10px]">Campus</Badge>}
-                  {g.type && <Badge variant="outline" className="text-[10px]">{ORGANISATIE_TYPE_LABELS[g.type] || g.type}</Badge>}
-                  <span className="text-xs text-muted-foreground ml-1">{g.rows.length}</span>
-                </div>
-                {g.parentName && (
-                  <span className="text-[11px] text-muted-foreground block">onder {g.parentName}</span>
-                )}
-              </Link>
-              <ul className="mt-1 divide-y divide-border/60 border-l border-border/60 pl-3 ml-0.5">
-                {g.rows.map((d) => {
-                  const overdue = d.deadline && d.deadline < today;
-                  const label = d.deliverable_types?.label ?? d.type;
-                  return (
-                    <li key={d.id} className="py-1.5 flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1 text-sm leading-snug">
-                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1.5">{label}</span>
-                        {d.omschrijving && <span>{d.omschrijving}</span>}
-                      </div>
-                      {d.deadline && (
-                        <span className={`text-[11px] shrink-0 tabular-nums ${overdue ? "text-destructive" : "text-muted-foreground"}`}>
-                          {fmtDate(d.deadline)}
-                        </span>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
+    <Link to="/tegenprestaties" className="block">
+      <div className="surface-card p-4 sm:p-5 hover:shadow-md transition-shadow cursor-pointer group">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm sm:text-base font-semibold">Open tegenprestaties</h2>
+          <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
         </div>
-      )}
-    </CardShell>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Laden...</p>
+        ) : total === 0 ? (
+          <p className="text-sm text-muted-foreground italic">Geen tegenprestaties in deze periode.</p>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl sm:text-3xl font-semibold tabular-nums">{open}</span>
+              <span className="text-base text-muted-foreground">van {total}</span>
+              <span className="text-sm text-muted-foreground">openstaand</span>
+            </div>
+            <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden flex">
+              <div
+                className="h-full bg-primary transition-all"
+                style={{ width: `${deliveredPct}%` }}
+                title={`Geleverd: ${deliveredPct}%`}
+              />
+              <div
+                className="h-full bg-muted-foreground/30 transition-all"
+                style={{ width: `${openPct}%` }}
+                title={`Openstaand: ${openPct}%`}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {open} openstaand · {delivered} geleverd
+              {total - open - delivered > 0 && ` · ${total - open - delivered} overig`}
+            </p>
+          </div>
+        )}
+      </div>
+    </Link>
   );
 }
 
@@ -363,7 +329,7 @@ export function RatingByTypeCard({ rangeStart, rangeEnd }: { rangeStart: Date; r
 export function DeliverablesReportCards({ rangeStart, rangeEnd }: { rangeStart: Date; rangeEnd: Date }) {
   return (
     <>
-      <OpenDeliverablesCard />
+      <OpenDeliverablesCard rangeStart={rangeStart} rangeEnd={rangeEnd} />
       <BudgetVsValueCard rangeStart={rangeStart} rangeEnd={rangeEnd} />
       <RatingByTypeCard rangeStart={rangeStart} rangeEnd={rangeEnd} />
     </>
