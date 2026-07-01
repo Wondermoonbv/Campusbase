@@ -281,7 +281,7 @@ export default function DashboardPage() {
           {showEvents && (
             <div className="surface-card">
               <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between">
-                <h2 className="text-base font-medium">Nog te vullen</h2>
+                <h2 className="text-base font-medium">Openstaande plaatsen</h2>
                 <Link to="/evenementen" className="text-sm text-primary hover:underline">Alles bekijken</Link>
               </div>
               <div className="divide-y divide-border">
@@ -324,7 +324,7 @@ export default function DashboardPage() {
             <div className="surface-card p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-4">
                 <BarChart3 className="h-4 w-4 text-primary" />
-                <h2 className="text-base font-medium">Event performance</h2>
+                <h2 className="text-base font-medium">Event-prestaties</h2>
                 <span className="text-xs text-muted-foreground ml-auto">Academiejaar {academicStart.getFullYear()}/{academicStart.getFullYear() + 1}</span>
               </div>
               <div className="grid grid-cols-3 gap-4">
