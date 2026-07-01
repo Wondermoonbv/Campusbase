@@ -45,6 +45,7 @@ type NavItem = {
   icon: React.ComponentType<{ className?: string }>;
   roles: string[];
   children?: { title: string; url: string; icon: React.ComponentType<{ className?: string }>; roles: string[] }[];
+  isSubitem?: boolean;
 };
 
 type NavGroup = {
