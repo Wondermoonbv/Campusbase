@@ -45,6 +45,7 @@ type NavItem = {
   icon: React.ComponentType<{ className?: string }>;
   roles: string[];
   children?: { title: string; url: string; icon: React.ComponentType<{ className?: string }>; roles: string[] }[];
+  isSubitem?: boolean;
 };
 
 type NavGroup = {
@@ -73,7 +74,7 @@ const navGroups: NavGroup[] = [
       { title: "Evenementen", url: "/evenementen", icon: CalendarDays, roles: ["admin", "editor", "viewer"] },
       { title: "Ambassadeurs", url: "/ambassadeurs", icon: UserCheck, roles: ["admin", "editor", "viewer"] },
       { title: "Contracten & Partnerships", url: "/contracten", icon: FileText, roles: ["admin", "editor"] },
-      { title: "Tegenprestaties", url: "/tegenprestaties", icon: ClipboardCheck, roles: ["admin", "editor", "viewer"] },
+      { title: "Tegenprestaties", url: "/tegenprestaties", icon: ClipboardCheck, roles: ["admin", "editor", "viewer"], isSubitem: true },
       { title: "Taken", url: "/taken", icon: CheckSquare, roles: ["admin", "editor"] },
     ],
   },
@@ -236,7 +237,8 @@ export function AppSidebar() {
                                     "relative flex items-center gap-3 px-3 py-2 rounded text-sm font-medium transition-colors flex-1",
                                     active
                                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
+                                    item.isSubitem && !collapsed && "ml-4 pl-2 text-[13px] font-normal text-sidebar-foreground/60 hover:text-sidebar-foreground/80"
                                   )}
                                   activeClassName=""
                                 >
