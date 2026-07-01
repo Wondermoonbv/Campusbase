@@ -121,6 +121,30 @@ export default function DashboardPage() {
     });
   }, [upcomingEvents, inschrijvingen, forms, responses, scholen]);
 
+  /* ── Events with open ambassador spots ── */
+  const teVullenEvents = useMemo(() => {
+    return evenementen
+      .filter((e) => new Date(e.date) >= now && e.status !== "geannuleerd" && e.max_ambassadeurs != null)
+      .map((ev) => {
+        const actief = inschrijvingen.filter(
+          (i) => i.evenement_id === ev.id && (i.status === "ingeschreven" || i.status === "bevestigd")
+        ).length;
+        const onbevestigd = inschrijvingen.filter(
+          (i) => i.evenement_id === ev.id && i.status === "ingeschreven"
+        ).length;
+        const max = ev.max_ambassadeurs as number;
+        const open = Math.max(max - actief, 0);
+        return { ...ev, actief, onbevestigd, max, open };
+      })
+      .filter((ev) => ev.open > 0)
+      .sort((a, b) => {
+        const da = new Date(a.date).getTime();
+        const db = new Date(b.date).getTime();
+        if (da !== db) return da - db;
+        return b.open - a.open;
+      });
+  }, [evenementen, inschrijvingen, now]);
+
   /* ── Event performance (academic year) ── */
   const academicStart = academicYearStart(now);
   const eventsPerf = useMemo(() => {
@@ -248,6 +272,48 @@ export default function DashboardPage() {
                       <StatusBadge status={ev.status} />
                     </Link>
                   ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Events with open spots */}
+          {showEvents && (
+            <div className="surface-card">
+              <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between">
+                <h2 className="text-base font-medium">Nog te vullen</h2>
+                <Link to="/evenementen" className="text-sm text-primary hover:underline">Alles bekijken</Link>
+              </div>
+              <div className="divide-y divide-border">
+                {teVullenEvents.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-muted-foreground">
+                    Alle aankomende events met een limiet zijn volzet.
+                  </div>
+                ) : (
+                  teVullenEvents.map((ev) => {
+                    const pct = ev.max > 0 ? Math.round((ev.actief / ev.max) * 100) : 0;
+                    return (
+                      <Link key={ev.id} to={`/evenementen/${ev.id}`} className="p-3 sm:p-4 hover:bg-muted/30 transition-[background-color] duration-150 cursor-pointer block active:scale-[0.99]">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm font-medium truncate">{ev.name}</p>
+                          <span className="text-xs font-medium text-muted-foreground shrink-0">{ev.actief}/{ev.max}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {new Date(ev.date).toLocaleDateString("nl-BE", { day: "numeric", month: "short" })}
+                          {ev.location ? ` · ${ev.location}` : ""}
+                        </p>
+                        <div className="mt-2 h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                          <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                        </div>
+                        <div className="flex items-center gap-3 mt-1.5">
+                          <span className="text-xs text-primary font-medium">{ev.open} nog te vullen</span>
+                          {ev.onbevestigd > 0 && (
+                            <span className="text-xs text-muted-foreground">{ev.onbevestigd} onbevestigd</span>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })
                 )}
               </div>
             </div>
