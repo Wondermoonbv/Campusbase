@@ -10,7 +10,7 @@ export function useScholen() {
     queryKey: ["scholen"],
     queryFn: async () => {
       const PAGE = 1000;
-      const cols = "id, name, type, school_type, province, city, website, email, telefoon, language, notes, status, created_at, parent_id, is_nationaal, verbonden_instelling_id, heeft_stem";
+      const cols = "id, name, type, school_type, province, city, website, email, telefoon, language, notes, status, created_at, parent_id, is_nationaal, verbonden_instelling_id, heeft_stem, latitude, longitude";
       const all: School[] = [];
       let from = 0;
       while (true) {

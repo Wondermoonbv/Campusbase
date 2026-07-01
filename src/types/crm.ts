@@ -37,6 +37,8 @@ export interface School {
   scholengemeenschap_nr?: string | null;
   heeft_stem?: boolean | null;
   zoektermen?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface EventOrganisatie {

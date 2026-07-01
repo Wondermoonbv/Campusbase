@@ -37,9 +37,26 @@ export default function BelgiumMap() {
     const showEvents = layer === "evenementen" || layer === "beide";
 
     if (showScholen) {
+      const seen = new Map<string, number>();
+
       scholen.forEach((s) => {
-        const coords = CITY_COORDS[s.city];
+        let coords: [number, number] | undefined =
+          (s.latitude != null && s.longitude != null)
+            ? [s.latitude, s.longitude]
+            : CITY_COORDS[s.city];
+
         if (!coords) return;
+
+        const key = `${coords[0].toFixed(5)},${coords[1].toFixed(5)}`;
+        const n = seen.get(key) ?? 0;
+        seen.set(key, n + 1);
+
+        if (n > 0) {
+          const angle = n * 2.399963;
+          const r = 0.0012 * Math.ceil(n / 6);
+          coords = [coords[0] + r * Math.cos(angle), coords[1] + r * Math.sin(angle)];
+        }
+
         const marker = L.circleMarker(coords, { radius: 7, fillColor: "#0E6575", color: "#fff", weight: 2, fillOpacity: 0.9 });
         marker.bindPopup(`<strong>${s.name}</strong><br/>${s.city}<br/><em>${s.type}</em>`);
         markersRef.current!.addLayer(marker);
@@ -49,10 +66,14 @@ export default function BelgiumMap() {
     if (showEvents) {
       evenementen.forEach((e) => {
         const school = e.organisator_id ? scholen.find((s) => s.id === e.organisator_id) : null;
-        const city = school?.city || e.location.split(",").pop()?.trim() || "";
-        const coords = CITY_COORDS[city];
-        if (!coords) return;
-        const offset: [number, number] = [coords[0] + 0.008, coords[1] + 0.008];
+        const base: [number, number] | undefined =
+          (school?.latitude != null && school?.longitude != null)
+            ? [school.latitude, school.longitude]
+            : CITY_COORDS[school?.city || e.location.split(",").pop()?.trim() || ""];
+
+        if (!base) return;
+
+        const offset: [number, number] = [base[0] + 0.008, base[1] + 0.008];
         const marker = L.circleMarker(offset, { radius: 6, fillColor: "#ef7c14", color: "#fff", weight: 2, fillOpacity: 0.9 });
         marker.bindPopup(`<strong>${e.name}</strong><br/>${new Date(e.date).toLocaleDateString("nl-BE")}<br/>${e.location}`);
         markersRef.current!.addLayer(marker);
