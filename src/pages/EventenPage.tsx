@@ -6,6 +6,7 @@ import { useEvenementen } from "@/hooks/useEvenementen";
 import { useEventContactpersonen } from "@/hooks/useEventContactpersonen";
 import { useEventOrganisaties } from "@/hooks/useEventOrganisaties";
 import { useOpleidingen, useEventOpleidingen } from "@/hooks/useOpleidingen";
+import { useAllInschrijvingen } from "@/hooks/useAmbassadeurs";
 import { writeAuditLog } from "@/lib/audit";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Download, CalendarDays, List, Pencil, Upload, Trash2, Calendar, Link2, Filter } from "lucide-react";
+import { Plus, Search, Download, CalendarDays, List, Pencil, Upload, Trash2, Calendar, Link2, Filter, Users } from "lucide-react";
 import { EventFormDialog } from "@/components/events/EventFormDialog";
 import { EventCalendar } from "@/components/events/EventCalendar";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
@@ -41,6 +42,16 @@ const BULK_INVOICE_OPTIONS = [
   { value: "ontvangen", label: "Ontvangen" },
   { value: "betaald", label: "Betaald" },
 ];
+
+function BezettingBadge({ actief, max, size = "sm" }: { actief: number; max: number; size?: "sm" | "md" }) {
+  const vol = actief >= max;
+  const txt = size === "md" ? "text-xs" : "text-[10px]";
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 ${txt} font-medium ${vol ? "bg-primary/10 text-primary border-primary/30" : "bg-muted text-muted-foreground border-border"}`}>
+      <Users className="h-3 w-3" />{actief}/{max}
+    </span>
+  );
+}
 
 const EVENT_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "name", label: "Naam", required: true },
@@ -71,6 +82,16 @@ export default function EventenPage() {
   const [searchParams] = useSearchParams();
   const initialPeriod = searchParams.get("period") ?? "all";
   const { evenementen, isLoading, upsertEvent, deleteEvent } = useEvenementen();
+  const { inschrijvingen } = useAllInschrijvingen();
+  const actiefByEvent = useMemo(() => {
+    const m = new Map<string, number>();
+    inschrijvingen.forEach((i) => {
+      if (i.status === "ingeschreven" || i.status === "bevestigd") {
+        m.set(i.evenement_id, (m.get(i.evenement_id) ?? 0) + 1);
+      }
+    });
+    return m;
+  }, [inschrijvingen]);
   const { syncContactpersonen } = useEventContactpersonen();
   const { syncOrganisaties } = useEventOrganisaties();
   const { opleidingen } = useOpleidingen();
@@ -276,6 +297,9 @@ export default function EventenPage() {
                     <p className="text-xs text-muted-foreground mt-0.5">{new Date(ev.date).toLocaleDateString("nl-BE")} · {ev.location || "—"}</p>
                     <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                       <StatusBadge status={ev.status} />
+                      {ev.max_ambassadeurs != null && (
+                        <BezettingBadge actief={actiefByEvent.get(ev.id) ?? 0} max={ev.max_ambassadeurs} />
+                      )}
                       {ev.follow_up_status && (
                         <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${followUpVariant(ev.follow_up_status)}`}>
                           {FOLLOW_UP_LABELS[ev.follow_up_status] || ev.follow_up_status}
@@ -309,6 +333,7 @@ export default function EventenPage() {
               <SortableTableHead sortKey="date" currentSort={sort} onSort={toggleSort}>Datum</SortableTableHead>
               <SortableTableHead sortKey="location" currentSort={sort} onSort={toggleSort}>Locatie</SortableTableHead>
               <SortableTableHead sortKey="status" currentSort={sort} onSort={toggleSort}>Status</SortableTableHead>
+              <TableHead>Bezetting</TableHead>
               <SortableTableHead sortKey="follow_up" currentSort={sort} onSort={toggleSort}>Follow-up</SortableTableHead>
               <TableHead>Factuur</TableHead>
               <TableHead className="w-20" />
@@ -328,6 +353,13 @@ export default function EventenPage() {
                   <TableCell className="tabular-nums">{new Date(ev.date).toLocaleDateString("nl-BE")}</TableCell>
                   <TableCell>{ev.location || "—"}</TableCell>
                   <TableCell><StatusBadge status={ev.status} /></TableCell>
+                  <TableCell>
+                    {ev.max_ambassadeurs != null ? (
+                      <BezettingBadge actief={actiefByEvent.get(ev.id) ?? 0} max={ev.max_ambassadeurs} size="md" />
+                    ) : (
+                      <span className="text-muted-foreground text-xs">—</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     {ev.follow_up_status && (
                       <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${followUpVariant(ev.follow_up_status)}`}>
