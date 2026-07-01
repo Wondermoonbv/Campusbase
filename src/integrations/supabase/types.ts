@@ -1416,9 +1416,12 @@ export type Database = {
       event_bezetting: {
         Row: {
           actief: number | null
+          afgemeld: number | null
           bevestigd: number | null
           date: string | null
+          elia_contact: string | null
           evenement_id: string | null
+          location: string | null
           max_ambassadeurs: number | null
           name: string | null
           onbevestigd: number | null
