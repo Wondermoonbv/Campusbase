@@ -238,7 +238,7 @@ export function AppSidebar() {
                                     active
                                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
                                       : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
-                                    item.isSubitem && !collapsed && "ml-3 pl-6 text-[13px] font-normal text-sidebar-foreground/60 hover:text-sidebar-foreground/80"
+                                    item.isSubitem && !collapsed && "ml-4 pl-2 text-[13px] font-normal text-sidebar-foreground/60 hover:text-sidebar-foreground/80"
                                   )}
                                   activeClassName=""
                                 >
