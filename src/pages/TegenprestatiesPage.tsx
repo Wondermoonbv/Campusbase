@@ -26,8 +26,9 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { AsyncOrganisatieSelect } from "@/components/organisaties/AsyncOrganisatieSelect";
 import { useDeliverableTypes } from "@/hooks/useContractDeliverables";
+import { ContractDeliverableDialog } from "@/components/contracts/ContractDeliverableDialog";
 import { ORGANISATIE_TYPE_LABELS } from "@/lib/event-labels";
-import { ClipboardCheck, ChevronLeft, ChevronRight } from "lucide-react";
+import { ClipboardCheck, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 
 type StatusOpt = "alle" | "te leveren" | "geleverd" | "n.v.t.";
 const STATUS_OPTS: StatusOpt[] = ["alle", "te leveren", "geleverd", "n.v.t."];
@@ -40,6 +41,13 @@ interface Row {
   omschrijving: string | null;
   status: "te leveren" | "geleverd" | "n.v.t.";
   deadline: string | null;
+  aantal: number | null;
+  kanaal: string | null;
+  geleverd_op: string | null;
+  geschatte_waarde: number | null;
+  waarde_score: number | null;
+  evaluatie: string | null;
+  notities: string | null;
   deliverable_types: { label: string } | null;
   contracten: {
     id: string;
@@ -65,6 +73,7 @@ export default function TegenprestatiesPage() {
   const [typeFilter, setTypeFilter] = useState<string>("alle");
   const [orgFilter, setOrgFilter] = useState<string>("all");
   const [page, setPage] = useState(0);
+  const [editing, setEditing] = useState<Row | null>(null);
 
   // Reset paging when filters change
   useEffect(() => {
@@ -83,6 +92,7 @@ export default function TegenprestatiesPage() {
         .from("contract_deliverables")
         .select(
           `id, contract_id, type, omschrijving, status, deadline,
+           aantal, kanaal, geleverd_op, geschatte_waarde, waarde_score, evaluatie, notities,
            deliverable_types(label),
            contracten!inner(id, organisatie_id, organisaties:organisatie_id(name, type, parent:parent_id(name)))`,
           { count: "exact" }
@@ -229,6 +239,7 @@ export default function TegenprestatiesPage() {
                 <TableHead>Omschrijving</TableHead>
                 <TableHead className="w-[180px]">Status</TableHead>
                 <TableHead className="w-[170px]">Deadline</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -255,7 +266,7 @@ export default function TegenprestatiesPage() {
                 );
                 return sorted.flatMap((g) => [
                   <TableRow key={`h-${g.name}-${g.contractId ?? "x"}`} className="bg-muted/40 hover:bg-muted/40">
-                    <TableCell colSpan={4} className="py-2">
+                    <TableCell colSpan={5} className="py-2">
                       <div className="flex items-center gap-2 flex-wrap">
                         {g.contractId ? (
                           <Link to={`/contracten/${g.contractId}`} className="font-semibold hover:underline">
@@ -311,6 +322,17 @@ export default function TegenprestatiesPage() {
                         className="h-8 w-[150px]"
                       />
                     </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        aria-label="Tegenprestatie bewerken"
+                        onClick={() => setEditing(r)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
                       </TableRow>
                     );
                   }),
@@ -346,6 +368,24 @@ export default function TegenprestatiesPage() {
             </Button>
           </div>
         </div>
+      )}
+
+      {editing && (
+        <ContractDeliverableDialog
+          open={!!editing}
+          onOpenChange={(v) => { if (!v) setEditing(null); }}
+          contractId={editing.contract_id}
+          deliverable={editing as any}
+          onSave={async (data) => {
+            const { id, contract_id, ...rest } = data as any;
+            const { error } = await (supabase as any)
+              .from("contract_deliverables")
+              .update(rest)
+              .eq("id", id);
+            if (error) throw error;
+            qc.invalidateQueries({ queryKey: ["tegenprestaties_all"] });
+          }}
+        />
       )}
     </div>
   );
