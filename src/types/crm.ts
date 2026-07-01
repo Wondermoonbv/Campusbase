@@ -16,6 +16,8 @@ export interface School {
   name: string;
   type: OrganisatieType;
   school_type: SchoolType;
+  street: string | null;
+  postal_code: string | null;
   province: string;
   city: string;
   website: string;
