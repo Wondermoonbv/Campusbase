@@ -277,6 +277,48 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {/* Events with open spots */}
+          {showEvents && (
+            <div className="surface-card">
+              <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between">
+                <h2 className="text-base font-medium">Nog te vullen</h2>
+                <Link to="/evenementen" className="text-sm text-primary hover:underline">Alles bekijken</Link>
+              </div>
+              <div className="divide-y divide-border">
+                {teVullenEvents.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-muted-foreground">
+                    Alle aankomende events met een limiet zijn volzet.
+                  </div>
+                ) : (
+                  teVullenEvents.map((ev) => {
+                    const pct = ev.max > 0 ? Math.round((ev.actief / ev.max) * 100) : 0;
+                    return (
+                      <Link key={ev.id} to={`/evenementen/${ev.id}`} className="p-3 sm:p-4 hover:bg-muted/30 transition-[background-color] duration-150 cursor-pointer block active:scale-[0.99]">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm font-medium truncate">{ev.name}</p>
+                          <span className="text-xs font-medium text-muted-foreground shrink-0">{ev.actief}/{ev.max}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {new Date(ev.date).toLocaleDateString("nl-BE", { day: "numeric", month: "short" })}
+                          {ev.location ? ` · ${ev.location}` : ""}
+                        </p>
+                        <div className="mt-2 h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                          <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                        </div>
+                        <div className="flex items-center gap-3 mt-1.5">
+                          <span className="text-xs text-primary font-medium">{ev.open} nog te vullen</span>
+                          {ev.onbevestigd > 0 && (
+                            <span className="text-xs text-muted-foreground">{ev.onbevestigd} onbevestigd</span>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Event performance */}
           {showPerformance && (
             <div className="surface-card p-4 sm:p-5">
