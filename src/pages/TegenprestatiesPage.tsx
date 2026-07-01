@@ -225,7 +225,6 @@ export default function TegenprestatiesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Partner / organisatie</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Omschrijving</TableHead>
                 <TableHead className="w-[180px]">Status</TableHead>
@@ -233,36 +232,54 @@ export default function TegenprestatiesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((r) => {
-                const org = r.contracten?.organisaties;
-                const orgName = org?.name ?? "Onbekende organisatie";
-                const parentName = org?.parent?.name;
-                const typeLabel = r.deliverable_types?.label ?? r.type;
-                return (
-                  <TableRow key={r.id}>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <Link
-                          to={r.contracten ? `/contracten/${r.contracten.id}` : "#"}
-                          className="font-medium hover:underline"
-                        >
-                          {orgName}
-                        </Link>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {org?.type && (
-                            <Badge variant="secondary" className="text-[10px]">
-                              {ORGANISATIE_TYPE_LABELS[org.type] ?? org.type}
-                            </Badge>
-                          )}
-                          {parentName && (
-                            <span className="text-xs text-muted-foreground">
-                              onder {parentName}
-                            </span>
-                          )}
-                        </div>
+              {(() => {
+                // Group rows by organisation (server-side name via relation)
+                const groups = new Map<string, { name: string; type: string | null; parentName: string | null; contractId: string | null; rows: Row[] }>();
+                for (const r of rows) {
+                  const org = r.contracten?.organisaties;
+                  const key = r.contracten?.organisatie_id ?? `__unknown_${r.id}`;
+                  const name = org?.name ?? "Onbekende organisatie";
+                  if (!groups.has(key)) {
+                    groups.set(key, {
+                      name,
+                      type: org?.type ?? null,
+                      parentName: org?.parent?.name ?? null,
+                      contractId: r.contracten?.id ?? null,
+                      rows: [],
+                    });
+                  }
+                  groups.get(key)!.rows.push(r);
+                }
+                const sorted = Array.from(groups.values()).sort((a, b) =>
+                  a.name.localeCompare(b.name, "nl", { sensitivity: "base" })
+                );
+                return sorted.flatMap((g) => [
+                  <TableRow key={`h-${g.name}-${g.contractId ?? "x"}`} className="bg-muted/40 hover:bg-muted/40">
+                    <TableCell colSpan={4} className="py-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {g.contractId ? (
+                          <Link to={`/contracten/${g.contractId}`} className="font-semibold hover:underline">
+                            {g.name}
+                          </Link>
+                        ) : (
+                          <span className="font-semibold">{g.name}</span>
+                        )}
+                        {g.type && (
+                          <Badge variant="secondary" className="text-[10px]">
+                            {ORGANISATIE_TYPE_LABELS[g.type] ?? g.type}
+                          </Badge>
+                        )}
+                        {g.parentName && (
+                          <span className="text-xs text-muted-foreground">onder {g.parentName}</span>
+                        )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm">{typeLabel}</TableCell>
+                  </TableRow>,
+                  ...g.rows.map((r) => {
+                    const typeLabel = r.deliverable_types?.label ?? r.type;
+                    return (
+                      <TableRow key={r.id}>
+                        <TableCell className="text-sm">{typeLabel}</TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-[280px] truncate">
                       {r.omschrijving || "—"}
                     </TableCell>
@@ -294,9 +311,11 @@ export default function TegenprestatiesPage() {
                         className="h-8 w-[150px]"
                       />
                     </TableCell>
-                  </TableRow>
-                );
-              })}
+                      </TableRow>
+                    );
+                  }),
+                ]);
+              })()}
             </TableBody>
           </Table>
         )}
