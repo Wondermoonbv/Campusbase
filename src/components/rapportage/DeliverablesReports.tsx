@@ -329,7 +329,7 @@ export function RatingByTypeCard({ rangeStart, rangeEnd }: { rangeStart: Date; r
 export function DeliverablesReportCards({ rangeStart, rangeEnd }: { rangeStart: Date; rangeEnd: Date }) {
   return (
     <>
-      <OpenDeliverablesCard />
+      <OpenDeliverablesCard rangeStart={rangeStart} rangeEnd={rangeEnd} />
       <BudgetVsValueCard rangeStart={rangeStart} rangeEnd={rangeEnd} />
       <RatingByTypeCard rangeStart={rangeStart} rangeEnd={rangeEnd} />
     </>
