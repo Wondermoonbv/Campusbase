@@ -28,6 +28,7 @@ const RapportagePage = lazy(() => import("./pages/RapportagePage"));
 const GebruikersPage = lazy(() => import("./pages/GebruikersPage"));
 const InstellingenPage = lazy(() => import("./pages/InstellingenPage"));
 const TakenPage = lazy(() => import("./pages/TakenPage"));
+const TegenprestatiesPage = lazy(() => import("./pages/TegenprestatiesPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PublicFeedbackPage = lazy(() => import("./pages/PublicFeedbackPage"));
 const AmbassadeursPage = lazy(() => import("./pages/AmbassadeursPage"));
@@ -179,6 +180,7 @@ function AppRoutes() {
           <Route path="/evenementen/:id" element={<EventDetailPage />} />
           <Route path="/rapportage" element={<RapportagePage />} />
           <Route path="/taken" element={<TakenPage />} />
+          <Route path="/tegenprestaties" element={<TegenprestatiesPage />} />
           {effectiveIsAdmin && <Route path="/gebruikers" element={<GebruikersPage />} />}
           {effectiveIsAdmin && <Route path="/audit-log" element={<AuditLogPage />} />}
           {effectiveIsAdmin ? (
