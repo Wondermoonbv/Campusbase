@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Download, CalendarDays, List, Pencil, Upload, Trash2, Calendar, Link2, Filter } from "lucide-react";
+import { Plus, Search, Download, CalendarDays, List, Pencil, Upload, Trash2, Calendar, Link2, Filter, Users } from "lucide-react";
 import { EventFormDialog } from "@/components/events/EventFormDialog";
 import { EventCalendar } from "@/components/events/EventCalendar";
 import { ImportDialog, ImportColumn } from "@/components/import/ImportDialog";
