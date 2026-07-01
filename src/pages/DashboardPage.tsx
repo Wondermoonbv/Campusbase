@@ -121,6 +121,30 @@ export default function DashboardPage() {
     });
   }, [upcomingEvents, inschrijvingen, forms, responses, scholen]);
 
+  /* ── Events with open ambassador spots ── */
+  const teVullenEvents = useMemo(() => {
+    return evenementen
+      .filter((e) => new Date(e.date) >= now && e.status !== "geannuleerd" && e.max_ambassadeurs != null)
+      .map((ev) => {
+        const actief = inschrijvingen.filter(
+          (i) => i.evenement_id === ev.id && (i.status === "ingeschreven" || i.status === "bevestigd")
+        ).length;
+        const onbevestigd = inschrijvingen.filter(
+          (i) => i.evenement_id === ev.id && i.status === "ingeschreven"
+        ).length;
+        const max = ev.max_ambassadeurs as number;
+        const open = Math.max(max - actief, 0);
+        return { ...ev, actief, onbevestigd, max, open };
+      })
+      .filter((ev) => ev.open > 0)
+      .sort((a, b) => {
+        const da = new Date(a.date).getTime();
+        const db = new Date(b.date).getTime();
+        if (da !== db) return da - db;
+        return b.open - a.open;
+      });
+  }, [evenementen, inschrijvingen, now]);
+
   /* ── Event performance (academic year) ── */
   const academicStart = academicYearStart(now);
   const eventsPerf = useMemo(() => {
