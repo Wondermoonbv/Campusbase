@@ -43,6 +43,16 @@ const BULK_INVOICE_OPTIONS = [
   { value: "betaald", label: "Betaald" },
 ];
 
+function BezettingBadge({ actief, max, size = "sm" }: { actief: number; max: number; size?: "sm" | "md" }) {
+  const vol = actief >= max;
+  const txt = size === "md" ? "text-xs" : "text-[10px]";
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 ${txt} font-medium ${vol ? "bg-primary/10 text-primary border-primary/30" : "bg-muted text-muted-foreground border-border"}`}>
+      <Users className="h-3 w-3" />{actief}/{max}
+    </span>
+  );
+}
+
 const EVENT_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "name", label: "Naam", required: true },
   { key: "type", label: "Type", required: true, validate: (v) => ["jobbeurs", "workshop", "event"].includes(v.toLowerCase()) ? null : "Ongeldig type" },
