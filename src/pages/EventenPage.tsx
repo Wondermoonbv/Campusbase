@@ -6,6 +6,7 @@ import { useEvenementen } from "@/hooks/useEvenementen";
 import { useEventContactpersonen } from "@/hooks/useEventContactpersonen";
 import { useEventOrganisaties } from "@/hooks/useEventOrganisaties";
 import { useOpleidingen, useEventOpleidingen } from "@/hooks/useOpleidingen";
+import { useAllInschrijvingen } from "@/hooks/useAmbassadeurs";
 import { writeAuditLog } from "@/lib/audit";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
