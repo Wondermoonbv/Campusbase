@@ -416,6 +416,13 @@ export type Database = {
             referencedRelation: "evenementen_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contract_evenementen_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_bezetting"
+            referencedColumns: ["evenement_id"]
+          },
         ]
       }
       contracten: {
@@ -703,6 +710,13 @@ export type Database = {
             referencedRelation: "evenementen_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "event_contactpersonen_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_bezetting"
+            referencedColumns: ["evenement_id"]
+          },
         ]
       }
       event_inschrijvingen: {
@@ -778,6 +792,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "event_inschrijvingen_evenement_id_fkey"
+            columns: ["evenement_id"]
+            isOneToOne: false
+            referencedRelation: "event_bezetting"
+            referencedColumns: ["evenement_id"]
+          },
+          {
             foreignKeyName: "event_inschrijvingen_feedback_response_id_fkey"
             columns: ["feedback_response_id"]
             isOneToOne: false
@@ -815,6 +836,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "event_opleidingen_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_bezetting"
+            referencedColumns: ["evenement_id"]
+          },
+          {
             foreignKeyName: "event_opleidingen_opleiding_id_fkey"
             columns: ["opleiding_id"]
             isOneToOne: false
@@ -850,6 +878,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "evenementen_public"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_organisaties_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_bezetting"
+            referencedColumns: ["evenement_id"]
           },
           {
             foreignKeyName: "event_organisaties_organisatie_id_fkey"
@@ -918,6 +953,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "evenementen_public"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_forms_evenement_id_fkey"
+            columns: ["evenement_id"]
+            isOneToOne: false
+            referencedRelation: "event_bezetting"
+            referencedColumns: ["evenement_id"]
           },
         ]
       }
@@ -1257,6 +1299,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "taken_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event_bezetting"
+            referencedColumns: ["evenement_id"]
+          },
+          {
             foreignKeyName: "taken_school_id_fkey"
             columns: ["organisatie_id"]
             isOneToOne: false
@@ -1364,6 +1413,20 @@ export type Database = {
         }
         Relationships: []
       }
+      event_bezetting: {
+        Row: {
+          actief: number | null
+          bevestigd: number | null
+          date: string | null
+          evenement_id: string | null
+          max_ambassadeurs: number | null
+          name: string | null
+          onbevestigd: number | null
+          open_plaatsen: number | null
+          status: string | null
+        }
+        Relationships: []
+      }
       event_inschrijvingen_public: {
         Row: {
           ambassadeur_id: string | null
@@ -1411,6 +1474,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "evenementen_public"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_inschrijvingen_evenement_id_fkey"
+            columns: ["evenement_id"]
+            isOneToOne: false
+            referencedRelation: "event_bezetting"
+            referencedColumns: ["evenement_id"]
           },
         ]
       }
