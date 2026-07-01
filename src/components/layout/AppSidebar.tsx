@@ -16,6 +16,7 @@ import {
   ChevronDown,
   ChevronUp,
   ClipboardList,
+  ClipboardCheck,
   Shield,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
@@ -72,6 +73,7 @@ const navGroups: NavGroup[] = [
       { title: "Evenementen", url: "/evenementen", icon: CalendarDays, roles: ["admin", "editor", "viewer"] },
       { title: "Ambassadeurs", url: "/ambassadeurs", icon: UserCheck, roles: ["admin", "editor", "viewer"] },
       { title: "Contracten & Partnerships", url: "/contracten", icon: FileText, roles: ["admin", "editor"] },
+      { title: "Tegenprestaties", url: "/tegenprestaties", icon: ClipboardCheck, roles: ["admin", "editor", "viewer"] },
       { title: "Taken", url: "/taken", icon: CheckSquare, roles: ["admin", "editor"] },
     ],
   },
