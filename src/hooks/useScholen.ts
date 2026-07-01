@@ -9,13 +9,23 @@ export function useScholen() {
   const { data: scholen = [], isLoading } = useQuery({
     queryKey: ["scholen"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("organisaties")
-        .select("id, name, type, school_type, province, city, website, email, telefoon, language, notes, status, created_at, parent_id, is_nationaal, verbonden_instelling_id, heeft_stem")
-        .range(0, 9999)
-        .order("name", { ascending: true });
-      if (error) { console.error("Error fetching organisaties:", error); return []; }
-      return data as unknown as School[];
+      const PAGE = 1000;
+      const cols = "id, name, type, school_type, province, city, website, email, telefoon, language, notes, status, created_at, parent_id, is_nationaal, verbonden_instelling_id, heeft_stem";
+      const all: School[] = [];
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from("organisaties")
+          .select(cols)
+          .order("name", { ascending: true })
+          .range(from, from + PAGE - 1);
+        if (error) { console.error("Error fetching organisaties:", error); break; }
+        if (!data || data.length === 0) break;
+        all.push(...(data as unknown as School[]));
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
+      return all;
     },
     staleTime: 5 * 60 * 1000,
   });
