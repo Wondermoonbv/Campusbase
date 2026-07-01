@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,10 +67,9 @@ export default function TegenprestatiesPage() {
   const [page, setPage] = useState(0);
 
   // Reset paging when filters change
-  const filterKey = `${statusFilter}|${typeFilter}|${orgFilter}`;
-  useMemo(() => {
+  useEffect(() => {
     setPage(0);
-  }, [filterKey]);
+  }, [statusFilter, typeFilter, orgFilter]);
 
   const query = useQuery({
     queryKey: ["tegenprestaties_all", statusFilter, typeFilter, orgFilter, page],
