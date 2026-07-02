@@ -9,6 +9,7 @@ const DAY_NAMES = ["ma", "di", "wo", "do", "vr", "za", "zo"];
 
 const STATUS_COLORS: Record<string, string> = {
   option: "bg-sky-400/15 text-sky-700 border-sky-400/25",
+  declined: "bg-slate-400/15 text-slate-500 border-slate-400/25",
   gepland: "bg-blue-500/15 text-blue-700 border-blue-500/25",
   bevestigd: "bg-emerald-500/15 text-emerald-700 border-emerald-500/25",
   afgelopen: "bg-zinc-400/15 text-zinc-500 border-zinc-400/25",
@@ -17,6 +18,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 const STATUS_DOT: Record<string, string> = {
   option: "bg-sky-400",
+  declined: "bg-slate-400",
   gepland: "bg-blue-500",
   bevestigd: "bg-emerald-500",
   afgelopen: "bg-zinc-400",

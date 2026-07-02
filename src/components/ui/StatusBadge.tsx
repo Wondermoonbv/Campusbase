@@ -13,6 +13,7 @@ const statusMap: Record<string, StatusType> = {
   gepland: "info",
   planned: "info",
   option: "sky",
+  declined: "neutral",
   open: "info",
   "in onderhandeling": "warning",
   "in negotiation": "warning",

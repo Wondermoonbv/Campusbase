@@ -9,7 +9,7 @@ export type ContractType = "partnership" | "sponsoring" | "stage-overeenkomst" |
 export type StandType = "jobbeurs stand" | "infotafel" | "presentatie" | "workshop" | "anders";
 export type ContractStatus = "actief" | "verlopen" | "in onderhandeling";
 export type EventType = "jobbeurs" | "workshop" | "event";
-export type EventStatus = "option" | "gepland" | "bevestigd" | "afgelopen" | "geannuleerd";
+export type EventStatus = "option" | "declined" | "gepland" | "bevestigd" | "afgelopen" | "geannuleerd";
 
 export interface School {
   id: string;
