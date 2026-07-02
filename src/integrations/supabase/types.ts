@@ -550,6 +550,7 @@ export type Database = {
           notes: string | null
           organisator_id: string | null
           parking_info: string | null
+          programma: string | null
           region: Database["public"]["Enums"]["region_enum"] | null
           registration_type:
             | Database["public"]["Enums"]["registration_type_enum"]
@@ -590,6 +591,7 @@ export type Database = {
           notes?: string | null
           organisator_id?: string | null
           parking_info?: string | null
+          programma?: string | null
           region?: Database["public"]["Enums"]["region_enum"] | null
           registration_type?:
             | Database["public"]["Enums"]["registration_type_enum"]
@@ -630,6 +632,7 @@ export type Database = {
           notes?: string | null
           organisator_id?: string | null
           parking_info?: string | null
+          programma?: string | null
           region?: Database["public"]["Enums"]["region_enum"] | null
           registration_type?:
             | Database["public"]["Enums"]["registration_type_enum"]
