@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-type StatusType = "success" | "error" | "info" | "warning" | "neutral";
+type StatusType = "success" | "error" | "info" | "warning" | "neutral" | "sky";
 
 const statusMap: Record<string, StatusType> = {
   actief: "success",
@@ -12,6 +12,7 @@ const statusMap: Record<string, StatusType> = {
   afgerond: "success",
   gepland: "info",
   planned: "info",
+  option: "sky",
   open: "info",
   "in onderhandeling": "warning",
   "in negotiation": "warning",
@@ -35,6 +36,7 @@ const statusStyles: Record<StatusType, string> = {
   info: "bg-info/10 text-info border-info/20",
   warning: "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800",
   neutral: "bg-muted text-muted-foreground border-border",
+  sky: "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-900/20 dark:text-sky-300 dark:border-sky-800",
 };
 
 interface StatusBadgeProps {
