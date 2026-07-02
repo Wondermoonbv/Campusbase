@@ -289,10 +289,16 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!cpValid) {
+    const isOption = form.status === "option";
+    if (isOption && !derivedOrganisatorId) {
+      toast.error("Selecteer een organisatie.");
+      return;
+    }
+    if (!isOption && !cpValid) {
       toast.error("Voeg minstens één contact ter plaatse toe.");
       return;
     }
+
     if (!timesValid) {
       toast.error("Einduur moet na het startuur liggen.");
       return;
@@ -690,7 +696,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
             </div>
           </FormSection>
 
-          <Button type="submit" className="w-full" disabled={(!cpValid && cpEntries.length > 0) || !timesValid}>
+          <Button type="submit" className="w-full" disabled={(form.status !== "option" && !cpValid && cpEntries.length > 0) || !timesValid}>
             {isEdit ? "Opslaan" : "Toevoegen"}
           </Button>
           {!cpValid && cpEntries.length > 0 && (
