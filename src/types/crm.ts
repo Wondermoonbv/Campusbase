@@ -91,7 +91,7 @@ export interface Contract {
   verantwoordelijke_id?: string | null;
 }
 
-export type Regio = 'brussel' | 'antwerpen' | 'vlaams_brabant' | 'west_vlaanderen' | 'limburg' | 'oost_vlaanderen' | 'waals_brabant' | 'henegouwen';
+export type Regio = 'brussel' | 'antwerpen' | 'vlaams_brabant' | 'west_vlaanderen' | 'limburg' | 'oost_vlaanderen' | 'waals_brabant' | 'henegouwen' | 'luik' | 'luxemburg' | 'namen';
 export type Taal = 'nl' | 'fr' | 'en' | 'meertalig';
 export type DoelgroepNiveau = 'bachelor' | 'master' | 'beide' | 'graduaat';
 export type RegistratieType = 'partnership' | 'ad_hoc';
