@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, type ChangeEvent, type FocusEvent } from 
 import { useScholen, useContacten } from "@/hooks/useScholen";
 import { useEventContactpersonen } from "@/hooks/useEventContactpersonen";
 import { useEventOrganisaties } from "@/hooks/useEventOrganisaties";
-import { useOpleidingen, useEventOpleidingen } from "@/hooks/useOpleidingen";
+import { useEventOpleidingen, useOpleidingenPicker, useOpleidingenByIds, type OpleidingPickerRow } from "@/hooks/useOpleidingen";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,14 +38,15 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
   const { contacten: allContacten } = useContacten();
   const { contactpersonen: existingCP } = useEventContactpersonen(event?.id);
   const { links: existingOrgLinks } = useEventOrganisaties(event?.id);
-  const { opleidingen: allOpleidingen } = useOpleidingen();
   const { eventOpleidingen } = useEventOpleidingen();
   const [confirmOrgChange, setConfirmOrgChange] = useState<string | null>(null);
   const [timeInputVersion, setTimeInputVersion] = useState(0);
   const [selectedOrgIds, setSelectedOrgIds] = useState<string[]>([]);
   const [orgPickerOpen, setOrgPickerOpen] = useState(false);
   const [orgSearch, setOrgSearch] = useState("");
-  const [selectedOpleidingIds, setSelectedOpleidingIds] = useState<string[]>([]);
+  interface SelectedOpleiding { id: string; name: string; organisatie_id: string | null; organisatie_name: string; }
+  const [selectedOpleidingen, setSelectedOpleidingen] = useState<SelectedOpleiding[]>([]);
+  const selectedOpleidingIds = useMemo(() => selectedOpleidingen.map((o) => o.id), [selectedOpleidingen]);
   const [opleidingPickerOpen, setOpleidingPickerOpen] = useState(false);
   const [opleidingSearch, setOpleidingSearch] = useState("");
 
