@@ -130,7 +130,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
         });
         setCpEntries([]);
         setSelectedOrgIds([]);
-        setSelectedOpleidingIds([]);
+        setSelectedOpleidingen([]);
       }
     }
   }, [open, event]);
@@ -149,14 +149,28 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
     }
   }, [open, event?.id, existingOrgLinks]);
 
-  // Load existing opleiding links when editing
+  // Load existing opleiding ids for the event; hydrate full chip info via a dedicated query
+  const existingOpleidingIds = useMemo(
+    () => (open && event ? eventOpleidingen.filter((ep) => ep.event_id === event.id).map((ep) => ep.program_id) : []),
+    [open, event?.id, eventOpleidingen]
+  );
+  const { data: existingOpleidingRows = [] } = useOpleidingenByIds(existingOpleidingIds);
   useEffect(() => {
-    if (open && event) {
-      setSelectedOpleidingIds(
-        eventOpleidingen.filter((ep) => ep.event_id === event.id).map((ep) => ep.program_id)
-      );
+    if (!open || !event) return;
+    if (existingOpleidingRows.length === 0 && existingOpleidingIds.length === 0) {
+      setSelectedOpleidingen([]);
+      return;
     }
-  }, [open, event?.id, eventOpleidingen]);
+    if (existingOpleidingRows.length === 0) return;
+    setSelectedOpleidingen(
+      existingOpleidingRows.map((r) => ({
+        id: r.id,
+        name: r.name,
+        organisatie_id: r.organisatie_id,
+        organisatie_name: r.organisatie?.name || "Onbekende organisatie",
+      }))
+    );
+  }, [open, event?.id, existingOpleidingRows, existingOpleidingIds.length]);
 
   // Derive "hoofdorganisator" from selection
   const orgById = useMemo(() => new Map(scholen.map((s) => [s.id, s])), [scholen]);
@@ -232,44 +246,40 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [allContacten, selectedOrgIds]);
 
-  // Opleidingen grouped by school; show only opleidingen of selected orgs, or all if none selected
-  const opleidingGroups = useMemo(() => {
-    const selectedSet = new Set(selectedOrgIds);
-    const filtered = selectedSet.size === 0
-      ? allOpleidingen
-      : allOpleidingen.filter((o) => o.organisatie_id && selectedSet.has(o.organisatie_id));
-    const search = opleidingSearch.trim().toLowerCase();
-    const matches = (s: string) => !search || s.toLowerCase().includes(search);
-    const byOrg = new Map<string, typeof allOpleidingen>();
-    for (const o of filtered) {
-      const key = o.organisatie_id || "_";
-      if (!byOrg.has(key)) byOrg.set(key, [] as any);
-      byOrg.get(key)!.push(o);
-    }
-    const groups: { orgId: string; orgName: string; items: typeof allOpleidingen }[] = [];
-    for (const [orgId, items] of byOrg.entries()) {
-      const orgName = orgById.get(orgId)?.name || "Onbekende organisatie";
-      const filteredItems = items
-        .filter((i) => matches(i.name) || matches(orgName))
-        .sort((a, b) => a.name.localeCompare(b.name));
-      if (filteredItems.length === 0) continue;
-      groups.push({ orgId, orgName, items: filteredItems });
-    }
-    return groups.sort((a, b) => a.orgName.localeCompare(b.orgName));
-  }, [allOpleidingen, selectedOrgIds, opleidingSearch, orgById]);
+  // Server-side opleidingen picker: filter by selected orgs and/or debounced search
+  const { rows: pickerRows, enabled: pickerEnabled } = useOpleidingenPicker(selectedOrgIds, opleidingSearch);
 
-  const toggleOpleiding = (id: string) => {
-    setSelectedOpleidingIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+  const opleidingGroups = useMemo(() => {
+    const byOrg = new Map<string, { orgId: string; orgName: string; items: OpleidingPickerRow[] }>();
+    for (const row of pickerRows) {
+      const key = row.organisatie?.id || row.organisatie_id || "_";
+      const name = row.organisatie?.name || "Onbekende organisatie";
+      if (!byOrg.has(key)) byOrg.set(key, { orgId: key, orgName: name, items: [] });
+      byOrg.get(key)!.items.push(row);
+    }
+    const groups = Array.from(byOrg.values());
+    for (const g of groups) g.items.sort((a, b) => a.name.localeCompare(b.name));
+    return groups.sort((a, b) => a.orgName.localeCompare(b.orgName));
+  }, [pickerRows]);
+
+  const toggleOpleidingRow = (row: OpleidingPickerRow) => {
+    setSelectedOpleidingen((prev) => {
+      if (prev.some((p) => p.id === row.id)) return prev.filter((p) => p.id !== row.id);
+      return [
+        ...prev,
+        {
+          id: row.id,
+          name: row.name,
+          organisatie_id: row.organisatie_id,
+          organisatie_name: row.organisatie?.name || "Onbekende organisatie",
+        },
+      ];
+    });
   };
 
-  const selectedOpleidingen = useMemo(
-    () => selectedOpleidingIds
-      .map((id) => allOpleidingen.find((o) => o.id === id))
-      .filter(Boolean) as typeof allOpleidingen,
-    [selectedOpleidingIds, allOpleidingen]
-  );
+  const removeSelectedOpleiding = (id: string) => {
+    setSelectedOpleidingen((prev) => prev.filter((p) => p.id !== id));
+  };
 
   const hasOrganisator = selectedOrgIds.length > 0;
   const hasEventTerPlaatse = cpEntries.some((e) => e.rol === "event_ter_plaatse");
