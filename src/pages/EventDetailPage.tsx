@@ -155,6 +155,12 @@ export default function EventDetailPage() {
                   <p className="text-sm mt-1 whitespace-pre-wrap">{event.description}</p>
                 </div>
               )}
+              {event.programma && (
+                <div className="sm:col-span-2">
+                  <Label className="text-xs text-muted-foreground">Programma</Label>
+                  <p className="text-sm mt-1 whitespace-pre-wrap">{event.programma}</p>
+                </div>
+              )}
             </div>
           </section>
 

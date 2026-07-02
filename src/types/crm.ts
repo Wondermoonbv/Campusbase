@@ -116,6 +116,7 @@ export interface Event {
   description: string;
   stand_type: StandType;
   notes: string;
+  programma?: string | null;
   school?: School;
   target_program_ids?: string[];
   region?: Regio | null;

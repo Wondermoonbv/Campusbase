@@ -53,7 +53,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
   const [form, setForm] = useState({
     name: "", type: "jobbeurs" as string, date: "", start_time: "", end_time: "",
     location: "", organisator_id: "", elia_contact: "", team_members: "",
-    description: "", stand_type: "jobbeurs stand" as string,
+    description: "", programma: "", stand_type: "jobbeurs stand" as string,
     budget: "", status: "gepland" as string, setup_date: "", setup_time: "", notes: "",
     requires_booth_builder: false, teardown_time: "", booth_size: "",
     max_ambassadeurs: "",
@@ -97,6 +97,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
           elia_contact: event.elia_contact || "",
           team_members: (event.team_members || []).join(", "),
           description: event.description || "",
+          programma: event.programma || "",
           stand_type: event.stand_type || "jobbeurs stand",
           budget: event.budget?.toString() || "", status: event.status,
           setup_date: event.setup_date || "", setup_time: event.setup_time || "",
@@ -118,7 +119,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
         setForm({
           name: "", type: "jobbeurs", date: "", start_time: "", end_time: "",
           location: "", organisator_id: "", elia_contact: "",
-          team_members: "", description: "", stand_type: "jobbeurs stand",
+          team_members: "", description: "", programma: "", stand_type: "jobbeurs stand",
           budget: "", status: "gepland", setup_date: "",
           setup_time: "", notes: "", requires_booth_builder: false, teardown_time: "",
           booth_size: "",
@@ -326,6 +327,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       elia_contact: sanitized.elia_contact,
       team_members: sanitized.team_members ? sanitized.team_members.split(",").map((s) => s.trim()).filter(Boolean) : [],
       description: sanitized.description,
+      programma: sanitized.programma || null,
       stand_type: sanitized.stand_type as Event["stand_type"],
       budget: sanitized.budget ? Number(sanitized.budget) : null,
       status: sanitized.status as Event["status"],
@@ -453,8 +455,20 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
             </div>
             <div>
               <div className="flex items-center justify-between"><Label>Beschrijving</Label><CharacterCounter current={form.description.length} max={MAX_LENGTHS.description} /></div>
+              <p className="text-xs text-muted-foreground mb-1">Korte omschrijving. Gebruik het programmaveld voor de agenda.</p>
               <Textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} maxLength={MAX_LENGTHS.description} />
               <p className="text-xs text-muted-foreground mt-1">Info over het event, zichtbaar voor ambassadeurs</p>
+            </div>
+            <div>
+              <div className="flex items-center justify-between"><Label>Programma</Label><CharacterCounter current={form.programma.length} max={MAX_LENGTHS.programma} /></div>
+              <p className="text-xs text-muted-foreground mb-1">Vrij tekstveld. Je kan een volledig programma plakken.</p>
+              <Textarea
+                rows={6}
+                value={form.programma}
+                onChange={(e) => setForm({ ...form, programma: e.target.value })}
+                maxLength={MAX_LENGTHS.programma}
+                placeholder={"Plak hier het programma, bijvoorbeeld:\n10u00: onthaal\n10u30: start workshop"}
+              />
             </div>
           </FormSection>
 
