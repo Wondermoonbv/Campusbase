@@ -488,7 +488,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
                       ) : selectedOpleidingen.map((o) => (
                         <Badge key={o.id} variant="secondary" className="gap-1">
                           {o.name}
-                          <X className="h-3 w-3 cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleOpleiding(o.id); }} />
+                          <X className="h-3 w-3 cursor-pointer" onClick={(e) => { e.stopPropagation(); removeSelectedOpleiding(o.id); }} />
                         </Badge>
                       ))}
                     </span>
@@ -505,9 +505,11 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
                     />
                   </div>
                   <div className="max-h-72 overflow-y-auto py-1">
-                    {opleidingGroups.length === 0 && (
+                    {!pickerEnabled ? (
+                      <div className="px-3 py-4 text-xs text-muted-foreground text-center">Selecteer eerst een organisatie of typ om te zoeken.</div>
+                    ) : opleidingGroups.length === 0 ? (
                       <div className="px-3 py-4 text-xs text-muted-foreground text-center">Geen opleidingen gevonden.</div>
-                    )}
+                    ) : null}
                     {opleidingGroups.map((g) => (
                       <div key={g.orgId} className="py-1">
                         <div className="px-3 py-1 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
@@ -517,10 +519,10 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
                           <label key={o.id} className="flex items-center gap-2 pl-6 pr-3 py-1.5 hover:bg-muted/50 cursor-pointer text-sm">
                             <Checkbox
                               checked={selectedOpleidingIds.includes(o.id)}
-                              onCheckedChange={() => toggleOpleiding(o.id)}
+                              onCheckedChange={() => toggleOpleidingRow(o)}
                             />
                             <span className="truncate">{o.name}</span>
-                            {o.faculty && <span className="text-[10px] text-muted-foreground ml-auto">{o.faculty}</span>}
+                            {o.study_level && <span className="text-[10px] text-muted-foreground ml-auto">{o.study_level}</span>}
                           </label>
                         ))}
                       </div>
@@ -529,7 +531,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
                 </PopoverContent>
               </Popover>
               {selectedOrgIds.length === 0 && (
-                <p className="text-xs text-muted-foreground mt-1">Geen organisatie geselecteerd — alle opleidingen worden getoond.</p>
+                <p className="text-xs text-muted-foreground mt-1">Selecteer eerst een organisatie of typ (min. 2 tekens) om opleidingen te zoeken.</p>
               )}
             </div>
           </FormSection>
