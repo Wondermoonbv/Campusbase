@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Program, EventProgram } from "@/types/crm";
@@ -146,6 +147,70 @@ export function useEventOpleidingen() {
   });
 
   return { eventOpleidingen, setEventPrograms };
+}
+
+// Server-side picker for the EventFormDialog opleidingen selector.
+// Avoids the 1000-row PostgREST default: filters by selected organisations
+// and/or a debounced search term, capped at 300 rows.
+export interface OpleidingPickerRow {
+  id: string;
+  name: string;
+  organisatie_id: string | null;
+  study_level: string | null;
+  organisatie: { id: string; name: string } | null;
+}
+
+export function useOpleidingenPicker(organisatieIds: string[], search: string) {
+  const [debounced, setDebounced] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const orgKey = [...organisatieIds].sort().join(",");
+  const hasOrgs = organisatieIds.length > 0;
+  const hasSearch = debounced.length >= 2;
+  const enabled = hasOrgs || hasSearch;
+
+  const query = useQuery({
+    queryKey: ["opleidingen-picker", orgKey, debounced],
+    enabled,
+    queryFn: async () => {
+      let q: any = supabase
+        .from("opleidingen")
+        .select("id, name, organisatie_id, study_level, organisatie:organisaties!organisatie_id(id, name)");
+      if (hasOrgs) q = q.in("organisatie_id", organisatieIds);
+      if (hasSearch) {
+        const escaped = debounced.replace(/[%,]/g, " ");
+        q = q.ilike("name", `%${escaped}%`);
+      }
+      q = q.order("name", { ascending: true }).limit(300);
+      const { data, error } = await q;
+      if (error) { console.error("Error fetching opleidingen picker:", error); return [] as OpleidingPickerRow[]; }
+      return (data ?? []) as OpleidingPickerRow[];
+    },
+    staleTime: 30_000,
+  });
+
+  return { rows: query.data ?? [], isLoading: query.isLoading, enabled };
+}
+
+// Fetch a specific set of opleidingen by id — used to hydrate chips in edit mode.
+export function useOpleidingenByIds(ids: string[]) {
+  const key = [...ids].sort().join(",");
+  return useQuery({
+    queryKey: ["opleidingen-by-ids", key],
+    enabled: ids.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("opleidingen")
+        .select("id, name, organisatie_id, study_level, organisatie:organisaties!organisatie_id(id, name)")
+        .in("id", ids);
+      if (error) { console.error("Error fetching opleidingen by ids:", error); return [] as OpleidingPickerRow[]; }
+      return (data ?? []) as OpleidingPickerRow[];
+    },
+    staleTime: 30_000,
+  });
 }
 
 // Grouped-by-richting view

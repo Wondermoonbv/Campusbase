@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, type ChangeEvent, type FocusEvent } from 
 import { useScholen, useContacten } from "@/hooks/useScholen";
 import { useEventContactpersonen } from "@/hooks/useEventContactpersonen";
 import { useEventOrganisaties } from "@/hooks/useEventOrganisaties";
-import { useOpleidingen, useEventOpleidingen } from "@/hooks/useOpleidingen";
+import { useEventOpleidingen, useOpleidingenPicker, useOpleidingenByIds, type OpleidingPickerRow } from "@/hooks/useOpleidingen";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,14 +38,15 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
   const { contacten: allContacten } = useContacten();
   const { contactpersonen: existingCP } = useEventContactpersonen(event?.id);
   const { links: existingOrgLinks } = useEventOrganisaties(event?.id);
-  const { opleidingen: allOpleidingen } = useOpleidingen();
   const { eventOpleidingen } = useEventOpleidingen();
   const [confirmOrgChange, setConfirmOrgChange] = useState<string | null>(null);
   const [timeInputVersion, setTimeInputVersion] = useState(0);
   const [selectedOrgIds, setSelectedOrgIds] = useState<string[]>([]);
   const [orgPickerOpen, setOrgPickerOpen] = useState(false);
   const [orgSearch, setOrgSearch] = useState("");
-  const [selectedOpleidingIds, setSelectedOpleidingIds] = useState<string[]>([]);
+  interface SelectedOpleiding { id: string; name: string; organisatie_id: string | null; organisatie_name: string; }
+  const [selectedOpleidingen, setSelectedOpleidingen] = useState<SelectedOpleiding[]>([]);
+  const selectedOpleidingIds = useMemo(() => selectedOpleidingen.map((o) => o.id), [selectedOpleidingen]);
   const [opleidingPickerOpen, setOpleidingPickerOpen] = useState(false);
   const [opleidingSearch, setOpleidingSearch] = useState("");
 
@@ -129,7 +130,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
         });
         setCpEntries([]);
         setSelectedOrgIds([]);
-        setSelectedOpleidingIds([]);
+        setSelectedOpleidingen([]);
       }
     }
   }, [open, event]);
@@ -148,14 +149,28 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
     }
   }, [open, event?.id, existingOrgLinks]);
 
-  // Load existing opleiding links when editing
+  // Load existing opleiding ids for the event; hydrate full chip info via a dedicated query
+  const existingOpleidingIds = useMemo(
+    () => (open && event ? eventOpleidingen.filter((ep) => ep.event_id === event.id).map((ep) => ep.program_id) : []),
+    [open, event?.id, eventOpleidingen]
+  );
+  const { data: existingOpleidingRows = [] } = useOpleidingenByIds(existingOpleidingIds);
   useEffect(() => {
-    if (open && event) {
-      setSelectedOpleidingIds(
-        eventOpleidingen.filter((ep) => ep.event_id === event.id).map((ep) => ep.program_id)
-      );
+    if (!open || !event) return;
+    if (existingOpleidingRows.length === 0 && existingOpleidingIds.length === 0) {
+      setSelectedOpleidingen([]);
+      return;
     }
-  }, [open, event?.id, eventOpleidingen]);
+    if (existingOpleidingRows.length === 0) return;
+    setSelectedOpleidingen(
+      existingOpleidingRows.map((r) => ({
+        id: r.id,
+        name: r.name,
+        organisatie_id: r.organisatie_id,
+        organisatie_name: r.organisatie?.name || "Onbekende organisatie",
+      }))
+    );
+  }, [open, event?.id, existingOpleidingRows, existingOpleidingIds.length]);
 
   // Derive "hoofdorganisator" from selection
   const orgById = useMemo(() => new Map(scholen.map((s) => [s.id, s])), [scholen]);
@@ -231,44 +246,40 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [allContacten, selectedOrgIds]);
 
-  // Opleidingen grouped by school; show only opleidingen of selected orgs, or all if none selected
-  const opleidingGroups = useMemo(() => {
-    const selectedSet = new Set(selectedOrgIds);
-    const filtered = selectedSet.size === 0
-      ? allOpleidingen
-      : allOpleidingen.filter((o) => o.organisatie_id && selectedSet.has(o.organisatie_id));
-    const search = opleidingSearch.trim().toLowerCase();
-    const matches = (s: string) => !search || s.toLowerCase().includes(search);
-    const byOrg = new Map<string, typeof allOpleidingen>();
-    for (const o of filtered) {
-      const key = o.organisatie_id || "_";
-      if (!byOrg.has(key)) byOrg.set(key, [] as any);
-      byOrg.get(key)!.push(o);
-    }
-    const groups: { orgId: string; orgName: string; items: typeof allOpleidingen }[] = [];
-    for (const [orgId, items] of byOrg.entries()) {
-      const orgName = orgById.get(orgId)?.name || "Onbekende organisatie";
-      const filteredItems = items
-        .filter((i) => matches(i.name) || matches(orgName))
-        .sort((a, b) => a.name.localeCompare(b.name));
-      if (filteredItems.length === 0) continue;
-      groups.push({ orgId, orgName, items: filteredItems });
-    }
-    return groups.sort((a, b) => a.orgName.localeCompare(b.orgName));
-  }, [allOpleidingen, selectedOrgIds, opleidingSearch, orgById]);
+  // Server-side opleidingen picker: filter by selected orgs and/or debounced search
+  const { rows: pickerRows, enabled: pickerEnabled } = useOpleidingenPicker(selectedOrgIds, opleidingSearch);
 
-  const toggleOpleiding = (id: string) => {
-    setSelectedOpleidingIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+  const opleidingGroups = useMemo(() => {
+    const byOrg = new Map<string, { orgId: string; orgName: string; items: OpleidingPickerRow[] }>();
+    for (const row of pickerRows) {
+      const key = row.organisatie?.id || row.organisatie_id || "_";
+      const name = row.organisatie?.name || "Onbekende organisatie";
+      if (!byOrg.has(key)) byOrg.set(key, { orgId: key, orgName: name, items: [] });
+      byOrg.get(key)!.items.push(row);
+    }
+    const groups = Array.from(byOrg.values());
+    for (const g of groups) g.items.sort((a, b) => a.name.localeCompare(b.name));
+    return groups.sort((a, b) => a.orgName.localeCompare(b.orgName));
+  }, [pickerRows]);
+
+  const toggleOpleidingRow = (row: OpleidingPickerRow) => {
+    setSelectedOpleidingen((prev) => {
+      if (prev.some((p) => p.id === row.id)) return prev.filter((p) => p.id !== row.id);
+      return [
+        ...prev,
+        {
+          id: row.id,
+          name: row.name,
+          organisatie_id: row.organisatie_id,
+          organisatie_name: row.organisatie?.name || "Onbekende organisatie",
+        },
+      ];
+    });
   };
 
-  const selectedOpleidingen = useMemo(
-    () => selectedOpleidingIds
-      .map((id) => allOpleidingen.find((o) => o.id === id))
-      .filter(Boolean) as typeof allOpleidingen,
-    [selectedOpleidingIds, allOpleidingen]
-  );
+  const removeSelectedOpleiding = (id: string) => {
+    setSelectedOpleidingen((prev) => prev.filter((p) => p.id !== id));
+  };
 
   const hasOrganisator = selectedOrgIds.length > 0;
   const hasEventTerPlaatse = cpEntries.some((e) => e.rol === "event_ter_plaatse");
@@ -477,7 +488,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
                       ) : selectedOpleidingen.map((o) => (
                         <Badge key={o.id} variant="secondary" className="gap-1">
                           {o.name}
-                          <X className="h-3 w-3 cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleOpleiding(o.id); }} />
+                          <X className="h-3 w-3 cursor-pointer" onClick={(e) => { e.stopPropagation(); removeSelectedOpleiding(o.id); }} />
                         </Badge>
                       ))}
                     </span>
@@ -494,9 +505,11 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
                     />
                   </div>
                   <div className="max-h-72 overflow-y-auto py-1">
-                    {opleidingGroups.length === 0 && (
+                    {!pickerEnabled ? (
+                      <div className="px-3 py-4 text-xs text-muted-foreground text-center">Selecteer eerst een organisatie of typ om te zoeken.</div>
+                    ) : opleidingGroups.length === 0 ? (
                       <div className="px-3 py-4 text-xs text-muted-foreground text-center">Geen opleidingen gevonden.</div>
-                    )}
+                    ) : null}
                     {opleidingGroups.map((g) => (
                       <div key={g.orgId} className="py-1">
                         <div className="px-3 py-1 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
@@ -506,10 +519,10 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
                           <label key={o.id} className="flex items-center gap-2 pl-6 pr-3 py-1.5 hover:bg-muted/50 cursor-pointer text-sm">
                             <Checkbox
                               checked={selectedOpleidingIds.includes(o.id)}
-                              onCheckedChange={() => toggleOpleiding(o.id)}
+                              onCheckedChange={() => toggleOpleidingRow(o)}
                             />
                             <span className="truncate">{o.name}</span>
-                            {o.faculty && <span className="text-[10px] text-muted-foreground ml-auto">{o.faculty}</span>}
+                            {o.study_level && <span className="text-[10px] text-muted-foreground ml-auto">{o.study_level}</span>}
                           </label>
                         ))}
                       </div>
@@ -518,7 +531,7 @@ export function EventFormDialog({ open, onOpenChange, event, onSave }: EventForm
                 </PopoverContent>
               </Popover>
               {selectedOrgIds.length === 0 && (
-                <p className="text-xs text-muted-foreground mt-1">Geen organisatie geselecteerd — alle opleidingen worden getoond.</p>
+                <p className="text-xs text-muted-foreground mt-1">Selecteer eerst een organisatie of typ (min. 2 tekens) om opleidingen te zoeken.</p>
               )}
             </div>
           </FormSection>
