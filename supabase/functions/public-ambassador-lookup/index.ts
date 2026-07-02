@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
 
     const { data: events } = await admin
       .from("evenementen")
-      .select("id, name, date, location, start_time, end_time, status, max_ambassadeurs, setup_time, teardown_time, short_code, booth_number, parking_info, locker_code")
+      .select("id, name, date, location, start_time, end_time, status, max_ambassadeurs, setup_time, teardown_time, short_code, booth_number, parking_info, locker_code, programma")
       .neq("status", "geannuleerd")
       .order("date", { ascending: true });
 

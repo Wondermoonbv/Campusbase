@@ -36,6 +36,7 @@ interface PortalEvent {
   setup_time: string | null;
   contactpersoon: string | null;
   description: string | null;
+  programma: string | null;
   booth_number: string | null;
   parking_info: string | null;
   locker_code: string | null;
@@ -158,6 +159,7 @@ export default function AmbassadeurPortaalPage() {
             setup_time: e.setup_time,
             contactpersoon: null,
             description: null,
+            programma: (e as any).programma ?? null,
             booth_number: e.booth_number ?? null,
             parking_info: e.parking_info ?? null,
             locker_code: e.locker_code ?? null,
@@ -611,6 +613,13 @@ export default function AmbassadeurPortaalPage() {
                           <p className="text-xs italic text-muted-foreground">
                             {ev.description.length > 120 ? ev.description.slice(0, 120) + "…" : ev.description}
                           </p>
+                        )}
+
+                        {ev.programma && (
+                          <div className="border-t border-border/50 pt-2">
+                            <p className="text-xs font-medium text-muted-foreground mb-1">Programma</p>
+                            <p className="text-xs whitespace-pre-wrap text-foreground/80">{ev.programma}</p>
+                          </div>
                         )}
 
                         {/* Status toelichting */}

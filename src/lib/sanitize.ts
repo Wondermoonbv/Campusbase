@@ -54,7 +54,8 @@ export function sanitizeFormData<T extends Record<string, unknown>>(data: T): T 
 export const MAX_LENGTHS = {
   title: 200,
   name: 200,
-  description: 2000,
+  description: 500,
+  programma: 10000,
   notes: 2000,
   zoektermen: 500,
   email: 255,
