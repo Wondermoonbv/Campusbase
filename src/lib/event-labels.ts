@@ -42,6 +42,9 @@ export const REGION_LABELS: Record<string, string> = {
   oost_vlaanderen: "Oost-Vlaanderen",
   waals_brabant: "Waals-Brabant",
   henegouwen: "Henegouwen",
+  luik: "Luik",
+  luxemburg: "Luxemburg",
+  namen: "Namen",
 };
 
 export const EVENT_LANGUAGE_LABELS: Record<string, string> = {
