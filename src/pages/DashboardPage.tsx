@@ -124,7 +124,7 @@ export default function DashboardPage() {
   /* ── Events with open ambassador spots ── */
   const teVullenEvents = useMemo(() => {
     return evenementen
-      .filter((e) => new Date(e.date) >= now && e.status !== "geannuleerd" && e.max_ambassadeurs != null)
+      .filter((e) => new Date(e.date) >= now && ["gepland", "bevestigd", "afgelopen"].includes(e.status) && e.max_ambassadeurs != null)
       .map((ev) => {
         const actief = inschrijvingen.filter(
           (i) => i.evenement_id === ev.id && (i.status === "ingeschreven" || i.status === "bevestigd")
