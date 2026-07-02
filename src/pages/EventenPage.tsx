@@ -33,6 +33,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 const BULK_STATUS_OPTIONS = [
   { value: "option", label: "Option" },
+  { value: "declined", label: "Declined" },
   { value: "gepland", label: "Gepland" },
   { value: "bevestigd", label: "Bevestigd" },
   { value: "afgelopen", label: "Afgelopen" },
@@ -61,7 +62,7 @@ const EVENT_IMPORT_COLUMNS: ImportColumn[] = [
   { key: "start_time", label: "Startuur" }, { key: "end_time", label: "Einduur" },
   { key: "location", label: "Locatie", required: true }, { key: "responsible", label: "Verantwoordelijke" },
   { key: "budget", label: "Budget", validate: (v) => !v || !isNaN(Number(v)) ? null : "Moet een getal zijn" },
-  { key: "status", label: "Status", validate: (v) => !v || ["option", "gepland", "bevestigd", "afgelopen", "geannuleerd"].includes(v.toLowerCase()) ? null : "Ongeldige status" },
+  { key: "status", label: "Status", validate: (v) => !v || ["option", "declined", "gepland", "bevestigd", "afgelopen", "geannuleerd"].includes(v.toLowerCase()) ? null : "Ongeldige status" },
   { key: "description", label: "Beschrijving" },
 ];
 
@@ -251,7 +252,7 @@ export default function EventenPage() {
           <div className="relative flex-1 min-w-0 sm:min-w-[200px]"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Zoeken..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10 sm:h-9" /></div>
           <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3">
             <Select value={filterType} onValueChange={setFilterType}><SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9"><SelectValue placeholder="Type" /></SelectTrigger><SelectContent><SelectItem value="all">Alle types</SelectItem><SelectItem value="jobbeurs">Jobbeurs</SelectItem><SelectItem value="workshop">Workshop</SelectItem><SelectItem value="event">Event</SelectItem></SelectContent></Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}><SelectTrigger className="w-full sm:w-[150px] h-10 sm:h-9"><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">Alle statussen</SelectItem><SelectItem value="option">Option</SelectItem><SelectItem value="gepland">Gepland</SelectItem><SelectItem value="bevestigd">Bevestigd</SelectItem><SelectItem value="afgelopen">Afgelopen</SelectItem><SelectItem value="geannuleerd">Geannuleerd</SelectItem></SelectContent></Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}><SelectTrigger className="w-full sm:w-[150px] h-10 sm:h-9"><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">Alle statussen</SelectItem><SelectItem value="option">Option</SelectItem><SelectItem value="declined">Declined</SelectItem><SelectItem value="gepland">Gepland</SelectItem><SelectItem value="bevestigd">Bevestigd</SelectItem><SelectItem value="afgelopen">Afgelopen</SelectItem><SelectItem value="geannuleerd">Geannuleerd</SelectItem></SelectContent></Select>
             <Select value={filterFieldOfStudy} onValueChange={setFilterFieldOfStudy}><SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-9 col-span-2 sm:col-span-1"><SelectValue placeholder="Studierichting" /></SelectTrigger><SelectContent><SelectItem value="all">Alle studierichtingen</SelectItem>{FIELDS_OF_STUDY.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent></Select>
             <Button variant={showExtraFilters || hasExtraFilters ? "default" : "outline"} size="sm" className="h-10 sm:h-9" onClick={() => setShowExtraFilters(!showExtraFilters)}>
               <Filter className="h-4 w-4 mr-1" /> Meer{hasExtraFilters ? ` (${[filterRegio, filterTaal, filterDoelgroep, filterRegistratie, filterFollowUp].filter(f => f !== "all").length})` : ""}
